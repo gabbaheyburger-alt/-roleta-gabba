@@ -98,6 +98,7 @@ h2 { font-family: var(--display); font-weight: 400; font-size: 1.4rem; line-heig
 footer { color: var(--muted); font-size: .78rem; text-align: center; }
 @media (prefers-reduced-motion: reduce) { .card .in, .hole span { transition: none; } .hole.miss { animation: none; } }
 </style>
+<script src="../contador.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -263,6 +264,7 @@ footer { color: var(--muted); font-size: .78rem; text-align: center; }
   const ITEMS = ['🍔', '🍟', '🥤', '🧀', '🥓', '🍅', '🌶️', '🍺'];
   let memoOpen = [], memoMoves = 0, memoPairs = 0, memoT0 = 0, memoTimer = null, memoLock = false;
   function memoStart() {
+    window.gabbaConta && gabbaConta('partida-memoria', 'Partida: Memória Gabba');
     memoOpen = []; memoMoves = 0; memoPairs = 0; memoLock = false; memoT0 = 0;
     $('memo-moves').textContent = '0'; $('memo-time').textContent = '0s';
     $('memo-end').hidden = true;
@@ -339,6 +341,7 @@ footer { color: var(--muted); font-size: .78rem; text-align: center; }
   const Q_PER_ROUND = 8, Q_TIME = 15000;
   let qList = [], qIdx = 0, qHits = 0, qPoints = 0, qT0 = 0, qRaf = null, qTimeout = null, qDone = false;
   function quizStart() {
+    window.gabbaConta && gabbaConta('partida-quiz', 'Partida: Quiz do Gabba');
     qList = shuffle(BANK.slice()).slice(0, Q_PER_ROUND);
     qIdx = 0; qHits = 0; qPoints = 0;
     $('quiz-hits').textContent = '0'; $('quiz-points').textContent = '0';

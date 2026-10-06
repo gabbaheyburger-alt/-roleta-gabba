@@ -110,6 +110,7 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
 @media (max-height: 640px) { .slot { height: 70px; } .patty { height: 36px; } .ing { min-height: 50px; } }
 @media (prefers-reduced-motion: reduce) { .layer, .msg, .served, .shake, .smoke { animation: none !important; } }
 </style>
+<script src="../contador.js"></script>
 </head>
 <body>
 <div class="app" id="app">
@@ -363,6 +364,7 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
   }
 
   function start() {
+    window.gabbaConta && gabbaConta('partida-chapa', 'Partida: Chapa do Gabba');
     initAudio();
     money = 0; served = 0; lives = 3; orderNo = 0; grill = [null, null];
     updateHud(); renderGrill();

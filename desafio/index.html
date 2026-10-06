@@ -76,6 +76,7 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
 
 @media (prefers-reduced-motion: reduce) { .prize { animation: none; } .float { animation-duration: .01s; } }
 </style>
+<script src="../contador.js"></script>
 </head>
 <body>
 <div class="app">
@@ -193,6 +194,7 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
   }
 
   function start() {
+    window.gabbaConta && gabbaConta('partida-desafio', 'Partida: Desafio da Espera');
     reset();
     state = 'play';
     $('start').hidden = true; $('over').hidden = true;
@@ -244,6 +246,7 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
     stack.push({ kind: 'paoCima', x: stack[stack.length - 1].x, w, y: topY(), h: lh('paoCima') });
     if (score > saved.best) { saved.best = score; $('best').textContent = score; }
     if (reached && saved.wonDay !== today()) { saved.wonDay = today(); }
+    if (reached) { window.gabbaConta && gabbaConta('desafio-venceu', 'Desafio da Espera: venceu'); }
     persist();
     setTimeout(() => showOver(), 700);
   }

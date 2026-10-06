@@ -48,8 +48,15 @@ Percurso 3D no navegador, dentro do Fliperama, no endereço `/obby/`. O personag
 
 Jogo de corrida com o mascote do Gabba Hey Burger, dentro do Fliperama, no endereço `/corre/`. Toque para pular (toque de novo no ar para pulo duplo), desvie de caixas de som, pimentas e cones e pegue batatas. A velocidade aumenta com o tempo. A imagem do mascote fica em `corre/mascote.png`.
 
+## Contador de uso
+
+`contador.js` conta, sem cookies e sem dados pessoais, os acessos a cada página e as partidas iniciadas em cada jogo, usando o GoatCounter. Fica desligado enquanto a variável `CODIGO` estiver vazia; para ligar, coloque nela o código da conta (o `xxx` de `xxx.goatcounter.com`). O relatório por dia fica no painel do GoatCounter.
+
+Eventos registrados: `partida-memoria`, `partida-quiz`, `partida-corre`, `partida-obby`, `partida-desafio`, `partida-chapa` e `desafio-venceu`.
+
 ## Arquivos
 
+- `contador.js`: contador de uso dos jogos.
 - `index.html`: a roleta inteira (visual, regras, relatório e animação) em um único arquivo.
 - `desafio/index.html`: o jogo Desafio da Espera.
 - `jogos/index.html`: o Fliperama Gabba.

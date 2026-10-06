@@ -56,6 +56,7 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--mustard); outli
 .record { color: var(--ok); font-weight: 700; }
 @media (prefers-reduced-motion: reduce) { .overlay img { animation: none; } .banner { animation-duration: .01s; } }
 </style>
+<script src="../contador.js"></script>
 </head>
 <body>
 <canvas id="game" aria-label="Corre, Gabba! Toque para pular"></canvas>
@@ -461,6 +462,7 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--mustard); outli
   }
 
   function play() {
+    window.gabbaConta && gabbaConta('partida-corre', 'Partida: Corre, Gabba!');
     initAudio(); reset();
     $('start').hidden = true; $('over').hidden = true;
     running = true; countdown = 3.0; banner('3'); sfx(440, 440, 0.12);
