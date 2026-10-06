@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Obby do Gabba</title>
+<meta name="theme-color" content="#17110f">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Barlow:wght@400;600;700;800&display=swap">
+<style>
+/* Layout: cena 3D em tela cheia; placar no topo, joystick à esquerda e botão de pulo à direita */
+:root {
+  --bg: #17110f;
+  --surface: #221a17;
+  --line: #3b2e29;
+  --fg: #f6ece2;
+  --muted: #b5a397;
+  --red: #d7261e;
+  --red-deep: #9c1611;
+  --mustard: #f2b632;
+  --cream: #f6e7cf;
+  --ok: #6fbf73;
+  --display: 'Bungee', Impact, 'Arial Black', sans-serif;
+  --body: 'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; margin: 0; overflow: hidden; background: var(--bg); color: var(--fg); font-family: var(--body); user-select: none; -webkit-user-select: none; overscroll-behavior: none; touch-action: none; }
+[hidden] { display: none !important; }
+#scene { position: fixed; inset: 0; }
+#scene canvas { display: block; width: 100%; height: 100%; }
+
+.hud { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 10px); left: 12px; right: 12px; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; pointer-events: none; z-index: 2; }
+.chip { background: rgba(23,17,15,.78); border: 1px solid rgba(255,255,255,.12); border-radius: 12px; padding: 6px 10px; }
+.chip small { display: block; font-size: .58rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.chip b { font-family: var(--display); font-weight: 400; font-size: 1.15rem; line-height: 1; font-variant-numeric: tabular-nums; }
+.chip.coins b { color: var(--mustard); }
+.hud-right { display: flex; gap: 6px; }
+.brand { font-family: var(--display); font-size: .9rem; line-height: 1; }
+.brand span { color: var(--mustard); }
+.test { display: inline-block; margin-top: 4px; font-size: .55rem; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+
+.toast { position: fixed; top: 30%; left: 50%; transform: translateX(-50%); font-family: var(--display); font-size: 1.4rem; color: var(--mustard); text-shadow: 0 2px 0 #000; pointer-events: none; z-index: 3; animation: pop 1.2s ease-out forwards; white-space: nowrap; }
+@keyframes pop { 0% { opacity: 0; transform: translate(-50%, 10px) scale(.8); } 15% { opacity: 1; transform: translate(-50%, 0) scale(1.05); } 80% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -16px); } }
+
+.stick-zone { position: fixed; left: 0; bottom: 0; width: 55%; height: 55%; z-index: 2; }
+.stick { position: fixed; width: 120px; height: 120px; margin: -60px 0 0 -60px; border-radius: 50%; background: rgba(255,255,255,.08); border: 2px solid rgba(255,255,255,.25); pointer-events: none; z-index: 2; }
+.stick i { position: absolute; left: 50%; top: 50%; width: 52px; height: 52px; margin: -26px 0 0 -26px; border-radius: 50%; background: rgba(246,231,207,.7); }
+.hint-stick { position: fixed; left: 22px; bottom: calc(env(safe-area-inset-bottom, 0px) + 26px); color: rgba(255,255,255,.55); font-size: .8rem; font-weight: 700; pointer-events: none; z-index: 2; }
+.jump { position: fixed; right: 22px; bottom: calc(env(safe-area-inset-bottom, 0px) + 26px); width: 92px; height: 92px; border-radius: 50%; border: none; background: var(--red); color: var(--cream); font-family: var(--display); font-size: 1rem; box-shadow: 0 6px 0 var(--red-deep); z-index: 2; touch-action: none; }
+.jump.down { transform: translateY(5px); box-shadow: 0 1px 0 var(--red-deep); }
+
+.overlay { position: fixed; inset: 0; background: rgba(23,17,15,.93); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 24px; text-align: center; z-index: 5; overflow-y: auto; touch-action: auto; }
+.overlay h1 { font-family: var(--display); font-weight: 400; font-size: clamp(2rem, 10vw, 2.8rem); line-height: 1; margin: 0; }
+.overlay h1 span { color: var(--mustard); }
+.overlay p { margin: 0; color: var(--muted); max-width: 34ch; }
+.rules { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; text-align: left; max-width: 340px; }
+.rules li { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; font-size: .95rem; }
+.rules b { color: var(--mustard); }
+.btn { font-family: var(--display); font-size: 1.3rem; letter-spacing: .04em; background: var(--red); color: var(--cream); border: none; border-radius: 14px; padding: 14px 28px; cursor: pointer; box-shadow: 0 5px 0 var(--red-deep); }
+.btn:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--red-deep); }
+button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
+.big { font-family: var(--display); font-size: 3rem; line-height: 1; color: var(--mustard); }
+.record { color: var(--ok); font-weight: 700; }
+.fade { position: fixed; inset: 0; background: #000; opacity: 0; pointer-events: none; transition: opacity .25s; z-index: 4; }
+.fade.on { opacity: .85; }
+.err { color: #ff8a80; }
+</style>
+</head>
+<body>
+<div id="scene"></div>
+<div class="fade" id="fade"></div>
+
+<div class="hud">
+  <div class="chip"><div class="brand">Obby <span>do Gabba</span></div><span class="test">Versão de teste</span></div>
+  <div class="hud-right">
+    <div class="chip"><small>Fase</small><b id="cp">1/3</b></div>
+    <div class="chip coins"><small>Moedas</small><b id="coins">0</b></div>
+    <div class="chip"><small>Tempo</small><b id="time">0:00</b></div>
+  </div>
+</div>
+
+<div class="stick-zone" id="stick-zone"></div>
+<div class="stick" id="stick" hidden><i id="knob"></i></div>
+<div class="hint-stick" id="hint-stick">Arraste aqui para andar</div>
+<button class="jump" id="jump" type="button" aria-label="Pular">PULA</button>
+
+<div class="overlay" id="start">
+  <h1>Obby <span>do Gabba</span></h1>
+  <p>Atravesse o percurso até o burger gigante sem cair no mar de ketchup.</p>
+  <ul class="rules">
+    <li><b>Andar:</b> arraste o dedo no lado esquerdo da tela.</li>
+    <li><b>Pular:</b> botão vermelho à direita.</li>
+    <li><b>Caiu?</b> Você volta para a última bandeira. Pegue as moedas no caminho!</li>
+  </ul>
+  <button class="btn" id="play" type="button">JOGAR</button>
+  <p id="load-err" class="err" hidden>Não consegui carregar o 3D. Verifique a internet e atualize a página.</p>
+</div>
+
+<div class="overlay" id="win" hidden>
+  <h1>Você <span>chegou!</span></h1>
+  <p>Seu tempo</p>
+  <div class="big" id="final-time">0:00</div>
+  <p id="final-msg"></p>
+  <button class="btn" id="again" type="button">JOGAR DE NOVO</button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  if (!window.THREE) { $('load-err').hidden = false; $('play').hidden = true; return; }
+  const STORE = 'obby-gabba-v1';
+  let best = null;
+  try { best = JSON.parse(localStorage.getItem(STORE) || '{}').best || null; } catch (e) {}
+
+  /* ---------- Cena ---------- */
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  $('scene').append(renderer.domElement);
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color('#f3a65a');
+  scene.fog = new THREE.Fog('#f3a65a', 28, 70);
+  const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 200);
+  scene.add(new THREE.HemisphereLight('#fff4e0', '#7a2a1a', 0.85));
+  const sun = new THREE.DirectionalLight('#ffffff', 0.75); sun.position.set(-6, 14, -4); scene.add(sun);
+
+  function resize() {
+    const w = window.innerWidth, h = window.innerHeight;
+    renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize', resize); resize();
+
+  const mat = c => new THREE.MeshLambertMaterial({ color: c });
+  const M = {
+    bun: mat('#d4913f'), bunTop: mat('#e0a253'), patty: mat('#5a2e1d'), cheese: mat('#f2b632'), lettuce: mat('#6dbb45'),
+    fry: mat('#f5c542'), box: mat('#d7261e'), cream: mat('#f6e7cf'), foam: mat('#fffaf0'), seed: mat('#fff3d6'),
+    glass: new THREE.MeshLambertMaterial({ color: '#e8a22b', transparent: true, opacity: 0.85 }),
+    pole: mat('#e9e2d8'), flag: mat('#d7261e'), flagOn: mat('#6fbf73'), coin: mat('#f2b632'),
+    dark: mat('#1d1411'), skin: mat('#f0c38e'), shirt: mat('#d7261e'), jeans: mat('#2b4a7a'), cap: mat('#17110f')
+  };
+
+  // mar de ketchup
+  const sea = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), mat('#b3170f'));
+  sea.rotation.x = -Math.PI / 2; sea.position.y = -7; scene.add(sea);
+  for (let i = 0; i < 40; i++) {
+    const b = new THREE.Mesh(new THREE.SphereGeometry(0.4 + Math.random() * 0.6, 8, 6), mat('#c9231a'));
+    b.position.set((Math.random() - 0.5) * 60, -7, Math.random() * 120 - 10); b.scale.y = 0.35; scene.add(b);
+  }
+
+  /* ---------- Plataformas ---------- */
+  const plats = [];   // {shape:'box'|'round', x,z,top,w,d,r, mesh, move, prev:{x,z}, cp, final}
+  function addPlat(p) { p.prevX = p.x; p.prevZ = p.z; p.baseX = p.x; p.baseZ = p.z; plats.push(p); scene.add(p.mesh); p.mesh.position.set(p.x, 0, p.z); return p; }
+
+  function box(x, top, z, w, d, opts) {
+    opts = opts || {};
+    const g = new THREE.Group();
+    const h = opts.h || 1;
+    const body = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), opts.mat || M.box);
+    body.position.y = top - h / 2; g.add(body);
+    const cap = new THREE.Mesh(new THREE.BoxGeometry(w, 0.12, d), opts.capMat || M.cream);
+    cap.position.y = top - 0.05; g.add(cap);
+    return addPlat({ shape: 'box', x, z, top, w, d, mesh: g, move: opts.move, cp: opts.cp, final: opts.final });
+  }
+  function burger(x, top, z, r) {
+    const g = new THREE.Group();
+    const parts = [[M.bun, r, 0.45], [M.patty, r * 1.04, 0.32], [M.cheese, r * 1.08, 0.08], [M.lettuce, r * 1.1, 0.1], [M.bunTop, r, 0.4]];
+    let y = top - parts.reduce((s, p) => s + p[2], 0);
+    parts.forEach(([m, rr, hh]) => { const c = new THREE.Mesh(new THREE.CylinderGeometry(rr, rr, hh, 24), m); c.position.y = y + hh / 2; y += hh; g.add(c); });
+    for (let i = 0; i < 7; i++) { const s = new THREE.Mesh(new THREE.SphereGeometry(0.07, 6, 4), M.seed); const a = i * 2.4, d = r * (0.25 + 0.5 * ((i * 0.37) % 1)); s.position.set(Math.cos(a) * d, top + 0.01, Math.sin(a) * d); s.scale.y = 0.4; g.add(s); }
+    return addPlat({ shape: 'round', x, z, top, r, mesh: g });
+  }
+  function fries(x, top, z, s) {
+    const g = new THREE.Group();
+    const carton = new THREE.Mesh(new THREE.BoxGeometry(s * 1.1, 2.4, s * 1.1), M.box); carton.position.y = top - 1.9; g.add(carton);
+    const fry = new THREE.Mesh(new THREE.BoxGeometry(s, 0.8, s), M.fry); fry.position.y = top - 0.4; g.add(fry);
+    for (let i = 0; i < 4; i++) { const f = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.5, 0.16), M.fry); f.position.set((i % 2 - 0.5) * s * 0.6, top + 0.1, (Math.floor(i / 2) - 0.5) * s * 0.6); g.add(f); }
+    return addPlat({ shape: 'box', x, z, top: top, w: s, d: s, mesh: g });
+  }
+  function chopp(x, top, z, r) {
+    const g = new THREE.Group();
+    const glass = new THREE.Mesh(new THREE.CylinderGeometry(r, r * 0.88, 2.2, 20), M.glass); glass.position.y = top - 0.35 - 1.1; g.add(glass);
+    const foam = new THREE.Mesh(new THREE.CylinderGeometry(r * 1.02, r, 0.35, 20), M.foam); foam.position.y = top - 0.175; g.add(foam);
+    const handle = new THREE.Mesh(new THREE.TorusGeometry(0.45, 0.1, 6, 12, Math.PI), M.glass); handle.rotation.z = -Math.PI / 2; handle.position.set(r + 0.05, top - 1.4, 0); g.add(handle);
+    return addPlat({ shape: 'round', x, z, top, r, mesh: g });
+  }
+  function flag(p) {
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 2.2, 8), M.pole); pole.position.set(p.w / 2 - 0.4, p.top + 1.1, 0);
+    const f = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.6, 0.9), M.flag); f.position.set(p.w / 2 - 0.4, p.top + 1.85, 0.45);
+    p.mesh.add(pole); p.mesh.add(f); p.flag = f;
+  }
+
+  // Percurso (z cresce para frente)
+  const start = box(0, 0, 0, 6, 6, { cp: 0 });
+  burger(0, 0.3, 5, 1.6); burger(1.5, 0.8, 9, 1.5); burger(-1, 1.3, 13, 1.5); burger(0, 1.6, 17, 1.6);
+  box(0, 1.6, 21.5, 2.2, 4, { mat: M.bun, capMat: M.bunTop, h: 0.6 });
+  fries(1.2, 2.2, 25, 1.4); fries(-0.8, 2.8, 28.2, 1.4); fries(1, 3.4, 31.4, 1.4); fries(-0.6, 4.0, 34.6, 1.4);
+  const cp1 = box(0, 4, 38.5, 4, 4, { cp: 1 }); flag(cp1);
+  box(0, 4, 43, 2.6, 2.6, { move: { axis: 'x', amp: 2.4, speed: 1.1, phase: 0 } });
+  box(0, 4.3, 47, 2.6, 2.6, { move: { axis: 'x', amp: 2.4, speed: 1.1, phase: Math.PI } });
+  box(0, 4.6, 51, 2.6, 2.6, { move: { axis: 'x', amp: 2.6, speed: 1.3, phase: 1.2 } });
+  box(0, 4.6, 55, 3, 3);
+  chopp(2, 5.2, 58.4, 1.1); chopp(3.6, 5.8, 61.8, 1.1); chopp(1.8, 6.4, 65.2, 1.1); chopp(0, 7, 68.6, 1.1);
+  const cp2 = box(0, 7, 72.5, 4, 4, { cp: 2 }); flag(cp2);
+  box(0, 7, 77.5, 0.9, 5, { mat: M.patty, capMat: M.cheese });
+  box(2.4, 7.3, 83, 0.9, 4.2, { mat: M.patty, capMat: M.cheese });
+  box(0, 7.6, 88.4, 0.9, 4.6, { mat: M.patty, capMat: M.cheese });
+  burger(0, 8.2, 92.8, 1.5); burger(0, 8.9, 96.4, 1.5);
+  const fin = box(0, 9.5, 101.5, 6, 6, { final: true, capMat: M.cheese });
+  // troféu: burger gigante
+  (function trophy() {
+    const g = new THREE.Group(); const r = 1.4;
+    [[M.bun, r, 0.6], [M.patty, r * 1.05, 0.45], [M.cheese, r * 1.1, 0.12], [M.lettuce, r * 1.12, 0.14], [M.bunTop, r, 0.9]].reduce((y, [m, rr, hh]) => { const c = new THREE.Mesh(new THREE.CylinderGeometry(rr, rr, hh, 28), m); c.position.y = y + hh / 2; g.add(c); return y + hh; }, 0);
+    g.position.set(0, 9.5, 103.3); scene.add(g); fin.trophy = g;
+  })();
+
+  // moedas
+  const coins = [];
+  [[1.5, 1.8, 9], [0, 2.6, 17], [-0.8, 4.3, 28.2], [0, 5.5, 47], [3.6, 7.3, 61.8], [2.4, 8.6, 83], [0, 10.2, 96.4], [-0.8, 2.4, 21.5]].forEach(([x, y, z]) => {
+    const c = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.08, 18), M.coin);
+    c.rotation.x = Math.PI / 2; c.position.set(x, y, z); scene.add(c); coins.push({ mesh: c, got: false });
+  });
+
+  /* ---------- Personagem ---------- */
+  const hero = new THREE.Group();
+  const part = (w, h, d, m, x, y, z) => { const p = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); p.position.set(x, y, z); hero.add(p); return p; };
+  const legL = part(0.24, 0.55, 0.26, M.jeans, -0.14, 0.28, 0), legR = part(0.24, 0.55, 0.26, M.jeans, 0.14, 0.28, 0);
+  part(0.56, 0.6, 0.32, M.shirt, 0, 0.85, 0);
+  const armL = part(0.18, 0.55, 0.22, M.skin, -0.38, 0.88, 0), armR = part(0.18, 0.55, 0.22, M.skin, 0.38, 0.88, 0);
+  part(0.42, 0.42, 0.42, M.skin, 0, 1.38, 0);
+  part(0.46, 0.16, 0.46, M.cap, 0, 1.63, 0);
+  part(0.44, 0.05, 0.26, M.cap, 0, 1.56, 0.3);
+  part(0.06, 0.06, 0.02, M.dark, -0.1, 1.42, 0.215); part(0.06, 0.06, 0.02, M.dark, 0.1, 1.42, 0.215);
+  scene.add(hero);
+  const blob = new THREE.Mesh(new THREE.CircleGeometry(0.4, 16), new THREE.MeshBasicMaterial({ color: '#000', transparent: true, opacity: 0.35 }));
+  blob.rotation.x = -Math.PI / 2; scene.add(blob);
+
+  /* ---------- Estado ---------- */
+  const P = { x: 0, y: 0, z: 0, vy: 0, grounded: false, coyote: 0, facing: 0, on: null };
+  let cp = 0, cpPos = { x: 0, y: 0, z: 0 }, nCoins = 0, running = false, t0 = 0, elapsed = 0, respawning = false, jumpBuf = 0, walkT = 0;
+  const RADIUS = 0.3, SPEED = 5.5, GRAV = 22, JUMP = 8.6;
+
+  function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.append(d); setTimeout(() => d.remove(), 1250); }
+  const fmt = s => Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0');
+
+  function reset() {
+    cp = 0; cpPos = { x: 0, y: 0, z: 0 }; nCoins = 0; elapsed = 0;
+    coins.forEach(c => { c.got = false; c.mesh.visible = true; });
+    [cp1, cp2].forEach(p => { p.flag.material = M.flag; });
+    $('coins').textContent = '0'; $('cp').textContent = '1/3'; $('time').textContent = '0:00';
+    spawn();
+  }
+  function spawn() { P.x = cpPos.x; P.y = cpPos.y + 0.01; P.z = cpPos.z; P.vy = 0; P.grounded = true; P.facing = 0; }
+
+  /* ---------- Controles ---------- */
+  const input = { x: 0, y: 0 };
+  const keys = {};
+  window.addEventListener('keydown', e => { keys[e.code] = true; if (e.code === 'Space') { e.preventDefault(); jumpBuf = 0.15; } });
+  window.addEventListener('keyup', e => { keys[e.code] = false; });
+  let stickId = null, sx = 0, sy = 0;
+  const zone = $('stick-zone'), stick = $('stick'), knob = $('knob');
+  zone.addEventListener('pointerdown', e => {
+    e.preventDefault(); stickId = e.pointerId; sx = e.clientX; sy = e.clientY;
+    stick.style.left = sx + 'px'; stick.style.top = sy + 'px'; stick.hidden = false; knob.style.transform = '';
+    $('hint-stick').hidden = true; zone.setPointerCapture(e.pointerId);
+  });
+  zone.addEventListener('pointermove', e => {
+    if (e.pointerId !== stickId) return;
+    let dx = e.clientX - sx, dy = e.clientY - sy; const d = Math.hypot(dx, dy), max = 50;
+    if (d > max) { dx = dx / d * max; dy = dy / d * max; }
+    knob.style.transform = 'translate(' + dx + 'px,' + dy + 'px)';
+    input.x = dx / max; input.y = dy / max;
+  });
+  const endStick = e => { if (e.pointerId !== stickId) return; stickId = null; input.x = 0; input.y = 0; stick.hidden = true; };
+  zone.addEventListener('pointerup', endStick); zone.addEventListener('pointercancel', endStick);
+  const jb = $('jump');
+  jb.addEventListener('pointerdown', e => { e.preventDefault(); jumpBuf = 0.15; jb.classList.add('down'); initAudio(); });
+  const up = () => jb.classList.remove('down');
+  jb.addEventListener('pointerup', up); jb.addEventListener('pointercancel', up); jb.addEventListener('pointerleave', up);
+
+  /* ---------- Física ---------- */
+  function footprint(p, x, z, pad) {
+    if (p.shape === 'round') return Math.hypot(x - p.x, z - p.z) <= p.r + pad;
+    return Math.abs(x - p.x) <= p.w / 2 + pad && Math.abs(z - p.z) <= p.d / 2 + pad;
+  }
+
+  function step(dt, t) {
+    // plataformas que se mexem
+    plats.forEach(p => {
+      p.prevX = p.x; p.prevZ = p.z;
+      if (p.move) {
+        const off = Math.sin(t * p.move.speed + p.move.phase) * p.move.amp;
+        if (p.move.axis === 'x') p.x = p.baseX + off; else p.z = p.baseZ + off;
+        p.mesh.position.x = p.x; p.mesh.position.z = p.z;
+      }
+    });
+    // carregar com a plataforma
+    if (P.grounded && P.on) { P.x += P.on.x - P.on.prevX; P.z += P.on.z - P.on.prevZ; }
+
+    // movimento
+    let mx = -input.x, mz = -input.y;
+    if (keys.ArrowLeft || keys.KeyA) mx += 1;
+    if (keys.ArrowRight || keys.KeyD) mx -= 1;
+    if (keys.ArrowUp || keys.KeyW) mz += 1;
+    if (keys.ArrowDown || keys.KeyS) mz -= 1;
+    const m = Math.hypot(mx, mz);
+    if (m > 1) { mx /= m; mz /= m; }
+    P.x += mx * SPEED * dt; P.z += mz * SPEED * dt;
+    if (m > 0.15) { P.facing = Math.atan2(mx, mz); walkT += dt * 10 * Math.min(1, m); } else walkT = 0;
+
+    // pulo
+    jumpBuf -= dt; P.coyote -= dt;
+    if (jumpBuf > 0 && (P.grounded || P.coyote > 0)) { P.vy = JUMP; P.grounded = false; P.coyote = 0; jumpBuf = 0; P.on = null; boing(); }
+
+    // gravidade e pouso
+    const oldY = P.y;
+    P.vy -= GRAV * dt; P.y += P.vy * dt;
+    let landed = null;
+    if (P.vy <= 0) {
+      for (const p of plats) {
+        if (!footprint(p, P.x, P.z, RADIUS * 0.6)) continue;
+        if (oldY >= p.top - 0.12 && P.y <= p.top) { if (!landed || p.top > landed.top) landed = p; }
+      }
+    }
+    if (landed) {
+      P.y = landed.top; P.vy = 0;
+      if (!P.grounded) thud();
+      P.grounded = true; P.on = landed; P.coyote = 0.1;
+      if (landed.cp !== undefined && landed.cp > cp) { cp = landed.cp; cpPos = { x: landed.x, y: landed.top, z: landed.z }; landed.flag.material = M.flagOn; $('cp').textContent = (cp + 1) + '/3'; toast('Checkpoint!'); ding(); }
+      if (landed.final && running) win();
+    } else {
+      if (P.grounded) P.coyote = 0.1;
+      P.grounded = false; P.on = null;
+    }
+
+    // moedas
+    coins.forEach(c => {
+      if (c.got) return;
+      c.mesh.rotation.z += dt * 3;
+      if (Math.hypot(P.x - c.mesh.position.x, P.y + 0.8 - c.mesh.position.y, P.z - c.mesh.position.z) < 1) {
+        c.got = true; c.mesh.visible = false; nCoins++; $('coins').textContent = nCoins; coinSound();
+      }
+    });
+
+    // caiu
+    if (P.y < -5 && !respawning) {
+      respawning = true; $('fade').classList.add('on'); splash();
+      setTimeout(() => { spawn(); $('fade').classList.remove('on'); respawning = false; }, 350);
+    }
+  }
+
+  /* ---------- Render ---------- */
+  const camPos = new THREE.Vector3(0, 6, -8);
+  function draw(t) {
+    hero.position.set(P.x, P.y, P.z);
+    hero.rotation.y = P.facing;
+    const sw = Math.sin(walkT) * 0.6 * (P.grounded ? 1 : 0.3);
+    legL.rotation.x = sw; legR.rotation.x = -sw; armL.rotation.x = -sw; armR.rotation.x = sw;
+    if (!P.grounded) { armL.rotation.x = armR.rotation.x = -2.6; }
+    // sombra
+    let gy = -7;
+    for (const p of plats) if (footprint(p, P.x, P.z, 0) && p.top <= P.y + 0.05 && p.top > gy) gy = p.top;
+    blob.position.set(P.x, gy + 0.02, P.z); blob.visible = gy > -7;
+    const hgt = Math.max(0, P.y - gy); blob.scale.setScalar(Math.max(0.4, 1 - hgt * 0.12));
+    if (fin.trophy) fin.trophy.rotation.y = t * 0.6;
+    // câmera
+    const target = new THREE.Vector3(P.x * 0.6, P.y + 4.6, P.z - 7.5);
+    camPos.lerp(target, 0.08);
+    camera.position.copy(camPos);
+    camera.lookAt(P.x * 0.8, P.y + 1, P.z + 3.5);
+    renderer.render(scene, camera);
+  }
+
+  let last = 0;
+  function loop(ms) {
+    const t = ms / 1000;
+    const dt = Math.min(0.033, last ? t - last : 0.016); last = t;
+    if (running) {
+      step(dt, t);
+      elapsed = (performance.now() - t0) / 1000;
+      $('time').textContent = fmt(elapsed);
+    }
+    draw(t);
+    requestAnimationFrame(loop);
+  }
+
+  function win() {
+    running = false;
+    const time = elapsed;
+    const rec = !best || time < best;
+    if (rec) { best = time; try { localStorage.setItem(STORE, JSON.stringify({ best })); } catch (e) {} }
+    $('final-time').textContent = fmt(time);
+    $('final-msg').innerHTML = nCoins + ' de ' + coins.length + ' moedas' + (rec ? '<br><span class="record">Novo recorde!</span>' : '<br>Seu recorde: ' + fmt(best));
+    fanfare();
+    setTimeout(() => { $('win').hidden = false; }, 700);
+  }
+
+  function play() {
+    initAudio(); reset();
+    $('start').hidden = true; $('win').hidden = true;
+    t0 = performance.now(); running = true;
+  }
+  $('play').addEventListener('click', play);
+  $('again').addEventListener('click', play);
+
+  /* ---------- Som ---------- */
+  let audio = null;
+  function initAudio() { try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); if (audio.state === 'suspended') audio.resume(); } catch (e) {} }
+  function tone(f1, f2, d, type, vol) {
+    if (!audio) return;
+    const o = audio.createOscillator(), g = audio.createGain(), n = audio.currentTime;
+    o.type = type || 'square'; o.frequency.setValueAtTime(f1, n); o.frequency.exponentialRampToValueAtTime(f2, n + d);
+    g.gain.setValueAtTime(vol || 0.05, n); g.gain.exponentialRampToValueAtTime(0.0001, n + d);
+    o.connect(g).connect(audio.destination); o.start(); o.stop(n + d + 0.02);
+  }
+  const boing = () => tone(300, 620, 0.15, 'triangle');
+  const thud = () => tone(160, 90, 0.08, 'sine', 0.06);
+  const coinSound = () => { tone(988, 988, 0.07, 'square', 0.04); setTimeout(() => tone(1319, 1319, 0.12, 'square', 0.04), 70); };
+  const ding = () => [660, 880].forEach((f, k) => setTimeout(() => tone(f, f, 0.18, 'triangle', 0.07), k * 90));
+  const splash = () => tone(400, 60, 0.35, 'sawtooth', 0.05);
+  const fanfare = () => [523, 659, 784, 1047].forEach((f, k) => setTimeout(() => tone(f, f, 0.25, 'triangle', 0.08), k * 120));
+
+  reset();
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
