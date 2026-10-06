@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Chapa do Gabba</title>
+<meta name="theme-color" content="#17110f">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Barlow:wght@400;600;700;800&display=swap">
+<style>
+/* Layout: placar no topo; comanda e prato lado a lado; chapa embaixo; botões de ingredientes no rodapé, ao alcance do polegar */
+:root {
+  --bg: #17110f;
+  --surface: #221a17;
+  --surface-2: #2c221e;
+  --line: #3b2e29;
+  --fg: #f6ece2;
+  --muted: #b5a397;
+  --red: #d7261e;
+  --red-deep: #9c1611;
+  --mustard: #f2b632;
+  --cream: #f6e7cf;
+  --ok: #6fbf73;
+  --bad: #ff6b5e;
+  --display: 'Bungee', Impact, 'Arial Black', sans-serif;
+  --body: 'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; background: var(--bg); color: var(--fg); }
+body { margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); font-family: var(--body); font-size: 16px; line-height: 1.35; overscroll-behavior: none; user-select: none; -webkit-user-select: none; }
+[hidden] { display: none !important; }
+button { font-family: inherit; touch-action: manipulation; }
+button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
+.app { position: relative; height: 100%; max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; padding: 10px 14px 12px; }
+
+.hud { display: flex; justify-content: space-between; align-items: flex-end; gap: 10px; }
+.brand { font-family: var(--display); font-size: 1rem; line-height: 1; }
+.brand span { color: var(--mustard); }
+.stats { display: flex; gap: 14px; align-items: flex-end; }
+.stat { text-align: right; }
+.stat small { display: block; font-size: .6rem; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); font-weight: 700; }
+.stat b { font-family: var(--display); font-weight: 400; font-size: 1.25rem; line-height: 1; font-variant-numeric: tabular-nums; }
+.stat.money b { color: var(--mustard); font-size: 1.5rem; }
+.lives { color: var(--red); font-size: 1.1rem; letter-spacing: 2px; }
+.lives .off { color: var(--line); }
+
+.top { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 10px; flex: 1; min-height: 0; }
+.ticket { background: var(--cream); color: #1d1411; border-radius: 6px 6px 14px 14px; padding: 10px 10px 12px; display: flex; flex-direction: column; gap: 6px; min-height: 0; position: relative; box-shadow: 0 4px 0 rgba(0,0,0,.4); }
+.ticket::before { content: ''; position: absolute; top: -6px; left: 0; right: 0; height: 6px; background: radial-gradient(circle at 6px 0, transparent 5px, var(--cream) 5.5px) repeat-x; background-size: 12px 6px; }
+.ticket h3 { margin: 0; font-family: var(--display); font-weight: 400; font-size: .85rem; letter-spacing: .02em; display: flex; justify-content: space-between; gap: 6px; }
+.ticket h3 span { color: var(--red); }
+.tbar { height: 7px; background: #e3cfae; border-radius: 999px; overflow: hidden; }
+.tbar i { display: block; height: 100%; width: 100%; background: var(--ok); }
+.tbar.warn i { background: var(--mustard); }
+.tbar.danger i { background: var(--red); }
+.steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column-reverse; gap: 3px; flex: 1; justify-content: flex-start; overflow: hidden; }
+.steps li { display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: .88rem; padding: 3px 6px; border-radius: 6px; border: 1.5px dashed transparent; }
+.steps li .dot { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; border: 1px solid rgba(0,0,0,.35); }
+.steps li.done { color: #9a8a7c; text-decoration: line-through; }
+.steps li.next { border-color: var(--red); background: #fff3df; }
+.steps li.fixed { color: #9a8a7c; font-weight: 600; font-size: .8rem; }
+
+.plate-wrap { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding: 8px 8px 12px; position: relative; overflow: hidden; min-height: 0; }
+.stack { display: flex; flex-direction: column-reverse; align-items: center; gap: 1px; width: 100%; }
+.plate { width: 88%; height: 10px; border-radius: 50%; background: #e9dccb; margin-top: 2px; box-shadow: 0 3px 0 #9d8e7f; }
+.layer { width: 74%; border-radius: 6px; animation: drop .18s ease-out; }
+@keyframes drop { from { transform: translateY(-24px); opacity: .3; } to { transform: none; opacity: 1; } }
+.served { animation: serve .5s ease-in forwards; }
+@keyframes serve { to { transform: translateX(140%) rotate(10deg); opacity: 0; } }
+.msg { position: absolute; top: 8px; left: 8px; right: 8px; text-align: center; font-family: var(--display); font-size: 1rem; pointer-events: none; animation: rise 1s ease-out forwards; }
+@keyframes rise { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(-20px); } }
+.shake { animation: shake .3s; }
+@keyframes shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+
+.grill { background: linear-gradient(#1b1b1b, #101010); border: 2px solid #3a3a3a; border-radius: 14px; padding: 10px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; background-image: repeating-linear-gradient(90deg, rgba(255,255,255,.05) 0 2px, transparent 2px 14px), linear-gradient(#1b1b1b, #101010); }
+.slot { height: 86px; border-radius: 12px; border: 2px dashed #3d3d3d; display: flex; align-items: center; justify-content: center; position: relative; background: transparent; padding: 0; cursor: pointer; color: #777; font-weight: 700; font-size: .8rem; }
+.patty { width: 78%; height: 44px; border-radius: 22px; transition: background-color .1s; position: relative; }
+.slot .state { position: absolute; bottom: 4px; left: 0; right: 0; text-align: center; font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.slot.ready { border-color: var(--ok); border-style: solid; box-shadow: 0 0 16px rgba(111,191,115,.45); }
+.slot.ready .state { color: var(--ok); }
+.slot.raw .state { color: #e79a8f; }
+.slot.burnt { border-color: var(--bad); border-style: solid; }
+.slot.burnt .state { color: var(--bad); }
+.smoke { position: absolute; top: 6px; left: 50%; width: 30px; height: 30px; margin-left: -15px; border-radius: 50%; background: radial-gradient(rgba(200,200,200,.35), transparent 70%); animation: smoke 1s infinite; pointer-events: none; }
+@keyframes smoke { from { transform: translateY(0) scale(.6); opacity: .8; } to { transform: translateY(-22px) scale(1.4); opacity: 0; } }
+
+.pad { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.ing { border: none; border-radius: 12px; padding: 8px 4px; min-height: 58px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-weight: 800; font-size: .78rem; background: var(--surface-2); color: var(--fg); box-shadow: 0 3px 0 #0c0907; }
+.ing:active { transform: translateY(3px); box-shadow: none; }
+.ing i { display: block; width: 32px; height: 12px; border-radius: 4px; }
+.ing.carne { background: var(--red); color: var(--cream); box-shadow: 0 3px 0 var(--red-deep); }
+
+.overlay { position: absolute; inset: 0; background: rgba(23,17,15,.95); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 24px; text-align: center; z-index: 5; overflow-y: auto; }
+.overlay h1 { font-family: var(--display); font-weight: 400; font-size: clamp(1.9rem, 9vw, 2.5rem); line-height: 1; margin: 0; }
+.overlay h1 span { color: var(--mustard); }
+.overlay p { margin: 0; color: var(--muted); max-width: 34ch; }
+.overlay p strong { color: var(--fg); }
+.rules { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; text-align: left; max-width: 340px; }
+.rules li { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; font-size: .95rem; }
+.rules b { color: var(--mustard); }
+.btn { font-family: var(--display); font-size: 1.3rem; letter-spacing: .04em; background: var(--red); color: var(--cream); border: none; border-radius: 14px; padding: 14px 28px; cursor: pointer; box-shadow: 0 5px 0 var(--red-deep); }
+.btn:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--red-deep); }
+.big { font-family: var(--display); font-size: 3rem; line-height: 1; color: var(--mustard); }
+.record { color: var(--ok); font-weight: 700; }
+.test { position: absolute; top: 6px; right: 14px; font-size: .6rem; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 2px 8px; z-index: 6; }
+
+@media (max-height: 640px) { .slot { height: 70px; } .patty { height: 36px; } .ing { min-height: 50px; } }
+@media (prefers-reduced-motion: reduce) { .layer, .msg, .served, .shake, .smoke { animation: none !important; } }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <span class="test">Versão de teste</span>
+  <div class="hud">
+    <div class="brand">Chapa<br><span>do Gabba</span></div>
+    <div class="stats">
+      <div class="stat"><small>Vidas</small><span class="lives" id="lives"></span></div>
+      <div class="stat"><small>Entregues</small><b id="served">0</b></div>
+      <div class="stat money"><small>Caixa</small><b id="money">R$ 0</b></div>
+    </div>
+  </div>
+
+  <div class="top">
+    <div class="ticket" id="ticket">
+      <h3><span id="order-name">Pedido #1</span><span id="order-table" style="color:#1d1411">Mesa 4</span></h3>
+      <div class="tbar" id="tbar"><i id="tbar-fill"></i></div>
+      <ul class="steps" id="steps"></ul>
+    </div>
+    <div class="plate-wrap" id="plate-wrap">
+      <div class="stack" id="stack"></div>
+    </div>
+  </div>
+
+  <div class="grill" id="grill">
+    <button class="slot" type="button" id="slot-0" aria-label="Chapa 1">Chapa livre</button>
+    <button class="slot" type="button" id="slot-1" aria-label="Chapa 2">Chapa livre</button>
+  </div>
+
+  <div class="pad" id="pad"></div>
+
+  <div class="overlay" id="start">
+    <h1>Chapa <span>do Gabba</span></h1>
+    <p>Hoje você é o chapeiro. Monte os pedidos antes que o cliente desista.</p>
+    <ul class="rules">
+      <li><b>1.</b> Siga a comanda de <b>baixo para cima</b>. O item marcado em vermelho é o próximo.</li>
+      <li><b>2.</b> Toque em <b>Carne</b> para jogar na chapa. Quando ficar <b>verde (no ponto)</b>, toque nela para pôr no lanche. Se passar, queima.</li>
+      <li><b>3.</b> Ingrediente errado tira 3 segundos do pedido. Perdeu 3 pedidos, acabou o turno.</li>
+    </ul>
+    <button class="btn" type="button" id="play">ABRIR A CHAPA</button>
+  </div>
+
+  <div class="overlay" id="over" hidden>
+    <h1>Fim do <span>turno</span></h1>
+    <p>Você fechou o caixa com</p>
+    <div class="big" id="final-money">R$ 0</div>
+    <p id="final-msg"></p>
+    <button class="btn" type="button" id="again">NOVO TURNO</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const STORE = 'chapa-gabba-v1';
+  let best = 0;
+  try { best = Number(JSON.parse(localStorage.getItem(STORE) || '{}').best) || 0; } catch (e) {}
+
+  const ING = {
+    pao:    { label: 'Pão',    color: '#d4913f', h: 18, r: '6px 6px 10px 10px' },
+    carne:  { label: 'Carne',  color: '#5a2e1d', h: 16, r: '8px' },
+    queijo: { label: 'Queijo', color: '#f2b632', h: 7,  r: '2px' },
+    bacon:  { label: 'Bacon',  color: '#b5432c', h: 7,  r: '2px' },
+    alface: { label: 'Alface', color: '#6dbb45', h: 8,  r: '4px' },
+    tomate: { label: 'Tomate', color: '#e2382c', h: 8,  r: '6px' },
+    cebola: { label: 'Cebola', color: '#d9b8e0', h: 7,  r: '6px' },
+    molho:  { label: 'Molho',  color: '#f6e7cf', h: 5,  r: '6px' },
+    topo:   { label: 'Pão',    color: '#d4913f', h: 26, r: '40px 40px 6px 6px' }
+  };
+  const PAD = ['carne', 'queijo', 'bacon', 'alface', 'tomate', 'cebola', 'molho'];
+  const EXTRAS = ['queijo', 'bacon', 'alface', 'tomate', 'cebola', 'molho'];
+  const COOK = 3600;               // ms de crua até queimar
+  const READY = [0.55, 0.82];      // janela do ponto
+
+  // monta os botões
+  PAD.forEach(k => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'ing' + (k === 'carne' ? ' carne' : '');
+    b.innerHTML = '<i></i><span></span>';
+    b.querySelector('i').style.background = k === 'carne' ? '#e79a8f' : ING[k].color;
+    b.querySelector('span').textContent = k === 'carne' ? 'Carne › chapa' : ING[k].label;
+    b.addEventListener('click', () => (k === 'carne' ? toGrill() : add(k)));
+    $('pad').append(b);
+  });
+  if (PAD.length % 4) { const sp = document.createElement('span'); $('pad').append(sp); }
+
+  let running = false, money = 0, served = 0, lives = 3, orderNo = 0, order = null, grill = [null, null], raf = null, last = 0;
+
+  function newOrder() {
+    orderNo++;
+    const n = Math.min(2 + Math.floor(served / 2), 7);
+    const meats = n >= 5 ? 2 : 1;
+    const extras = [];
+    for (let i = 0; i < n - meats; i++) extras.push(EXTRAS[Math.floor(Math.random() * EXTRAS.length)]);
+    // carne sempre embaixo dos extras (como um burger de verdade), segunda carne no meio
+    const items = ['carne'];
+    if (meats === 2) { const half = Math.ceil(extras.length / 2); items.push(...extras.slice(0, half), 'carne', ...extras.slice(half)); }
+    else items.push(...extras);
+    const total = Math.max(7000, (9000 + n * 2600) - served * 250);
+    order = { items, idx: 0, total, left: total };
+    $('order-name').textContent = 'Pedido #' + orderNo;
+    $('order-table').textContent = 'Mesa ' + (1 + Math.floor(Math.random() * 12));
+    renderTicket();
+    resetStack();
+  }
+
+  function renderTicket() {
+    const ul = $('steps'); ul.innerHTML = '';
+    const li0 = document.createElement('li'); li0.className = 'fixed';
+    li0.innerHTML = '<span class="dot"></span>Pão (já está no prato)';
+    li0.querySelector('.dot').style.background = ING.pao.color;
+    ul.append(li0);
+    order.items.forEach((k, i) => {
+      const li = document.createElement('li');
+      li.className = i < order.idx ? 'done' : (i === order.idx ? 'next' : '');
+      li.innerHTML = '<span class="dot"></span><span></span>';
+      li.querySelector('.dot').style.background = ING[k].color;
+      li.lastChild.textContent = (k === 'carne' ? 'Carne no ponto' : ING[k].label);
+      ul.append(li);
+    });
+  }
+
+  function resetStack() {
+    const s = $('stack'); s.innerHTML = '';
+    s.classList.remove('served');
+    const p = document.createElement('div'); p.className = 'plate'; s.append(p);
+    pushLayer('pao');
+  }
+  function pushLayer(k) {
+    const d = document.createElement('div'); d.className = 'layer';
+    d.style.background = ING[k].color; d.style.height = ING[k].h + 'px'; d.style.borderRadius = ING[k].r;
+    if (k === 'carne') d.style.width = '80%';
+    if (k === 'queijo') d.style.width = '82%';
+    if (k === 'alface') d.style.width = '84%';
+    $('stack').append(d);
+  }
+
+  function say(text, color) {
+    const m = document.createElement('div'); m.className = 'msg'; m.textContent = text; m.style.color = color || 'var(--mustard)';
+    $('plate-wrap').append(m); setTimeout(() => m.remove(), 1000);
+  }
+  function shake(el) { el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake'); }
+
+  function add(k) {
+    if (!running || !order || order.idx >= order.items.length) return false;
+    const want = order.items[order.idx];
+    if (k !== want) {
+      order.left -= 3000;
+      shake($('ticket')); bad();
+      say('Não é ' + (k === 'carne' ? 'carne' : ING[k].label.toLowerCase()) + '! −3s', 'var(--bad)');
+      return false;
+    }
+    pushLayer(k); order.idx++; good();
+    renderTicket();
+    if (order.idx === order.items.length) complete();
+    return true;
+  }
+
+  function complete() {
+    pushLayer('topo');
+    const tip = Math.round(5 * Math.max(0, order.left) / order.total);
+    const earned = order.items.length * 2 + tip;
+    money += earned; served++;
+    updateHud(); ding();
+    say('+R$ ' + earned + (tip ? ' (gorjeta R$ ' + tip + ')' : ''), 'var(--ok)');
+    const s = $('stack');
+    order = null;
+    setTimeout(() => { s.classList.add('served'); }, 350);
+    setTimeout(() => { if (running) newOrder(); }, 850);
+  }
+
+  function toGrill() {
+    if (!running) return;
+    const i = grill.findIndex(g => !g);
+    if (i < 0) { say('Chapa cheia!', 'var(--bad)'); bad(); return; }
+    grill[i] = { t0: performance.now() };
+    sizzle();
+    renderGrill();
+  }
+
+  function progress(g) { return (performance.now() - g.t0) / COOK; }
+
+  function tapSlot(i) {
+    if (!running) return;
+    const g = grill[i];
+    if (!g) { toGrill(); return; }
+    const p = progress(g);
+    if (p < READY[0]) { say('Ainda crua!', '#e79a8f'); shake($('slot-' + i)); return; }
+    if (p > READY[1]) { grill[i] = null; say('Queimou! Foi pro lixo', 'var(--bad)'); bad(); renderGrill(); return; }
+    if (add('carne')) { grill[i] = null; renderGrill(); }
+  }
+  [0, 1].forEach(i => $('slot-' + i).addEventListener('click', () => tapSlot(i)));
+
+  function lerp(a, b, t) { return Math.round(a + (b - a) * t); }
+  function pattyColor(p) {
+    if (p > READY[1]) return '#1f1612';
+    const t = Math.min(1, p / READY[0]);
+    return 'rgb(' + lerp(231, 107, t) + ',' + lerp(154, 58, t) + ',' + lerp(143, 34, t) + ')';
+  }
+  function renderGrill() {
+    grill.forEach((g, i) => {
+      const el = $('slot-' + i);
+      el.classList.remove('ready', 'raw', 'burnt');
+      if (!g) { el.innerHTML = 'Chapa livre'; return; }
+      const p = progress(g);
+      const state = p < READY[0] ? 'raw' : (p <= READY[1] ? 'ready' : 'burnt');
+      el.classList.add(state);
+      if (!el.querySelector('.patty')) el.innerHTML = '<div class="patty"></div><span class="state"></span>';
+      el.querySelector('.patty').style.background = pattyColor(p);
+      el.querySelector('.state').textContent = state === 'raw' ? 'Crua' : (state === 'ready' ? 'No ponto! Toque' : 'Queimada');
+      const hasSmoke = !!el.querySelector('.smoke');
+      if (state === 'burnt' && !hasSmoke) { const s = document.createElement('div'); s.className = 'smoke'; el.append(s); }
+    });
+  }
+
+  function updateHud() {
+    $('money').textContent = 'R$ ' + money;
+    $('served').textContent = served;
+    $('lives').innerHTML = [0, 1, 2].map(i => i < lives ? '♥' : '<span class="off">♥</span>').join('');
+  }
+
+  function loop(t) {
+    const dt = last ? t - last : 16; last = t;
+    if (running && order) {
+      order.left -= dt;
+      const f = Math.max(0, order.left / order.total);
+      $('tbar-fill').style.width = (f * 100) + '%';
+      $('tbar').className = 'tbar' + (f < 0.25 ? ' danger' : f < 0.5 ? ' warn' : '');
+      if (order.left <= 0) lose();
+    }
+    if (running) renderGrill();
+    raf = requestAnimationFrame(loop);
+  }
+
+  function lose() {
+    lives--; updateHud(); bad();
+    say('Cliente desistiu!', 'var(--bad)');
+    shake($('ticket'));
+    order = null;
+    if (lives <= 0) { setTimeout(gameOver, 600); running = false; return; }
+    setTimeout(() => { if (running) newOrder(); }, 900);
+  }
+
+  function gameOver() {
+    running = false;
+    const rec = money > best;
+    if (rec) { best = money; try { localStorage.setItem(STORE, JSON.stringify({ best })); } catch (e) {} }
+    $('final-money').textContent = 'R$ ' + money;
+    $('final-msg').innerHTML = served + (served === 1 ? ' pedido entregue' : ' pedidos entregues') + (rec && money > 0 ? '<br><span class="record">Novo recorde!</span>' : '<br>Seu recorde: R$ ' + best);
+    $('over').hidden = false;
+  }
+
+  function start() {
+    initAudio();
+    money = 0; served = 0; lives = 3; orderNo = 0; grill = [null, null];
+    updateHud(); renderGrill();
+    $('start').hidden = true; $('over').hidden = true;
+    running = true;
+    newOrder();
+  }
+  $('play').addEventListener('click', start);
+  $('again').addEventListener('click', start);
+
+  /* Som */
+  let audio = null;
+  function initAudio() { try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); if (audio.state === 'suspended') audio.resume(); } catch (e) {} }
+  function beep(f, d, type, vol) {
+    if (!audio) return;
+    const o = audio.createOscillator(), g = audio.createGain();
+    o.type = type || 'square'; o.frequency.value = f;
+    g.gain.setValueAtTime(vol || 0.06, audio.currentTime); g.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + d);
+    o.connect(g).connect(audio.destination); o.start(); o.stop(audio.currentTime + d + 0.02);
+  }
+  function good() { beep(620, 0.06, 'triangle'); }
+  function bad() { beep(140, 0.2, 'sawtooth'); }
+  function ding() { [784, 1047].forEach((f, k) => setTimeout(() => beep(f, 0.18, 'triangle', 0.08), k * 90)); }
+  function sizzle() {
+    if (!audio) return;
+    const len = audio.sampleRate * 0.35, buf = audio.createBuffer(1, len, audio.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
+    const src = audio.createBufferSource(), f = audio.createBiquadFilter(), g = audio.createGain();
+    f.type = 'highpass'; f.frequency.value = 2500; g.gain.value = 0.05;
+    src.buffer = buf; src.connect(f).connect(g).connect(audio.destination); src.start();
+  }
+
+  updateHud();
+  order = { items: ['carne', 'queijo', 'alface'], idx: 0, total: 1, left: 1 };
+  renderTicket(); resetStack(); order = null;
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

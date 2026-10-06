@@ -35,8 +35,13 @@ Central de jogos rápidos para o cliente passar o tempo enquanto espera, no ende
 
 Os recordes ficam salvos no celular de cada cliente. As perguntas do quiz ficam na lista `BANK` dentro de `jogos/index.html`.
 
+## Chapa do Gabba (teste)
+
+Jogo em teste, fora do Fliperama, no endereço `/chapa/`. O jogador monta os pedidos seguindo a comanda e tira a carne da chapa no ponto certo. Perdeu 3 pedidos por tempo, acaba o turno.
+
 ## Arquivos
 
 - `index.html`: a roleta inteira (visual, regras, relatório e animação) em um único arquivo.
 - `desafio/index.html`: o jogo Desafio da Espera.
 - `jogos/index.html`: o Fliperama Gabba.
+- `chapa/index.html`: o jogo Chapa do Gabba (teste).
