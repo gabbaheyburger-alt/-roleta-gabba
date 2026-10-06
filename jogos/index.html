@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fliperama Gabba</title>
+<meta name="theme-color" content="#17110f">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Barlow:wght@400;600;700&display=swap">
+<style>
+/* Layout: uma tela por vez (central, memória, quiz, caça), coluna única centrada para celular */
+:root {
+  --bg: #17110f;
+  --surface: #221a17;
+  --surface-2: #2c221e;
+  --line: #3b2e29;
+  --fg: #f6ece2;
+  --muted: #b5a397;
+  --red: #d7261e;
+  --red-deep: #9c1611;
+  --mustard: #f2b632;
+  --cream: #f6e7cf;
+  --ok: #6fbf73;
+  --bad: #ff6b5e;
+  --display: 'Bungee', Impact, 'Arial Black', sans-serif;
+  --body: 'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { background: var(--bg); color: var(--fg); }
+body { margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); font-family: var(--body); font-size: 16px; line-height: 1.4; }
+[hidden] { display: none !important; }
+.wrap { max-width: 520px; margin: 0 auto; padding: 18px 16px 40px; display: flex; flex-direction: column; gap: 18px; }
+button { font-family: inherit; }
+button:focus-visible, a:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
+
+h1 { font-family: var(--display); font-weight: 400; font-size: clamp(1.9rem, 9vw, 2.6rem); line-height: .95; margin: 0; text-wrap: balance; }
+h1 span { color: var(--mustard); }
+h2 { font-family: var(--display); font-weight: 400; font-size: 1.4rem; line-height: 1; margin: 0; }
+.sub { color: var(--muted); margin: 6px 0 0; }
+
+.games { display: flex; flex-direction: column; gap: 12px; }
+.game-card { display: grid; grid-template-columns: 64px minmax(0,1fr) auto; gap: 14px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 14px; color: inherit; text-decoration: none; cursor: pointer; text-align: left; width: 100%; font: inherit; }
+.game-card:active { transform: scale(.98); }
+.game-icon { width: 64px; height: 64px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 34px; }
+.game-card strong { font-family: var(--display); font-weight: 400; font-size: 1.05rem; display: block; line-height: 1.1; }
+.game-card small { color: var(--muted); font-size: .9rem; display: block; margin-top: 3px; }
+.game-card .best { font-size: .72rem; color: var(--mustard); font-weight: 700; text-transform: uppercase; letter-spacing: .08em; margin-top: 5px; display: block; }
+.go { font-family: var(--display); color: var(--mustard); font-size: 1.3rem; }
+
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.back { background: transparent; border: 1px solid var(--line); color: var(--muted); font-weight: 700; font-size: .9rem; padding: 8px 12px; border-radius: 10px; cursor: pointer; }
+.stats { display: flex; gap: 16px; }
+.stat { text-align: right; }
+.stat small { display: block; font-size: .62rem; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); font-weight: 700; }
+.stat b { font-family: var(--display); font-weight: 400; font-size: 1.4rem; line-height: 1; font-variant-numeric: tabular-nums; }
+.stat.hl b { color: var(--mustard); }
+
+.btn { font-family: var(--display); font-size: 1.25rem; letter-spacing: .04em; background: var(--red); color: var(--cream); border: none; border-radius: 14px; padding: 14px 22px; cursor: pointer; box-shadow: 0 5px 0 var(--red-deep); width: 100%; }
+.btn:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--red-deep); }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 20px; display: flex; flex-direction: column; gap: 12px; text-align: center; align-items: center; }
+.panel p { margin: 0; color: var(--muted); max-width: 34ch; }
+.big { font-family: var(--display); font-size: 3rem; line-height: 1; color: var(--mustard); }
+.record { color: var(--ok); font-weight: 700; }
+
+/* Memória */
+.grid4 { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 8px; }
+.card { aspect-ratio: 1; border: none; border-radius: 12px; cursor: pointer; position: relative; perspective: 600px; background: transparent; padding: 0; }
+.card .in { position: absolute; inset: 0; transition: transform .35s; transform-style: preserve-3d; }
+.card.open .in, .card.done .in { transform: rotateY(180deg); }
+.card .face { position: absolute; inset: 0; border-radius: 12px; display: flex; align-items: center; justify-content: center; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.card .front { background: var(--red); border: 2px solid var(--red-deep); font-family: var(--display); color: var(--cream); font-size: 1.3rem; }
+.card .back-face { background: var(--cream); transform: rotateY(180deg); font-size: clamp(1.6rem, 9vw, 2.4rem); }
+.card.done .back-face { background: var(--mustard); }
+
+/* Quiz */
+.timer { height: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+.timer i { display: block; height: 100%; background: var(--mustard); width: 100%; }
+.question { font-weight: 700; font-size: 1.3rem; line-height: 1.25; margin: 0; text-wrap: balance; }
+.qnum { font-size: .75rem; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); font-weight: 700; }
+.answers { display: flex; flex-direction: column; gap: 10px; }
+.answer { background: var(--surface); border: 2px solid var(--line); color: var(--fg); font-weight: 700; font-size: 1.05rem; padding: 14px 16px; border-radius: 12px; text-align: left; cursor: pointer; }
+.answer.right { border-color: var(--ok); background: #1f3320; }
+.answer.wrong { border-color: var(--bad); background: #3a1b18; }
+.answer:disabled { cursor: default; }
+
+/* Caça */
+.grid3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; }
+.hole { aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle at 50% 60%, #0d0908 0 55%, var(--surface-2) 56%); border: 2px solid var(--line); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: clamp(2.2rem, 13vw, 3.4rem); padding: 0; position: relative; overflow: hidden; }
+.hole span { transform: translateY(110%); transition: transform .12s ease-out; line-height: 1; }
+.hole.up span { transform: translateY(0); }
+.hole.hit { border-color: var(--ok); }
+.hole.miss { border-color: var(--bad); animation: shake .3s; }
+@keyframes shake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+.legend { display: flex; justify-content: center; gap: 18px; color: var(--muted); font-size: .9rem; flex-wrap: wrap; }
+
+footer { color: var(--muted); font-size: .78rem; text-align: center; }
+@media (prefers-reduced-motion: reduce) { .card .in, .hole span { transition: none; } .hole.miss { animation: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Central -->
+  <section id="home">
+    <div style="display:flex;flex-direction:column;gap:18px">
+      <div>
+        <h1>Fliperama <span>Gabba</span></h1>
+        <p class="sub">Escolha um jogo e passe o tempo até o seu lanche chegar.</p>
+      </div>
+      <div class="games">
+        <button class="game-card" type="button" data-open="memo">
+          <span class="game-icon" style="background:#3a2a12">🍔</span>
+          <span><strong>Memória Gabba</strong><small>Ache os pares do cardápio</small><span class="best" id="best-memo"></span></span>
+          <span class="go">›</span>
+        </button>
+        <button class="game-card" type="button" data-open="quiz">
+          <span class="game-icon" style="background:#2b1f3a">🎸</span>
+          <span><strong>Quiz do Gabba</strong><small>Burger, rock e Ceará, contra o relógio</small><span class="best" id="best-quiz"></span></span>
+          <span class="go">›</span>
+        </button>
+        <button class="game-card" type="button" data-open="caca">
+          <span class="game-icon" style="background:#3a1614">🔥</span>
+          <span><strong>Caça ao Burger</strong><small>Pegue os burgers, fuja dos queimados</small><span class="best" id="best-caca"></span></span>
+          <span class="go">›</span>
+        </button>
+        <a class="game-card" href="../desafio/">
+          <span class="game-icon" style="background:#1f3320">🏆</span>
+          <span><strong>Desafio da Espera</strong><small>Monte 15 camadas e ganhe prêmio</small></span>
+          <span class="go">›</span>
+        </a>
+      </div>
+      <footer>Gabba Hey Burger · @gabbaheyburger</footer>
+    </div>
+  </section>
+
+  <!-- Memória -->
+  <section id="memo" hidden>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="topbar">
+        <button class="back" type="button" data-home>‹ Jogos</button>
+        <div class="stats">
+          <div class="stat"><small>Jogadas</small><b id="memo-moves">0</b></div>
+          <div class="stat hl"><small>Tempo</small><b id="memo-time">0s</b></div>
+        </div>
+      </div>
+      <h2>Memória Gabba</h2>
+      <div class="grid4" id="memo-grid"></div>
+      <div class="panel" id="memo-end" hidden>
+        <p>Você achou todos os pares em</p>
+        <div class="big" id="memo-final">0</div>
+        <p id="memo-msg">jogadas</p>
+        <button class="btn" type="button" id="memo-again">JOGAR DE NOVO</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quiz -->
+  <section id="quiz" hidden>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="topbar">
+        <button class="back" type="button" data-home>‹ Jogos</button>
+        <div class="stats">
+          <div class="stat"><small>Acertos</small><b id="quiz-hits">0</b></div>
+          <div class="stat hl"><small>Pontos</small><b id="quiz-points">0</b></div>
+        </div>
+      </div>
+      <div id="quiz-play" style="display:flex;flex-direction:column;gap:14px">
+        <div class="timer"><i id="quiz-timer"></i></div>
+        <span class="qnum" id="quiz-num"></span>
+        <p class="question" id="quiz-q"></p>
+        <div class="answers" id="quiz-answers"></div>
+      </div>
+      <div class="panel" id="quiz-end" hidden>
+        <p>Você fez</p>
+        <div class="big" id="quiz-final">0</div>
+        <p id="quiz-msg">pontos</p>
+        <button class="btn" type="button" id="quiz-again">JOGAR DE NOVO</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Caça ao Burger -->
+  <section id="caca" hidden>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="topbar">
+        <button class="back" type="button" data-home>‹ Jogos</button>
+        <div class="stats">
+          <div class="stat"><small>Tempo</small><b id="caca-time">30</b></div>
+          <div class="stat hl"><small>Pontos</small><b id="caca-points">0</b></div>
+        </div>
+      </div>
+      <h2>Caça ao Burger</h2>
+      <div class="legend"><span>🍔 +1 ponto</span><span>🔥 −2 pontos</span></div>
+      <div class="grid3" id="caca-grid"></div>
+      <div class="panel" id="caca-start">
+        <p>Toque nos burgers antes que eles sumam. Cuidado com os queimados!</p>
+        <button class="btn" type="button" id="caca-go">COMEÇAR</button>
+      </div>
+      <div class="panel" id="caca-end" hidden>
+        <p>Você pegou</p>
+        <div class="big" id="caca-final">0</div>
+        <p id="caca-msg">pontos</p>
+        <button class="btn" type="button" id="caca-again">JOGAR DE NOVO</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const STORE = 'fliperama-gabba-v1';
+  let best = { memo: null, quiz: null, caca: null };
+  try { best = Object.assign(best, JSON.parse(localStorage.getItem(STORE) || '{}')); } catch (e) {}
+  const persist = () => { try { localStorage.setItem(STORE, JSON.stringify(best)); } catch (e) {} };
+  const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+  /* ---------- Som ---------- */
+  let audio = null;
+  function initAudio() { try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); if (audio.state === 'suspended') audio.resume(); } catch (e) {} }
+  function beep(f, d, type) {
+    if (!audio) return;
+    const o = audio.createOscillator(), g = audio.createGain();
+    o.type = type || 'square'; o.frequency.value = f;
+    g.gain.setValueAtTime(0.06, audio.currentTime); g.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + d);
+    o.connect(g).connect(audio.destination); o.start(); o.stop(audio.currentTime + d + 0.02);
+  }
+  const good = () => beep(760, 0.08, 'triangle');
+  const bad = () => beep(150, 0.2, 'sawtooth');
+  const win = () => [523, 659, 784, 1047].forEach((f, k) => setTimeout(() => beep(f, 0.22, 'triangle'), k * 110));
+
+  /* ---------- Navegação ---------- */
+  const screens = ['home', 'memo', 'quiz', 'caca'];
+  function show(id) {
+    stopAll();
+    screens.forEach(s => { $(s).hidden = s !== id; });
+    window.scrollTo(0, 0);
+    if (id === 'home') renderBest();
+    if (id === 'memo') memoStart();
+    if (id === 'quiz') quizStart();
+    if (id === 'caca') cacaReady();
+  }
+  document.querySelectorAll('[data-open]').forEach(b => b.addEventListener('click', () => { initAudio(); show(b.dataset.open); }));
+  document.querySelectorAll('[data-home]').forEach(b => b.addEventListener('click', () => show('home')));
+  function stopAll() { memoStop(); quizStop(); cacaStop(); }
+
+  function renderBest() {
+    $('best-memo').textContent = best.memo ? 'Seu recorde: ' + best.memo + ' jogadas' : '';
+    $('best-quiz').textContent = best.quiz ? 'Seu recorde: ' + best.quiz + ' pontos' : '';
+    $('best-caca').textContent = best.caca ? 'Seu recorde: ' + best.caca + ' pontos' : '';
+  }
+
+  /* ---------- Memória ---------- */
+  const ITEMS = ['🍔', '🍟', '🥤', '🧀', '🥓', '🍅', '🌶️', '🍺'];
+  let memoOpen = [], memoMoves = 0, memoPairs = 0, memoT0 = 0, memoTimer = null, memoLock = false;
+  function memoStart() {
+    memoOpen = []; memoMoves = 0; memoPairs = 0; memoLock = false; memoT0 = 0;
+    $('memo-moves').textContent = '0'; $('memo-time').textContent = '0s';
+    $('memo-end').hidden = true;
+    const grid = $('memo-grid'); grid.innerHTML = ''; grid.hidden = false;
+    shuffle(ITEMS.concat(ITEMS)).forEach((it, i) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'card'; b.dataset.item = it;
+      b.setAttribute('aria-label', 'Carta ' + (i + 1));
+      b.innerHTML = '<span class="in"><span class="face front">G</span><span class="face back-face"></span></span>';
+      b.querySelector('.back-face').textContent = it;
+      b.addEventListener('click', () => memoFlip(b));
+      grid.append(b);
+    });
+  }
+  function memoFlip(b) {
+    if (memoLock || b.classList.contains('open') || b.classList.contains('done')) return;
+    if (!memoT0) { memoT0 = Date.now(); memoTimer = setInterval(() => { $('memo-time').textContent = Math.round((Date.now() - memoT0) / 1000) + 's'; }, 500); }
+    b.classList.add('open'); beep(500, 0.04);
+    memoOpen.push(b);
+    if (memoOpen.length < 2) return;
+    memoMoves++; $('memo-moves').textContent = memoMoves;
+    const [a, c] = memoOpen;
+    if (a.dataset.item === c.dataset.item) {
+      a.classList.add('done'); c.classList.add('done'); memoOpen = []; memoPairs++; good();
+      if (memoPairs === ITEMS.length) memoEnd();
+    } else {
+      memoLock = true;
+      setTimeout(() => { a.classList.remove('open'); c.classList.remove('open'); memoOpen = []; memoLock = false; }, 750);
+    }
+  }
+  function memoEnd() {
+    memoStop();
+    const secs = Math.round((Date.now() - memoT0) / 1000);
+    const rec = !best.memo || memoMoves < best.memo;
+    if (rec) { best.memo = memoMoves; persist(); }
+    $('memo-final').textContent = memoMoves;
+    $('memo-msg').innerHTML = 'jogadas em ' + secs + ' segundos' + (rec ? '<br><span class="record">Novo recorde!</span>' : '');
+    setTimeout(() => { $('memo-end').hidden = false; $('memo-end').scrollIntoView({ behavior: 'smooth', block: 'center' }); win(); }, 500);
+  }
+  function memoStop() { clearInterval(memoTimer); memoTimer = null; }
+  $('memo-again').addEventListener('click', memoStart);
+
+  /* ---------- Quiz ---------- */
+  const BANK = [
+    ['O nome "hambúrguer" vem de qual cidade?', ['Hamburgo', 'Berlim', 'Nova York', 'Londres']],
+    ['Qual é a capital do Ceará?', ['Fortaleza', 'Juazeiro do Norte', 'Sobral', 'Caucaia']],
+    ['Paracuru fica em qual estado?', ['Ceará', 'Piauí', 'Rio Grande do Norte', 'Maranhão']],
+    ['Qual banda gravou "Bohemian Rhapsody"?', ['Queen', 'The Beatles', 'Led Zeppelin', 'Pink Floyd']],
+    ['Quem é conhecido como o "Rei do Rock"?', ['Elvis Presley', 'Chuck Berry', 'Mick Jagger', 'Ozzy Osbourne']],
+    ['Quem é conhecido como o "Rei do Baião"?', ['Luiz Gonzaga', 'Dominguinhos', 'Fagner', 'Alceu Valença']],
+    ['Qual banda gravou "Back in Black"?', ['AC/DC', 'Metallica', 'Guns N\' Roses', 'Kiss']],
+    ['Qual banda brasileira gravou "Que País É Este"?', ['Legião Urbana', 'Titãs', 'Capital Inicial', 'Os Paralamas do Sucesso']],
+    ['Quantas cordas tem uma guitarra tradicional?', ['6', '4', '5', '8']],
+    ['Quantas cordas tem um baixo elétrico tradicional?', ['4', '6', '3', '7']],
+    ['Qual carne é a mais usada no hambúrguer tradicional?', ['Bovina', 'Suína', 'Frango', 'Peixe']],
+    ['O que é um "smash burger"?', ['Burger prensado bem fino na chapa', 'Burger de carne de porco', 'Burger sem pão', 'Burger cozido no vapor']],
+    ['Qual destes pontos da carne é o mais cru?', ['Mal passado', 'Ao ponto', 'Ao ponto para bem', 'Bem passado']],
+    ['Qual destes NÃO é uma pimenta?', ['Cominho', 'Jalapeño', 'Biquinho', 'Dedo-de-moça']],
+    ['A batata frita tem a invenção disputada entre a França e qual país?', ['Bélgica', 'Holanda', 'Alemanha', 'Estados Unidos']],
+    ['O chopp normalmente NÃO passa por qual processo?', ['Pasteurização', 'Fermentação', 'Resfriamento', 'Filtragem']],
+    ['A cerveja é feita principalmente com malte, água, levedura e…', ['Lúpulo', 'Açúcar mascavo', 'Mel', 'Gengibre']],
+    ['Qual fruta é a base do guacamole?', ['Abacate', 'Manga', 'Limão', 'Maracujá']],
+    ['Qual é o maior estado do Brasil em área?', ['Amazonas', 'Pará', 'Mato Grosso', 'Bahia']],
+    ['Como é chamado o clássico entre Ceará e Fortaleza?', ['Clássico-Rei', 'Clássico dos Milhões', 'Fla-Flu', 'Gre-Nal']],
+    ['Qual passeio é famoso nas dunas do litoral cearense?', ['Buggy', 'Teleférico', 'Trem', 'Balão']],
+    ['Qual planeta é conhecido como o planeta vermelho?', ['Marte', 'Vênus', 'Júpiter', 'Saturno']],
+    ['A que temperatura a água ferve ao nível do mar?', ['100 °C', '90 °C', '80 °C', '120 °C']],
+    ['Quantos minutos tem uma partida de futebol, sem acréscimos?', ['90', '80', '100', '120']],
+    ['Qual instrumento marca o ritmo numa banda de rock?', ['Bateria', 'Teclado', 'Flauta', 'Violino']],
+    ['Quantos lados tem um hexágono?', ['6', '5', '7', '8']],
+    ['O pão brioche fica macio e amarelado por causa de…', ['Ovos e manteiga', 'Fubá', 'Açafrão', 'Mandioca']],
+    ['Qual destes é um tempero com sabor defumado?', ['Páprica defumada', 'Orégano', 'Canela', 'Hortelã']]
+  ];
+  const Q_PER_ROUND = 8, Q_TIME = 15000;
+  let qList = [], qIdx = 0, qHits = 0, qPoints = 0, qT0 = 0, qRaf = null, qTimeout = null, qDone = false;
+  function quizStart() {
+    qList = shuffle(BANK.slice()).slice(0, Q_PER_ROUND);
+    qIdx = 0; qHits = 0; qPoints = 0;
+    $('quiz-hits').textContent = '0'; $('quiz-points').textContent = '0';
+    $('quiz-end').hidden = true; $('quiz-play').hidden = false;
+    quizShow();
+  }
+  function quizShow() {
+    const [q, opts] = qList[qIdx];
+    const right = opts[0];
+    $('quiz-num').textContent = 'Pergunta ' + (qIdx + 1) + ' de ' + Q_PER_ROUND;
+    $('quiz-q').textContent = q;
+    const box = $('quiz-answers'); box.innerHTML = '';
+    shuffle(opts.slice()).forEach(o => {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'answer'; b.textContent = o;
+      b.addEventListener('click', () => quizAnswer(b, o === right, right));
+      box.append(b);
+    });
+    qDone = false; qT0 = performance.now();
+    const tick = () => {
+      const left = Math.max(0, 1 - (performance.now() - qT0) / Q_TIME);
+      $('quiz-timer').style.width = (left * 100) + '%';
+      if (left > 0 && !qDone) qRaf = requestAnimationFrame(tick);
+    };
+    tick();
+    qTimeout = setTimeout(() => { if (!qDone) quizAnswer(null, false, right); }, Q_TIME);
+  }
+  function quizAnswer(b, ok, right) {
+    if (qDone) return;
+    qDone = true; clearTimeout(qTimeout); cancelAnimationFrame(qRaf);
+    const left = Math.max(0, 1 - (performance.now() - qT0) / Q_TIME);
+    document.querySelectorAll('.answer').forEach(x => { x.disabled = true; if (x.textContent === right) x.classList.add('right'); });
+    if (ok) { qHits++; qPoints += 50 + Math.round(left * 50); good(); }
+    else { if (b) b.classList.add('wrong'); bad(); }
+    $('quiz-hits').textContent = qHits; $('quiz-points').textContent = qPoints;
+    qTimeout = setTimeout(() => { qIdx++; if (qIdx < Q_PER_ROUND) quizShow(); else quizEnd(); }, 1300);
+  }
+  function quizEnd() {
+    $('quiz-play').hidden = true;
+    const rec = !best.quiz || qPoints > best.quiz;
+    if (rec && qPoints > 0) { best.quiz = qPoints; persist(); }
+    $('quiz-final').textContent = qPoints;
+    $('quiz-msg').innerHTML = 'pontos, com ' + qHits + ' de ' + Q_PER_ROUND + ' acertos' + (rec && qPoints > 0 ? '<br><span class="record">Novo recorde!</span>' : '');
+    $('quiz-end').hidden = false; win();
+  }
+  function quizStop() { clearTimeout(qTimeout); cancelAnimationFrame(qRaf); qDone = true; }
+  $('quiz-again').addEventListener('click', quizStart);
+
+  /* ---------- Caça ao Burger ---------- */
+  const CACA_TIME = 30;
+  let holes = [], cPoints = 0, cLeft = CACA_TIME, cRunning = false, cTick = null, cSpawn = null, cTimers = [];
+  (function buildHoles() {
+    const g = $('caca-grid');
+    for (let i = 0; i < 9; i++) {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'hole';
+      b.setAttribute('aria-label', 'Buraco ' + (i + 1));
+      b.innerHTML = '<span></span>';
+      b.addEventListener('pointerdown', ev => { ev.preventDefault(); cacaHit(i); });
+      g.append(b); holes.push({ el: b, kind: null, timer: null });
+    }
+  })();
+  function cacaReady() {
+    cacaStop(); cPoints = 0; cLeft = CACA_TIME;
+    $('caca-points').textContent = '0'; $('caca-time').textContent = CACA_TIME;
+    $('caca-start').hidden = false; $('caca-end').hidden = true;
+    holes.forEach(h => { h.kind = null; h.el.classList.remove('up', 'hit', 'miss'); h.el.firstChild.textContent = ''; });
+  }
+  function cacaGo() {
+    initAudio(); cacaReady();
+    $('caca-start').hidden = true; cRunning = true;
+    cTick = setInterval(() => {
+      cLeft--; $('caca-time').textContent = cLeft;
+      if (cLeft <= 0) cacaEnd();
+    }, 1000);
+    spawnLoop();
+  }
+  function spawnLoop() {
+    if (!cRunning) return;
+    const elapsed = CACA_TIME - cLeft;
+    const stay = Math.max(520, 1050 - elapsed * 18);
+    const free = holes.filter(h => !h.kind);
+    if (free.length) {
+      const h = free[Math.floor(Math.random() * free.length)];
+      h.kind = Math.random() < 0.72 ? 'burger' : 'fire';
+      h.el.firstChild.textContent = h.kind === 'burger' ? '🍔' : '🔥';
+      h.el.classList.remove('hit', 'miss'); h.el.classList.add('up');
+      h.timer = setTimeout(() => cacaHide(h), stay);
+    }
+    cSpawn = setTimeout(spawnLoop, Math.max(300, 680 - elapsed * 10));
+  }
+  function cacaHide(h) { clearTimeout(h.timer); h.kind = null; h.el.classList.remove('up'); }
+  function cacaHit(i) {
+    if (!cRunning) return;
+    const h = holes[i];
+    if (!h.kind) return;
+    if (h.kind === 'burger') { cPoints++; h.el.classList.add('hit'); good(); }
+    else { cPoints = Math.max(0, cPoints - 2); h.el.classList.add('miss'); bad(); }
+    $('caca-points').textContent = cPoints;
+    cacaHide(h);
+  }
+  function cacaEnd() {
+    cacaStop();
+    const rec = !best.caca || cPoints > best.caca;
+    if (rec && cPoints > 0) { best.caca = cPoints; persist(); }
+    $('caca-final').textContent = cPoints;
+    $('caca-msg').innerHTML = 'pontos em 30 segundos' + (rec && cPoints > 0 ? '<br><span class="record">Novo recorde!</span>' : '');
+    $('caca-end').hidden = false; win();
+  }
+  function cacaStop() {
+    cRunning = false; clearInterval(cTick); clearTimeout(cSpawn);
+    holes.forEach(h => { clearTimeout(h.timer); h.kind = null; h.el.classList.remove('up'); });
+  }
+  $('caca-go').addEventListener('click', cacaGo);
+  $('caca-again').addEventListener('click', cacaGo);
+
+  renderBest();
+})();
+</script>
+</body>
+</html>

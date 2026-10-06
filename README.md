@@ -24,7 +24,19 @@ Jogo para o cliente jogar no celular enquanto espera o lanche, pelo QR code da m
 - A meta e o prêmio ficam no topo do script de `desafio/index.html` (`TARGET` e `PRIZE`).
 - A tela do prêmio mostra a data e um relógio correndo, para o atendente conferir que não é print. O atendente toca em "marcar como entregue" para o prêmio não ser usado duas vezes no mesmo celular.
 
+## Fliperama Gabba
+
+Central de jogos rápidos para o cliente passar o tempo enquanto espera, no endereço `/jogos/`:
+
+- **Memória Gabba:** achar os 8 pares de itens do cardápio.
+- **Quiz do Gabba:** 8 perguntas sorteadas sobre hambúrguer, rock e Ceará, com 15 segundos cada. Responder rápido vale mais pontos.
+- **Caça ao Burger:** 30 segundos para tocar nos burgers (+1) e fugir dos queimados (−2).
+- Atalho para o **Desafio da Espera**.
+
+Os recordes ficam salvos no celular de cada cliente. As perguntas do quiz ficam na lista `BANK` dentro de `jogos/index.html`.
+
 ## Arquivos
 
 - `index.html`: a roleta inteira (visual, regras, relatório e animação) em um único arquivo.
 - `desafio/index.html`: o jogo Desafio da Espera.
+- `jogos/index.html`: o Fliperama Gabba.
