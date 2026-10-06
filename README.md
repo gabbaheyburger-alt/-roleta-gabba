@@ -30,7 +30,7 @@ Central de jogos rápidos para o cliente passar o tempo enquanto espera, no ende
 
 - **Memória Gabba:** achar os 8 pares de itens do cardápio.
 - **Quiz do Gabba:** 8 perguntas sorteadas sobre hambúrguer, rock e Ceará, com 15 segundos cada. Responder rápido vale mais pontos.
-- **Caça ao Burger:** 30 segundos para tocar nos burgers (+1) e fugir dos queimados (−2).
+- **Corre, Gabba!:** corrida com o mascote.
 - **Obby do Gabba:** percurso 3D.
 - Atalho para o **Desafio da Espera**.
 
@@ -44,9 +44,9 @@ Jogo em teste, fora do Fliperama, no endereço `/chapa/`. O jogador monta os ped
 
 Percurso 3D no navegador, dentro do Fliperama, no endereço `/obby/`. O personagem atravessa burgers, batatas, copos de chopp e plataformas móveis sem cair no mar de ketchup, com 3 bandeiras de checkpoint e moedas. Usa a biblioteca three.js.
 
-## Corre, Gabba! (teste)
+## Corre, Gabba!
 
-Jogo de corrida com o mascote do Gabba Hey Burger, no endereço `/corre/`. Toque para pular (toque de novo no ar para pulo duplo), desvie de caixas de som, pimentas e cones e pegue batatas. A velocidade aumenta com o tempo. A imagem do mascote fica em `corre/mascote.png`.
+Jogo de corrida com o mascote do Gabba Hey Burger, dentro do Fliperama, no endereço `/corre/`. Toque para pular (toque de novo no ar para pulo duplo), desvie de caixas de som, pimentas e cones e pegue batatas. A velocidade aumenta com o tempo. A imagem do mascote fica em `corre/mascote.png`.
 
 ## Arquivos
 
@@ -55,4 +55,4 @@ Jogo de corrida com o mascote do Gabba Hey Burger, no endereço `/corre/`. Toque
 - `jogos/index.html`: o Fliperama Gabba.
 - `chapa/index.html`: o jogo Chapa do Gabba (teste).
 - `obby/index.html`: o Obby do Gabba em 3D.
-- `corre/index.html` e `corre/mascote.png`: o jogo Corre, Gabba! (teste).
+- `corre/index.html` e `corre/mascote.png`: o jogo Corre, Gabba!.
