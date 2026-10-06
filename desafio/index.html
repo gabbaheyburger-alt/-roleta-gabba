@@ -79,7 +79,6 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
   <div class="hud">
     <div class="brand">Desafio<br><span>da Espera</span></div>
     <div class="scores">
-      <div class="score"><small>Tentativas</small><b id="tries">3</b></div>
       <div class="score"><small>Recorde</small><b id="best">0</b></div>
       <div class="score main"><small>Camadas</small><b id="score">0</b></div>
     </div>
@@ -93,8 +92,7 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
     <div class="overlay" id="start">
       <h1>Monte o <span>burger</span></h1>
       <p>As camadas passam deslizando. <strong>Toque na tela</strong> para soltar cada uma em cima da outra. O que ficar para fora, cai.</p>
-      <p>Monte <strong id="target-txt">18</strong> camadas e ganhe: <strong id="prize-txt"></strong></p>
-      <p id="tries-txt"></p>
+      <p>Monte <strong id="target-txt">15</strong> camadas e ganhe: <strong id="prize-txt"></strong></p>
       <button class="btn" id="play" type="button">JOGAR</button>
       <button class="link" id="see-prize" type="button" hidden>Ver meu prêmio de hoje</button>
     </div>
@@ -112,7 +110,6 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
         <span class="clock" id="prize-clock">--:--:--</span>
         <span id="prize-note">Mostre esta tela ao atendente</span>
       </div>
-      <p id="no-tries" hidden>Suas tentativas de hoje acabaram. <strong>Volte amanhã</strong> para tentar de novo!</p>
       <div class="row">
         <button class="btn" id="again" type="button">DE NOVO</button>
       </div>
@@ -124,8 +121,7 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
 <script>
 (function () {
   /* ===== Configuração da loja ===== */
-  const TARGET = 18;                                  // camadas para ganhar
-  const MAX_TRIES = 3;                                // tentativas por dia em cada celular
+  const TARGET = 15;                                  // camadas para ganhar
   const PRIZE = 'Molho extra por conta da casa';      // troque pelo prêmio escolhido
   /* ================================ */
 
@@ -134,7 +130,7 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
   const pad = n => String(n).padStart(2, '0');
   const today = () => { const d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
 
-  let saved = { best: 0, wonDay: null, usedDay: null, usedAt: null, triesDay: null, tries: 0 };
+  let saved = { best: 0, wonDay: null, usedDay: null, usedAt: null };
   try { saved = Object.assign(saved, JSON.parse(localStorage.getItem(STORE) || '{}')); } catch (e) {}
   const persist = () => { try { localStorage.setItem(STORE, JSON.stringify(saved)); } catch (e) {} };
 
@@ -143,14 +139,6 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
   $('prize-what').textContent = PRIZE;
   $('best').textContent = saved.best;
   $('see-prize').hidden = saved.wonDay !== today();
-  const triesLeft = () => saved.triesDay === today() ? Math.max(0, MAX_TRIES - saved.tries) : MAX_TRIES;
-  function renderTries() {
-    const left = triesLeft();
-    $('tries').textContent = left;
-    $('tries-txt').textContent = left > 0 ? 'Você tem ' + left + (left === 1 ? ' tentativa' : ' tentativas') + ' hoje.' : 'Suas tentativas de hoje acabaram. Volte amanhã!';
-    $('play').hidden = left <= 0;
-  }
-  renderTries();
 
   const canvas = $('game'), ctx = canvas.getContext('2d'), field = $('field');
   let W = 0, H = 0, dpr = 1;
@@ -187,7 +175,7 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
     $('banner').hidden = true;
   }
 
-  function speed() { return W * Math.min(1.6, 0.62 + score * 0.055); }
+  function speed() { return W * Math.min(1.25, 0.42 + score * 0.04); }
 
   function spawn() {
     const prev = stack[stack.length - 1];
@@ -197,9 +185,6 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
   }
 
   function start() {
-    if (triesLeft() <= 0) { renderTries(); showNoTries(); return; }
-    if (saved.triesDay !== today()) { saved.triesDay = today(); saved.tries = 0; }
-    saved.tries += 1; persist(); renderTries();
     reset();
     state = 'play';
     $('start').hidden = true; $('over').hidden = true;
@@ -221,7 +206,7 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
     }
 
     let placed;
-    if (Math.abs(m.x - prev.x) < W * 0.008) {
+    if (Math.abs(m.x - prev.x) < W * 0.012) {
       placed = { kind: m.kind, x: prev.x, w: prev.w, y: m.y, h: m.h };
       floatText('Perfeito!');
       beep(880, 0.12, 'triangle');
@@ -261,16 +246,7 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
     $('over-msg').textContent = won ? 'camadas. Você venceu o desafio!' : (score === 1 ? 'camada. Faltaram ' + (TARGET - score) + ' para o prêmio.' : 'camadas. Faltaram ' + (TARGET - score) + ' para o prêmio.');
     $('over-normal').hidden = false;
     showPrize(won);
-    showNoTries();
     $('over').hidden = false;
-  }
-
-  function showNoTries() {
-    const none = triesLeft() <= 0;
-    $('no-tries').hidden = !none;
-    $('again').hidden = none;
-    $('again').textContent = 'DE NOVO (' + triesLeft() + ')';
-    if (none && $('over').hidden && $('start').hidden === false) { $('start').hidden = false; }
   }
 
   /* ----- Prêmio ----- */
@@ -306,7 +282,6 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
     $('start').hidden = true;
     $('over-normal').hidden = true;
     showPrize(true);
-    showNoTries();
     $('over').hidden = false;
   });
 

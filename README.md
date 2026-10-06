@@ -18,10 +18,10 @@ O PIN é uma trava contra clientes curiosos, não uma proteção forte. Não gua
 
 ## Desafio da Espera
 
-Jogo para o cliente jogar no celular enquanto espera o lanche, pelo QR code da mesa. As camadas do burger passam deslizando e o cliente toca para soltar cada uma. Quem montar 18 camadas ganha o prêmio do dia. Cada celular tem 3 tentativas por dia.
+Jogo para o cliente jogar no celular enquanto espera o lanche, pelo QR code da mesa. As camadas do burger passam deslizando e o cliente toca para soltar cada uma. Quem montar 15 camadas ganha o prêmio do dia.
 
 - Endereço: `/desafio/` dentro do site da roleta.
-- A meta e o prêmio ficam no topo do script de `desafio/index.html` (`TARGET`, `PRIZE` e `MAX_TRIES`).
+- A meta e o prêmio ficam no topo do script de `desafio/index.html` (`TARGET` e `PRIZE`).
 - A tela do prêmio mostra a data e um relógio correndo, para o atendente conferir que não é print. O atendente toca em "marcar como entregue" para o prêmio não ser usado duas vezes no mesmo celular.
 
 ## Arquivos
