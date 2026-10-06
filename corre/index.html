@@ -111,7 +111,7 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--mustard); outli
   /* ---------- Estado ---------- */
   const G = { x: 0, y: 0, vy: 0, jumps: 0, onGround: true, run: 0, squash: 0, dead: false, rot: 0, vx: 0 };
   let obs = [], items = [], parts = [], lines = [], stars = [];
-  let speed = 0, dist = 0, score = 0, fries = 0, running = false, countdown = 0, nextObs = 0, nextItem = 0, shake = 0, flash = 0, slow = 1, t = 0, lastMilestone = 0, stepT = 0;
+  let jumpBuf = 0, obsDist = 0, speed = 0, dist = 0, score = 0, fries = 0, running = false, countdown = 0, nextObs = 0, nextItem = 0, shake = 0, flash = 0, slow = 1, t = 0, lastMilestone = 0, stepT = 0;
   let farOff = 0, midOff = 0, poleOff = 0, groundOff = 0;
   const SPR_H = () => U * 30;
   const SPR_W = () => SPR_H() * (img.naturalWidth ? img.naturalWidth / img.naturalHeight : 0.7);
@@ -122,17 +122,19 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--mustard); outli
   function reset() {
     G.x = Math.max(W * 0.2, U * 16); G.y = GROUND; G.vy = 0; G.jumps = 0; G.onGround = true; G.squash = 0; G.dead = false; G.rot = 0; G.vx = 0;
     obs = []; items = []; parts = []; lines = [];
-    speed = U * 64; dist = 0; score = 0; fries = 0; nextObs = 1.0; nextItem = 0.6; shake = 0; flash = 0; slow = 1; lastMilestone = 0;
+    speed = U * 50; dist = 0; score = 0; fries = 0; nextObs = U * 70; obsDist = 0; jumpBuf = 0; nextItem = 0.6; shake = 0; flash = 0; slow = 1; lastMilestone = 0;
     $('score').textContent = '0'; $('fries').textContent = '0';
   }
 
   function banner(txt) { const b = document.createElement('div'); b.className = 'banner'; b.textContent = txt; document.body.append(b); setTimeout(() => b.remove(), 950); }
 
   /* ---------- Pulo ---------- */
+  const GRAV = 215, JUMP_V = 104, JUMP2_V = 88;   // pulo de ~0,97 s no ar
   function jump() {
     if (!running || countdown > 0) return;
-    if (G.onGround) { G.vy = -U * 118; G.onGround = false; G.jumps = 1; G.squash = -0.16; sfx(420, 760, 0.12); dust(G.x, GROUND, 6); }
-    else if (G.jumps < 2) { G.vy = -U * 102; G.jumps = 2; sfx(560, 1000, 0.12); ring(G.x, G.y - SPR_H() * 0.2); }
+    if (!G.onGround && G.jumps >= 2) { jumpBuf = 0.15; return; }
+    if (G.onGround) { G.vy = -U * JUMP_V; G.onGround = false; G.jumps = 1; G.squash = -0.16; sfx(420, 760, 0.12); dust(G.x, GROUND, 6); }
+    else if (G.jumps < 2) { G.vy = -U * JUMP2_V; G.jumps = 2; sfx(560, 1000, 0.12); ring(G.x, G.y - SPR_H() * 0.2); }
   }
   cv.addEventListener('pointerdown', e => { e.preventDefault(); initAudio(); jump(); });
   window.addEventListener('keydown', e => { if (e.code === 'Space' || e.code === 'ArrowUp') { e.preventDefault(); jump(); } });
@@ -146,14 +148,17 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--mustard); outli
   const TYPES = { amp: { w: 15, h: 14 }, pimenta: { w: 8, h: 19 }, cone: { w: 12, h: 13 }, amp2: { w: 15, h: 27 } };
   function spawnObs() {
     const level = dist / (U * 1000);
-    const pool = level < 1.2 ? ['amp', 'pimenta', 'cone'] : ['amp', 'pimenta', 'cone', 'amp2'];
+    const pool = level < 1.6 ? ['amp', 'pimenta', 'cone'] : ['amp', 'pimenta', 'cone', 'amp', 'cone', 'amp2'];
     const k = pool[Math.floor(Math.random() * pool.length)];
     obs.push({ kind: k, x: W + U * 10, w: TYPES[k].w * U, h: TYPES[k].h * U });
-    if (level > 2.2 && k !== 'amp2' && Math.random() < 0.3) {
+    if (level > 3 && k !== 'amp2' && Math.random() < 0.25) {
       const k2 = ['cone', 'pimenta'][Math.floor(Math.random() * 2)];
       obs.push({ kind: k2, x: W + U * 10 + TYPES[k].w * U + U * 3, w: TYPES[k2].w * U, h: TYPES[k2].h * U });
     }
-    nextObs = (0.8 + Math.random() * 0.9) * Math.max(0.62, 1 - level * 0.07);
+    // tempo no ar + tempo para reagir depois de cair, convertido em distância
+    const air = 2 * JUMP_V / GRAV;
+    const react = Math.max(0.42, 0.75 - level * 0.05);
+    nextObs = speed * (air + react) + speed * Math.random() * 0.9 + (k === 'amp2' ? speed * 0.3 : 0);
   }
   function spawnItem() {
     const pattern = Math.random();
@@ -177,19 +182,20 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--mustard); outli
       if (after !== before) { if (after > 0) { banner(String(after)); sfx(440, 440, 0.12); } else { banner('VAI!'); sfx(880, 880, 0.2); } }
       G.run += rdt * 4;
     } else if (running) {
-      speed = Math.min(U * 155, speed + U * 1.7 * dt);
+      speed = Math.min(U * 120, speed + U * 1.0 * dt);
       dist += speed * dt;
       score = Math.floor(dist / (U * 10)) + fries * 10;
       $('score').textContent = score;
       const ms = Math.floor(score / 250) * 250;
       if (ms > 0 && ms > lastMilestone) { lastMilestone = ms; banner(ms + '!'); sfx(660, 1320, 0.25, 'triangle'); }
 
-      G.vy += U * 330 * dt; G.y += G.vy * dt;
-      if (G.y >= GROUND) { if (!G.onGround) { G.squash = 0.18; dust(G.x, GROUND, 7); sfx(160, 90, 0.06, 'sine'); } G.y = GROUND; G.vy = 0; G.onGround = true; G.jumps = 0; }
+      G.vy += U * GRAV * dt; G.y += G.vy * dt;
+      jumpBuf -= dt;
+      if (G.y >= GROUND) { if (!G.onGround) { G.squash = 0.18; dust(G.x, GROUND, 7); sfx(160, 90, 0.06, 'sine'); } G.y = GROUND; G.vy = 0; G.onGround = true; G.jumps = 0; if (jumpBuf > 0) { jumpBuf = 0; jump(); } }
       G.run += dt * speed / (U * 5.5);
       if (G.onGround) { stepT -= dt; if (stepT <= 0) { stepT = (U * 5.5 * Math.PI) / speed; dust(G.x - SPR_W() * 0.1, GROUND, 1); } }
 
-      nextObs -= dt; if (nextObs <= 0) spawnObs();
+      obsDist += speed * dt; if (obsDist >= nextObs) { obsDist = 0; spawnObs(); }
       nextItem -= dt; if (nextItem <= 0) spawnItem();
       obs.forEach(o => { o.x -= speed * dt; });
       items.forEach(i => { i.x -= speed * dt; });
@@ -199,7 +205,7 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--mustard); outli
       if (speed > U * 95 && Math.random() < dt * 14) lines.push({ x: W, y: Math.random() * GROUND * 0.95, len: U * (10 + Math.random() * 20), life: 1 });
 
       const sw = SPR_W(), sh = SPR_H();
-      const hb = { x: G.x - sw * 0.26, y: G.y - sh * 0.74, w: sw * 0.52, h: sh * 0.68 };
+      const hb = { x: G.x - sw * 0.22, y: G.y - sh * 0.72, w: sw * 0.44, h: sh * 0.64 };
       for (const o of obs) {
         const ob = o.kind === 'cone' ? { x: o.x + o.w * 0.25, y: GROUND - o.h * 0.85, w: o.w * 0.5, h: o.h * 0.85 } : { x: o.x + o.w * 0.08, y: GROUND - o.h * 0.94, w: o.w * 0.84, h: o.h * 0.94 };
         if (hb.x < ob.x + ob.w && hb.x + hb.w > ob.x && hb.y < ob.y + ob.h && hb.y + hb.h > ob.y) { crash(); break; }
@@ -211,7 +217,7 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--mustard); outli
         }
       });
     } else if (G.dead) {
-      G.vy += U * 330 * rdt; G.y += G.vy * rdt; G.x += G.vx * rdt; G.rot += rdt * 7;
+      G.vy += U * GRAV * rdt; G.y += G.vy * rdt; G.x += G.vx * rdt; G.rot += rdt * 7;
       slow = Math.min(1, slow + rdt * 1.5);
     }
     parts.forEach(p => { p.x += p.vx * dt - (running ? speed * dt * 0.3 : 0); p.y += p.vy * dt; if (p.kind !== 'ring') p.vy += U * 90 * dt; p.life -= rdt; });
