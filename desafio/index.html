@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Desafio da Espera</title>
+<meta name="theme-color" content="#17110f">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Barlow:wght@400;600;700&display=swap">
+<style>
+/* Layout: tela única de jogo; placar no topo, área de jogo ocupando o resto, telas de início/fim por cima */
+:root {
+  --bg: #17110f;
+  --surface: #221a17;
+  --line: #3b2e29;
+  --fg: #f6ece2;
+  --muted: #b5a397;
+  --red: #d7261e;
+  --red-deep: #9c1611;
+  --mustard: #f2b632;
+  --cream: #f6e7cf;
+  --ok: #6fbf73;
+  --display: 'Bungee', Impact, 'Arial Black', sans-serif;
+  --body: 'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; background: var(--bg); color: var(--fg); }
+body { margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); font-family: var(--body); font-size: 16px; line-height: 1.4; overscroll-behavior: none; }
+[hidden] { display: none !important; }
+.app { height: 100%; max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; padding: 12px 16px 16px; gap: 10px; }
+
+.hud { display: flex; justify-content: space-between; align-items: flex-end; gap: 10px; }
+.brand { font-family: var(--display); font-size: 1.05rem; line-height: 1; }
+.brand span { color: var(--mustard); }
+.scores { display: flex; gap: 14px; }
+.score { text-align: right; }
+.score small { display: block; font-size: .65rem; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); font-weight: 600; }
+.score b { font-family: var(--display); font-weight: 400; font-size: 1.5rem; line-height: 1; font-variant-numeric: tabular-nums; }
+.score.main b { color: var(--mustard); font-size: 2rem; }
+
+.meter { height: 8px; background: var(--surface); border-radius: 999px; overflow: hidden; border: 1px solid var(--line); }
+.meter i { display: block; height: 100%; width: 0; background: var(--mustard); transition: width .25s; }
+.meter.done i { background: var(--ok); }
+
+.field { position: relative; flex: 1; min-height: 0; border-radius: 18px; overflow: hidden; background: var(--surface); border: 1px solid var(--line); touch-action: manipulation; user-select: none; -webkit-user-select: none; cursor: pointer; }
+.field canvas { width: 100%; height: 100%; display: block; }
+.banner { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); background: var(--ok); color: #10200f; font-weight: 700; padding: 6px 14px; border-radius: 999px; font-size: .9rem; white-space: nowrap; pointer-events: none; }
+.float { position: absolute; left: 50%; transform: translateX(-50%); font-family: var(--display); color: var(--mustard); font-size: 1.1rem; pointer-events: none; animation: rise .8s ease-out forwards; }
+@keyframes rise { from { opacity: 1; margin-top: 0; } to { opacity: 0; margin-top: -40px; } }
+
+.overlay { position: absolute; inset: 0; background: rgba(23,17,15,.92); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; gap: 12px; cursor: default; overflow-y: auto; }
+.overlay h1 { font-family: var(--display); font-weight: 400; font-size: clamp(1.7rem, 8vw, 2.3rem); line-height: 1.05; margin: 0; text-wrap: balance; }
+.overlay h1 span { color: var(--mustard); }
+.overlay p { margin: 0; color: var(--muted); max-width: 32ch; }
+.overlay p strong { color: var(--fg); }
+.btn { font-family: var(--display); font-size: 1.3rem; letter-spacing: .04em; background: var(--red); color: var(--cream); border: none; border-radius: 14px; padding: 14px 28px; cursor: pointer; box-shadow: 0 5px 0 var(--red-deep); }
+.btn:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--red-deep); }
+.link { background: transparent; border: 1px solid var(--line); color: var(--muted); font: 700 .88rem var(--body); padding: 9px 14px; border-radius: 10px; cursor: pointer; }
+button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
+.big { font-family: var(--display); font-size: 3.2rem; line-height: 1; color: var(--mustard); }
+
+.prize { width: 100%; max-width: 320px; border: 3px solid var(--mustard); border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 6px; background: linear-gradient(135deg, #2a1f12, #3a2a12, #2a1f12); background-size: 300% 300%; animation: shine 3s linear infinite; }
+@keyframes shine { 0% { background-position: 0% 50%; } 100% { background-position: 100% 50%; } }
+.prize .tag { font-size: .7rem; text-transform: uppercase; letter-spacing: .14em; color: var(--mustard); font-weight: 700; }
+.prize .what { font-family: var(--display); font-size: 1.35rem; line-height: 1.15; color: var(--cream); }
+.prize .when { font-variant-numeric: tabular-nums; color: var(--fg); font-weight: 700; }
+.prize .clock { font-family: var(--display); font-size: 1.6rem; color: var(--mustard); font-variant-numeric: tabular-nums; }
+.prize.used { animation: none; border-color: var(--line); background: var(--surface); }
+.prize.used .what { text-decoration: line-through; color: var(--muted); }
+.row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+
+@media (prefers-reduced-motion: reduce) { .prize { animation: none; } .float { animation-duration: .01s; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="hud">
+    <div class="brand">Desafio<br><span>da Espera</span></div>
+    <div class="scores">
+      <div class="score"><small>Recorde</small><b id="best">0</b></div>
+      <div class="score main"><small>Camadas</small><b id="score">0</b></div>
+    </div>
+  </div>
+  <div class="meter" id="meter" aria-hidden="true"><i id="meter-fill"></i></div>
+
+  <div class="field" id="field">
+    <canvas id="game" aria-label="Jogo de montar o burger"></canvas>
+    <div class="banner" id="banner" hidden>Desafio cumprido! Continue empilhando</div>
+
+    <div class="overlay" id="start">
+      <h1>Monte o <span>burger</span></h1>
+      <p>As camadas passam deslizando. <strong>Toque na tela</strong> para soltar cada uma em cima da outra. O que ficar para fora, cai.</p>
+      <p>Monte <strong id="target-txt">15</strong> camadas e ganhe: <strong id="prize-txt"></strong></p>
+      <button class="btn" id="play" type="button">JOGAR</button>
+      <button class="link" id="see-prize" type="button" hidden>Ver meu prêmio de hoje</button>
+    </div>
+
+    <div class="overlay" id="over" hidden>
+      <div id="over-normal">
+        <p>Seu burger ficou com</p>
+        <div class="big" id="final">0</div>
+        <p id="over-msg">camadas</p>
+      </div>
+      <div class="prize" id="prize-card" hidden>
+        <span class="tag">Desafio cumprido</span>
+        <span class="what" id="prize-what"></span>
+        <span class="when" id="prize-date"></span>
+        <span class="clock" id="prize-clock">--:--:--</span>
+        <span id="prize-note">Mostre esta tela ao atendente</span>
+      </div>
+      <div class="row">
+        <button class="btn" id="again" type="button">DE NOVO</button>
+      </div>
+      <button class="link" id="mark-used" type="button" hidden>Atendente: marcar como entregue</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  /* ===== Configuração da loja ===== */
+  const TARGET = 15;                                  // camadas para ganhar
+  const PRIZE = 'Molho extra por conta da casa';      // troque pelo prêmio escolhido
+  /* ================================ */
+
+  const STORE = 'desafio-espera-v1';
+  const $ = id => document.getElementById(id);
+  const pad = n => String(n).padStart(2, '0');
+  const today = () => { const d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
+
+  let saved = { best: 0, wonDay: null, usedDay: null, usedAt: null };
+  try { saved = Object.assign(saved, JSON.parse(localStorage.getItem(STORE) || '{}')); } catch (e) {}
+  const persist = () => { try { localStorage.setItem(STORE, JSON.stringify(saved)); } catch (e) {} };
+
+  $('target-txt').textContent = TARGET;
+  $('prize-txt').textContent = PRIZE;
+  $('prize-what').textContent = PRIZE;
+  $('best').textContent = saved.best;
+  $('see-prize').hidden = saved.wonDay !== today();
+
+  const canvas = $('game'), ctx = canvas.getContext('2d'), field = $('field');
+  let W = 0, H = 0, dpr = 1;
+
+  // Camadas: altura relativa à largura do campo
+  const KINDS = {
+    paoBaixo: { h: 0.075 }, carne: { h: 0.06 }, queijo: { h: 0.03 }, alface: { h: 0.035 },
+    tomate: { h: 0.035 }, bacon: { h: 0.032 }, cebola: { h: 0.03 }, paoCima: { h: 0.11 }
+  };
+  const SEQ = ['carne', 'queijo', 'alface', 'tomate', 'bacon', 'carne', 'queijo', 'cebola'];
+
+  let stack = [], moving = null, falling = [], camY = 0, state = 'start', score = 0, dir = 1, reached = false, last = 0;
+
+  function resize() {
+    const r = field.getBoundingClientRect();
+    dpr = window.devicePixelRatio || 1;
+    W = r.width; H = r.height;
+    canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (state === 'start' && !stack.length) reset();
+    render();
+  }
+
+  const lh = kind => KINDS[kind].h * W;
+  const topY = () => stack.length ? stack[stack.length - 1].y + stack[stack.length - 1].h : 0;
+  const groundPad = () => H * 0.08;
+  const sy = y => H - groundPad() - (y - camY);  // mundo -> tela
+
+  function reset() {
+    const w = W * 0.62;
+    stack = [{ kind: 'paoBaixo', x: (W - w) / 2, w, y: 0, h: lh('paoBaixo') }];
+    falling = []; camY = 0; score = 0; reached = false;
+    updateHud();
+    $('banner').hidden = true;
+  }
+
+  function speed() { return W * Math.min(1.25, 0.42 + score * 0.04); }
+
+  function spawn() {
+    const prev = stack[stack.length - 1];
+    const kind = SEQ[score % SEQ.length];
+    dir = Math.random() < 0.5 ? 1 : -1;
+    moving = { kind, w: prev.w, h: lh(kind), y: topY(), x: dir > 0 ? -prev.w * 0.6 : W - prev.w * 0.4 };
+  }
+
+  function start() {
+    reset();
+    state = 'play';
+    $('start').hidden = true; $('over').hidden = true;
+    initAudio();
+    spawn();
+  }
+
+  function drop() {
+    if (state !== 'play' || !moving) return;
+    const prev = stack[stack.length - 1];
+    const m = moving; moving = null;
+    const left = Math.max(m.x, prev.x), right = Math.min(m.x + m.w, prev.x + prev.w);
+    const overlap = right - left;
+
+    if (overlap <= W * 0.015) {
+      falling.push({ ...m, vy: 0, vr: (m.x < prev.x ? -1 : 1) * 2.5, rot: 0 });
+      beep(140, 0.25, 'sawtooth');
+      return gameOver();
+    }
+
+    let placed;
+    if (Math.abs(m.x - prev.x) < W * 0.012) {
+      placed = { kind: m.kind, x: prev.x, w: prev.w, y: m.y, h: m.h };
+      floatText('Perfeito!');
+      beep(880, 0.12, 'triangle');
+    } else {
+      placed = { kind: m.kind, x: left, w: overlap, y: m.y, h: m.h };
+      const cut = m.x < prev.x
+        ? { kind: m.kind, x: m.x, w: left - m.x, y: m.y, h: m.h }
+        : { kind: m.kind, x: right, w: (m.x + m.w) - right, y: m.y, h: m.h };
+      if (cut.w > 0.5) falling.push({ ...cut, vy: 0, vr: (m.x < prev.x ? -1 : 1) * 2, rot: 0 });
+      beep(520, 0.06, 'square');
+    }
+    stack.push(placed);
+    score++;
+    updateHud();
+    if (!reached && score >= TARGET) {
+      reached = true;
+      $('banner').hidden = false;
+      setTimeout(() => { $('banner').hidden = true; }, 2600);
+      fanfare();
+    }
+    spawn();
+  }
+
+  function gameOver() {
+    state = 'over';
+    const w = stack[stack.length - 1].w;
+    stack.push({ kind: 'paoCima', x: stack[stack.length - 1].x, w, y: topY(), h: lh('paoCima') });
+    if (score > saved.best) { saved.best = score; $('best').textContent = score; }
+    if (reached && saved.wonDay !== today()) { saved.wonDay = today(); }
+    persist();
+    setTimeout(() => showOver(), 700);
+  }
+
+  function showOver() {
+    $('final').textContent = score;
+    const won = reached;
+    $('over-msg').textContent = won ? 'camadas. Você venceu o desafio!' : (score === 1 ? 'camada. Faltaram ' + (TARGET - score) + ' para o prêmio.' : 'camadas. Faltaram ' + (TARGET - score) + ' para o prêmio.');
+    $('over-normal').hidden = false;
+    showPrize(won);
+    $('over').hidden = false;
+  }
+
+  /* ----- Prêmio ----- */
+  let clockTimer = null;
+  function showPrize(show) {
+    const card = $('prize-card');
+    card.hidden = !show; $('mark-used').hidden = !show;
+    clearInterval(clockTimer);
+    if (!show) return;
+    const d = new Date();
+    const dias = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
+    $('prize-date').textContent = 'Válido hoje, ' + dias[d.getDay()] + ' ' + pad(d.getDate()) + '/' + pad(d.getMonth() + 1);
+    const used = saved.usedDay === today();
+    card.classList.toggle('used', used);
+    $('prize-note').textContent = used ? 'Prêmio entregue às ' + saved.usedAt : 'Mostre esta tela ao atendente';
+    $('mark-used').hidden = used;
+    const tickClock = () => { const n = new Date(); $('prize-clock').textContent = pad(n.getHours()) + ':' + pad(n.getMinutes()) + ':' + pad(n.getSeconds()); };
+    tickClock(); clockTimer = setInterval(tickClock, 1000);
+  }
+
+  let usedArmed = false;
+  $('mark-used').addEventListener('click', () => {
+    if (!usedArmed) { usedArmed = true; $('mark-used').textContent = 'Toque de novo para confirmar a entrega'; setTimeout(() => { usedArmed = false; $('mark-used').textContent = 'Atendente: marcar como entregue'; }, 4000); return; }
+    usedArmed = false;
+    const n = new Date();
+    saved.usedDay = today(); saved.usedAt = pad(n.getHours()) + ':' + pad(n.getMinutes()); persist();
+    $('mark-used').textContent = 'Atendente: marcar como entregue';
+    showPrize(true);
+  });
+
+  $('see-prize').addEventListener('click', ev => {
+    ev.stopPropagation();
+    $('start').hidden = true;
+    $('over-normal').hidden = true;
+    showPrize(true);
+    $('over').hidden = false;
+  });
+
+  /* ----- HUD ----- */
+  function updateHud() {
+    $('score').textContent = score;
+    $('meter-fill').style.width = Math.min(100, score / TARGET * 100) + '%';
+    $('meter').classList.toggle('done', score >= TARGET);
+  }
+  function floatText(t) {
+    const el = document.createElement('div'); el.className = 'float'; el.textContent = t;
+    el.style.top = Math.max(30, sy(topY()) - 50) + 'px';
+    field.append(el); setTimeout(() => el.remove(), 850);
+  }
+
+  /* ----- Desenho ----- */
+  function rr(x, y, w, h, r) {
+    r = Math.min(r, h / 2, w / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y); ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r); ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y); ctx.closePath();
+  }
+
+  function drawLayer(L, top) {
+    const { x, w, h } = L, y = top;
+    switch (L.kind) {
+      case 'paoBaixo':
+        rr(x, y, w, h, h * 0.45); ctx.fillStyle = '#d4913f'; ctx.fill();
+        ctx.fillStyle = '#e9b46a'; ctx.fillRect(x + 4, y, Math.max(0, w - 8), h * 0.32);
+        break;
+      case 'carne':
+        rr(x, y, w, h, h * 0.4); ctx.fillStyle = '#5a2e1d'; ctx.fill();
+        ctx.strokeStyle = '#3a1c11'; ctx.lineWidth = 2;
+        for (let gx = x + 10; gx < x + w - 6; gx += 18) { ctx.beginPath(); ctx.moveTo(gx, y + h * 0.3); ctx.lineTo(gx + 8, y + h * 0.7); ctx.stroke(); }
+        break;
+      case 'queijo':
+        ctx.fillStyle = '#f2b632'; ctx.fillRect(x, y, w, h);
+        for (let dx = x + 6; dx < x + w - 8; dx += 26) { ctx.beginPath(); ctx.moveTo(dx, y + h); ctx.lineTo(dx + 12, y + h); ctx.lineTo(dx + 6, y + h + h * 0.9); ctx.closePath(); ctx.fill(); }
+        break;
+      case 'alface':
+        ctx.fillStyle = '#6dbb45'; ctx.beginPath(); ctx.moveTo(x, y + h);
+        for (let dx = 0; dx <= w; dx += 10) ctx.lineTo(x + dx, y + (Math.floor(dx / 10) % 2 ? 0 : h * 0.45));
+        ctx.lineTo(x + w, y + h); ctx.closePath(); ctx.fill();
+        break;
+      case 'tomate':
+        rr(x, y, w, h, h * 0.5); ctx.fillStyle = '#d7261e'; ctx.fill();
+        ctx.fillStyle = '#f07a5f';
+        for (let dx = x + 12; dx < x + w - 8; dx += 22) { ctx.beginPath(); ctx.arc(dx, y + h / 2, h * 0.17, 0, Math.PI * 2); ctx.fill(); }
+        break;
+      case 'bacon':
+        ctx.fillStyle = '#a63a26'; ctx.beginPath(); ctx.moveTo(x, y + h * 0.2);
+        for (let dx = 0; dx <= w; dx += 14) ctx.lineTo(x + dx, y + (Math.floor(dx / 14) % 2 ? h * 0.05 : h * 0.3));
+        ctx.lineTo(x + w, y + h); ctx.lineTo(x, y + h); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#f1c9a5'; ctx.fillRect(x, y + h * 0.5, w, h * 0.16);
+        break;
+      case 'cebola':
+        rr(x, y, w, h, h * 0.5); ctx.fillStyle = '#efe2f0'; ctx.fill();
+        ctx.strokeStyle = '#b77fb0'; ctx.lineWidth = 2; rr(x + 3, y + 3, Math.max(0, w - 6), Math.max(0, h - 6), h * 0.4); ctx.stroke();
+        break;
+      case 'paoCima': {
+        ctx.fillStyle = '#d4913f'; ctx.beginPath();
+        ctx.moveTo(x, y + h); ctx.bezierCurveTo(x, y - h * 0.15, x + w, y - h * 0.15, x + w, y + h); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#f6e7cf';
+        for (let i = 0; i < Math.max(2, Math.floor(w / 26)); i++) {
+          const sx = x + w * (0.15 + 0.7 * ((i * 0.618) % 1)), syy = y + h * (0.3 + 0.35 * ((i * 0.37) % 1));
+          ctx.beginPath(); ctx.ellipse(sx, syy, 3.5, 2, 0.4, 0, Math.PI * 2); ctx.fill();
+        }
+        break;
+      }
+    }
+  }
+
+  function render() {
+    if (!W) return;
+    ctx.clearRect(0, 0, W, H);
+    // prato
+    ctx.fillStyle = '#3b2e29';
+    rr(W * 0.12, sy(0) + 2, W * 0.76, Math.max(6, H * 0.018), 6); ctx.fill();
+    // meta
+    if (!reached && stack.length) {
+      const goalY = stack[0].h + Array.from({ length: TARGET }, (_, i) => lh(SEQ[i % SEQ.length])).reduce((a, b) => a + b, 0);
+      const gy = sy(goalY);
+      if (gy > 0 && gy < H) {
+        ctx.setLineDash([6, 6]); ctx.strokeStyle = 'rgba(242,182,50,.55)'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(10, gy); ctx.lineTo(W - 10, gy); ctx.stroke(); ctx.setLineDash([]);
+        ctx.fillStyle = 'rgba(242,182,50,.8)'; ctx.font = '700 12px Barlow, sans-serif'; ctx.textAlign = 'right';
+        ctx.fillText('PRÊMIO', W - 12, gy - 6);
+      }
+    }
+    stack.forEach(L => drawLayer(L, sy(L.y + L.h)));
+    if (moving) drawLayer(moving, sy(moving.y + moving.h));
+    falling.forEach(f => {
+      ctx.save();
+      const cx = f.x + f.w / 2, cy = sy(f.y + f.h / 2);
+      ctx.translate(cx, cy); ctx.rotate(f.rot); ctx.translate(-cx, -cy);
+      drawLayer(f, sy(f.y + f.h));
+      ctx.restore();
+    });
+  }
+
+  function loop(t) {
+    const dt = Math.min(0.033, (t - (last || t)) / 1000); last = t;
+    if (state === 'play' && moving) {
+      moving.x += dir * speed() * dt;
+      if (moving.x + moving.w > W + moving.w * 0.25) { moving.x = W + moving.w * 0.25 - moving.w; dir = -1; }
+      if (moving.x < -moving.w * 0.25) { moving.x = -moving.w * 0.25; dir = 1; }
+    }
+    falling.forEach(f => { f.vy -= W * 2.2 * dt; f.y += f.vy * dt; f.rot += f.vr * dt; });
+    falling = falling.filter(f => sy(f.y) < H + 200);
+    const want = Math.max(0, topY() + (moving ? moving.h : 0) - (H - groundPad()) * 0.62);
+    camY += (want - camY) * Math.min(1, dt * 6);
+    render();
+    requestAnimationFrame(loop);
+  }
+
+  /* ----- Som ----- */
+  let audio = null;
+  function initAudio() { try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); if (audio.state === 'suspended') audio.resume(); } catch (e) {} }
+  function beep(f, d, type) {
+    if (!audio) return;
+    const o = audio.createOscillator(), g = audio.createGain();
+    o.type = type; o.frequency.value = f;
+    g.gain.setValueAtTime(0.07, audio.currentTime); g.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + d);
+    o.connect(g).connect(audio.destination); o.start(); o.stop(audio.currentTime + d + 0.02);
+  }
+  function fanfare() { [523, 659, 784, 1047].forEach((f, k) => setTimeout(() => beep(f, 0.25, 'triangle'), k * 110)); }
+
+  /* ----- Controles ----- */
+  field.addEventListener('pointerdown', ev => {
+    if (ev.target.closest('.overlay')) return;
+    ev.preventDefault();
+    drop();
+  });
+  document.addEventListener('keydown', ev => {
+    if (ev.code === 'Space' || ev.code === 'Enter') {
+      if (state === 'play') { ev.preventDefault(); drop(); }
+    }
+  });
+  $('play').addEventListener('click', ev => { ev.stopPropagation(); start(); });
+  $('again').addEventListener('click', ev => { ev.stopPropagation(); $('over-normal').hidden = false; start(); });
+
+  window.addEventListener('resize', resize);
+  resize();
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
