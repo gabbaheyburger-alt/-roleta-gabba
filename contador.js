@@ -4,7 +4,7 @@
  * Para ligar: coloque abaixo o código da conta do GoatCounter (o "xxx" de xxx.goatcounter.com).
  */
 (function () {
-  var CODIGO = '';
+  var CODIGO = 'gabbajogos';
 
   var fila = [];
   window.gabbaConta = function (nome, titulo) {
