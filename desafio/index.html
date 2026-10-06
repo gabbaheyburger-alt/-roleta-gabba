@@ -33,6 +33,9 @@ body { margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: en
 
 .hud { display: flex; justify-content: space-between; align-items: flex-end; gap: 10px; }
 .brand { font-family: var(--display); font-size: 1.05rem; line-height: 1; }
+.hud-left { display: flex; align-items: center; gap: 10px; }
+.back { color: var(--muted); border: 1px solid var(--line); border-radius: 10px; padding: 7px 10px; font: 700 .85rem var(--body); text-decoration: none; white-space: nowrap; }
+.back:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
 .brand span { color: var(--mustard); }
 .scores { display: flex; gap: 14px; }
 .score { text-align: right; }
@@ -77,7 +80,10 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
 <body>
 <div class="app">
   <div class="hud">
-    <div class="brand">Desafio<br><span>da Espera</span></div>
+    <div class="hud-left">
+      <a class="back" href="../jogos/">‹ Jogos</a>
+      <div class="brand">Desafio<br><span>da Espera</span></div>
+    </div>
     <div class="scores">
       <div class="score"><small>Recorde</small><b id="best">0</b></div>
       <div class="score main"><small>Camadas</small><b id="score">0</b></div>
@@ -95,6 +101,7 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
       <p>Monte <strong id="target-txt">15</strong> camadas e ganhe: <strong id="prize-txt"></strong></p>
       <button class="btn" id="play" type="button">JOGAR</button>
       <button class="link" id="see-prize" type="button" hidden>Ver meu prêmio de hoje</button>
+      <a class="link" href="../jogos/" style="text-decoration:none">Escolher outro jogo</a>
     </div>
 
     <div class="overlay" id="over" hidden>
@@ -114,6 +121,7 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
         <button class="btn" id="again" type="button">DE NOVO</button>
       </div>
       <button class="link" id="mark-used" type="button" hidden>Atendente: marcar como entregue</button>
+      <a class="link" href="../jogos/" style="text-decoration:none">Escolher outro jogo</a>
     </div>
   </div>
 </div>
