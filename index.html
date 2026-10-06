@@ -4,11 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Roleta Gabba</title>
+<meta name="theme-color" content="#17110f">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Barlow:wght@400;600;700&display=swap">
 <style>
-/* Layout: coluna única centrada; a roleta é a peça principal no topo, resultado logo abaixo, prêmios editáveis no fim */
+/* Layout: coluna única; roleta e botão para o cliente no topo, área da loja (PIN) com relatório e prêmios abaixo */
 :root {
   --bg: #17110f;
   --surface: #221a17;
@@ -20,22 +21,24 @@
   --mustard: #f2b632;
   --cream: #f6e7cf;
   --ink: #1d1411;
+  --ok: #6fbf73;
   --display: 'Bungee', Impact, 'Arial Black', sans-serif;
   --body: 'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
-body { margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
 html, body { background: var(--bg); color: var(--fg); }
-body { font-family: var(--body); font-size: 16px; line-height: 1.45; }
+body { margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); font-family: var(--body); font-size: 16px; line-height: 1.45; }
+[hidden] { display: none !important; }
 .wrap { max-width: 520px; margin: 0 auto; padding: 20px 16px 48px; display: flex; flex-direction: column; gap: 22px; }
 
-header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 h1 { font-family: var(--display); font-weight: 400; font-size: clamp(1.6rem, 7vw, 2.2rem); line-height: 1; margin: 0; letter-spacing: .01em; text-wrap: balance; }
 h1 span { color: var(--mustard); }
 .sub { color: var(--muted); font-size: .9rem; margin: 6px 0 0; }
-.icon-btn { background: transparent; border: 1px solid var(--line); color: var(--muted); font: 600 .8rem var(--body); padding: 6px 10px; border-radius: 999px; cursor: pointer; letter-spacing: .04em; text-transform: uppercase; }
-.icon-btn[aria-pressed="true"] { color: var(--mustard); border-color: var(--mustard); }
+.top-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.pill { background: transparent; border: 1px solid var(--line); color: var(--muted); font: 600 .78rem var(--body); padding: 6px 10px; border-radius: 999px; cursor: pointer; letter-spacing: .04em; text-transform: uppercase; }
+.pill[aria-pressed="true"], .pill.on { color: var(--mustard); border-color: var(--mustard); }
 
 .stage { position: relative; width: 100%; max-width: 440px; margin: 0 auto; aspect-ratio: 1; }
 .stage canvas { width: 100%; height: 100%; display: block; }
@@ -44,55 +47,80 @@ h1 span { color: var(--mustard); }
 .spin { font-family: var(--display); font-size: 1.5rem; letter-spacing: .04em; background: var(--red); color: var(--cream); border: none; border-radius: 14px; padding: 16px 20px; width: 100%; cursor: pointer; box-shadow: 0 5px 0 var(--red-deep); transition: transform .08s, box-shadow .08s; }
 .spin:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 1px 0 var(--red-deep); }
 .spin:disabled { opacity: .55; cursor: default; }
-.spin:focus-visible, .icon-btn:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
+button:focus-visible, input:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
 
 .result { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 18px; text-align: center; min-height: 104px; display: flex; flex-direction: column; justify-content: center; gap: 4px; }
-.result .label { text-transform: uppercase; letter-spacing: .12em; font-size: .72rem; color: var(--muted); font-weight: 600; }
+.label { text-transform: uppercase; letter-spacing: .12em; font-size: .72rem; color: var(--muted); font-weight: 600; }
 .result .prize { font-family: var(--display); font-size: clamp(1.3rem, 6vw, 1.8rem); color: var(--mustard); line-height: 1.15; overflow-wrap: anywhere; }
 .result.win { animation: pop .5s ease-out; border-color: var(--mustard); }
 @keyframes pop { 0% { transform: scale(.94); } 60% { transform: scale(1.03); } 100% { transform: scale(1); } }
 
-section h2 { font-family: var(--display); font-weight: 400; font-size: 1rem; letter-spacing: .03em; margin: 0 0 10px; color: var(--cream); }
-.history { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
-.history li { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: .95rem; }
-.history li span:first-child { min-width: 0; overflow-wrap: anywhere; }
-.history time { color: var(--muted); font-variant-numeric: tabular-nums; flex-shrink: 0; }
-.empty { color: var(--muted); font-size: .9rem; margin: 0; }
+/* Área da loja */
+.admin { display: flex; flex-direction: column; gap: 16px; border-top: 2px dashed var(--line); padding-top: 18px; }
+.admin-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.admin-head h2 { font-family: var(--display); font-weight: 400; font-size: 1.15rem; margin: 0; color: var(--cream); }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.panel h3 { font-family: var(--display); font-weight: 400; font-size: .95rem; margin: 0; color: var(--cream); letter-spacing: .02em; }
+.hint { color: var(--muted); font-size: .85rem; margin: 0; }
 
-details { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 4px 16px; }
-summary { cursor: pointer; padding: 12px 0; font-weight: 700; list-style: none; display: flex; justify-content: space-between; align-items: center; }
-summary::-webkit-details-marker { display: none; }
-summary::after { content: '+'; font-family: var(--display); color: var(--mustard); font-size: 1.2rem; }
-details[open] summary::after { content: '–'; }
-.hint { color: var(--muted); font-size: .85rem; margin: 0 0 12px; }
-.rows { display: flex; flex-direction: column; gap: 8px; }
-.row { display: grid; grid-template-columns: 14px minmax(0,1fr) 64px 46px 34px; gap: 8px; align-items: center; }
-.swatch { width: 14px; height: 14px; border-radius: 4px; }
-.row input { font: 600 .95rem var(--body); background: var(--bg); color: var(--fg); border: 1px solid var(--line); border-radius: 8px; padding: 8px; width: 100%; min-width: 0; }
-.row input[type=number] { text-align: center; font-variant-numeric: tabular-nums; }
-.pct { color: var(--muted); font-size: .8rem; text-align: right; font-variant-numeric: tabular-nums; }
+.date-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.date-row input { font: 600 .95rem var(--body); background: var(--bg); color: var(--fg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.stat { background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+.stat b { display: block; font-family: var(--display); font-weight: 400; font-size: 1.35rem; color: var(--mustard); font-variant-numeric: tabular-nums; margin-top: 2px; }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+th, td { text-align: left; padding: 7px 4px; border-bottom: 1px solid var(--line); }
+th { font-size: .7rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); font-weight: 600; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+tfoot td { font-weight: 700; border-bottom: none; }
+details.log summary { cursor: pointer; color: var(--muted); font-size: .88rem; font-weight: 600; }
+.log-list { list-style: none; margin: 8px 0 0; padding: 0; max-height: 260px; overflow-y: auto; }
+.log-list li { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: .9rem; }
+.log-list li span { min-width: 0; overflow-wrap: anywhere; }
+.log-list time { color: var(--muted); font-variant-numeric: tabular-nums; flex-shrink: 0; }
+
+.rows { display: flex; flex-direction: column; gap: 10px; }
+.prow { background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 10px; display: grid; grid-template-columns: 12px minmax(0,1fr) 34px; gap: 8px; align-items: center; }
+.swatch { width: 12px; height: 12px; border-radius: 3px; }
+.prow .fields { grid-column: 2 / 4; display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; align-items: end; }
+.prow label { font-size: .68rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); font-weight: 600; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.prow input { font: 600 .95rem var(--body); background: var(--surface); color: var(--fg); border: 1px solid var(--line); border-radius: 8px; padding: 8px; width: 100%; min-width: 0; }
+.prow .fields input { text-align: center; font-variant-numeric: tabular-nums; }
+.pct { color: var(--mustard); font-weight: 700; font-size: .95rem; font-variant-numeric: tabular-nums; padding-bottom: 8px; min-width: 42px; text-align: right; }
 .del { background: transparent; border: 1px solid var(--line); color: var(--muted); border-radius: 8px; height: 34px; cursor: pointer; font-size: 1.1rem; line-height: 1; }
 .del:disabled { opacity: .3; cursor: default; }
-.cols { display: grid; grid-template-columns: 14px minmax(0,1fr) 64px 46px 34px; gap: 8px; font-size: .7rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-bottom: 6px; }
-.cols span:nth-child(3) { text-align: center; }
-.cols span:nth-child(4) { text-align: right; }
-.actions { display: flex; gap: 8px; flex-wrap: wrap; margin: 14px 0 12px; }
-.ghost { background: transparent; border: 1px solid var(--mustard); color: var(--mustard); font: 700 .9rem var(--body); padding: 9px 14px; border-radius: 10px; cursor: pointer; }
+
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.ghost { background: transparent; border: 1px solid var(--mustard); color: var(--mustard); font: 700 .88rem var(--body); padding: 9px 14px; border-radius: 10px; cursor: pointer; }
 .ghost.quiet { border-color: var(--line); color: var(--muted); }
+.ghost.danger { border-color: var(--red); color: #ff8a80; }
 .ghost:disabled { opacity: .4; cursor: default; }
+.toast { color: var(--ok); font-size: .85rem; font-weight: 600; min-height: 1.2em; margin: 0; }
+
+/* Janela do PIN */
+.overlay { position: fixed; inset: 0; background: rgba(10,6,5,.82); display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 10; }
+.dialog { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 20px; width: 100%; max-width: 340px; display: flex; flex-direction: column; gap: 12px; }
+.dialog h2 { font-family: var(--display); font-weight: 400; font-size: 1.15rem; margin: 0; }
+.dialog input { font: 700 1.5rem var(--body); letter-spacing: .4em; text-align: center; background: var(--bg); color: var(--fg); border: 1px solid var(--line); border-radius: 10px; padding: 10px; width: 100%; }
+.err { color: #ff8a80; font-size: .88rem; margin: 0; min-height: 1.2em; }
+.dialog .actions { justify-content: flex-end; }
+
 footer { color: var(--muted); font-size: .78rem; text-align: center; }
 @media (prefers-reduced-motion: reduce) { .result.win { animation: none; } }
 </style>
 </head>
 <body>
-
 <div class="wrap">
   <header>
     <div>
       <h1>Roleta <span>Gabba</span></h1>
       <p class="sub">Gire e descubra o prêmio da casa</p>
     </div>
-    <button class="icon-btn" id="sound-toggle" aria-pressed="true" type="button">Som ligado</button>
+    <div class="top-actions">
+      <button class="pill" id="sound-toggle" aria-pressed="true" type="button">Som ligado</button>
+      <button class="pill" id="store-btn" type="button">Área da loja</button>
+    </div>
   </header>
 
   <div class="stage">
@@ -107,73 +135,131 @@ footer { color: var(--muted); font-size: .78rem; text-align: center; }
     <span class="prize" id="prize">Toque em girar</span>
   </div>
 
-  <section>
-    <h2>Últimos giros</h2>
-    <ul class="history" id="history"></ul>
-    <p class="empty" id="history-empty">Nenhum giro ainda.</p>
-  </section>
-
-  <details id="editor">
-    <summary>Editar prêmios</summary>
-    <p class="hint">O peso define a chance. Peso 2 sai duas vezes mais que peso 1, e a fatia na roleta fica do tamanho da chance real.</p>
-    <div class="cols"><span></span><span>Prêmio</span><span>Peso</span><span>Chance</span><span></span></div>
-    <div class="rows" id="rows"></div>
-    <div class="actions">
-      <button class="ghost" id="add" type="button">+ Adicionar prêmio</button>
-      <button class="ghost quiet" id="reset" type="button">Voltar ao exemplo</button>
-      <button class="ghost quiet" id="clear-history" type="button">Limpar giros</button>
+  <section class="admin" id="admin" hidden>
+    <div class="admin-head">
+      <h2>Área da loja</h2>
+      <div class="actions">
+        <button class="ghost quiet" id="change-pin" type="button">Trocar PIN</button>
+        <button class="ghost" id="lock" type="button">Trancar</button>
+      </div>
     </div>
-  </details>
+
+    <div class="panel">
+      <h3>Giros do dia</h3>
+      <div class="date-row">
+        <label class="label" for="report-date">Dia</label>
+        <input type="date" id="report-date">
+        <button class="ghost quiet" id="today" type="button">Hoje</button>
+      </div>
+      <div class="stats">
+        <div class="stat"><span class="label">Giros</span><b id="stat-spins">0</b></div>
+        <div class="stat"><span class="label">Custo dos prêmios</span><b id="stat-cost">R$ 0,00</b></div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Prêmio</th><th class="num">Qtd</th><th class="num">Custo</th></tr></thead>
+          <tbody id="report-body"></tbody>
+          <tfoot id="report-foot"></tfoot>
+        </table>
+      </div>
+      <p class="hint" id="report-empty">Nenhum giro neste dia.</p>
+      <details class="log" id="log-details">
+        <summary>Ver giro a giro</summary>
+        <ul class="log-list" id="log-list"></ul>
+      </details>
+      <div class="actions">
+        <button class="ghost" id="copy-report" type="button">Copiar resumo</button>
+        <button class="ghost quiet" id="download-csv" type="button">Baixar planilha</button>
+        <button class="ghost danger" id="clear-log" type="button">Apagar registro</button>
+      </div>
+      <p class="toast" id="report-toast" aria-live="polite"></p>
+      <p class="hint">O registro fica salvo só neste aparelho. Use sempre o mesmo tablet ou celular da loja.</p>
+    </div>
+
+    <div class="panel">
+      <h3>Prêmios</h3>
+      <p class="hint">O peso define a chance: peso 2 sai duas vezes mais que peso 1. O custo é quanto o prêmio custa para a loja (CMV), usado no relatório.</p>
+      <div class="rows" id="rows"></div>
+      <div class="actions">
+        <button class="ghost" id="add" type="button">+ Adicionar prêmio</button>
+        <button class="ghost quiet" id="reset" type="button">Voltar ao exemplo</button>
+      </div>
+    </div>
+  </section>
 
   <footer>Gabba Hey Burger · Paracuru</footer>
 </div>
 
+<div class="overlay" id="pin-overlay" hidden>
+  <form class="dialog" id="pin-form" autocomplete="off">
+    <h2 id="pin-title">Área da loja</h2>
+    <p class="hint" id="pin-hint">Digite o PIN da loja.</p>
+    <input type="password" id="pin-input" inputmode="numeric" pattern="[0-9]*" maxlength="8" aria-label="PIN">
+    <input type="password" id="pin-confirm" inputmode="numeric" pattern="[0-9]*" maxlength="8" aria-label="Confirme o PIN" placeholder="repita" hidden>
+    <p class="err" id="pin-err" aria-live="polite"></p>
+    <div class="actions">
+      <button class="ghost quiet" id="pin-cancel" type="button">Cancelar</button>
+      <button class="ghost" id="pin-ok" type="submit">Entrar</button>
+    </div>
+  </form>
+</div>
+
 <script>
 (function () {
-  const STORE = 'roleta-gabba-v1';
+  const STORE = 'roleta-gabba-v2';
   const COLORS = [
     { fill: '#d7261e', text: '#f6e7cf' },
     { fill: '#f6e7cf', text: '#1d1411' },
     { fill: '#f2b632', text: '#1d1411' },
     { fill: '#9c1611', text: '#f6e7cf' }
   ];
+  // Exemplo: nomes, pesos e custos são ilustrativos. Ajuste com o CMV real de cada item.
   const EXAMPLE = [
-    { name: 'Batata pequena', weight: 3 },
-    { name: 'Refri lata', weight: 3 },
-    { name: 'Não foi dessa vez', weight: 4 },
-    { name: 'Sobremesa', weight: 2 },
-    { name: '10% de desconto', weight: 3 },
-    { name: 'Chopp 300 ml', weight: 2 },
-    { name: 'Milkshake', weight: 1 },
-    { name: 'Burger grátis', weight: 1 }
+    { name: 'Batata pequena', weight: 3, cost: 3.5 },
+    { name: 'Refri lata', weight: 3, cost: 3 },
+    { name: 'Molho extra', weight: 4, cost: 0.8 },
+    { name: 'Sobremesa', weight: 2, cost: 4 },
+    { name: '10% de desconto', weight: 3, cost: 0 },
+    { name: 'Chopp 300 ml', weight: 2, cost: 3.2 },
+    { name: 'Milkshake', weight: 1, cost: 6 },
+    { name: 'Burger grátis', weight: 1, cost: 12 }
   ];
-  const MAX = 12, MIN = 2;
+  const MAX = 12, MIN = 2, LOG_MAX = 5000, AUTO_LOCK_MS = 10 * 60 * 1000;
 
   let prizes = EXAMPLE.map(p => ({ ...p }));
-  let history = [];
-  let rotation = 0;          // graus, sentido horário
-  let spinning = false;
-  let soundOn = true;
-  let winner = -1;
+  let log = [];               // { t: ISO, name, cost }
+  let pinHash = null;
+  let rotation = 0, spinning = false, soundOn = true, winner = -1, unlocked = false, lockTimer = null;
 
   try {
     const saved = JSON.parse(localStorage.getItem(STORE) || 'null');
-    if (saved && Array.isArray(saved.prizes) && saved.prizes.length >= MIN) prizes = saved.prizes;
-    if (saved && Array.isArray(saved.history)) history = saved.history;
-    if (saved && typeof saved.soundOn === 'boolean') soundOn = saved.soundOn;
+    if (saved) {
+      if (Array.isArray(saved.prizes) && saved.prizes.length >= MIN) prizes = saved.prizes.map(p => ({ name: String(p.name || ''), weight: Number(p.weight) || 0, cost: Number(p.cost) || 0 }));
+      if (Array.isArray(saved.log)) log = saved.log;
+      if (typeof saved.soundOn === 'boolean') soundOn = saved.soundOn;
+      if (typeof saved.pinHash === 'string') pinHash = saved.pinHash;
+    } else {
+      const old = JSON.parse(localStorage.getItem('roleta-gabba-v1') || 'null');
+      if (old && Array.isArray(old.prizes) && old.prizes.length >= MIN) prizes = old.prizes.map(p => ({ name: String(p.name || ''), weight: Number(p.weight) || 0, cost: 0 }));
+    }
   } catch (e) {}
 
   function save() {
-    try { localStorage.setItem(STORE, JSON.stringify({ prizes, history, soundOn })); } catch (e) {}
+    try { localStorage.setItem(STORE, JSON.stringify({ prizes, log, soundOn, pinHash })); } catch (e) {}
   }
 
-  const canvas = document.getElementById('wheel');
-  const ctx = canvas.getContext('2d');
   const $ = id => document.getElementById(id);
+  const canvas = $('wheel');
+  const ctx = canvas.getContext('2d');
+  const brl = v => (Number(v) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const pad = n => String(n).padStart(2, '0');
+  const dayKey = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  const hhmm = d => pad(d.getHours()) + ':' + pad(d.getMinutes());
+  const parseMoney = s => { const n = parseFloat(String(s).replace(/\s|R\$/g, '').replace(',', '.')); return isFinite(n) && n >= 0 ? n : 0; };
 
+  /* ---------- Roleta ---------- */
   function active() { return prizes.map((p, i) => ({ ...p, i })).filter(p => Number(p.weight) > 0 && p.name.trim()); }
 
-  // segmentos em graus, medidos a partir do topo no sentido horário
   function segments() {
     const list = active();
     const total = list.reduce((s, p) => s + Number(p.weight), 0);
@@ -196,25 +282,22 @@ footer { color: var(--muted); font-size: .78rem; text-align: center; }
 
   function draw() {
     const W = canvas.width, c = W / 2, R = c * 0.94;
+    if (!W) return;
     ctx.clearRect(0, 0, W, W);
     const segs = segments();
     const rad = d => (d - 90 + rotation) * Math.PI / 180;
 
-    // aro externo
     ctx.beginPath(); ctx.arc(c, c, c * 0.995, 0, Math.PI * 2); ctx.fillStyle = '#1d1411'; ctx.fill();
 
-    segs.forEach((s, k) => {
+    segs.forEach(s => {
       const col = COLORS[s.i % COLORS.length];
       ctx.beginPath(); ctx.moveTo(c, c);
       ctx.arc(c, c, R, rad(s.start), rad(s.end));
       ctx.closePath();
       ctx.fillStyle = col.fill; ctx.fill();
       ctx.lineWidth = W * 0.004; ctx.strokeStyle = '#1d1411'; ctx.stroke();
-      if (s.i === winner && !spinning) {
-        ctx.fillStyle = 'rgba(255,255,255,0.18)'; ctx.fill();
-      }
+      if (s.i === winner && !spinning) { ctx.fillStyle = 'rgba(255,255,255,0.18)'; ctx.fill(); }
 
-      // texto
       const mid = rad((s.start + s.end) / 2);
       const sweepRad = (s.end - s.start) * Math.PI / 180;
       ctx.save();
@@ -231,23 +314,20 @@ footer { color: var(--muted); font-size: .78rem; text-align: center; }
       ctx.restore();
     });
 
-    // pinos do aro
     segs.forEach(s => {
       const a = rad(s.start);
       ctx.beginPath(); ctx.arc(c + Math.cos(a) * c * 0.965, c + Math.sin(a) * c * 0.965, W * 0.011, 0, Math.PI * 2);
       ctx.fillStyle = '#f2b632'; ctx.fill();
     });
 
-    // miolo
     ctx.beginPath(); ctx.arc(c, c, R * 0.2, 0, Math.PI * 2);
     ctx.fillStyle = '#1d1411'; ctx.fill();
     ctx.lineWidth = W * 0.012; ctx.strokeStyle = '#f2b632'; ctx.stroke();
     ctx.fillStyle = '#f6e7cf'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.font = (W * 0.042) + "px Bungee, Impact, sans-serif";
+    ctx.font = (W * 0.042) + 'px Bungee, Impact, sans-serif';
     ctx.fillText('GABBA', c, c + W * 0.003);
   }
 
-  // som
   let audio = null;
   function tick() {
     if (!soundOn || !audio) return;
@@ -312,47 +392,206 @@ footer { color: var(--muted); font-size: .78rem; text-align: center; }
       void $('result').offsetWidth;
       $('result').classList.add('win');
       fanfare();
-      const d = new Date();
-      history.unshift({ name: chosen.name.trim(), time: d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) });
-      history = history.slice(0, 10);
-      renderHistory(); save();
+      log.push({ t: new Date().toISOString(), name: chosen.name.trim(), cost: Number(chosen.cost) || 0 });
+      if (log.length > LOG_MAX) log = log.slice(-LOG_MAX);
+      save();
+      if (unlocked) renderReport();
     }
     requestAnimationFrame(frame);
   }
 
-  function renderHistory() {
-    const ul = $('history');
-    ul.innerHTML = '';
-    history.forEach(h => {
-      const li = document.createElement('li');
-      const n = document.createElement('span'); n.textContent = h.name;
-      const t = document.createElement('time'); t.textContent = h.time;
-      li.append(n, t); ul.append(li);
-    });
-    $('history-empty').hidden = history.length > 0;
+  /* ---------- PIN ---------- */
+  async function hash(pin) {
+    const data = 'roleta-gabba:' + pin;
+    if (window.crypto && crypto.subtle) {
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(data));
+      return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+    let h = 5381; for (let i = 0; i < data.length; i++) h = ((h << 5) + h + data.charCodeAt(i)) | 0;
+    return 'x' + (h >>> 0).toString(16);
   }
 
+  let pinMode = 'unlock'; // unlock | create | change-old
+  function openPin(mode) {
+    pinMode = mode;
+    const creating = mode === 'create';
+    $('pin-title').textContent = creating ? 'Criar PIN da loja' : (mode === 'change-old' ? 'Trocar PIN' : 'Área da loja');
+    $('pin-hint').textContent = creating ? 'Escolha um PIN de 4 a 8 números. Só quem souber o PIN edita prêmios e vê o relatório.' : (mode === 'change-old' ? 'Digite o PIN atual.' : 'Digite o PIN da loja.');
+    $('pin-confirm').hidden = !creating;
+    $('pin-ok').textContent = creating ? 'Salvar PIN' : 'Entrar';
+    $('pin-input').value = ''; $('pin-confirm').value = ''; $('pin-err').textContent = '';
+    $('pin-overlay').hidden = false;
+    setTimeout(() => $('pin-input').focus(), 30);
+  }
+  function closePin() { $('pin-overlay').hidden = true; }
+
+  $('pin-form').addEventListener('submit', async ev => {
+    ev.preventDefault();
+    const pin = $('pin-input').value.trim();
+    if (!/^\d{4,8}$/.test(pin)) { $('pin-err').textContent = 'O PIN precisa ter de 4 a 8 números.'; return; }
+    if (pinMode === 'create') {
+      if (pin !== $('pin-confirm').value.trim()) { $('pin-err').textContent = 'Os dois PINs não são iguais. Digite de novo.'; return; }
+      pinHash = await hash(pin); save(); closePin(); unlock();
+      return;
+    }
+    if ((await hash(pin)) !== pinHash) { $('pin-err').textContent = 'PIN errado. Tente de novo.'; $('pin-input').value = ''; return; }
+    if (pinMode === 'change-old') { openPin('create'); return; }
+    closePin(); unlock();
+  });
+  $('pin-cancel').addEventListener('click', closePin);
+
+  function bumpLock() {
+    clearTimeout(lockTimer);
+    if (unlocked) lockTimer = setTimeout(lock, AUTO_LOCK_MS);
+  }
+  function unlock() {
+    unlocked = true;
+    $('admin').hidden = false;
+    $('store-btn').classList.add('on');
+    $('store-btn').textContent = 'Loja aberta';
+    if (!$('report-date').value) $('report-date').value = dayKey(new Date());
+    renderRows(); renderReport(); bumpLock();
+    $('admin').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  function lock() {
+    unlocked = false;
+    clearTimeout(lockTimer);
+    $('admin').hidden = true;
+    $('store-btn').classList.remove('on');
+    $('store-btn').textContent = 'Área da loja';
+    resetClearBtn();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  $('store-btn').addEventListener('click', () => {
+    if (unlocked) { $('admin').scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
+    openPin(pinHash ? 'unlock' : 'create');
+  });
+  $('lock').addEventListener('click', lock);
+  $('change-pin').addEventListener('click', () => openPin('change-old'));
+  $('admin').addEventListener('input', bumpLock);
+  $('admin').addEventListener('click', bumpLock);
+
+  /* ---------- Relatório ---------- */
+  function entriesFor(day) { return log.filter(e => dayKey(new Date(e.t)) === day); }
+
+  function renderReport() {
+    const day = $('report-date').value || dayKey(new Date());
+    const list = entriesFor(day);
+    const byPrize = new Map();
+    list.forEach(e => {
+      const k = e.name;
+      const cur = byPrize.get(k) || { qty: 0, cost: 0 };
+      cur.qty += 1; cur.cost += Number(e.cost) || 0;
+      byPrize.set(k, cur);
+    });
+    const rows = [...byPrize.entries()].sort((a, b) => b[1].qty - a[1].qty);
+    const totalCost = list.reduce((s, e) => s + (Number(e.cost) || 0), 0);
+
+    $('stat-spins').textContent = list.length;
+    $('stat-cost').textContent = brl(totalCost);
+    const body = $('report-body'); body.innerHTML = '';
+    rows.forEach(([name, v]) => {
+      const tr = document.createElement('tr');
+      const a = document.createElement('td'); a.textContent = name;
+      const b = document.createElement('td'); b.className = 'num'; b.textContent = v.qty;
+      const c = document.createElement('td'); c.className = 'num'; c.textContent = brl(v.cost);
+      tr.append(a, b, c); body.append(tr);
+    });
+    $('report-foot').innerHTML = list.length ? '<tr><td>Total</td><td class="num">' + list.length + '</td><td class="num">' + brl(totalCost) + '</td></tr>' : '';
+    $('report-empty').hidden = list.length > 0;
+
+    const ul = $('log-list'); ul.innerHTML = '';
+    list.slice().reverse().forEach(e => {
+      const li = document.createElement('li');
+      const n = document.createElement('span'); n.textContent = e.name;
+      const t = document.createElement('time'); t.textContent = hhmm(new Date(e.t));
+      li.append(n, t); ul.append(li);
+    });
+    $('log-details').hidden = list.length === 0;
+  }
+
+  function toast(msg) {
+    $('report-toast').textContent = msg;
+    clearTimeout(toast.t); toast.t = setTimeout(() => { $('report-toast').textContent = ''; }, 3500);
+  }
+
+  $('report-date').addEventListener('change', renderReport);
+  $('today').addEventListener('click', () => { $('report-date').value = dayKey(new Date()); renderReport(); });
+
+  $('copy-report').addEventListener('click', () => {
+    const day = $('report-date').value || dayKey(new Date());
+    const list = entriesFor(day);
+    const [y, m, d] = day.split('-');
+    const byPrize = new Map();
+    list.forEach(e => { const c = byPrize.get(e.name) || { qty: 0, cost: 0 }; c.qty++; c.cost += Number(e.cost) || 0; byPrize.set(e.name, c); });
+    const total = list.reduce((s, e) => s + (Number(e.cost) || 0), 0);
+    let txt = '🎡 Roleta Gabba – ' + d + '/' + m + '/' + y + '\n';
+    txt += 'Giros: ' + list.length + '\nCusto dos prêmios: ' + brl(total) + '\n';
+    [...byPrize.entries()].sort((a, b) => b[1].qty - a[1].qty).forEach(([n, v]) => { txt += '• ' + n + ': ' + v.qty + ' (' + brl(v.cost) + ')\n'; });
+    const done = () => toast('Resumo copiado. Cole no WhatsApp.');
+    const fallback = () => {
+      const ta = document.createElement('textarea'); ta.value = txt; ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.append(ta); ta.select();
+      try { document.execCommand('copy'); done(); } catch (e) { toast('Não consegui copiar neste aparelho.'); }
+      ta.remove();
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done, fallback); else fallback();
+  });
+
+  $('download-csv').addEventListener('click', () => {
+    if (!log.length) { toast('Ainda não há giros para baixar.'); return; }
+    const lines = ['data;hora;premio;custo'];
+    log.forEach(e => {
+      const d = new Date(e.t);
+      lines.push([pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear(), hhmm(d), '"' + e.name.replace(/"/g, '""') + '"', (Number(e.cost) || 0).toFixed(2).replace('.', ',')].join(';'));
+    });
+    const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = 'giros-roleta-gabba.csv';
+    document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    toast('Planilha baixada.');
+  });
+
+  let clearArmed = false;
+  function resetClearBtn() { clearArmed = false; $('clear-log').textContent = 'Apagar registro'; }
+  $('clear-log').addEventListener('click', () => {
+    if (!clearArmed) { clearArmed = true; $('clear-log').textContent = 'Toque de novo para apagar tudo'; setTimeout(resetClearBtn, 4000); return; }
+    log = []; save(); resetClearBtn(); renderReport(); toast('Registro apagado.');
+  });
+
+  /* ---------- Prêmios ---------- */
   function renderRows() {
     const box = $('rows');
     box.innerHTML = '';
-    const total = active().reduce((s, p) => s + Number(p.weight), 0) || 1;
     prizes.forEach((p, i) => {
-      const row = document.createElement('div'); row.className = 'row';
+      const row = document.createElement('div'); row.className = 'prow';
       const sw = document.createElement('span'); sw.className = 'swatch'; sw.style.background = COLORS[i % COLORS.length].fill;
       const name = document.createElement('input');
       name.type = 'text'; name.id = 'prize-name-' + i; name.value = p.name; name.maxLength = 28;
       name.setAttribute('aria-label', 'Nome do prêmio ' + (i + 1));
       name.addEventListener('input', () => { p.name = name.value; save(); updatePct(); draw(); });
-      const w = document.createElement('input');
-      w.type = 'number'; w.id = 'prize-weight-' + i; w.min = '0'; w.max = '99'; w.step = '1'; w.value = p.weight; w.inputMode = 'numeric';
-      w.setAttribute('aria-label', 'Peso do prêmio ' + (i + 1));
-      w.addEventListener('input', () => { p.weight = Math.max(0, Math.min(99, Number(w.value) || 0)); save(); updatePct(); draw(); });
-      const pct = document.createElement('span'); pct.className = 'pct'; pct.dataset.i = i;
       const del = document.createElement('button'); del.className = 'del'; del.type = 'button'; del.textContent = '×';
       del.setAttribute('aria-label', 'Remover ' + p.name);
       del.disabled = prizes.length <= MIN;
       del.addEventListener('click', () => { if (spinning) return; prizes.splice(i, 1); winner = -1; save(); renderRows(); draw(); });
-      row.append(sw, name, w, pct, del); box.append(row);
+
+      const fields = document.createElement('div'); fields.className = 'fields';
+      const lw = document.createElement('label'); lw.textContent = 'Peso';
+      const w = document.createElement('input');
+      w.type = 'number'; w.id = 'prize-weight-' + i; w.min = '0'; w.max = '99'; w.step = '1'; w.value = p.weight; w.inputMode = 'numeric';
+      w.addEventListener('input', () => { p.weight = Math.max(0, Math.min(99, Number(w.value) || 0)); save(); updatePct(); draw(); });
+      lw.append(w);
+      const lc = document.createElement('label'); lc.textContent = 'Custo R$';
+      const c = document.createElement('input');
+      c.type = 'text'; c.id = 'prize-cost-' + i; c.inputMode = 'decimal'; c.value = (Number(p.cost) || 0).toFixed(2).replace('.', ',');
+      c.addEventListener('input', () => { p.cost = parseMoney(c.value); save(); });
+      c.addEventListener('blur', () => { c.value = (Number(p.cost) || 0).toFixed(2).replace('.', ','); });
+      lc.append(c);
+      const pct = document.createElement('span'); pct.className = 'pct'; pct.dataset.i = i;
+      fields.append(lw, lc, pct);
+
+      row.append(sw, name, del, fields); box.append(row);
     });
     $('add').disabled = prizes.length >= MAX;
     updatePct();
@@ -367,24 +606,23 @@ footer { color: var(--muted); font-size: .78rem; text-align: center; }
     });
   }
 
+  $('add').addEventListener('click', () => {
+    if (prizes.length >= MAX || spinning) return;
+    prizes.push({ name: 'Novo prêmio', weight: 1, cost: 0 }); save(); renderRows(); draw();
+    const el = $('prize-name-' + (prizes.length - 1)); if (el) { el.focus(); el.select(); }
+  });
+  $('reset').addEventListener('click', () => { if (spinning) return; prizes = EXAMPLE.map(p => ({ ...p })); winner = -1; save(); renderRows(); draw(); });
+
+  /* ---------- Início ---------- */
   function renderSound() {
     $('sound-toggle').setAttribute('aria-pressed', String(soundOn));
     $('sound-toggle').textContent = soundOn ? 'Som ligado' : 'Som desligado';
   }
-
-  $('spin').addEventListener('click', spin);
   $('sound-toggle').addEventListener('click', () => { soundOn = !soundOn; renderSound(); save(); });
-  $('add').addEventListener('click', () => {
-    if (prizes.length >= MAX || spinning) return;
-    prizes.push({ name: 'Novo prêmio', weight: 1 }); save(); renderRows(); draw();
-    const el = $('prize-name-' + (prizes.length - 1)); if (el) { el.focus(); el.select(); }
-  });
-  $('reset').addEventListener('click', () => { if (spinning) return; prizes = EXAMPLE.map(p => ({ ...p })); winner = -1; save(); renderRows(); draw(); });
-  $('clear-history').addEventListener('click', () => { history = []; save(); renderHistory(); });
-
+  $('spin').addEventListener('click', spin);
   window.addEventListener('resize', size);
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
-  renderSound(); renderRows(); renderHistory(); size();
+  renderSound(); size();
 })();
 </script>
 </body>
