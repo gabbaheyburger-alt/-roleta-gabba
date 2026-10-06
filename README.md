@@ -31,6 +31,7 @@ Central de jogos rápidos para o cliente passar o tempo enquanto espera, no ende
 - **Memória Gabba:** achar os 8 pares de itens do cardápio.
 - **Quiz do Gabba:** 8 perguntas sorteadas sobre hambúrguer, rock e Ceará, com 15 segundos cada. Responder rápido vale mais pontos.
 - **Caça ao Burger:** 30 segundos para tocar nos burgers (+1) e fugir dos queimados (−2).
+- **Obby do Gabba:** percurso 3D.
 - Atalho para o **Desafio da Espera**.
 
 Os recordes ficam salvos no celular de cada cliente. As perguntas do quiz ficam na lista `BANK` dentro de `jogos/index.html`.
@@ -39,9 +40,9 @@ Os recordes ficam salvos no celular de cada cliente. As perguntas do quiz ficam 
 
 Jogo em teste, fora do Fliperama, no endereço `/chapa/`. O jogador monta os pedidos seguindo a comanda e tira a carne da chapa no ponto certo. Perdeu 3 pedidos por tempo, acaba o turno.
 
-## Obby do Gabba (teste)
+## Obby do Gabba
 
-Percurso 3D no navegador, fora do Fliperama, no endereço `/obby/`. O personagem atravessa burgers, batatas, copos de chopp e plataformas móveis sem cair no mar de ketchup, com 3 bandeiras de checkpoint e moedas. Usa a biblioteca three.js.
+Percurso 3D no navegador, dentro do Fliperama, no endereço `/obby/`. O personagem atravessa burgers, batatas, copos de chopp e plataformas móveis sem cair no mar de ketchup, com 3 bandeiras de checkpoint e moedas. Usa a biblioteca three.js.
 
 ## Arquivos
 
@@ -49,4 +50,4 @@ Percurso 3D no navegador, fora do Fliperama, no endereço `/obby/`. O personagem
 - `desafio/index.html`: o jogo Desafio da Espera.
 - `jogos/index.html`: o Fliperama Gabba.
 - `chapa/index.html`: o jogo Chapa do Gabba (teste).
-- `obby/index.html`: o Obby do Gabba em 3D (teste).
+- `obby/index.html`: o Obby do Gabba em 3D.
