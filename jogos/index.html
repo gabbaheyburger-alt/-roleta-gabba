@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Fliperama Gabba</title>
 <meta name="theme-color" content="#17110f">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -27,7 +27,7 @@
   --body: 'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif;
   color-scheme: dark;
 }
-* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+* { touch-action: manipulation; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { background: var(--bg); color: var(--fg); }
 body { margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); font-family: var(--body); font-size: 16px; line-height: 1.4; }
 [hidden] { display: none !important; }
@@ -448,6 +448,23 @@ footer { color: var(--muted); font-size: .78rem; text-align: center; }
   $('caca-again').addEventListener('click', cacaGo);
 
   renderBest();
+})();
+</script>
+<script>
+/* Impede o zoom por toque duplo e por pinça (iPhone ignora user-scalable=no) */
+(function () {
+  let lastEnd = 0;
+  document.addEventListener('touchend', function (e) {
+    const now = Date.now();
+    const onControl = e.target && e.target.closest && e.target.closest('button, a, input, select, textarea, label');
+    if (!onControl && now - lastEnd < 350) e.preventDefault();
+    lastEnd = now;
+  }, { passive: false });
+  document.addEventListener('dblclick', function (e) { e.preventDefault(); }, { passive: false });
+  ['gesturestart', 'gesturechange', 'gestureend'].forEach(function (t) {
+    document.addEventListener(t, function (e) { e.preventDefault(); }, { passive: false });
+  });
+  document.addEventListener('touchmove', function (e) { if (e.touches && e.touches.length > 1) e.preventDefault(); }, { passive: false });
 })();
 </script>
 </body>
