@@ -44,6 +44,10 @@ Jogo em teste, fora do Fliperama, no endereço `/chapa/`. O jogador monta os ped
 
 Percurso 3D no navegador, dentro do Fliperama, no endereço `/obby/`. O personagem atravessa burgers, batatas, copos de chopp e plataformas móveis sem cair no mar de ketchup, com 3 bandeiras de checkpoint e moedas. Usa a biblioteca three.js.
 
+## Corre, Gabba! (teste)
+
+Jogo de corrida com o mascote do Gabba Hey Burger, no endereço `/corre/`. Toque para pular (toque de novo no ar para pulo duplo), desvie de caixas de som, pimentas e cones e pegue batatas. A velocidade aumenta com o tempo. A imagem do mascote fica em `corre/mascote.png`.
+
 ## Arquivos
 
 - `index.html`: a roleta inteira (visual, regras, relatório e animação) em um único arquivo.
@@ -51,3 +55,4 @@ Percurso 3D no navegador, dentro do Fliperama, no endereço `/obby/`. O personag
 - `jogos/index.html`: o Fliperama Gabba.
 - `chapa/index.html`: o jogo Chapa do Gabba (teste).
 - `obby/index.html`: o Obby do Gabba em 3D.
+- `corre/index.html` e `corre/mascote.png`: o jogo Corre, Gabba! (teste).

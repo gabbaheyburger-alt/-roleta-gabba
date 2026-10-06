@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Corre, Gabba!</title>
+<meta name="theme-color" content="#0d0a09">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Barlow:wght@400;600;700;800&display=swap">
+<style>
+/* Layout: corrida em tela cheia; placar no topo, toque em qualquer lugar para pular */
+:root {
+  --bg: #0d0a09;
+  --surface: #221a17;
+  --line: #3b2e29;
+  --fg: #f6ece2;
+  --muted: #b5a397;
+  --red: #e8102e;
+  --red-deep: #9c0b1f;
+  --mustard: #f2b632;
+  --cream: #f3e6cc;
+  --ok: #6fbf73;
+  --display: 'Bungee', Impact, 'Arial Black', sans-serif;
+  --body: 'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color-scheme: dark;
+}
+* { touch-action: manipulation; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; margin: 0; overflow: hidden; background: var(--bg); color: var(--fg); font-family: var(--body); user-select: none; -webkit-user-select: none; overscroll-behavior: none; }
+[hidden] { display: none !important; }
+#game { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+
+.hud { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 10px); left: 12px; right: 12px; display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; pointer-events: none; z-index: 2; }
+.chip { background: rgba(13,10,9,.72); border: 1px solid rgba(255,255,255,.1); border-radius: 12px; padding: 6px 10px; }
+.chip small { display: block; font-size: .58rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.chip b { font-family: var(--display); font-weight: 400; font-size: 1.2rem; line-height: 1; font-variant-numeric: tabular-nums; }
+.chip.main b { color: var(--mustard); font-size: 1.5rem; }
+.right { display: flex; gap: 6px; }
+.back { pointer-events: auto; color: var(--fg); background: rgba(13,10,9,.72); border: 1px solid rgba(255,255,255,.1); border-radius: 10px; padding: 7px 10px; font-weight: 700; font-size: .85rem; text-decoration: none; }
+
+.overlay { position: fixed; inset: 0; background: rgba(13,10,9,.9); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 24px; text-align: center; z-index: 5; overflow-y: auto; }
+.overlay img { width: 150px; height: auto; filter: drop-shadow(0 8px 18px rgba(232,16,46,.45)); animation: bob 1.2s ease-in-out infinite; }
+@keyframes bob { 50% { transform: translateY(-8px) rotate(-3deg); } }
+.overlay h1 { font-family: var(--display); font-weight: 400; font-size: clamp(2.2rem, 11vw, 3rem); line-height: .95; margin: 0; color: var(--red); text-shadow: 0 0 22px rgba(232,16,46,.45); }
+.overlay h1 span { color: var(--cream); }
+.overlay p { margin: 0; color: var(--muted); max-width: 32ch; }
+.overlay p strong { color: var(--fg); }
+.btn { font-family: var(--display); font-size: 1.3rem; letter-spacing: .04em; background: var(--red); color: var(--cream); border: none; border-radius: 14px; padding: 14px 28px; cursor: pointer; box-shadow: 0 5px 0 var(--red-deep); }
+.btn:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--red-deep); }
+.link { color: var(--muted); border: 1px solid var(--line); border-radius: 10px; padding: 9px 14px; font-weight: 700; font-size: .9rem; text-decoration: none; }
+button:focus-visible, a:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
+.big { font-family: var(--display); font-size: 3rem; line-height: 1; color: var(--mustard); }
+.record { color: var(--ok); font-weight: 700; }
+@media (prefers-reduced-motion: reduce) { .overlay img { animation: none; } }
+</style>
+</head>
+<body>
+<canvas id="game" aria-label="Corre, Gabba! Toque para pular"></canvas>
+
+<div class="hud">
+  <a class="back" href="../jogos/">‹ Jogos</a>
+  <div class="right">
+    <div class="chip"><small>Batatas</small><b id="fries">0</b></div>
+    <div class="chip"><small>Recorde</small><b id="best">0</b></div>
+    <div class="chip main"><small>Pontos</small><b id="score">0</b></div>
+  </div>
+</div>
+
+<div class="overlay" id="start">
+  <img src="mascote.png" alt="Mascote do Gabba Hey Burger">
+  <h1>Corre, <span>Gabba!</span></h1>
+  <p><strong>Toque na tela para pular.</strong> Toque de novo no ar para dar um pulo duplo.</p>
+  <p>Desvie das caixas de som e das pimentas e pegue as batatas.</p>
+  <button class="btn" id="play" type="button">CORRER</button>
+  <a class="link" href="../jogos/">Escolher outro jogo</a>
+</div>
+
+<div class="overlay" id="over" hidden>
+  <img src="mascote.png" alt="">
+  <h1>Ops, <span>trombou!</span></h1>
+  <div class="big" id="final">0</div>
+  <p id="final-msg">pontos</p>
+  <button class="btn" id="again" type="button">CORRER DE NOVO</button>
+  <a class="link" href="../jogos/">Escolher outro jogo</a>
+</div>
+
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const cv = $('game'), ctx = cv.getContext('2d');
+  const STORE = 'corre-gabba-v1';
+  let best = 0;
+  try { best = Number(JSON.parse(localStorage.getItem(STORE) || '{}').best) || 0; } catch (e) {}
+  $('best').textContent = best;
+
+  const img = new Image(); img.src = 'mascote.png';
+  let W = 0, H = 0, dpr = 1, U = 1, GROUND = 0;
+  function resize() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = window.innerWidth; H = window.innerHeight;
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    U = Math.min(W, H * 0.62) / 100;   // unidade de tamanho
+    GROUND = H * 0.78;
+  }
+  window.addEventListener('resize', resize); resize();
+
+  /* ---------- Estado ---------- */
+  const G = { x: 0, y: 0, vy: 0, jumps: 0, onGround: true, run: 0, squash: 0 };
+  let obs = [], items = [], parts = [], speed = 0, dist = 0, score = 0, fries = 0, running = false, nextObs = 0, nextItem = 0, shake = 0, t = 0;
+  let farOff = 0, midOff = 0, groundOff = 0;
+  const SPR_H = () => U * 30, SPR_W = () => SPR_H() * (img.naturalWidth && img.naturalHeight ? img.naturalWidth / img.naturalHeight : 0.7);
+
+  function reset() {
+    G.x = Math.max(W * 0.18, U * 14); G.y = GROUND; G.vy = 0; G.jumps = 0; G.onGround = true; G.squash = 0;
+    obs = []; items = []; parts = []; speed = U * 62; dist = 0; score = 0; fries = 0; nextObs = 1.2; nextItem = 0.8; shake = 0;
+    $('score').textContent = '0'; $('fries').textContent = '0';
+  }
+
+  /* ---------- Pulo ---------- */
+  function jump() {
+    if (!running) return;
+    if (G.onGround) { G.vy = -U * 118; G.onGround = false; G.jumps = 1; G.squash = -0.18; sfx(420, 760, 0.12); }
+    else if (G.jumps < 2) { G.vy = -U * 100; G.jumps = 2; sfx(560, 980, 0.12); puff(G.x, G.y, '#f3e6cc', 6); }
+  }
+  cv.addEventListener('pointerdown', e => { e.preventDefault(); initAudio(); jump(); });
+  window.addEventListener('keydown', e => { if (e.code === 'Space' || e.code === 'ArrowUp') { e.preventDefault(); jump(); } });
+
+  /* ---------- Obstáculos e itens ---------- */
+  const TYPES = [
+    { kind: 'amp', w: 15, h: 13 },
+    { kind: 'pimenta', w: 7, h: 17 },
+    { kind: 'amp2', w: 15, h: 25 },
+    { kind: 'cone', w: 11, h: 12 }
+  ];
+  function spawnObs() {
+    const level = dist / (U * 1000);
+    const pool = level < 1.2 ? TYPES.filter(t => t.kind !== 'amp2') : TYPES;
+    const T = pool[Math.floor(Math.random() * pool.length)];
+    obs.push({ kind: T.kind, x: W + U * 10, w: T.w * U, h: T.h * U });
+    if (level > 2 && Math.random() < 0.3) { const T2 = TYPES[Math.floor(Math.random() * 2)]; obs.push({ kind: T2.kind, x: W + U * 10 + T.w * U + U * 4, w: T2.w * U, h: T2.h * U }); }
+    const gap = 0.75 + Math.random() * 0.9;
+    nextObs = gap * Math.max(0.6, 1 - level * 0.08) + (U * 62) / speed * 0.25;
+  }
+  function spawnItem() {
+    const hgt = [U * 8, U * 24, U * 40][Math.floor(Math.random() * 3)];
+    const n = 1 + Math.floor(Math.random() * 3);
+    for (let i = 0; i < n; i++) items.push({ x: W + U * 10 + i * U * 9, y: GROUND - hgt, r: U * 4.2, got: false });
+    nextItem = 1.4 + Math.random() * 1.6;
+  }
+
+  function puff(x, y, color, n) { for (let i = 0; i < n; i++) parts.push({ x, y, vx: (Math.random() - 0.5) * U * 50, vy: -Math.random() * U * 40, life: 0.5, color }); }
+
+  /* ---------- Atualização ---------- */
+  function update(dt) {
+    t += dt;
+    if (running) {
+      speed = Math.min(U * 150, speed + U * 1.6 * dt);
+      dist += speed * dt;
+      score = Math.floor(dist / (U * 10)) + fries * 10;
+      $('score').textContent = score;
+      // física
+      G.vy += U * 330 * dt; G.y += G.vy * dt;
+      if (G.y >= GROUND) { if (!G.onGround) { G.squash = 0.2; puff(G.x, GROUND, '#5a4a42', 5); } G.y = GROUND; G.vy = 0; G.onGround = true; G.jumps = 0; }
+      G.run += dt * speed / (U * 7);
+      G.squash *= Math.pow(0.0001, dt);
+      // spawn
+      nextObs -= dt; if (nextObs <= 0) spawnObs();
+      nextItem -= dt; if (nextItem <= 0) spawnItem();
+      // mover
+      obs.forEach(o => { o.x -= speed * dt; });
+      items.forEach(i => { i.x -= speed * dt; });
+      obs = obs.filter(o => o.x + o.w > -50);
+      items = items.filter(i => i.x > -50 && !i.got);
+      // colisões (caixa menor que o desenho, para ser justo)
+      const sw = SPR_W(), sh = SPR_H();
+      const hb = { x: G.x - sw * 0.28, y: G.y - sh * 0.72, w: sw * 0.56, h: sh * 0.66 };
+      for (const o of obs) {
+        const ob = { x: o.x + o.w * 0.1, y: GROUND - o.h + o.h * 0.08, w: o.w * 0.8, h: o.h * 0.92 };
+        if (hb.x < ob.x + ob.w && hb.x + hb.w > ob.x && hb.y < ob.y + ob.h && hb.y + hb.h > ob.y) { crash(); break; }
+      }
+      items.forEach(i => {
+        if (i.got) return;
+        const cx = G.x, cy = G.y - sh * 0.45;
+        if (Math.abs(i.x - cx) < sw * 0.4 + i.r && Math.abs(i.y - cy) < sh * 0.45 + i.r) {
+          i.got = true; fries++; $('fries').textContent = fries; puff(i.x, i.y, '#f5c542', 8); sfx(900, 1300, 0.08);
+        }
+      });
+    }
+    parts.forEach(p => { p.x += p.vx * dt - (running ? speed * dt * 0.5 : 0); p.y += p.vy * dt; p.vy += U * 120 * dt; p.life -= dt; });
+    parts = parts.filter(p => p.life > 0);
+    const s = running ? speed : U * 20;
+    farOff += s * 0.12 * dt; midOff += s * 0.4 * dt; groundOff += s * dt;
+    shake *= Math.pow(0.001, dt);
+  }
+
+  function crash() {
+    running = false; shake = U * 3;
+    puff(G.x, G.y - SPR_H() * 0.5, '#e8102e', 16);
+    sfx(220, 60, 0.4, 'sawtooth');
+    const rec = score > best;
+    if (rec) { best = score; try { localStorage.setItem(STORE, JSON.stringify({ best })); } catch (e) {} $('best').textContent = best; }
+    $('final').textContent = score;
+    $('final-msg').innerHTML = 'pontos e ' + fries + (fries === 1 ? ' batata' : ' batatas') + (rec && score > 0 ? '<br><span class="record">Novo recorde!</span>' : '<br>Seu recorde: ' + best);
+    setTimeout(() => { $('over').hidden = false; }, 800);
+  }
+
+  /* ---------- Desenho ---------- */
+  function rr(x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+
+  function drawBackground() {
+    const g = ctx.createLinearGradient(0, 0, 0, GROUND);
+    g.addColorStop(0, '#0d0a09'); g.addColorStop(1, '#2a0d10');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    // prédios ao fundo
+    const bw = U * 22;
+    for (let i = -1; i < W / bw + 2; i++) {
+      const k = Math.floor(i + farOff / bw);
+      const h = U * (30 + ((k * 37) % 5) * 9);
+      const x = i * bw - (farOff % bw);
+      ctx.fillStyle = '#1a1212'; ctx.fillRect(x, GROUND - U * 18 - h, bw - U * 2, h + U * 18);
+      ctx.fillStyle = 'rgba(242,182,50,.18)';
+      for (let wy = 0; wy < h - U * 8; wy += U * 8) for (let wx = U * 3; wx < bw - U * 5; wx += U * 6) if (((k * 13 + wy + wx) | 0) % 3 === 0) ctx.fillRect(x + wx, GROUND - U * 18 - h + U * 4 + wy, U * 2.4, U * 3);
+    }
+    // parede de tijolo com letreiro
+    const mw = U * 90;
+    for (let i = -1; i < W / mw + 2; i++) {
+      const x = i * mw - (midOff % mw), k = Math.floor(i + midOff / mw);
+      ctx.fillStyle = '#231615'; ctx.fillRect(x, GROUND - U * 26, mw, U * 26);
+      ctx.strokeStyle = 'rgba(0,0,0,.45)'; ctx.lineWidth = 1;
+      for (let row = 0; row < 6; row++) {
+        const y = GROUND - U * 26 + row * U * 4.4;
+        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + mw, y); ctx.stroke();
+        for (let bx = (row % 2) * U * 5; bx < mw; bx += U * 10) { ctx.beginPath(); ctx.moveTo(x + bx, y); ctx.lineTo(x + bx, y + U * 4.4); ctx.stroke(); }
+      }
+      if (k % 2 === 0) {
+        ctx.save(); ctx.font = (U * 7) + 'px Bungee, Impact, sans-serif'; ctx.textAlign = 'center';
+        ctx.shadowColor = '#e8102e'; ctx.shadowBlur = U * 4; ctx.fillStyle = '#ff4d63';
+        const on = Math.sin(t * 3 + k) > -0.85;
+        if (on) ctx.fillText('GABBA HEY', x + mw / 2, GROUND - U * 12);
+        ctx.restore();
+      }
+    }
+    // rua
+    ctx.fillStyle = '#151010'; ctx.fillRect(0, GROUND, W, H - GROUND);
+    ctx.fillStyle = '#3b2e29'; ctx.fillRect(0, GROUND, W, U * 1.2);
+    ctx.fillStyle = 'rgba(243,230,204,.35)';
+    const dw = U * 16;
+    for (let x = -(groundOff % dw); x < W; x += dw) ctx.fillRect(x, GROUND + (H - GROUND) * 0.45, dw * 0.5, U * 1.2);
+  }
+
+  function drawObs(o) {
+    const x = o.x, y = GROUND - o.h, w = o.w, h = o.h;
+    if (o.kind === 'amp' || o.kind === 'amp2') {
+      const n = o.kind === 'amp2' ? 2 : 1, bh = h / n;
+      for (let i = 0; i < n; i++) {
+        const by = y + i * bh;
+        rr(x, by, w, bh - 1, U * 1.2); ctx.fillStyle = '#1b1b1b'; ctx.fill(); ctx.lineWidth = U * 0.6; ctx.strokeStyle = '#000'; ctx.stroke();
+        ctx.fillStyle = '#e8102e'; ctx.fillRect(x + U, by + U, w - 2 * U, U * 1.6);
+        ctx.fillStyle = '#2e2e2e'; ctx.beginPath(); ctx.arc(x + w / 2, by + bh * 0.58, Math.min(w, bh) * 0.3, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#0a0a0a'; ctx.beginPath(); ctx.arc(x + w / 2, by + bh * 0.58, Math.min(w, bh) * 0.12, 0, Math.PI * 2); ctx.fill();
+      }
+    } else if (o.kind === 'pimenta') {
+      rr(x, y + h * 0.28, w, h * 0.72, U * 1.6); ctx.fillStyle = '#c4161c'; ctx.fill();
+      ctx.lineWidth = U * 0.6; ctx.strokeStyle = '#000'; ctx.stroke();
+      ctx.fillStyle = '#f3e6cc'; ctx.fillRect(x + U * 0.8, y + h * 0.5, w - U * 1.6, h * 0.2);
+      ctx.fillStyle = '#2e7d32'; ctx.fillRect(x + w * 0.3, y, w * 0.4, h * 0.3);
+    } else {
+      ctx.fillStyle = '#ff6a00'; ctx.beginPath(); ctx.moveTo(x + w / 2, y); ctx.lineTo(x + w, y + h); ctx.lineTo(x, y + h); ctx.closePath(); ctx.fill();
+      ctx.lineWidth = U * 0.6; ctx.strokeStyle = '#000'; ctx.stroke();
+      ctx.fillStyle = '#f3e6cc'; ctx.fillRect(x + w * 0.28, y + h * 0.45, w * 0.44, h * 0.14);
+    }
+  }
+
+  function drawFries(i) {
+    const r = i.r, bob = Math.sin(t * 6 + i.x * 0.05) * U;
+    const x = i.x, y = i.y + bob;
+    ctx.fillStyle = '#f5c542';
+    for (let k = -1; k <= 1; k++) ctx.fillRect(x + k * r * 0.45 - r * 0.15, y - r * 1.2, r * 0.3, r * 1.2);
+    ctx.beginPath(); ctx.moveTo(x - r * 0.8, y - r * 0.3); ctx.lineTo(x + r * 0.8, y - r * 0.3); ctx.lineTo(x + r * 0.6, y + r); ctx.lineTo(x - r * 0.6, y + r); ctx.closePath();
+    ctx.fillStyle = '#e8102e'; ctx.fill(); ctx.lineWidth = U * 0.5; ctx.strokeStyle = '#000'; ctx.stroke();
+  }
+
+  function drawGabba() {
+    const sh = SPR_H(), sw = SPR_W();
+    // sombra no chão
+    const lift = Math.max(0, GROUND - G.y);
+    ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.beginPath(); ctx.ellipse(G.x, GROUND + U, sw * 0.38 * Math.max(0.4, 1 - lift / (U * 80)), U * 1.6, 0, 0, Math.PI * 2); ctx.fill();
+    if (!img.complete || !img.naturalWidth) return;
+    ctx.save();
+    const runBob = G.onGround && running ? Math.abs(Math.sin(G.run)) * U * 1.4 : 0;
+    ctx.translate(G.x, G.y - runBob);
+    const tilt = G.onGround ? Math.sin(G.run) * 0.06 : Math.max(-0.35, Math.min(0.3, G.vy / (U * 600)));
+    ctx.rotate(tilt + (running ? 0 : 0));
+    const sq = G.squash;
+    ctx.scale(1 + sq, 1 - sq);
+    ctx.drawImage(img, -sw / 2, -sh, sw, sh);
+    ctx.restore();
+  }
+
+  function draw() {
+    ctx.save();
+    if (shake > 0.2) ctx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake);
+    drawBackground();
+    items.forEach(drawFries);
+    obs.forEach(drawObs);
+    drawGabba();
+    parts.forEach(p => { ctx.globalAlpha = Math.max(0, p.life * 2); ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, U * 1.2, U * 1.2); });
+    ctx.globalAlpha = 1;
+    ctx.restore();
+  }
+
+  let last = 0;
+  function loop(ms) {
+    const dt = Math.min(0.033, last ? (ms - last) / 1000 : 0.016); last = ms;
+    update(dt); draw();
+    requestAnimationFrame(loop);
+  }
+
+  function play() {
+    initAudio(); reset();
+    $('start').hidden = true; $('over').hidden = true;
+    running = true;
+  }
+  $('play').addEventListener('click', play);
+  $('again').addEventListener('click', play);
+
+  /* ---------- Som ---------- */
+  let audio = null;
+  function initAudio() { try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); if (audio.state === 'suspended') audio.resume(); } catch (e) {} }
+  function sfx(f1, f2, d, type) {
+    if (!audio) return;
+    const o = audio.createOscillator(), g = audio.createGain(), n = audio.currentTime;
+    o.type = type || 'square'; o.frequency.setValueAtTime(f1, n); o.frequency.exponentialRampToValueAtTime(f2, n + d);
+    g.gain.setValueAtTime(0.05, n); g.gain.exponentialRampToValueAtTime(0.0001, n + d);
+    o.connect(g).connect(audio.destination); o.start(); o.stop(n + d + 0.02);
+  }
+
+  reset();
+  requestAnimationFrame(loop);
+})();
+</script>
+<script>
+/* Impede o zoom por toque duplo e por pinça (iPhone ignora user-scalable=no) */
+(function () {
+  let lastEnd = 0;
+  document.addEventListener('touchend', function (e) {
+    const now = Date.now();
+    const onControl = e.target && e.target.closest && e.target.closest('button, a, input, select, textarea, label');
+    if (!onControl && now - lastEnd < 350) e.preventDefault();
+    lastEnd = now;
+  }, { passive: false });
+  document.addEventListener('dblclick', function (e) { e.preventDefault(); }, { passive: false });
+  ['gesturestart', 'gesturechange', 'gestureend'].forEach(function (t) {
+    document.addEventListener(t, function (e) { e.preventDefault(); }, { passive: false });
+  });
+  document.addEventListener('touchmove', function (e) { if (e.touches && e.touches.length > 1) e.preventDefault(); }, { passive: false });
+})();
+</script>
+</body>
+</html>
