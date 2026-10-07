@@ -37,6 +37,10 @@ Central de jogos rápidos para o cliente passar o tempo enquanto espera, no ende
 
 Os recordes ficam salvos no celular de cada cliente. As perguntas do quiz ficam na lista `BANK` dentro de `jogos/index.html`.
 
+## Fliperama Delivery
+
+`delivery/index.html` é o Fliperama para clientes de delivery: igual ao da mesa, **sem o Desafio da Espera** (que dá prêmio na mesa) e com o texto "Seu pedido tá a caminho". O arquivo é **gerado** a partir de `jogos/index.html`; depois de mudar o Fliperama, rode `python3 scripts/gerar-delivery.py`. O bloco que só existe na mesa fica entre os marcadores `SO-MESA-INICIO` e `SO-MESA-FIM`. Dentro dos jogos, o botão "‹ Jogos" volta para a versão em que o cliente entrou.
+
 ## Chapa do Gabba (teste)
 
 Jogo em teste, fora do Fliperama, no endereço `/chapa/`. O jogador monta os pedidos seguindo a comanda e tira a carne da chapa no ponto certo. Perdeu 3 pedidos por tempo, acaba o turno.
@@ -72,7 +76,8 @@ Jogo de ritmo no endereço `/hero/`, com 3 músicas originais tocadas pelo próp
 - `contador.js`: contador de uso dos jogos.
 - `index.html`: a roleta inteira (visual, regras, relatório e animação) em um único arquivo.
 - `desafio/index.html`: o jogo Desafio da Espera.
-- `jogos/index.html`: o Fliperama Gabba.
+- `jogos/index.html`: o Fliperama Gabba (versão mesa).
+- `delivery/index.html`: o Fliperama Delivery (gerado por `scripts/gerar-delivery.py`).
 - `chapa/index.html`: o jogo Chapa do Gabba (teste).
 - `obby/index.html`: o Obby do Gabba em 3D.
 - `avalie/index.html`: o Termômetro da Loja.

@@ -4,6 +4,17 @@
  * Para ligar: coloque abaixo o código da conta do GoatCounter (o "xxx" de xxx.goatcounter.com).
  */
 (function () {
+  // Versão delivery do Fliperama: os botões "‹ Jogos" voltam para /delivery/ em vez de /jogos/
+  document.addEventListener('DOMContentLoaded', function () {
+    var modo = null;
+    try { modo = sessionStorage.getItem('gabba-modo'); } catch (e) {}
+    if (modo !== 'delivery') return;
+    var links = document.querySelectorAll('a[href="../jogos/"]');
+    for (var i = 0; i < links.length; i++) links[i].setAttribute('href', '../delivery/');
+  });
+})();
+
+(function () {
   var CODIGO = 'gabbajogos';
 
   var fila = [];
