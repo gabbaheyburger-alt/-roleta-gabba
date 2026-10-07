@@ -64,7 +64,7 @@ Filtro de câmera no endereço `/vire/`: coloca o moicano e os óculos do mascot
 
 ## Gabba Hero (teste)
 
-Jogo de ritmo no endereço `/hero/`: notas descem pelo braço de uma guitarra e o jogador toca no botão da cor certa na hora certa. A música é um rock original gerado pelo próprio jogo (bateria, baixo e guitarra sintetizados), com modos Fácil e Rock. Acertos tocam a guitarra solo; erros fazem a plateia vaiar. Evento: `partida-hero`.
+Jogo de ritmo no endereço `/hero/`, com 3 músicas originais tocadas pelo próprio aparelho: **Chapa Quente** (punk, 168 BPM), **Baião do Gabba** (forró rock com sanfona e zabumba, 138 BPM) e **Moicano Metal** (bumbo duplo, 150 BPM). As notas do jogador seguem a melodia: quem acerta toca o solo. Modos Fácil e Rock, notas estrela que enchem o GABBA POWER (pontos em dobro por 8 s), plateia pulando, anúncio de seção e virada de bateria. Evento: `partida-hero`.
 
 ## Arquivos
 
