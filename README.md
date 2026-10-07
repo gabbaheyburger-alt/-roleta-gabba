@@ -62,6 +62,10 @@ Página `/avalie/` para o cliente avaliar a visita com um toque (😍 Amei, 😐
 
 Filtro de câmera no endereço `/vire/`: coloca o moicano e os óculos do mascote no rosto do cliente (detecção de rosto MediaPipe, roda no próprio celular, nada é enviado) e gera uma foto 4:5 com a moldura "Eu virei um Gabba! @gabbaheyburger" para compartilhar. Sem detecção, os acessórios ficam fixos e o cliente encaixa o rosto. Eventos: `vire-abriu`, `vire-foto`, `vire-compartilhou`, `vire-salvou`.
 
+## Gabba Hero (teste)
+
+Jogo de ritmo no endereço `/hero/`: notas descem pelo braço de uma guitarra e o jogador toca no botão da cor certa na hora certa. A música é um rock original gerado pelo próprio jogo (bateria, baixo e guitarra sintetizados), com modos Fácil e Rock. Acertos tocam a guitarra solo; erros fazem a plateia vaiar. Evento: `partida-hero`.
+
 ## Arquivos
 
 - `contador.js`: contador de uso dos jogos.
@@ -72,4 +76,5 @@ Filtro de câmera no endereço `/vire/`: coloca o moicano e os óculos do mascot
 - `obby/index.html`: o Obby do Gabba em 3D.
 - `avalie/index.html`: o Termômetro da Loja.
 - `vire/index.html`: o filtro Vire um Gabba (teste).
+- `hero/index.html`: o jogo Gabba Hero (teste).
 - `corre/index.html` e `corre/mascote.png`: o jogo Corre, Gabba!.
