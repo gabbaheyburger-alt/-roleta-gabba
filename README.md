@@ -30,6 +30,7 @@ Central de jogos rápidos para o cliente passar o tempo enquanto espera, no ende
 
 - **Memória Gabba:** achar os 8 pares de itens do cardápio.
 - **Quiz do Gabba:** 8 perguntas sorteadas sobre hambúrguer, rock e Ceará, com 15 segundos cada. Responder rápido vale mais pontos.
+- **Gabba Hero:** jogo de ritmo com 3 músicas.
 - **Corre, Gabba!:** corrida com o mascote.
 - **Obby do Gabba:** percurso 3D.
 - Atalho para o **Desafio da Espera**.
@@ -62,7 +63,7 @@ Página `/avalie/` para o cliente avaliar a visita com um toque (😍 Amei, 😐
 
 Filtro de câmera no endereço `/vire/`: coloca o moicano e os óculos do mascote no rosto do cliente (detecção de rosto MediaPipe, roda no próprio celular, nada é enviado) e gera uma foto 4:5 com a moldura "Eu virei um Gabba! @gabbaheyburger" para compartilhar. Sem detecção, os acessórios ficam fixos e o cliente encaixa o rosto. Eventos: `vire-abriu`, `vire-foto`, `vire-compartilhou`, `vire-salvou`.
 
-## Gabba Hero (teste)
+## Gabba Hero
 
 Jogo de ritmo no endereço `/hero/`, com 3 músicas originais tocadas pelo próprio aparelho: **Chapa Quente** (punk, 168 BPM), **Baião do Gabba** (forró rock com sanfona e zabumba, 138 BPM) e **Moicano Metal** (bumbo duplo, 150 BPM). As notas do jogador seguem a melodia: quem acerta toca o solo. Modos Fácil e Rock, notas estrela que enchem o GABBA POWER (pontos em dobro por 8 s), plateia pulando, anúncio de seção e virada de bateria. Evento: `partida-hero`.
 
@@ -76,5 +77,5 @@ Jogo de ritmo no endereço `/hero/`, com 3 músicas originais tocadas pelo próp
 - `obby/index.html`: o Obby do Gabba em 3D.
 - `avalie/index.html`: o Termômetro da Loja.
 - `vire/index.html`: o filtro Vire um Gabba (teste).
-- `hero/index.html`: o jogo Gabba Hero (teste).
+- `hero/index.html`: o jogo Gabba Hero.
 - `corre/index.html` e `corre/mascote.png`: o jogo Corre, Gabba!.
