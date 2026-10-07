@@ -58,6 +58,10 @@ Eventos registrados: `partida-memoria`, `partida-quiz`, `partida-corre`, `partid
 
 Página `/avalie/` para o cliente avaliar a visita com um toque (😍 Amei, 😐 Foi ok, 😡 Não curti). Cada voto vira um evento no GoatCounter no formato `aval-gabba-<turno>-<voto>`, com turno `almoco` (6h às 16h) ou `noite`. Quem toca em "Foi ok" ou "Não curti" recebe um botão para falar no WhatsApp do dono. Cada celular avalia uma vez por dia.
 
+## Vire um Gabba (teste)
+
+Filtro de câmera no endereço `/vire/`: coloca o moicano e os óculos do mascote no rosto do cliente (detecção de rosto MediaPipe, roda no próprio celular, nada é enviado) e gera uma foto 4:5 com a moldura "Eu virei um Gabba! @gabbaheyburger" para compartilhar. Sem detecção, os acessórios ficam fixos e o cliente encaixa o rosto. Eventos: `vire-abriu`, `vire-foto`, `vire-compartilhou`, `vire-salvou`.
+
 ## Arquivos
 
 - `contador.js`: contador de uso dos jogos.
@@ -67,4 +71,5 @@ Página `/avalie/` para o cliente avaliar a visita com um toque (😍 Amei, 😐
 - `chapa/index.html`: o jogo Chapa do Gabba (teste).
 - `obby/index.html`: o Obby do Gabba em 3D.
 - `avalie/index.html`: o Termômetro da Loja.
+- `vire/index.html`: o filtro Vire um Gabba (teste).
 - `corre/index.html` e `corre/mascote.png`: o jogo Corre, Gabba!.
