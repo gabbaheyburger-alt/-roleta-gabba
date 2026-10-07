@@ -54,6 +54,10 @@ Jogo de corrida com o mascote do Gabba Hey Burger, dentro do Fliperama, no ender
 
 Eventos registrados: `partida-memoria`, `partida-quiz`, `partida-corre`, `partida-obby`, `partida-desafio`, `partida-chapa` e `desafio-venceu`.
 
+## Termômetro da Loja (teste, só Gabba Hey Burger)
+
+Página `/avalie/` para o cliente avaliar a visita com um toque (😍 Amei, 😐 Foi ok, 😡 Não curti). Cada voto vira um evento no GoatCounter no formato `aval-gabba-<turno>-<voto>`, com turno `almoco` (6h às 16h) ou `noite`. Quem toca em "Foi ok" ou "Não curti" recebe um botão para falar no WhatsApp do dono. Cada celular avalia uma vez por dia.
+
 ## Arquivos
 
 - `contador.js`: contador de uso dos jogos.
@@ -62,4 +66,5 @@ Eventos registrados: `partida-memoria`, `partida-quiz`, `partida-corre`, `partid
 - `jogos/index.html`: o Fliperama Gabba.
 - `chapa/index.html`: o jogo Chapa do Gabba (teste).
 - `obby/index.html`: o Obby do Gabba em 3D.
+- `avalie/index.html`: o Termômetro da Loja.
 - `corre/index.html` e `corre/mascote.png`: o jogo Corre, Gabba!.
