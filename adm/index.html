@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Adm · Desafio da Espera</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#120d0c">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Barlow:wght@400;600;700;800&display=swap">
+<style>
+/* Layout: coluna única para celular; cartão de configuração do prêmio, prévia do que o cliente vê e, na primeira vez, cartão de conexão com o GitHub */
+:root {
+  --bg: #120d0c;
+  --surface: #1f1816;
+  --surface-2: #2a201d;
+  --line: #3b2e29;
+  --fg: #f6ece2;
+  --muted: #b5a397;
+  --red: #e8102e;
+  --red-deep: #9c0b1f;
+  --mustard: #f2b632;
+  --ok: #6fbf73;
+  --bad: #ff8a80;
+  --display: 'Bungee', Impact, 'Arial Black', sans-serif;
+  --body: 'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { background: var(--bg); color: var(--fg); }
+body { margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); font-family: var(--body); font-size: 16px; line-height: 1.45; }
+[hidden] { display: none !important; }
+.wrap { max-width: 520px; margin: 0 auto; padding: 22px 16px 40px; display: flex; flex-direction: column; gap: 18px; }
+header .tag { font-size: .72rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--mustard); }
+h1 { font-family: var(--display); font-weight: 400; font-size: clamp(1.6rem, 8vw, 2rem); line-height: 1; margin: 4px 0 0; }
+h1 span { color: var(--red); }
+h2 { font-family: var(--display); font-weight: 400; font-size: 1rem; margin: 0; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+label { display: flex; flex-direction: column; gap: 6px; font-weight: 700; }
+label small { color: var(--muted); font-weight: 600; }
+input[type=text], input[type=number], input[type=password] { font: 600 1.05rem var(--body); color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 12px; width: 100%; }
+input:focus-visible, button:focus-visible, a:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
+.switch { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 12px; font-weight: 700; }
+.switch input { width: 52px; height: 30px; accent-color: var(--ok); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chips button { background: var(--surface-2); border: 1px solid var(--line); color: var(--fg); border-radius: 999px; padding: 7px 12px; font: 700 .85rem var(--body); cursor: pointer; }
+.btn { font-family: var(--display); font-size: 1.1rem; letter-spacing: .03em; background: var(--red); color: #fff4e6; border: none; border-radius: 14px; padding: 14px 18px; cursor: pointer; box-shadow: 0 5px 0 var(--red-deep); width: 100%; }
+.btn:active { transform: translateY(4px); box-shadow: none; }
+.btn:disabled { opacity: .5; }
+.ghost { background: transparent; border: 1px solid var(--line); color: var(--muted); border-radius: 10px; padding: 9px 12px; font: 700 .88rem var(--body); cursor: pointer; text-decoration: none; text-align: center; }
+.msg { margin: 0; font-weight: 700; min-height: 1.4em; }
+.msg.ok { color: var(--ok); } .msg.err { color: var(--bad); }
+.preview { background: #17110f; border: 1px dashed var(--line); border-radius: 14px; padding: 14px; text-align: center; }
+.preview .t { font-family: var(--display); font-size: 1.2rem; }
+.preview .t span { color: var(--mustard); }
+.preview p { margin: 6px 0 0; color: var(--muted); }
+.preview p strong { color: var(--fg); }
+.steps { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; }
+.steps li { color: var(--muted); }
+.steps li b { color: var(--fg); }
+.note { margin: 0; color: var(--muted); font-size: .88rem; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; }
+.row > * { flex: 1; }
+.current { font-size: .9rem; color: var(--muted); }
+.current b { color: var(--fg); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="tag">Área do dono</div>
+    <h1>Prêmio do <span>Desafio</span></h1>
+  </header>
+
+  <!-- Configuração do prêmio -->
+  <section class="card" id="cfg" hidden>
+    <p class="current" id="current">Carregando a configuração atual…</p>
+    <div class="switch"><span>Desafio valendo prêmio hoje</span><input type="checkbox" id="ativo" checked aria-label="Desafio valendo prêmio"></div>
+    <label for="premio">Prêmio <small>O que o cliente ganha ao vencer (até 60 letras)</small>
+      <input type="text" id="premio" maxlength="60" autocomplete="off">
+    </label>
+    <div class="chips" id="sugestoes" aria-label="Sugestões de prêmio"></div>
+    <label for="camadas">Camadas para ganhar <small>Mais camadas = mais difícil. Recomendado: 12 a 20</small>
+      <input type="number" id="camadas" min="5" max="60" step="1" inputmode="numeric">
+    </label>
+    <div class="preview" aria-live="polite">
+      <div class="t">Monte o <span>burger</span></div>
+      <p id="prev-txt"></p>
+    </div>
+    <button class="btn" id="salvar" type="button">SALVAR</button>
+    <p class="msg" id="msg" aria-live="polite"></p>
+    <p class="note">Depois de salvar, leva de 1 a 2 minutos para aparecer no celular dos clientes. Quem já ganhou hoje continua vendo o prêmio que ganhou.</p>
+    <div class="row">
+      <a class="ghost" href="../desafio/" target="_blank" rel="noopener">Abrir o Desafio</a>
+      <button class="ghost" id="sair" type="button">Desconectar este celular</button>
+    </div>
+  </section>
+
+  <!-- Conexão (só na primeira vez) -->
+  <section class="card" id="setup" hidden>
+    <h2>Conectar este celular</h2>
+    <p class="note">Para salvar o prêmio, este celular precisa de uma <b>chave do GitHub</b> que só pode mexer na pasta dos jogos. É feito uma única vez.</p>
+    <ol class="steps">
+      <li>Abra <b>github.com/settings/personal-access-tokens/new</b> no navegador (entre na sua conta se pedir).</li>
+      <li>Em <b>Token name</b>, escreva <b>adm desafio</b>. Em <b>Expiration</b>, escolha <b>366 days</b> ou <b>No expiration</b>.</li>
+      <li>Em <b>Repository access</b>, marque <b>Only select repositories</b> e escolha <b>-roleta-gabba</b>.</li>
+      <li>Em <b>Permissions → Repository permissions → Contents</b>, escolha <b>Read and write</b>.</li>
+      <li>Toque em <b>Generate token</b>, copie a chave (começa com <b>github_pat_</b>) e cole aqui.</li>
+    </ol>
+    <label for="token">Chave do GitHub
+      <input type="password" id="token" autocomplete="off" placeholder="github_pat_…">
+    </label>
+    <button class="btn" id="conectar" type="button">CONECTAR</button>
+    <p class="msg" id="msg-setup" aria-live="polite"></p>
+    <p class="note">A chave fica guardada só neste celular. Não mande para ninguém. Se perder o celular, apague a chave em github.com/settings/personal-access-tokens.</p>
+  </section>
+</div>
+
+<script>
+(function () {
+  const OWNER = 'gabbaheyburger-alt', REPO = '-roleta-gabba', PATH = 'desafio/config.json', BRANCH = 'main';
+  const API = 'https://api.github.com/repos/' + OWNER + '/' + REPO + '/contents/' + PATH;
+  const KEY = 'gabba-adm-token';
+  const $ = id => document.getElementById(id);
+  const SUGESTOES = ['Molho extra por conta da casa', 'Batata pequena grátis', 'Refri lata grátis', 'Sobremesa da casa', '10% de desconto no próximo pedido', 'Chopp 300 ml grátis'];
+
+  let token = null, sha = null;
+  try { token = localStorage.getItem(KEY); } catch (e) {}
+
+  const b64enc = s => btoa(unescape(encodeURIComponent(s)));
+  const b64dec = s => decodeURIComponent(escape(atob(s.replace(/\n/g, ''))));
+  const headers = () => ({ 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' });
+
+  function msg(el, text, kind) { el.textContent = text; el.className = 'msg' + (kind ? ' ' + kind : ''); }
+  function preview() {
+    const ativo = $('ativo').checked, premio = $('premio').value.trim() || '(sem prêmio escrito)', n = $('camadas').value || '15';
+    $('prev-txt').innerHTML = '';
+    if (ativo) { $('prev-txt').append('Monte '); const a = document.createElement('strong'); a.textContent = n; $('prev-txt').append(a, ' camadas e ganhe: '); const b = document.createElement('strong'); b.textContent = premio; $('prev-txt').append(b); }
+    else $('prev-txt').innerHTML = 'Hoje o desafio está <strong>sem prêmio</strong>. Jogue pela diversão e bata o seu recorde!';
+    $('premio').disabled = !ativo;
+  }
+  ['ativo', 'premio', 'camadas'].forEach(id => $(id).addEventListener('input', preview));
+  SUGESTOES.forEach(t => { const b = document.createElement('button'); b.type = 'button'; b.textContent = t; b.addEventListener('click', () => { $('premio').value = t; preview(); }); $('sugestoes').append(b); });
+
+  async function carregar() {
+    $('setup').hidden = true; $('cfg').hidden = false;
+    msg($('msg'), '');
+    try {
+      const r = await fetch(API + '?ref=' + BRANCH + '&t=' + Date.now(), { headers: headers(), cache: 'no-store' });
+      if (r.status === 401 || r.status === 403) { sair('A chave não funcionou ou não tem permissão de escrita. Crie uma nova e conecte de novo.'); return; }
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const j = await r.json(); sha = j.sha;
+      const c = JSON.parse(b64dec(j.content));
+      $('premio').value = c.premio || ''; $('camadas').value = c.camadas || 15; $('ativo').checked = c.ativo !== false;
+      $('current').innerHTML = 'Configuração atual carregada.';
+      preview();
+    } catch (e) {
+      $('current').textContent = 'Não consegui carregar a configuração. Verifique a internet e atualize a página.';
+    }
+  }
+
+  async function salvar() {
+    const premio = $('premio').value.trim(), camadas = Math.round(+$('camadas').value), ativo = $('ativo').checked;
+    if (ativo && !premio) { msg($('msg'), 'Escreva o prêmio ou desligue o desafio.', 'err'); return; }
+    if (!(camadas >= 5 && camadas <= 60)) { msg($('msg'), 'As camadas precisam ficar entre 5 e 60.', 'err'); return; }
+    const conteudo = JSON.stringify({ premio: premio || 'Molho extra por conta da casa', camadas, ativo }, null, 2) + '\n';
+    $('salvar').disabled = true; msg($('msg'), 'Salvando…');
+    try {
+      const body = { message: (ativo ? 'Prêmio do Desafio: ' + premio + ' (' + camadas + ' camadas)' : 'Desafio sem prêmio'), content: b64enc(conteudo), branch: BRANCH };
+      if (sha) body.sha = sha;
+      let r = await fetch(API, { method: 'PUT', headers: Object.assign({ 'Content-Type': 'application/json' }, headers()), body: JSON.stringify(body) });
+      if (r.status === 409 || r.status === 422) { const g = await fetch(API + '?ref=' + BRANCH + '&t=' + Date.now(), { headers: headers(), cache: 'no-store' }); if (g.ok) body.sha = (await g.json()).sha; r = await fetch(API, { method: 'PUT', headers: Object.assign({ 'Content-Type': 'application/json' }, headers()), body: JSON.stringify(body) }); }
+      if (r.status === 401 || r.status === 403) { sair('A chave não tem permissão para salvar. Crie uma nova com "Contents: Read and write".'); return; }
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const j = await r.json(); sha = j.content && j.content.sha;
+      msg($('msg'), 'Salvo! Em 1 a 2 minutos os clientes já veem o novo prêmio.', 'ok');
+    } catch (e) {
+      msg($('msg'), 'Não consegui salvar. Verifique a internet e tente de novo.', 'err');
+    } finally { $('salvar').disabled = false; }
+  }
+
+  async function conectar() {
+    const t = $('token').value.trim();
+    if (!/^(github_pat_|ghp_)/.test(t)) { msg($('msg-setup'), 'Essa não parece uma chave do GitHub. Ela começa com github_pat_.', 'err'); return; }
+    token = t; $('conectar').disabled = true; msg($('msg-setup'), 'Testando a chave…');
+    try {
+      const r = await fetch(API + '?ref=' + BRANCH, { headers: headers() });
+      if (!r.ok) { token = null; msg($('msg-setup'), r.status === 404 ? 'A chave não enxerga a pasta -roleta-gabba. Confira o passo 3.' : 'A chave não funcionou. Confira os passos e tente de novo.', 'err'); return; }
+      try { localStorage.setItem(KEY, t); } catch (e) {}
+      $('token').value = '';
+      carregar();
+    } catch (e) { token = null; msg($('msg-setup'), 'Sem conexão. Tente de novo.', 'err'); }
+    finally { $('conectar').disabled = false; }
+  }
+
+  function sair(motivo) {
+    token = null; sha = null;
+    try { localStorage.removeItem(KEY); } catch (e) {}
+    $('cfg').hidden = true; $('setup').hidden = false;
+    msg($('msg-setup'), motivo || '', motivo ? 'err' : '');
+  }
+
+  $('salvar').addEventListener('click', salvar);
+  $('conectar').addEventListener('click', conectar);
+  $('sair').addEventListener('click', () => sair());
+  if (token) carregar(); else sair();
+})();
+</script>
+</body>
+</html>

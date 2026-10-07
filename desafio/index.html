@@ -129,9 +129,12 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
 
 <script>
 (function () {
-  /* ===== Configuração da loja ===== */
-  const TARGET = 15;                                  // camadas para ganhar
-  const PRIZE = 'Molho extra por conta da casa';      // troque pelo prêmio escolhido
+  /* ===== Configuração da loja =====
+     Valores padrão. O prêmio, a meta e se o desafio está valendo vêm de desafio/config.json,
+     que o dono altera pela página de administração (/adm/). */
+  let TARGET = 15;
+  let PRIZE = 'Molho extra por conta da casa';
+  let ATIVO = true;
   /* ================================ */
 
   const STORE = 'desafio-espera-v1';
@@ -143,9 +146,26 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
   try { saved = Object.assign(saved, JSON.parse(localStorage.getItem(STORE) || '{}')); } catch (e) {}
   const persist = () => { try { localStorage.setItem(STORE, JSON.stringify(saved)); } catch (e) {} };
 
-  $('target-txt').textContent = TARGET;
-  $('prize-txt').textContent = PRIZE;
-  $('prize-what').textContent = PRIZE;
+  function aplicarConfig() {
+    const linha = $('target-txt').parentNode;
+    if (ATIVO) {
+      linha.innerHTML = 'Monte <strong id="target-txt"></strong> camadas e ganhe: <strong id="prize-txt"></strong>';
+      $('target-txt').textContent = TARGET; $('prize-txt').textContent = PRIZE;
+    } else {
+      linha.innerHTML = 'Hoje o desafio está <strong>sem prêmio</strong>. Jogue pela diversão e bata o seu recorde! <span id="target-txt" hidden></span>';
+    }
+  }
+  aplicarConfig();
+  fetch('config.json?v=' + Date.now(), { cache: 'no-store' })
+    .then(r => r.ok ? r.json() : null)
+    .then(c => {
+      if (!c) return;
+      if (typeof c.premio === 'string' && c.premio.trim()) PRIZE = c.premio.trim().slice(0, 60);
+      if (Number.isFinite(+c.camadas) && +c.camadas >= 5 && +c.camadas <= 60) TARGET = Math.round(+c.camadas);
+      if (typeof c.ativo === 'boolean') ATIVO = c.ativo;
+      aplicarConfig();
+    })
+    .catch(() => {});
   $('best').textContent = saved.best;
   $('see-prize').hidden = saved.wonDay !== today();
 
@@ -245,16 +265,16 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
     const w = stack[stack.length - 1].w;
     stack.push({ kind: 'paoCima', x: stack[stack.length - 1].x, w, y: topY(), h: lh('paoCima') });
     if (score > saved.best) { saved.best = score; $('best').textContent = score; }
-    if (reached && saved.wonDay !== today()) { saved.wonDay = today(); }
-    if (reached) { window.gabbaConta && gabbaConta('desafio-venceu', 'Desafio da Espera: venceu'); }
+    if (reached && ATIVO && saved.wonDay !== today()) { saved.wonDay = today(); saved.wonPrize = PRIZE; }
+    if (reached && ATIVO) { window.gabbaConta && gabbaConta('desafio-venceu', 'Desafio da Espera: venceu'); }
     persist();
     setTimeout(() => showOver(), 700);
   }
 
   function showOver() {
     $('final').textContent = score;
-    const won = reached;
-    $('over-msg').textContent = won ? 'camadas. Você venceu o desafio!' : (score === 1 ? 'camada. Faltaram ' + (TARGET - score) + ' para o prêmio.' : 'camadas. Faltaram ' + (TARGET - score) + ' para o prêmio.');
+    const won = reached && ATIVO;
+    $('over-msg').textContent = reached ? (ATIVO ? 'camadas. Você venceu o desafio!' : 'camadas. Mandou bem!') : !ATIVO ? 'camadas. Tente bater o seu recorde!' : (score === 1 ? 'camada. Faltaram ' + (TARGET - score) + ' para o prêmio.' : 'camadas. Faltaram ' + (TARGET - score) + ' para o prêmio.');
     $('over-normal').hidden = false;
     showPrize(won);
     $('over').hidden = false;
@@ -267,6 +287,7 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
     card.hidden = !show; $('mark-used').hidden = !show;
     clearInterval(clockTimer);
     if (!show) return;
+    $('prize-what').textContent = (saved.wonDay === today() && saved.wonPrize) || PRIZE;
     const d = new Date();
     const dias = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
     $('prize-date').textContent = 'Válido hoje, ' + dias[d.getDay()] + ' ' + pad(d.getDate()) + '/' + pad(d.getMonth() + 1);
@@ -381,7 +402,7 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
         ctx.setLineDash([6, 6]); ctx.strokeStyle = 'rgba(242,182,50,.55)'; ctx.lineWidth = 1.5;
         ctx.beginPath(); ctx.moveTo(10, gy); ctx.lineTo(W - 10, gy); ctx.stroke(); ctx.setLineDash([]);
         ctx.fillStyle = 'rgba(242,182,50,.8)'; ctx.font = '700 12px Barlow, sans-serif'; ctx.textAlign = 'right';
-        ctx.fillText('PRÊMIO', W - 12, gy - 6);
+        ctx.fillText(ATIVO ? 'PRÊMIO' : 'META', W - 12, gy - 6);
       }
     }
     stack.forEach(L => drawLayer(L, sy(L.y + L.h)));
