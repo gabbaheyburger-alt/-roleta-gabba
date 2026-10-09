@@ -36,6 +36,8 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--cream); outline
 .tela { position: relative; height: min(100svh, 177.8vw); min-height: 600px; overflow: hidden; display: flex; flex-direction: column; }
 .midia { position: absolute; inset: 0; z-index: 0; }
 .midia video, .midia img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.midia .camada { position: absolute; inset: 0; opacity: 0; transition: opacity 1.2s ease; }
+.midia .camada.on { opacity: 1; }
 .midia img.zoom { animation: zoom 20s ease-in-out infinite alternate; }
 @keyframes zoom { from { transform: scale(1); } to { transform: scale(1.1); } }
 .tela::after { content: ''; position: absolute; inset: 0; z-index: 0; background:
@@ -157,6 +159,7 @@ var COMIDA = [
   { img: 'coxinhas', nome: 'Coxinhas', desc: 'Com molho da casa', preco: '' },
   { img: 'onion-rings', nome: 'Onion rings', desc: 'Com barbecue', preco: '' },
   { img: 'pasteizinhos', nome: 'Pasteizinhos', desc: 'Com molho da casa', preco: '' },
+  { img: 'brownie', nome: 'Brownie', desc: 'Com sorvete', preco: '' },
   { img: 'pudim', nome: 'Pudim', desc: 'Sobremesa', preco: '' }
 ];
 var DRINKS = [
@@ -189,7 +192,7 @@ var MOMENTOS = {
     t1: 'Mais pedidos', r1: 'comida', t2: 'Pra beber', r2: 'drinks'
   },
   fechado: {
-    midia: { video: 'brownie' }, rotulo: 'Fechado agora', quente: false,
+    midia: { seq: [{ video: 'brownie', seg: 9 }, { img: 'pudim', seg: 6 }] }, rotulo: 'Fechado agora', quente: false,
     titulo: function () { return 'Até amanhã!'; }, sub: function (x) { return x.proxima ? 'Abrimos ' + x.proxima + '. Já deixa salvo o que vai pedir.' : 'Já deixa salvo o que vai pedir.'; },
     b1: { txt: 'VER CARDÁPIO', link: 'pedir', ev: 'bio3-fechado-cardapio' }, b2: { html: PIN, link: 'mapa', ev: 'bio3-fechado-mapa', label: 'Como chegar' },
     t1: 'Pra próxima', r1: 'comida', t2: 'Do bar', r2: 'drinks'
@@ -262,7 +265,29 @@ var MOMENTOS = {
       atualMomento = x.momento;
       document.getElementById('tela').classList.toggle('limpo', !!M.limpo);
       var midia = document.getElementById('midia'); midia.innerHTML = '';
-      if (M.midia.video) {
+      clearTimeout(window.__seqT);
+      if (M.midia.seq) {
+        // Alterna as mídias (ex.: brownie em vídeo e pudim em foto), com transição suave
+        var camadas = M.midia.seq.map(function (m) {
+          var el;
+          if (m.video) {
+            el = document.createElement('video'); el.muted = true; el.playsInline = true; el.setAttribute('playsinline', ''); el.setAttribute('muted', ''); el.preload = 'auto';
+            el.poster = '../bio2/vid/' + m.video + '.jpg'; el.src = '../bio2/vid/' + m.video + '.mp4';
+          } else { el = document.createElement('img'); el.src = '../bio2/img/' + m.img + '.jpg'; el.alt = ''; el.className = 'zoom'; }
+          el.classList.add('camada'); midia.append(el); return el;
+        });
+        var vez = 0;
+        var mostra = function () {
+          camadas.forEach(function (c, k) { c.classList.toggle('on', k === vez); });
+          var el = camadas[vez];
+          if (el.tagName === 'VIDEO') { try { el.currentTime = 0; } catch (e) {} el.play().catch(function () {}); }
+          window.__seqT = setTimeout(function () {
+            if (el.tagName === 'VIDEO') setTimeout(function () { el.pause(); }, 1300);
+            vez = (vez + 1) % camadas.length; mostra();
+          }, M.midia.seq[vez].seg * 1000);
+        };
+        mostra();
+      } else if (M.midia.video) {
         var v = document.createElement('video');
         v.muted = true; v.loop = true; v.autoplay = true; v.playsInline = true; v.setAttribute('playsinline', ''); v.setAttribute('muted', '');
         v.poster = '../bio2/vid/' + M.midia.video + '.jpg'; v.src = '../bio2/vid/' + M.midia.video + '.mp4';
