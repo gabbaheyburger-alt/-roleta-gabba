@@ -136,5 +136,13 @@
       "foto": "fotos/evento-blues-rock.jpg",
       "oculto": false
     }
+  ],
+  "ordem": [
+    "especiais",
+    "agenda",
+    "carrossel1",
+    "carrossel2",
+    "nogabba",
+    "horarios"
   ]
 }

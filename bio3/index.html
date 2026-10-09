@@ -183,15 +183,15 @@ video::-webkit-media-controls, video::-webkit-media-controls-panel, video::-webk
     <div class="titulo col"><h2 id="t-agenda">Agenda</h2><small id="agenda-dica">toque no cartaz</small></div>
     <div class="trilho" id="agenda"></div>
   </section>
-  <section>
+  <section id="sec-r1">
     <div class="titulo col"><h2 id="t1">Pra agora</h2><small>arraste ›</small></div>
     <div class="trilho" id="r1"></div>
   </section>
-  <section>
+  <section id="sec-r2">
     <div class="titulo col"><h2 id="t2">Também tem</h2><small>arraste ›</small></div>
     <div class="trilho" id="r2"></div>
   </section>
-  <section>
+  <section id="sec-nogabba">
     <div class="titulo col"><h2>No Gabba</h2></div>
     <div class="lista col">
       <a class="card" data-ev="bio3-jam" data-link="jam" href="https://drive.google.com/file/d/1su-nbrSu-AS9AikEyHxsbkgV3jZbYX84/view?usp=drivesdk"><span class="ic">🎸</span><span><b>Jam Session &amp; Happy hour</b><span id="happy-s">Segunda a sexta, 17h às 20h</span></span><span class="seta">›</span></a>
@@ -200,7 +200,7 @@ video::-webkit-media-controls, video::-webkit-media-controls-panel, video::-webk
       <a class="card" data-ev="bio3-fliperama" href="../delivery/"><span class="ic">🎮</span><span><b>Fliperama Gabba</b><span>Jogos enquanto o lanche chega</span></span><span class="seta">›</span></a>
     </div>
   </section>
-  <section>
+  <section id="sec-horarios">
     <div class="titulo col"><h2>Horários</h2></div>
     <div class="horarios col" id="horarios"></div>
     <div class="lista col" style="margin-top:14px">
@@ -219,7 +219,7 @@ video::-webkit-media-controls, video::-webkit-media-controls-panel, video::-webk
 <script src="../contador.js"></script>
 <script>
 /* ===== Vitrine: padrão; a versão atual vem de vitrine.json (alterada em /bio3/adm/) ===== */
-var VIT = {"titulos": {"especiais": "Especiais do mês", "antes": ["Pra hoje à noite", "No happy hour"], "happy": ["Do bar", "Pra acompanhar"], "noite": ["Mais pedidos", "Pra beber"], "fechado": ["Pra próxima", "Do bar"], "eventos": "Agenda"}, "especiais": [{"selo": "🔥 Burger do mês", "nome": "PORK BURGER", "desc": "Nosso burger suíno", "preco": "", "foto": "../bio2/img/pork-burger.jpg", "video": "", "oculto": false}, {"selo": "Opção light", "nome": "NO BREAD", "desc": "Sem pão", "preco": "", "foto": "../bio2/vid/nobread.jpg", "video": "../bio2/vid/nobread.mp4", "oculto": false}, {"selo": "Harmonização", "nome": "BURGER + TURATTI IPA", "desc": "", "preco": "", "foto": "../bio2/img/harmonizacao.jpg", "video": "", "oculto": false}], "comida": [{"nome": "Smash Axl Rose", "desc": "Smash burger", "preco": "", "foto": "../bio2/img/axl-rose.jpg", "oculto": false, "video": "../bio2/vid/axl-rose.mp4"}, {"nome": "Smoked Ribs", "desc": "Costela suína defumada, coleslaw e fritas", "preco": "", "foto": "../bio2/img/ribs.jpg", "oculto": false}, {"nome": "Coxinhas", "desc": "Com molho da casa", "preco": "", "foto": "../bio2/img/coxinhas.jpg", "oculto": false}, {"nome": "Onion rings", "desc": "Com barbecue", "preco": "", "foto": "../bio2/img/onion-rings.jpg", "oculto": false}, {"nome": "Pasteizinhos", "desc": "Com molho da casa", "preco": "", "foto": "../bio2/img/pasteizinhos.jpg", "oculto": false}, {"nome": "Pudim", "desc": "Sobremesa", "preco": "", "foto": "../bio2/img/pudim.jpg", "nome2": "Brownie", "desc2": "Sobremesa · com sorvete", "preco2": "", "foto2": "../bio2/img/brownie.jpg", "oculto": false}], "drinks": [{"nome": "Caipirinha", "desc": "", "preco": "", "foto": "../bio2/img/caipirinha.jpg", "oculto": false}, {"nome": "Drink da casa", "desc": "", "preco": "", "foto": "../bio2/img/drink-laranja.jpg", "oculto": false}, {"nome": "Drink PQP Jabuticaba", "desc": "Com energético PQP", "preco": "", "foto": "../bio2/img/pqp-jabuticaba.jpg", "oculto": false}, {"nome": "Drink PQP Maçã Verde", "desc": "Com energético PQP", "preco": "", "foto": "../bio2/img/pqp-maca-verde.jpg", "oculto": false}], "eventos": [{"data": "2026-10-17", "hora": "18:30", "titulo": "Uma noite de Blues & Rock", "desc": "18h30 Arthur Leite (Blues Rock) · 20h Banda 3 Elementos (Pop Rock nacional e internacional)", "foto": "fotos/evento-blues-rock.jpg", "oculto": false}]};
+var VIT = {"titulos": {"especiais": "Especiais do mês", "antes": ["Pra hoje à noite", "No happy hour"], "happy": ["Do bar", "Pra acompanhar"], "noite": ["Mais pedidos", "Pra beber"], "fechado": ["Pra próxima", "Do bar"], "eventos": "Agenda"}, "especiais": [{"selo": "🔥 Burger do mês", "nome": "PORK BURGER", "desc": "Nosso burger suíno", "preco": "", "foto": "../bio2/img/pork-burger.jpg", "video": "", "oculto": false}, {"selo": "Opção light", "nome": "NO BREAD", "desc": "Sem pão", "preco": "", "foto": "../bio2/vid/nobread.jpg", "video": "../bio2/vid/nobread.mp4", "oculto": false}, {"selo": "Harmonização", "nome": "BURGER + TURATTI IPA", "desc": "", "preco": "", "foto": "../bio2/img/harmonizacao.jpg", "video": "", "oculto": false}], "comida": [{"nome": "Smash Axl Rose", "desc": "Smash burger", "preco": "", "foto": "../bio2/img/axl-rose.jpg", "oculto": false, "video": "../bio2/vid/axl-rose.mp4"}, {"nome": "Smoked Ribs", "desc": "Costela suína defumada, coleslaw e fritas", "preco": "", "foto": "../bio2/img/ribs.jpg", "oculto": false}, {"nome": "Coxinhas", "desc": "Com molho da casa", "preco": "", "foto": "../bio2/img/coxinhas.jpg", "oculto": false}, {"nome": "Onion rings", "desc": "Com barbecue", "preco": "", "foto": "../bio2/img/onion-rings.jpg", "oculto": false}, {"nome": "Pasteizinhos", "desc": "Com molho da casa", "preco": "", "foto": "../bio2/img/pasteizinhos.jpg", "oculto": false}, {"nome": "Pudim", "desc": "Sobremesa", "preco": "", "foto": "../bio2/img/pudim.jpg", "nome2": "Brownie", "desc2": "Sobremesa · com sorvete", "preco2": "", "foto2": "../bio2/img/brownie.jpg", "oculto": false}], "drinks": [{"nome": "Caipirinha", "desc": "", "preco": "", "foto": "../bio2/img/caipirinha.jpg", "oculto": false}, {"nome": "Drink da casa", "desc": "", "preco": "", "foto": "../bio2/img/drink-laranja.jpg", "oculto": false}, {"nome": "Drink PQP Jabuticaba", "desc": "Com energético PQP", "preco": "", "foto": "../bio2/img/pqp-jabuticaba.jpg", "oculto": false}, {"nome": "Drink PQP Maçã Verde", "desc": "Com energético PQP", "preco": "", "foto": "../bio2/img/pqp-maca-verde.jpg", "oculto": false}], "eventos": [{"data": "2026-10-17", "hora": "18:30", "titulo": "Uma noite de Blues & Rock", "desc": "18h30 Arthur Leite (Blues Rock) · 20h Banda 3 Elementos (Pop Rock nacional e internacional)", "foto": "fotos/evento-blues-rock.jpg", "oculto": false}], "ordem": ["especiais", "agenda", "carrossel1", "carrossel2", "nogabba", "horarios"]};
 
 /* ===== Os 4 momentos do dia ===== */
 var ZAP = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3z"/></svg>';
@@ -366,6 +366,14 @@ var MOMENTOS = {
     }
   }
 
+  // Ordem das seções (arrastada no adm, aba Ordem)
+  var SECOES = { especiais: 'sec-esp', agenda: 'sec-agenda', carrossel1: 'sec-r1', carrossel2: 'sec-r2', nogabba: 'sec-nogabba', horarios: 'sec-horarios' };
+  function ordena() {
+    var main = document.getElementById('mais'), ordem = (VIT.ordem || []).filter(function (k) { return SECOES[k]; });
+    Object.keys(SECOES).forEach(function (k) { if (ordem.indexOf(k) < 0) ordem.push(k); });
+    ordem.forEach(function (k) { var el = document.getElementById(SECOES[k]); if (el) main.append(el); });
+  }
+
   function especiais() {
     var box = document.getElementById('esp'); box.innerHTML = '';
     var lista = visiveis(VIT.especiais);
@@ -475,9 +483,9 @@ var MOMENTOS = {
   }
 
   if (previa) { var p = document.createElement('div'); p.className = 'previa'; p.textContent = 'Prévia: momento "' + previa + '"'; document.body.append(p); }
-  especiais(); agenda(); aplica(); setInterval(atualiza, 60000);
+  especiais(); agenda(); ordena(); aplica(); setInterval(atualiza, 60000);
   fetch('vitrine.json?v=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (v) {
-    if (!v) return; VIT = v; especiais(); agenda(); atualMomento = null; atualiza();
+    if (!v) return; VIT = v; especiais(); agenda(); ordena(); atualMomento = null; atualiza();
   }).catch(function () {});
   fetch('../bio/config.json?v=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (c) {
     if (!c) return;

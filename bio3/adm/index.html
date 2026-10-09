@@ -66,6 +66,12 @@ input:focus-visible, button:focus-visible, select:focus-visible, a:focus-visible
 .tit-grupo b { font-size: .95rem; }
 .passou { font: 700 .75rem var(--body); letter-spacing: .1em; text-transform: uppercase; color: var(--bad); }
 .foto.cartaz { aspect-ratio: 9 / 16; }
+.linha { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px; user-select: none; -webkit-user-select: none; }
+.linha .nome { flex: 1; font-weight: 800; }
+.linha .nome small { display: block; color: var(--muted); font-weight: 600; font-size: .82rem; }
+.alca { width: 44px; height: 44px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2); color: var(--fg); font-size: 1.3rem; display: flex; align-items: center; justify-content: center; touch-action: none; cursor: grab; flex-shrink: 0; }
+.arrastando { opacity: .92; box-shadow: 0 12px 30px rgba(0,0,0,.6); border-color: var(--mustard) !important; position: relative; z-index: 3; }
+.card .topo-card { display: flex; justify-content: flex-end; margin: -4px -4px 0 0; }
 .sujo::after { content: ' •'; color: var(--mustard); }
 </style>
 </head>
@@ -79,7 +85,8 @@ input:focus-visible, button:focus-visible, select:focus-visible, a:focus-visible
   <div id="app" hidden>
     <p class="note" id="current">Carregando a vitrine…</p>
     <nav class="abas" role="tablist" aria-label="Partes da vitrine">
-      <button type="button" role="tab" data-aba="especiais" aria-selected="true">Especiais</button>
+      <button type="button" role="tab" data-aba="ordem" aria-selected="true">Ordem</button>
+      <button type="button" role="tab" data-aba="especiais" aria-selected="false">Especiais</button>
       <button type="button" role="tab" data-aba="comida" aria-selected="false">Comida</button>
       <button type="button" role="tab" data-aba="drinks" aria-selected="false">Drinks</button>
       <button type="button" role="tab" data-aba="eventos" aria-selected="false">Eventos</button>
@@ -128,11 +135,12 @@ input:focus-visible, button:focus-visible, select:focus-visible, a:focus-visible
     especiais: 'O primeiro visível vira o card grande (Burger do mês, com botão Pedir agora). Os outros aparecem em dupla embaixo.',
     comida: 'Carrossel de comida. A "foto alternada" faz o card trocar sozinho a cada 4 segundos (ex.: pudim ↔ brownie).',
     drinks: 'Carrossel de drinks. Fica primeiro no happy hour.',
+    ordem: 'Arraste pelo ☰ para mudar a ordem das partes da página (de cima para baixo, depois da capa). Também dá para usar ↑ ↓.',
     eventos: 'Agenda da bio: aparece do dia de hoje em diante e some sozinha depois que passa. No dia do evento, ele também aparece na capa. Use o cartaz como foto.',
     titulos: 'Nome das seções. Cada horário tem dois carrosséis: o de cima e o de baixo.'
   };
 
-  let token = null, sha = null, V = null, aba = 'especiais', sujo = false;
+  let token = null, sha = null, V = null, aba = 'ordem', sujo = false;
   const previas = {}; // foto enviada agora → imagem local, até o site atualizar
   try { token = localStorage.getItem(KEY); } catch (e) {}
 
@@ -255,6 +263,35 @@ input:focus-visible, button:focus-visible, select:focus-visible, a:focus-visible
     return c;
   }
 
+  // Arrastar para reordenar (funciona com o dedo no iPhone): segura no ☰ e arrasta
+  function arrastavel(box, lista, aoTerminar) {
+    box.querySelectorAll('[data-i]').forEach(item => {
+      const alca = item.querySelector('.alca'); if (!alca) return;
+      alca.addEventListener('pointerdown', ev => {
+        ev.preventDefault();
+        const itens = [...box.querySelectorAll(':scope > [data-i]')];
+        const centros = itens.map(o => { const r = o.getBoundingClientRect(); return r.top + window.scrollY + r.height / 2; });
+        const de = itens.indexOf(item), h = item.offsetHeight + 12, y0 = ev.clientY + window.scrollY;
+        let para = de;
+        item.classList.add('arrastando'); alca.setPointerCapture(ev.pointerId);
+        const mover = e => {
+          const dy = e.clientY + window.scrollY - y0; item.style.transform = 'translateY(' + dy + 'px)';
+          const alt = item.offsetHeight, meu = dy < 0 ? centros[de] - alt / 2 + dy + 30 : centros[de] + alt / 2 + dy - 30;
+          para = centros.filter((c, k) => k !== de && c < meu).length;
+          itens.forEach((o, k) => { if (o === item) return; o.style.transition = 'transform .15s'; o.style.transform = (k > de && k <= para) ? 'translateY(' + (-h) + 'px)' : (k < de && k >= para) ? 'translateY(' + h + 'px)' : ''; });
+          if (e.clientY < 90) window.scrollBy(0, -12); if (e.clientY > innerHeight - 140) window.scrollBy(0, 12);
+        };
+        const soltar = () => {
+          alca.removeEventListener('pointermove', mover); alca.removeEventListener('pointerup', soltar); alca.removeEventListener('pointercancel', soltar);
+          if (para !== de) { const [x] = lista.splice(de, 1); lista.splice(para, 0, x); marca(); }
+          aoTerminar();
+        };
+        alca.addEventListener('pointermove', mover); alca.addEventListener('pointerup', soltar); alca.addEventListener('pointercancel', soltar);
+      });
+    });
+  }
+  const NOMES_SEC = { especiais: ['⭐ Especiais do mês', 'Burger do mês, light, harmonização'], agenda: ['📅 Agenda', 'Some sozinha quando não tem evento'], carrossel1: ['🍔 Carrossel de cima', 'Muda com o horário (ex.: Mais pedidos / Do bar)'], carrossel2: ['🍹 Carrossel de baixo', 'Muda com o horário (ex.: Pra beber)'], nogabba: ['🎸 No Gabba', 'Jam, Vire um Gabba, cardápio, Fliperama'], horarios: ['🕔 Horários', 'Horários, Como chegar e Instagram'] };
+
   function desenha() {
     document.querySelectorAll('.abas button').forEach(b => b.setAttribute('aria-selected', b.dataset.aba === aba));
     $('dica').textContent = DICAS[aba];
@@ -269,6 +306,20 @@ input:focus-visible, button:focus-visible, select:focus-visible, a:focus-visible
       });
       return;
     }
+    if (aba === 'ordem') {
+      const ord = V.ordem = (V.ordem || []).filter(k => NOMES_SEC[k]);
+      Object.keys(NOMES_SEC).forEach(k => { if (ord.indexOf(k) < 0) ord.push(k); });
+      const cont = el('div', { style: 'display:flex;flex-direction:column;gap:12px' });
+      ord.forEach((k, i) => {
+        const up = el('button', { type: 'button', className: 'mini', textContent: '↑', ariaLabel: 'Subir' }); up.addEventListener('click', () => { if (i) { [ord[i - 1], ord[i]] = [ord[i], ord[i - 1]]; marca(); desenha(); } });
+        const dn = el('button', { type: 'button', className: 'mini', textContent: '↓', ariaLabel: 'Descer' }); dn.addEventListener('click', () => { if (i < ord.length - 1) { [ord[i + 1], ord[i]] = [ord[i], ord[i + 1]]; marca(); desenha(); } });
+        const linha = el('div', { className: 'linha' }, [el('span', { className: 'alca', textContent: '☰', ariaLabel: 'Arrastar' }), el('span', { className: 'nome' }, [NOMES_SEC[k][0], el('small', { textContent: NOMES_SEC[k][1] })]), up, dn]);
+        linha.dataset.i = i; cont.append(linha);
+      });
+      box.append(el('div', { className: 'card', style: 'padding:10px 12px' }, [el('b', { textContent: '📱 Capa (sempre no topo)' })]), cont);
+      arrastavel(cont, ord, desenha);
+      return;
+    }
     if (aba === 'eventos') {
       const evs = V.eventos = V.eventos || [];
       evs.sort((a, b) => ((a.data || '9') + (a.hora || '')).localeCompare((b.data || '9') + (b.hora || '')));
@@ -279,7 +330,9 @@ input:focus-visible, button:focus-visible, select:focus-visible, a:focus-visible
       return;
     }
     const lista = V[aba] = V[aba] || [];
-    lista.forEach((_, i) => box.append(cartao(lista, i, aba)));
+    const cont = el('div', { style: 'display:flex;flex-direction:column;gap:12px' });
+    lista.forEach((_, i) => { const c = cartao(lista, i, aba); c.dataset.i = i; c.prepend(el('div', { className: 'topo-card' }, [el('span', { className: 'alca', textContent: '☰', ariaLabel: 'Arrastar' })])); cont.append(c); });
+    box.append(cont); arrastavel(cont, lista, desenha);
     const add = el('button', { type: 'button', className: 'add', textContent: '+ Adicionar ' + (aba === 'especiais' ? 'especial' : aba === 'drinks' ? 'drink' : 'prato') });
     add.addEventListener('click', () => { lista.push(aba === 'especiais' ? { selo: '', nome: '', desc: '', preco: '', foto: '', video: '', oculto: false } : { nome: '', desc: '', preco: '', foto: '', oculto: false }); marca(); desenha(); escolheFoto(lista[lista.length - 1], 'foto'); });
     box.append(add);
