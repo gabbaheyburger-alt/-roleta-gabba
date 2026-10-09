@@ -384,7 +384,7 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
   $('nome').value = LS.get(K.nome, '');
   marcar('unidade'); ajustaSituacao(); mostraHist(); mostraFila(); atualiza();
   fetch('../pedidos/config.json?v=' + Date.now(), { cache: 'no-store' })
-    .then((r) => r.json()).then((c) => { CONFIG = c; }).catch(() => { CONFIG = null; })
+    .then((r) => r.json()).then((c) => { CONFIG = c; if (c && c.limpar_hist && LS.get('es-limpo', '') !== c.limpar_hist) { const lim = new Date(c.limpar_hist).getTime(); LS.set(K.hist, LS.get(K.hist, []).filter(h => new Date(h.quando).getTime() >= lim)); LS.set('es-limpo', c.limpar_hist); mostraHist(); } }).catch(() => { CONFIG = null; })
     .finally(() => { $('aviso-config').hidden = configOk(); atualiza(); esvaziaFila(); buscaStatus(); });
   document.addEventListener('visibilitychange', () => { if (!document.hidden) buscaStatus(); });
 })();
