@@ -86,6 +86,28 @@ h2 { font: 400 1.9rem/1 var(--display); letter-spacing: .03em; margin: 0; }
 .item .preco { position: absolute; right: 10px; bottom: 10px; background: rgba(11,9,8,.75); padding: 4px 10px; border-radius: 999px; font: 700 .95rem var(--label); }
 .item .nome { display: block; margin-top: 8px; font: 600 1.12rem/1.15 var(--label); }
 .item .desc { display: block; color: var(--muted); font-size: .88rem; }
+/* Especiais do mês */
+.esp { padding: 0 16px; display: grid; gap: 12px; }
+.mes, .mini { position: relative; display: block; border-radius: 18px; overflow: hidden; text-decoration: none; background: var(--surface); }
+.mes { border: 1px solid #3a1a1e; }
+.mes img { position: static !important; display: block; aspect-ratio: 1 / 1; height: auto !important; object-position: 50% 62%; }
+.mes::after { display: none; }
+.mes .txt { display: block; position: static !important; padding: 14px 16px 16px; background: linear-gradient(180deg, #1d1210, var(--surface)); }
+.mini { aspect-ratio: 3 / 4; }
+.mes img, .mini img, .mini video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.mini video { object-position: 50% 0; }
+.mes::after, .mini::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(11,9,8,0) 45%, rgba(11,9,8,.92) 100%); }
+.mes .txt, .mini .txt { position: absolute; left: 0; right: 0; bottom: 0; z-index: 1; padding: 14px; }
+.esp .selo { display: inline-block; font: 700 .72rem var(--label); letter-spacing: .14em; text-transform: uppercase; background: var(--cream); color: var(--bg); padding: 3px 9px; border-radius: 999px; }
+.esp .selo.quente { background: var(--red); color: #fff; }
+.mes b { display: block; font: 400 clamp(2.4rem, 12vw, 3.1rem)/.9 var(--display); letter-spacing: .02em; margin-top: 8px; }
+.mini b { display: block; font: 400 1.55rem/.95 var(--display); letter-spacing: .02em; margin-top: 6px; }
+.esp .s { display: block; color: #ddd3c3; font-size: .95rem; margin-top: 2px; }
+.mini .s { font-size: .85rem; }
+.esp .preco { font: 700 1rem var(--label); margin-left: 6px; }
+.mes .cta { display: inline-flex; margin-top: 12px; background: var(--red); color: #fff; font: 400 1.25rem var(--display); letter-spacing: .04em; padding: 9px 16px; border-radius: 12px; }
+.mini .selo { letter-spacing: .08em; font-size: .68rem; white-space: nowrap; }
+.dupla { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .lista { margin: 0 16px; display: grid; gap: 10px; }
 .card { display: flex; align-items: center; gap: 14px; padding: 13px 14px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); text-decoration: none; }
 .card .ic { width: 42px; height: 42px; border-radius: 12px; background: #221c19; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1.2rem; }
@@ -126,6 +148,26 @@ footer { padding: 30px 16px calc(28px + env(safe-area-inset-bottom)); text-align
 </header>
 
 <main id="mais">
+  <!-- Especiais do mês: trocar fotos/textos aqui (fotos em bio2/img, vídeos em bio2/vid) -->
+  <section aria-labelledby="t-mes">
+    <div class="titulo col"><h2 id="t-mes">Especiais do mês</h2></div>
+    <div class="esp col">
+      <a class="mes" data-ev="bio3-burger-do-mes" data-link="pedir" href="https://gabbaburger.saipos.com">
+        <img src="../bio2/img/pork-burger.jpg" alt="Pork Burger: burger suíno com queijo, bacon, alface e cebola roxa" loading="lazy">
+        <span class="txt"><span class="selo quente">🔥 Burger do mês</span><b>PORK BURGER</b><span class="s">Nosso burger suíno</span><span class="cta">PEDIR AGORA ›</span></span>
+      </a>
+      <div class="dupla">
+        <a class="mini" data-ev="bio3-nobread" data-link="pedir" href="https://gabbaburger.saipos.com">
+          <video src="../bio2/vid/nobread.mp4" poster="../bio2/vid/nobread.jpg" autoplay muted loop playsinline aria-label="No Bread"></video>
+          <span class="txt"><span class="selo">Opção light</span><b>NO BREAD</b><span class="s">Sem pão</span></span>
+        </a>
+        <a class="mini" data-ev="bio3-harmonizacao" data-link="pedir" href="https://gabbaburger.saipos.com">
+          <img src="../bio2/img/harmonizacao.jpg" alt="Burger com cerveja Turatti IPA" loading="lazy">
+          <span class="txt"><span class="selo">Harmonização</span><b>BURGER + TURATTI IPA</b></span>
+        </a>
+      </div>
+    </div>
+  </section>
   <section>
     <div class="titulo col"><h2 id="t1">Pra agora</h2><small>arraste ›</small></div>
     <div class="trilho" id="r1"></div>
