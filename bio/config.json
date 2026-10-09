@@ -43,15 +43,15 @@
   },
   "fechadoEm": "",
   "aviso": "🎤 Hoje tem karaokê! Vem soltar a voz no palco do Gabba 🤘",
+  "promo": {
+    "ativo": true,
+    "premio": "Poste e ganhe entrega grátis 😀🛵"
+  },
   "links": {
     "pedir": "https://gabbaburger.saipos.com",
     "whatsapp": "https://wa.me/message/QXY4DJK6HWG6N1",
     "jam": "https://drive.google.com/file/d/1su-nbrSu-AS9AikEyHxsbkgV3jZbYX84/view?usp=drivesdk",
     "cardapio": "https://drive.google.com/file/d/1euJpGexVkUlRfaj6BTdJ4an4jWUEet9E/view?usp=drivesdk",
     "mapa": "https://maps.app.goo.gl/ck9mdvzTTk1EoMLC9"
-  },
-  "promo": {
-    "ativo": false,
-    "premio": ""
   }
 }
