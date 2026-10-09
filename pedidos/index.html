@@ -343,7 +343,7 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
       item: $('item').value.trim(),
       quantidade: m ? 'Precisa ' + n : pr ? 'Tem ' + n : (estado.urgencia === 'Acabou' ? '0' : 'Tem ' + n),
       urgencia: (m || pr) ? estado.urgmat : estado.urgencia,
-      motivo: pr ? ('Conferência de produção' + (det ? ' — ' + det : '')) : ((m ? estado.motivomat : estado.motivo) + (det ? ' — ' + det : '')),
+      motivo: pr ? (det || 'Conferência de produção') : ((m ? estado.motivomat : estado.motivo) + (det ? ' — ' + det : '')),
       nome: $('nome').value.trim(),
       quando: new Date().toISOString()
     };

@@ -1,5 +1,5 @@
 {
-  "_comentario": "Ligação com os Formulários Google. 'form'/'campos' = Insumos das lojas (aba Insumos). 'material' = Material e equipamento das lojas (aba Material e Equipamento). 'estoque' = página da estoquista (aba Estoque central).",
+  "_comentario": "Ligação com os Formulários Google. 'form'/'campos' = Insumos das lojas (aba Insumos). 'material' = Material e equipamento (aba Material e Equipamento). 'producao' = Produção do Gabba (aba Produção). 'estoque' = página da estoquista (aba Estoque central).",
   "form": "https://docs.google.com/forms/d/e/1FAIpQLSfqiBnaqHrUxpRdh03knBbscYuWYEoUnaMWGBhf7ZX-9Bt0Rg/formResponse",
   "campos": {
     "loja": "entry.1111801695",
@@ -29,6 +29,17 @@
       "urgencia": "entry.1588775357",
       "motivo": "entry.1510479188",
       "nome": "entry.1457539566"
+    }
+  },
+  "producao": {
+    "form": "https://docs.google.com/forms/d/e/1FAIpQLSd53fXXWvClW5AMlkkzm--4m9CgtWG49DhsGmBq_a7jnBC8uw/formResponse",
+    "campos": {
+      "loja": "entry.1111801695",
+      "item": "entry.443214422",
+      "quantidade": "entry.538836595",
+      "urgencia": "entry.1160809239",
+      "motivo": "entry.796775247",
+      "nome": "entry.1701895569"
     }
   }
 }
