@@ -151,12 +151,6 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
         <label class="label" for="item"><span class="n">03</span>Produto</label>
         <input type="text" id="item" list="itens-usados" maxlength="80" autocomplete="off" placeholder="Ex.: Queijo muçarela, copo 300 ml">
         <datalist id="itens-usados"></datalist>
-        <datalist id="itens-producao"><option value="Madonna"></option><option value="Rita Lee"></option><option value="Croc balls"></option></datalist>
-        <div class="tags" id="atalhos-producao" hidden>
-          <button type="button" class="tag atalho" data-item="Madonna">Madonna</button>
-          <button type="button" class="tag atalho" data-item="Rita Lee">Rita Lee</button>
-          <button type="button" class="tag atalho" data-item="Croc balls">Croc balls</button>
-        </div>
       </div>
 
       <div class="field modo-insumo">
@@ -286,9 +280,7 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
     $('campo-qtd').hidden = md === 'insumo' ? estado.urgencia !== 'Tem pouco' : false;
     $('qtd-label').textContent = md === 'material' ? 'Quantos precisa' : md === 'producao' ? 'Quantas tem prontas' : 'Quanto tem na loja';
     $('qtd-opt').textContent = md === 'material' ? '' : 'aproximado';
-    $('item').placeholder = md === 'material' ? 'Ex.: liquidificador, panela grande, tábua de corte' : md === 'producao' ? 'Ex.: Madonna, Rita Lee, Croc balls' : 'Ex.: Queijo muçarela, copo 300 ml';
-    $('item').setAttribute('list', md === 'producao' ? 'itens-producao' : 'itens-usados');
-    $('atalhos-producao').hidden = md !== 'producao';
+    $('item').placeholder = md === 'material' ? 'Ex.: liquidificador, panela grande, tábua de corte' : md === 'producao' ? 'Escreva o que precisa produzir' : 'Ex.: Queijo muçarela, copo 300 ml';
     $('intro').textContent = md === 'material' ? 'Precisa de um material ou equipamento? Descreva aqui. Um item por vez.'
       : md === 'producao' ? 'Conferiu a produção? Informe quantas tem prontas e se é urgente. Um item por vez.'
       : 'Acabou ou está acabando? Avise aqui. Um item por vez — quanto comprar, a gerência decide.';
@@ -314,7 +306,6 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
     });
   }
 
-  document.querySelectorAll('.atalho').forEach(b => b.addEventListener('click', () => { $('item').value = b.dataset.item; validar(); }));
   const qtd = $('qtd');
   $('mais').onclick = () => { qtd.value = Math.max(0, (parseFloat(qtd.value) || 0) + 1); validar(); };
   $('menos').onclick = () => { qtd.value = Math.max(1, (parseFloat(qtd.value) || 0) - 1); validar(); };
