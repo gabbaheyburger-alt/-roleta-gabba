@@ -441,7 +441,7 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
   }
   window.addEventListener('online', esvaziarFila);
 
-  let STATUS = new Map(), statusOk = false;
+  let STATUS = new Map(), statusOk = false, statusErro = '';
   const tipoStatus = t => t === 'Material' ? 'Material' : t === 'Producao' ? 'Producao' : 'Insumo';
   async function buscaStatus() {
     if (!CONFIG || !CONFIG.status_csv) return;
@@ -449,8 +449,8 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
     const lista = LS.get(K.hist, []).filter(h => !h.pendente && new Date(h.quando).getTime() >= lim);
     try {
       STATUS = await window.gabbaStatus(CONFIG.status_csv, lista.map(h => ({ tipo: tipoStatus(h.tipo), loja: h.loja, item: h.item, quando: h.quando })));
-      statusOk = true;
-    } catch (e) { statusOk = false; }
+      statusOk = true; statusErro = STATUS.size + '/' + lista.length;
+    } catch (e) { statusOk = false; statusErro = String(e && e.message || e); }
     mostrarHist();
   }
   function mostrarHist() {
@@ -471,7 +471,7 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
     }));
     const nota = $('hist-nota');
     nota.hidden = !(CONFIG && CONFIG.status_csv);
-    nota.textContent = statusOk ? 'A situação é atualizada pela gerência e pode levar alguns minutos para aparecer aqui.' : 'Não foi possível ver a situação agora.';
+    nota.textContent = statusOk ? 'A situação é atualizada pela gerência e pode levar alguns minutos para aparecer aqui. (' + statusErro + ')' : 'Não foi possível ver a situação agora' + (statusErro ? ' (' + statusErro + ')' : '') + '.';
     $('itens-usados').replaceChildren(...LS.get(K.itens, []).map(i => { const o = document.createElement('option'); o.value = i; return o; }));
   }
 
