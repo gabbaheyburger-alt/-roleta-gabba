@@ -171,15 +171,6 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
           <input type="number" id="sobrou" inputmode="decimal" min="0" step="any" value="1" aria-label="Quanto sobrou">
           <button type="button" class="step" data-alvo="sobrou" data-d="1" aria-label="Aumentar">+</button>
         </div>
-      </div>
-
-      <div class="field">
-        <div class="label"><span class="n" id="n-comprar">05</span>Quanto comprar<span class="opt">sugestão</span></div>
-        <div class="qtd">
-          <button type="button" class="step" data-alvo="comprar" data-d="-1" aria-label="Diminuir">−</button>
-          <input type="number" id="comprar" inputmode="decimal" min="0" step="any" value="1" aria-label="Quanto comprar">
-          <button type="button" class="step" data-alvo="comprar" data-d="1" aria-label="Aumentar">+</button>
-        </div>
         <div class="tags" data-grupo="unidade">
           <button type="button" class="tag" data-v="un">Unidade</button>
           <button type="button" class="tag" data-v="cx">Caixa</button>
@@ -191,13 +182,14 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
         </div>
       </div>
 
+
       <div class="field">
-        <label class="label" for="obs"><span class="n" id="n-obs">06</span>Observação<span class="opt">opcional</span></label>
-        <textarea id="obs" maxlength="200" placeholder="Ex.: comprar a marca de sempre, fornecedor X"></textarea>
+        <label class="label" for="obs"><span class="n" id="n-obs">05</span>Observação<span class="opt">opcional</span></label>
+        <textarea id="obs" maxlength="200" placeholder="Ex.: a caixa fechada está no fundo, marca diferente"></textarea>
       </div>
 
       <div class="field">
-        <label class="label" for="nome"><span class="n" id="n-nome">07</span>Quem avisa</label>
+        <label class="label" for="nome"><span class="n" id="n-nome">06</span>Quem avisa</label>
         <input type="text" id="nome" maxlength="40" placeholder="Seu nome">
       </div>
     </div>
@@ -230,7 +222,7 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
   <div class="panel"><div class="field explica">
     <div class="label">Como funcionaria de verdade</div>
     <ol>
-      <li>A estoquista avisa aqui quando pega o <b>último</b> ou vê que está <b>acabando</b>.</li>
+      <li>A estoquista avisa aqui quando pega o <b>último</b> ou vê que está <b>acabando</b>. Quanto comprar quem decide é a gerência.</li>
       <li>O alerta entra na mesma lista de compras dos pedidos das lojas, marcado como <b>Estoque central</b>.</li>
       <li>No Painel, "Peguei o último" aparece como <b>Acabou</b> (vermelho) e "Tem pouco" como <b>Acabando</b>.</li>
       <li>Você compra e marca a caixinha <b>Comprado</b>, como já faz hoje.</li>
@@ -267,30 +259,27 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
   function ajustaSituacao() {
     const acabou = est.situacao === 'Acabou';
     $('campo-sobrou').hidden = acabou;
-    $('n-comprar').textContent = acabou ? '04' : '05';
-    $('n-obs').textContent = acabou ? '05' : '06';
-    $('n-nome').textContent = acabou ? '06' : '07';
+    $('n-obs').textContent = acabou ? '04' : '05';
+    $('n-nome').textContent = acabou ? '05' : '06';
   }
   document.querySelectorAll('.step').forEach((b) => b.addEventListener('click', () => {
-    const el = $(b.dataset.alvo); const min = b.dataset.alvo === 'sobrou' ? 0 : 1;
+    const el = $(b.dataset.alvo); const min = 0;
     el.value = Math.max(min, (parseFloat(el.value) || 0) + Number(b.dataset.d)); atualiza();
   }));
-  ['item', 'sobrou', 'comprar', 'obs', 'nome'].forEach((id) => $(id).addEventListener('input', atualiza));
+  ['item', 'sobrou', 'obs', 'nome'].forEach((id) => $(id).addEventListener('input', atualiza));
 
   function faltando() {
     const f = [];
     if (!est.situacao) f.push('situação');
     if (!$('item').value.trim()) f.push('produto');
     if (!est.loja) f.push('loja');
-    if (!(parseFloat($('comprar').value) > 0)) f.push('quanto comprar');
     if (!$('nome').value.trim()) f.push('quem avisa');
     return f;
   }
   function monta() {
     const acabou = est.situacao === 'Acabou';
-    const qtd = String(parseFloat($('comprar').value)).replace('.', ',') + ' ' + est.unidade;
     const sobrou = acabou ? '0' : String(parseFloat($('sobrou').value) || 0).replace('.', ',') + ' ' + est.unidade;
-    return { situacao: est.situacao, item: $('item').value.trim(), loja: est.loja, comprar: qtd, sobrou, obs: $('obs').value.trim(), nome: $('nome').value.trim(), quando: new Date().toISOString() };
+    return { situacao: est.situacao, item: $('item').value.trim(), loja: est.loja, sobrou, obs: $('obs').value.trim(), nome: $('nome').value.trim(), quando: new Date().toISOString() };
   }
   function atualiza() {
     const f = faltando();
@@ -308,7 +297,6 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
     $('pv-alerta').replaceChildren(pill, t);
     const partes = [];
     if (p.situacao !== 'Acabou') partes.push('Sobrou no estoque: ' + p.sobrou);
-    partes.push('Comprar: ' + p.comprar);
     if (p.obs) partes.push('Obs.: ' + p.obs);
     if (p.nome) partes.push('Avisado por ' + p.nome);
     $('pv-det').textContent = partes.join(' · ');
@@ -323,7 +311,7 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
     $('form').hidden = true; $('ok').hidden = false; mostraHist(); window.scrollTo({ top: 0, behavior: 'smooth' });
   });
   $('outro').addEventListener('click', () => {
-    $('item').value = ''; $('obs').value = ''; $('sobrou').value = 1; $('comprar').value = 1;
+    $('item').value = ''; $('obs').value = ''; $('sobrou').value = 1;
     est.situacao = null; est.loja = null; est.unidade = 'un'; ['situacao', 'loja', 'unidade'].forEach(marcar); ajustaSituacao();
     $('ok').hidden = true; $('form').hidden = false; atualiza();
   });
@@ -339,7 +327,7 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
       const t = document.createElement('span'); t.textContent = p.item + ' → ' + nomeLoja(p.loja);
       l1.append(pill, t);
       const l2 = document.createElement('div'); l2.className = 'l2';
-      l2.textContent = 'Comprar ' + p.comprar + (p.situacao !== 'Acabou' ? ' · sobrou ' + p.sobrou : '') + ' · ' + p.nome + ' · ' + hora(new Date(p.quando));
+      l2.textContent = (p.situacao !== 'Acabou' ? 'Sobrou ' + p.sobrou + ' · ' : '') + p.nome + ' · ' + hora(new Date(p.quando));
       li.append(l1, l2); return li;
     }));
     $('itens').replaceChildren(...LS.get(K.itens, []).map((i) => { const o = document.createElement('option'); o.value = i; return o; }));
