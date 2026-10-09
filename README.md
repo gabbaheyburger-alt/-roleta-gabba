@@ -75,6 +75,15 @@ Filtro de câmera no endereço `/vire/`: coloca o moicano e os óculos do mascot
 
 Jogo de ritmo no endereço `/hero/`, com 3 músicas originais tocadas pelo próprio aparelho: **Chapa Quente** (punk, 168 BPM), **Baião do Gabba** (forró rock com sanfona e zabumba, 138 BPM) e **Moicano Metal** (bumbo duplo, 150 BPM). As notas do jogador seguem a melodia: quem acerta toca o solo. Modos Fácil e Rock, notas estrela que enchem o GABBA POWER (pontos em dobro por 8 s), plateia pulando, anúncio de seção e virada de bateria. Evento: `partida-hero`.
 
+## Checklist de abertura (lojas)
+
+Página para o funcionário conferir o setor ao chegar, no endereço `/checklist/` (hoje: chapa do Gabba Hey Burger, prazo 17h00).
+
+- Cada item tem OK / POUCO / FALTA. FALTA exige motivo. Qualquer item pode ter observação.
+- Envia para o formulário "Checklist Abertura", que grava na planilha CHECKLISTS: uma linha por item com problema ou observação e uma linha RESUMO no fim.
+- Itens de reposição em FALTA podem ir também como pedido de insumo, no mesmo formulário da página de pedidos.
+- Nomes da equipe, itens e prazo ficam em `checklist/config.json`. Novos setores ou lojas entram no mesmo arquivo; abrir com `?loja=gabba&setor=chapa`.
+
 ## Arquivos
 
 - `contador.js`: contador de uso dos jogos.

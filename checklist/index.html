@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Checklist de Abertura · Grupo Gabba</title>
+<meta name="theme-color" content="#111111">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+/* Layout: barra preta da marca no topo; seções numeradas em painéis claros; itens com 3 botões grandes; barra de progresso fixa embaixo */
+:root {
+  --ink: #111111; --ink-2: #2b2b2b; --cream: #f5f2dc; --page: #f3f2ee; --panel: #ffffff;
+  --line: #e4e2db; --line-2: #d3d0c6; --muted: #6e6b63; --soft: #f7f6f2;
+  --red: #c8102e; --red-soft: #fcecee; --amber: #b87700; --amber-soft: #fdf3dc; --green: #2f7d45; --green-soft: #e7f3ea;
+  --font: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; background: var(--page); color: var(--ink); }
+body { font-family: var(--font); font-size: 16px; line-height: 1.45; -webkit-font-smoothing: antialiased; }
+[hidden] { display: none !important; }
+
+.topbar { background: var(--ink); color: var(--cream); padding: calc(env(safe-area-inset-top, 0px) + 16px) 16px 18px; }
+.topbar .in { max-width: 560px; margin: 0 auto; display: flex; align-items: center; gap: 14px; }
+.topbar img { height: 58px; width: auto; display: block; }
+.topbar .sep { width: 1px; align-self: stretch; background: rgba(245,242,220,.22); }
+.topbar .eyebrow { font-size: .68rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: rgba(245,242,220,.62); }
+.topbar h1 { margin: 2px 0 0; font-size: 1.22rem; font-weight: 700; letter-spacing: -.01em; color: var(--cream); }
+.topbar .prazo { font-size: .8rem; color: rgba(245,242,220,.75); margin-top: 2px; }
+
+.main { max-width: 560px; margin: 0 auto; padding: 16px 16px 130px; display: flex; flex-direction: column; gap: 14px; }
+.notice { border-radius: 10px; padding: 11px 13px; font-size: .9rem; border: 1px solid #ead9a6; background: #fbf5e2; color: #5b4810; }
+.notice.err { border-color: #efc3c9; background: #fcf0f1; color: #7a1222; }
+.notice.okn { border-color: #bfe0c8; background: var(--green-soft); color: #1d5130; }
+
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.label { display: flex; align-items: baseline; gap: 10px; font-size: .78rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); }
+.label .n { font-variant-numeric: tabular-nums; color: var(--muted); font-weight: 500; }
+.hint { margin: 0; font-size: .86rem; color: var(--muted); }
+
+.names { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.pick { font: 600 1rem var(--font); min-height: 50px; border-radius: 10px; border: 1px solid var(--line-2); background: #fff; color: var(--ink); cursor: pointer; }
+.pick[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--cream); }
+.pick.other { color: var(--muted); font-weight: 500; }
+input[type=text], textarea { width: 100%; font: 500 1rem var(--font); color: var(--ink); background: var(--soft); border: 1px solid var(--line-2); border-radius: 10px; padding: 12px 13px; outline: none; -webkit-appearance: none; appearance: none; }
+textarea { min-height: 44px; resize: vertical; font-size: .94rem; }
+input:focus, textarea:focus { border-color: var(--ink); background: #fff; box-shadow: 0 0 0 3px rgba(17,17,17,.08); }
+
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .78rem; color: var(--muted); }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+
+.grp { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.gh { all: unset; box-sizing: border-box; width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 13px 14px; background: var(--soft); cursor: pointer; font-weight: 700; font-size: .98rem; }
+.gh:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }
+.gh .cnt { font-size: .78rem; font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 8px; }
+.gh .cnt.done { color: var(--green); }
+.gh .car { transition: transform .2s; }
+.grp.closed .car { transform: rotate(-90deg); }
+.grp.closed .items { display: none; }
+.item { padding: 12px 14px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 8px; }
+.item.falta-resp { background: var(--red-soft); }
+.irow { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.iname { font-weight: 600; font-size: .98rem; min-width: 0; }
+.tag { flex: none; font-size: .64rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; padding: 2px 7px; border-radius: 999px; border: 1px solid var(--line-2); color: var(--muted); }
+.tag.prep { color: var(--red); border-color: var(--red); }
+.seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.seg.yn { grid-template-columns: repeat(2, 1fr); }
+.seg button { font: 700 .92rem var(--font); min-height: 48px; border-radius: 10px; border: 1px solid var(--line-2); background: #fff; color: var(--ink); cursor: pointer; }
+.seg button[aria-pressed="true"].ok { background: var(--green); border-color: var(--green); color: #fff; }
+.seg button[aria-pressed="true"].low { background: var(--amber); border-color: var(--amber); color: #fff; }
+.seg button[aria-pressed="true"].miss { background: var(--red); border-color: var(--red); color: #fff; }
+.mots { display: flex; flex-wrap: wrap; gap: 6px; }
+.mlbl { width: 100%; font-size: .78rem; font-weight: 600; color: var(--muted); }
+.mot { font: 600 .84rem var(--font); padding: 8px 11px; min-height: 38px; border-radius: 999px; border: 1px solid var(--line-2); background: #fff; color: var(--ink); cursor: pointer; }
+.mot[aria-pressed="true"] { background: var(--ink); color: var(--cream); border-color: var(--ink); }
+.addobs { all: unset; align-self: flex-start; font-size: .84rem; font-weight: 600; color: var(--muted); padding: 4px 2px; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.addobs:focus-visible { outline: 2px solid var(--ink); }
+.err { color: var(--red); font-size: .84rem; font-weight: 600; margin: 0; }
+
+.submit { width: 100%; padding: 16px; border: 0; border-radius: 12px; background: var(--ink); color: var(--cream); font: 600 1.02rem var(--font); cursor: pointer; }
+.submit.red { background: var(--red); color: #fff; }
+.submit:disabled { background: #bdbab1; color: #f3f2ee; }
+.ghost { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid var(--ink); background: #fff; color: var(--ink); font: 600 1rem var(--font); cursor: pointer; }
+
+.dock { position: fixed; left: 0; right: 0; bottom: 0; background: #fff; border-top: 1px solid var(--line); padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px)); z-index: 20; }
+.dock .in { max-width: 560px; margin: 0 auto; display: flex; align-items: center; gap: 12px; }
+.prog { flex: 1; min-width: 0; }
+.prog .lbl { font-size: .78rem; color: var(--muted); font-variant-numeric: tabular-nums; display: flex; justify-content: space-between; gap: 8px; }
+.track { height: 8px; background: var(--line); border-radius: 99px; overflow: hidden; margin-top: 5px; display: flex; }
+.track span { display: block; height: 100%; }
+.dock .submit { width: auto; padding: 0 18px; min-height: 46px; font-size: .95rem; }
+
+.sum { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.sum div { border-radius: 12px; padding: 10px; text-align: center; }
+.sum b { display: block; font-size: 1.6rem; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.sum small { font-size: .74rem; font-weight: 700; letter-spacing: .05em; }
+.s-ok { background: var(--green-soft); color: var(--green); } .s-low { background: var(--amber-soft); color: var(--amber); } .s-miss { background: var(--red-soft); color: var(--red); }
+.list { display: flex; flex-direction: column; gap: 6px; }
+.list h3 { margin: 6px 0 0; font-size: .76rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.li { display: flex; justify-content: space-between; gap: 10px; font-size: .9rem; padding: 8px 10px; border-radius: 8px; background: var(--soft); }
+.li em { font-style: normal; font-size: .78rem; color: var(--muted); display: block; }
+.pill { flex: none; font-size: .68rem; font-weight: 800; padding: 3px 8px; border-radius: 999px; align-self: center; }
+.pill.low { background: var(--amber-soft); color: var(--amber); } .pill.miss { background: var(--red-soft); color: var(--red); } .pill.okp { background: var(--green-soft); color: var(--green); }
+.offer { border: 1.5px dashed var(--red); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 10px; font-size: .9rem; }
+.offer label { display: flex; gap: 10px; align-items: center; font-weight: 600; }
+.offer input { width: 22px; height: 22px; accent-color: var(--ink); }
+
+.done { text-align: center; align-items: center; }
+.check { width: 52px; height: 52px; border-radius: 50%; background: var(--green); color: #fff; display: flex; align-items: center; justify-content: center; }
+.done h2 { margin: 2px 0 0; font-size: 1.2rem; }
+.done dl { width: 100%; margin: 4px 0; border-top: 1px solid var(--line); text-align: left; font-size: .92rem; }
+.done dl div { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--line); }
+.done dt { color: var(--muted); } .done dd { margin: 0; font-weight: 600; text-align: right; }
+button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spacing: .04em; padding-top: 4px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="in">
+    <img src="../pedidos/logo-grupo-gabba.svg" alt="Grupo Gabba">
+    <span class="sep"></span>
+    <div>
+      <div class="eyebrow">Checklist de abertura</div>
+      <h1 id="titulo">Carregando…</h1>
+      <div class="prazo" id="prazo"></div>
+    </div>
+  </div>
+</header>
+
+<main class="main" id="app">
+  <div class="notice err" id="aviso-config" hidden>Não consegui carregar a lista do checklist. Confira a internet e abra a página de novo.</div>
+  <div class="notice" id="aviso-fila" hidden></div>
+  <div class="notice okn" id="aviso-hoje" hidden></div>
+
+  <section class="panel" id="s1">
+    <div class="label"><span class="n">01</span>Quem está conferindo</div>
+    <div class="names" id="names" role="group" aria-label="Escolha seu nome"></div>
+    <input type="text" id="nome" autocomplete="name" placeholder="Digite seu nome" hidden>
+    <p class="hint">O celular lembra seu nome para as próximas vezes.</p>
+  </section>
+
+  <section class="panel" id="s2">
+    <div class="label"><span class="n">02</span>Antes de começar</div>
+    <p class="hint">Funcionamento e higiene da bancada.</p>
+    <div class="grp" id="safety"></div>
+  </section>
+
+  <section class="panel" id="s3">
+    <div class="label"><span class="n">03</span>Conferência dos itens</div>
+    <div class="legend">
+      <span><i style="background:var(--green)"></i>OK: quantidade ideal</span>
+      <span><i style="background:var(--amber)"></i>POUCO: abaixo do ideal</span>
+      <span><i style="background:var(--red)"></i>FALTA: não tem</span>
+    </div>
+    <p class="hint"><b style="color:var(--red)">PREPARO</b> = feito aqui na loja. <b>REPOSIÇÃO</b> = vem do estoque ou da compra.</p>
+    <div id="groups" style="display:flex;flex-direction:column;gap:10px"></div>
+  </section>
+
+  <section class="panel" id="s4">
+    <div class="label"><span class="n">04</span>Revisar e enviar</div>
+    <p class="hint" id="s4hint">Responda todos os itens para liberar o envio.</p>
+    <button class="submit" id="review" type="button">Revisar checklist</button>
+    <p class="err" id="errmsg" hidden></p>
+  </section>
+  <footer>Grupo Gabba · Paracuru</footer>
+</main>
+
+<main class="main" id="summary" hidden></main>
+
+<div class="dock" id="dock">
+  <div class="in">
+    <div class="prog">
+      <div class="lbl"><span id="plbl">—</span><span id="ptime"></span></div>
+      <div class="track" id="track"></div>
+    </div>
+    <button class="submit" id="dockbtn" type="button">Próximo</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  const $ = s => document.querySelector(s);
+  const LS = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
+    del(k) { try { localStorage.removeItem(k); } catch (e) {} }
+  };
+  const esc = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const MOT_OK = ['Não porcionado', 'Qualidade ruim, não dá para amanhã', 'Perto de vencer', 'Outro'];
+  const MOT_BAD = ['Pedido, aguardando estoque central', 'Ainda não foi pedido', 'Precisa preparar', 'Estragou / descartado', 'Outro'];
+  const AGUARD = MOT_BAD[0];
+  const hojeStr = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+  const hora = d => d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  const fmtTempo = s => Math.floor(s / 60) + ' min ' + String(s % 60).padStart(2, '0') + ' s';
+
+  let CONFIG = null, PED = null, LOJA, SETOR, LOJA_NOME, CFG, SAF = [], ITEMS = [], ALL = [];
+  let ans = {}, obs = {}, mot = {}, started = null, nomeSel = '';
+  let KD;
+
+  // ---------- Montagem ----------
+  function montar() {
+    const qs = new URLSearchParams(location.search);
+    const lojas = Object.keys(CONFIG.lojas);
+    LOJA = lojas.find(l => l.toLowerCase() === (qs.get('loja') || '').toLowerCase()) || lojas[0];
+    const setores = Object.keys(CONFIG.lojas[LOJA].setores);
+    SETOR = setores.find(s => s.toLowerCase() === (qs.get('setor') || '').toLowerCase()) || setores[0];
+    LOJA_NOME = CONFIG.lojas[LOJA].nome || LOJA;
+    CFG = CONFIG.lojas[LOJA].setores[SETOR];
+    KD = 'ck-rascunho-' + LOJA + '-' + SETOR;
+    document.title = 'Checklist ' + SETOR + ' · ' + LOJA_NOME;
+    $('#titulo').textContent = SETOR + ' · ' + LOJA_NOME;
+    $('#prazo').textContent = 'Fazer até as ' + (CONFIG.prazo || '17:00').replace(':', 'h');
+
+    SAF = CFG.seguranca.map((n, i) => ({ id: 's' + i, n, yn: true }));
+    ITEMS = [];
+    CFG.grupos.forEach(([g, list]) => list.forEach(([n, t]) => ITEMS.push({ id: 'i' + ITEMS.length, g, n, t })));
+    ALL = SAF.concat(ITEMS);
+
+    $('#safety').innerHTML = grpHTML('Funcionamento e higiene', SAF, 'saf');
+    $('#groups').innerHTML = CFG.grupos.map(([g], gi) => '<div class="grp" id="g' + gi + '">' + grpHTML(g, ITEMS.filter(i => i.g === g), 'g' + gi) + '</div>').join('');
+
+    // Nome lembrado
+    const saved = LS.get('ck-nome', '') || LS.get('pc-nome', '');
+    if (saved) { nomeSel = saved; if (!CFG.equipe.includes(saved)) { $('#nome').hidden = false; $('#nome').value = saved; } }
+    renderNames();
+
+    // Rascunho do dia (se o celular bloqueou no meio da conferência)
+    const r = LS.get(KD, null);
+    if (r && r.data === hojeStr()) {
+      ans = r.ans || {}; obs = r.obs || {}; mot = r.mot || {}; started = r.started || null;
+      ALL.forEach(i => { if (ans[i.id]) aplicarResposta(i.id, ans[i.id], true); if (obs[i.id]) { $('#obs-' + i.id).value = obs[i.id]; $('#obs-' + i.id).hidden = false; const a = $('#add-' + i.id); if (a) a.hidden = true; const m = $('#mots-' + i.id); if (m && mot[i.id]) { m.hidden = false; renderMots(i.id); } } });
+    } else LS.del(KD);
+
+    // Já enviado hoje neste aparelho?
+    const h = LS.get('ck-hist', []).find(x => x.data === hojeStr() && x.loja === LOJA && x.setor === SETOR);
+    if (h) { $('#aviso-hoje').hidden = false; $('#aviso-hoje').textContent = 'O checklist de hoje já foi enviado deste celular por ' + h.nome + ' às ' + h.hora + '. Só envie outro se precisar corrigir algo.'; }
+    update();
+  }
+
+  function segHTML(id, yn) {
+    if (yn) return '<div class="seg yn" role="group"><button type="button" class="ok" data-id="' + id + '" data-v="SIM" aria-pressed="false">Sim</button><button type="button" class="miss" data-id="' + id + '" data-v="NÃO" aria-pressed="false">Não</button></div>';
+    return '<div class="seg" role="group"><button type="button" class="ok" data-id="' + id + '" data-v="OK" aria-pressed="false">OK</button><button type="button" class="low" data-id="' + id + '" data-v="POUCO" aria-pressed="false">POUCO</button><button type="button" class="miss" data-id="' + id + '" data-v="FALTA" aria-pressed="false">FALTA</button></div>';
+  }
+  function itemHTML(it) {
+    const tag = it.yn ? '' : '<span class="tag ' + (it.t === 'P' ? 'prep' : '') + '">' + (it.t === 'P' ? 'Preparo' : 'Reposição') + '</span>';
+    return '<div class="item" id="row-' + it.id + '"><div class="irow"><span class="iname">' + esc(it.n) + '</span>' + tag + '</div>' + segHTML(it.id, it.yn) +
+      (it.yn ? '' : '<div class="mots" id="mots-' + it.id + '" hidden></div>') +
+      '<button type="button" class="addobs" data-id="' + it.id + '" id="add-' + it.id + '" hidden>+ Observação</button>' +
+      '<textarea id="obs-' + it.id + '" class="obs" rows="1" placeholder="' + (it.yn ? 'O que aconteceu?' : 'Escreva aqui (opcional)') + '" hidden></textarea>' +
+      '<p class="err" id="merr-' + it.id + '" hidden>Escolha o motivo da falta.</p></div>';
+  }
+  function grpHTML(name, list, key) {
+    return '<button class="gh" type="button" aria-expanded="true"><span>' + esc(name) + '</span><span class="cnt" id="cnt-' + key + '"><span class="n">0/' + list.length + '</span><span class="car">▾</span></span></button><div class="items">' + list.map(itemHTML).join('') + '</div>';
+  }
+  function renderMots(id) {
+    const box = $('#mots-' + id); if (!box) return;
+    const v = ans[id], list = v === 'OK' ? MOT_OK : MOT_BAD;
+    box.innerHTML = '<span class="mlbl">' + (v === 'OK' ? 'Tem alguma ressalva?' : 'Motivo' + (v === 'FALTA' ? ' (obrigatório)' : '')) + '</span>' +
+      list.map(m => '<button type="button" class="mot" data-id="' + id + '" data-m="' + esc(m) + '" aria-pressed="' + (mot[id] === m) + '">' + esc(m) + '</button>').join('');
+  }
+  function renderNames() {
+    const outro = (nomeSel && !CFG.equipe.includes(nomeSel)) || !$('#nome').hidden;
+    $('#names').innerHTML = CFG.equipe.map(n => '<button type="button" class="pick" data-n="' + esc(n) + '" aria-pressed="' + (nomeSel === n) + '">' + esc(n) + '</button>').join('') +
+      '<button type="button" class="pick other" data-n="__outro" aria-pressed="' + outro + '">Outro nome</button>';
+  }
+
+  // ---------- Respostas ----------
+  function aplicarResposta(id, v, restaurando) {
+    const prev = restaurando ? v : ans[id]; ans[id] = v;
+    if (!restaurando && (prev === 'OK') !== (v === 'OK')) delete mot[id];
+    const row = $('#row-' + id);
+    row.querySelectorAll('.seg button').forEach(x => x.setAttribute('aria-pressed', x.dataset.v === v ? 'true' : 'false'));
+    row.classList.remove('falta-resp'); $('#merr-' + id).hidden = true;
+    const yn = id[0] === 's', good = v === 'OK' || v === 'SIM', aberto = row.dataset.open === '1' || !!obs[id];
+    const t = $('#obs-' + id), a = $('#add-' + id), m = $('#mots-' + id);
+    if (yn) { t.hidden = good && !aberto; a.hidden = !good || aberto; }
+    else if (good) { m.hidden = !aberto; t.hidden = !aberto; a.hidden = aberto; renderMots(id); }
+    else { m.hidden = false; t.hidden = false; a.hidden = true; renderMots(id); }
+  }
+  function salvarRascunho() { LS.set(KD, { data: hojeStr(), ans, obs, mot, started }); }
+
+  document.addEventListener('click', e => {
+    const b = e.target.closest('.seg button');
+    if (b) { if (!started) started = Date.now(); aplicarResposta(b.dataset.id, b.dataset.v); salvarRascunho(); update(); return; }
+    const ao = e.target.closest('.addobs');
+    if (ao) { const id = ao.dataset.id; $('#row-' + id).dataset.open = '1'; ao.hidden = true; $('#obs-' + id).hidden = false; const mb = $('#mots-' + id); if (mb) { mb.hidden = false; renderMots(id); } $('#obs-' + id).focus(); return; }
+    const mo = e.target.closest('.mot');
+    if (mo) { const id = mo.dataset.id, m = mo.dataset.m; if (mot[id] === m) delete mot[id]; else mot[id] = m; renderMots(id); $('#merr-' + id).hidden = true; $('#row-' + id).classList.remove('falta-resp'); salvarRascunho(); update(); return; }
+    const gh = e.target.closest('.gh');
+    if (gh) { const g = gh.parentElement; g.classList.toggle('closed'); gh.setAttribute('aria-expanded', !g.classList.contains('closed')); return; }
+    const pk = e.target.closest('.pick');
+    if (pk) {
+      if (pk.dataset.n === '__outro') { $('#nome').hidden = false; nomeSel = $('#nome').value.trim(); $('#nome').focus(); }
+      else { nomeSel = pk.dataset.n; $('#nome').hidden = true; LS.set('ck-nome', nomeSel); }
+      $('#errmsg').hidden = true; renderNames();
+    }
+  });
+  document.addEventListener('input', e => {
+    if (e.target.id === 'nome') { nomeSel = e.target.value.trim(); if (nomeSel) LS.set('ck-nome', nomeSel); }
+    else if (e.target.classList.contains('obs')) { const id = e.target.id.slice(4), v = e.target.value.trim(); if (v) obs[id] = v; else delete obs[id]; salvarRascunho(); }
+  });
+
+  const precisaMotivo = i => !i.yn && ans[i.id] === 'FALTA' && !mot[i.id];
+  const pendente = i => !ans[i.id] || precisaMotivo(i);
+  function update() {
+    const done = ALL.filter(i => ans[i.id]).length;
+    $('#plbl').textContent = done + ' de ' + ALL.length + ' respondidos';
+    const c = contar(), pct = n => (n / ALL.length * 100) + '%';
+    $('#track').innerHTML = '<span style="width:' + pct(c.ok) + ';background:var(--green)"></span><span style="width:' + pct(c.low) + ';background:var(--amber)"></span><span style="width:' + pct(c.miss) + ';background:var(--red)"></span>';
+    const setCnt = (key, list) => { const n = list.filter(i => ans[i.id]).length, el = $('#cnt-' + key); el.querySelector('.n').textContent = (n === list.length ? '✓ ' : '') + n + '/' + list.length; el.classList.toggle('done', n === list.length); };
+    setCnt('saf', SAF); CFG.grupos.forEach(([g], gi) => setCnt('g' + gi, ITEMS.filter(i => i.g === g)));
+    const falta = ALL.filter(pendente).length;
+    $('#dockbtn').textContent = falta ? 'Próximo' : 'Revisar';
+    $('#s4hint').textContent = falta ? 'Faltam ' + falta + ' respostas para liberar o envio.' : 'Tudo respondido. Revise antes de enviar.';
+  }
+  function contar() { const c = { ok: 0, low: 0, miss: 0 }; ALL.forEach(i => { const v = ans[i.id]; if (v === 'OK' || v === 'SIM') c.ok++; else if (v === 'POUCO') c.low++; else if (v) c.miss++; }); return c; }
+  setInterval(() => { if (started) $('#ptime').textContent = fmtTempo(Math.round((Date.now() - started) / 1000)); }, 1000);
+
+  function irParaPendente() {
+    const m = ALL.find(pendente); if (!m) return false;
+    if (precisaMotivo(m)) $('#merr-' + m.id).hidden = false;
+    const row = $('#row-' + m.id), g = row.closest('.grp'); g.classList.remove('closed');
+    row.classList.add('falta-resp'); row.scrollIntoView({ behavior: 'smooth', block: 'center' }); return true;
+  }
+  function revisar() {
+    if (!nomeSel) { $('#errmsg').textContent = 'Escolha ou escreva seu nome no passo 1.'; $('#errmsg').hidden = false; $('#s1').scrollIntoView({ behavior: 'smooth' }); return; }
+    if (irParaPendente()) { const n = ALL.filter(pendente).length; $('#errmsg').textContent = 'Ainda faltam ' + n + ' respostas (item sem marcar ou FALTA sem motivo). Levei você à primeira.'; $('#errmsg').hidden = false; return; }
+    $('#errmsg').hidden = true; mostrarResumo();
+  }
+  $('#review').onclick = revisar;
+  $('#dockbtn').onclick = () => { if (ALL.find(pendente)) irParaPendente(); else revisar(); };
+
+  // ---------- Resumo ----------
+  function li(i) {
+    const v = ans[i.id], det = [mot[i.id], obs[i.id]].filter(Boolean).map(esc).join(' · ');
+    const cls = (v === 'OK' || v === 'SIM') ? 'okp' : v === 'POUCO' ? 'low' : 'miss';
+    return '<div class="li"><span>' + esc(i.n) + (det ? '<em>' + det + '</em>' : '') + '</span><span class="pill ' + cls + '">' + v + '</span></div>';
+  }
+  let segs = 0;
+  function mostrarResumo() {
+    segs = Math.round((Date.now() - (started || Date.now())) / 1000);
+    const c = contar(), ruim = i => ans[i.id] !== 'OK', esp = i => mot[i.id] === AGUARD;
+    const safRuim = SAF.filter(i => ans[i.id] === 'NÃO' || obs[i.id]);
+    const ress = ITEMS.filter(i => ans[i.id] === 'OK' && (mot[i.id] || obs[i.id]));
+    const aguard = ITEMS.filter(i => ruim(i) && esp(i));
+    const prep = ITEMS.filter(i => i.t === 'P' && ruim(i) && !esp(i)), rep = ITEMS.filter(i => i.t === 'R' && ruim(i) && !esp(i));
+    const pedir = rep.filter(i => ans[i.id] === 'FALTA');
+    const S = $('#summary');
+    S.innerHTML =
+      '<section class="panel"><div class="label"><span class="n">04</span>Resumo antes de enviar</div>' +
+      '<p class="hint">' + esc(nomeSel) + ' · ' + esc(SETOR) + ' · ' + hora(new Date()) + ' · levou ' + fmtTempo(segs) + '</p>' +
+      '<div class="sum"><div class="s-ok"><b>' + c.ok + '</b><small>OK</small></div><div class="s-low"><b>' + c.low + '</b><small>POUCO</small></div><div class="s-miss"><b>' + c.miss + '</b><small>FALTA / NÃO</small></div></div>' +
+      '<div class="list">' +
+      (safRuim.length ? '<h3>Funcionamento: precisa de atenção</h3>' + safRuim.map(li).join('') : '') +
+      (prep.length ? '<h3>Preparar antes de abrir</h3>' + prep.map(li).join('') : '') +
+      (rep.length ? '<h3>Repor do estoque</h3>' + rep.map(li).join('') : '') +
+      (aguard.length ? '<h3>Aguardando o estoque central</h3>' + aguard.map(li).join('') : '') +
+      (ress.length ? '<h3>Tem, mas com ressalva</h3>' + ress.map(li).join('') : '') +
+      (!safRuim.length && !prep.length && !rep.length && !aguard.length && !ress.length ? '<p class="hint">Tudo OK. Nenhum item precisa de atenção.</p>' : '') +
+      '</div>' +
+      (pedir.length ? '<div class="offer"><b>' + pedir.length + (pedir.length === 1 ? ' item de reposição em FALTA' : ' itens de reposição em FALTA') + '</b><span>Mandar também como pedido de insumo para o estoque central? Vai para a mesma lista da página de pedidos. Itens marcados "aguardando estoque central" não entram, porque já foram pedidos.</span><label><input type="checkbox" id="sendped" checked> Sim, enviar como pedido</label></div>' : '') +
+      '<button class="submit red" id="confirm" type="button">Enviar checklist</button>' +
+      '<button class="ghost" id="back" type="button">Voltar e corrigir</button></section>';
+    $('#app').hidden = true; $('#dock').hidden = true; S.hidden = false; window.scrollTo(0, 0);
+    $('#back').onclick = () => { S.hidden = true; $('#app').hidden = false; $('#dock').hidden = false; };
+    $('#confirm').onclick = () => enviar(c, pedir);
+  }
+
+  // ---------- Envio ----------
+  function linha(p) { // p: {item,status,motivo,observacao,tempo}
+    return { tipo: 'ck', dados: Object.assign({ loja: LOJA, setor: SETOR, responsavel: nomeSel }, p) };
+  }
+  async function postar(env) {
+    if (env.tipo === 'ped') {
+      const body = new URLSearchParams();
+      for (const k of ['loja', 'item', 'quantidade', 'urgencia', 'motivo', 'nome']) { const id = PED.campos[k]; if (id) body.append(id, env.dados[k]); }
+      await fetch(PED.form, { method: 'POST', mode: 'no-cors', body });
+    } else {
+      const body = new URLSearchParams();
+      for (const k of Object.keys(CONFIG.campos)) body.append(CONFIG.campos[k], env.dados[k] || '');
+      await fetch(CONFIG.form, { method: 'POST', mode: 'no-cors', body });
+    }
+  }
+  const pausa = ms => new Promise(r => setTimeout(r, ms));
+  async function enviarLista(lista) {
+    const resto = [];
+    for (let k = 0; k < lista.length; k++) {
+      try { await postar(lista[k]); await pausa(150); }
+      catch (e) { resto.push(...lista.slice(k)); break; }
+    }
+    return resto;
+  }
+  async function enviar(c, pedir) {
+    const btn = $('#confirm'); btn.disabled = true; btn.textContent = 'Enviando…';
+    const agora = new Date();
+    const cod = 'CHK-' + String(agora.getFullYear()).slice(2) + String(agora.getMonth() + 1).padStart(2, '0') + String(agora.getDate()).padStart(2, '0') + '-' + String(agora.getHours()).padStart(2, '0') + String(agora.getMinutes()).padStart(2, '0') + '-' + Math.random().toString(36).slice(2, 4).toUpperCase();
+    const lista = [];
+    SAF.forEach(i => { if (ans[i.id] === 'NÃO' || obs[i.id]) lista.push(linha({ comprovante: cod, item: '[Funcionamento] ' + i.n, status: ans[i.id], motivo: '', observacao: obs[i.id] || '', tempo: '' })); });
+    ITEMS.forEach(i => { if (ans[i.id] !== 'OK' || mot[i.id] || obs[i.id]) lista.push(linha({ comprovante: cod, item: i.n, status: ans[i.id], motivo: mot[i.id] || '', observacao: obs[i.id] || '', tempo: '' })); });
+    // Resumo por último: quando ele chega na planilha, o checklist chegou inteiro
+    lista.push(linha({ comprovante: cod, item: 'RESUMO', status: c.ok + ' OK · ' + c.low + ' POUCO · ' + c.miss + ' FALTA', motivo: 'Abertura', observacao: ALL.length + ' itens conferidos', tempo: fmtTempo(segs) }));
+    const pedidoOk = pedir.length && $('#sendped') && $('#sendped').checked && PED;
+    if (pedidoOk) pedir.forEach(i => lista.push({ tipo: 'ped', dados: { loja: LOJA, item: i.n, quantidade: '0', urgencia: 'Acabou', motivo: 'Checklist ' + SETOR.toLowerCase() + (obs[i.id] ? ' — ' + obs[i.id] : '') + ' · ' + cod, nome: nomeSel } }));
+
+    const resto = await enviarLista(lista);
+    if (resto.length) { const f = LS.get('ck-fila', []); f.push(...resto); LS.set('ck-fila', f); }
+    const hist = LS.get('ck-hist', []); hist.unshift({ data: hojeStr(), hora: hora(agora), loja: LOJA, setor: SETOR, nome: nomeSel, cod, pendente: resto.length > 0 }); LS.set('ck-hist', hist.slice(0, 30));
+    LS.del(KD);
+
+    const dt = agora.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    const [ph, pm] = (CONFIG.prazo || '17:00').split(':').map(Number);
+    const noPrazo = agora.getHours() * 60 + agora.getMinutes() <= ph * 60 + pm;
+    $('#summary').innerHTML =
+      '<section class="panel done"><div class="check"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg></div>' +
+      '<h2>' + (resto.length ? 'Checklist salvo no celular' : 'Checklist enviado') + '</h2>' +
+      (resto.length ? '<p class="hint" style="color:var(--amber)">Sem internet agora. Ele será enviado sozinho quando a conexão voltar. Não feche esta página de vez.</p>' : '') +
+      '<dl><div><dt>Comprovante</dt><dd>' + cod + '</dd></div><div><dt>Setor</dt><dd>' + esc(SETOR) + ' · ' + esc(LOJA_NOME) + '</dd></div><div><dt>Responsável</dt><dd>' + esc(nomeSel) + '</dd></div><div><dt>Horário</dt><dd>' + dt + (noPrazo ? '' : ' (após o prazo)') + '</dd></div><div><dt>Resultado</dt><dd>' + c.ok + ' OK · ' + c.low + ' POUCO · ' + c.miss + ' FALTA</dd></div><div><dt>Tempo</dt><dd>' + fmtTempo(segs) + '</dd></div>' +
+      (pedidoOk ? '<div><dt>Pedidos de insumo</dt><dd>' + pedir.length + '</dd></div>' : '') + '</dl>' +
+      '<button class="ghost" type="button" id="novo">Fechar</button></section>';
+    window.scrollTo(0, 0);
+    $('#novo').onclick = () => location.reload();
+    window.gabbaConta && gabbaConta('checklist-' + LOJA.toLowerCase() + '-' + SETOR.toLowerCase(), 'Checklist ' + SETOR);
+  }
+
+  async function esvaziarFila() {
+    const f = LS.get('ck-fila', []); if (!f.length || !CONFIG) return;
+    const resto = await enviarLista(f); LS.set('ck-fila', resto);
+    if (!resto.length) { const h = LS.get('ck-hist', []); h.forEach(x => x.pendente = false); LS.set('ck-hist', h); }
+    mostrarFila();
+  }
+  function mostrarFila() {
+    const n = LS.get('ck-fila', []).length;
+    $('#aviso-fila').hidden = !n;
+    $('#aviso-fila').textContent = 'Há um checklist guardado neste celular esperando internet para ser enviado.';
+  }
+  window.addEventListener('online', esvaziarFila);
+
+  // ---------- Início ----------
+  Promise.all([
+    fetch('config.json?v=' + Date.now(), { cache: 'no-store' }).then(r => r.json()),
+    fetch('../pedidos/config.json?v=' + Date.now(), { cache: 'no-store' }).then(r => r.json()).catch(() => null)
+  ]).then(([c, p]) => {
+    CONFIG = c; PED = p && p.form ? { form: p.form, campos: p.campos } : null;
+    montar(); mostrarFila(); esvaziarFila();
+  }).catch(() => { $('#aviso-config').hidden = false; $('#titulo').textContent = 'Checklist'; $('#dock').hidden = true; });
+})();
+</script>
+<script src="../contador.js"></script>
+</body>
+</html>
