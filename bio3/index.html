@@ -108,6 +108,27 @@ h2 { font: 400 1.9rem/1 var(--display); letter-spacing: .03em; margin: 0; }
 .mes .cta { display: inline-flex; margin-top: 12px; background: var(--red); color: #fff; font: 400 1.25rem var(--display); letter-spacing: .04em; padding: 9px 16px; border-radius: 12px; }
 .mini .selo { letter-spacing: .08em; font-size: .68rem; white-space: nowrap; }
 .dupla { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+/* Agenda */
+.agenda .ev { flex: 0 0 auto; width: min(58vw, 220px); scroll-snap-align: start; background: none; border: none; padding: 0; color: var(--cream); text-align: left; cursor: pointer; font: inherit; }
+.agenda .cartaz { position: relative; display: block; aspect-ratio: 9 / 16; border-radius: 16px; overflow: hidden; background: var(--surface); border: 1px solid var(--line); }
+.agenda .cartaz img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.agenda .quando { position: absolute; left: 8px; top: 8px; background: rgba(11,9,8,.85); border-radius: 10px; padding: 5px 9px; font: 700 .8rem/1.1 var(--label); letter-spacing: .06em; text-transform: uppercase; }
+.agenda .ev.hoje .cartaz { border-color: var(--red); box-shadow: 0 0 0 1px var(--red); }
+.agenda .ev.hoje .quando { background: var(--red); color: #fff; }
+.agenda .ev b { display: block; margin-top: 8px; font: 600 1.1rem/1.15 var(--label); }
+.agenda .ev small { display: block; color: var(--muted); font-size: .86rem; margin-top: 2px; }
+.evhoje { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; padding: 8px; border-radius: 14px; background: rgba(216,18,43,.88); color: #fff; text-decoration: none; border: none; width: 100%; text-align: left; font: inherit; cursor: pointer; }
+.evhoje img { width: 44px; height: 60px; object-fit: cover; border-radius: 8px; flex-shrink: 0; }
+.evhoje small { display: block; font: 700 .7rem var(--label); letter-spacing: .16em; text-transform: uppercase; opacity: .9; }
+.evhoje b { display: block; font: 600 1.05rem/1.15 var(--label); }
+.evhoje .seta { margin-left: auto; font-size: 1.3rem; padding-right: 4px; }
+.luz { position: fixed; inset: 0; z-index: 60; background: rgba(0,0,0,.94); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: max(14px, env(safe-area-inset-top)) 14px calc(14px + env(safe-area-inset-bottom)); gap: 12px; }
+.luz img { max-width: 100%; max-height: calc(100% - 140px); border-radius: 12px; object-fit: contain; }
+.luz .txt { color: #ddd3c3; text-align: center; font-size: .95rem; max-width: 40ch; }
+.luz .acoes { display: flex; gap: 10px; width: 100%; max-width: 420px; }
+.luz .acoes > * { flex: 1; min-height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; text-decoration: none; font: 400 1.3rem var(--display); letter-spacing: .04em; cursor: pointer; }
+.luz .ir { background: var(--red); color: #fff; border: none; }
+.luz .fechar { background: transparent; color: var(--cream); border: 1px solid rgba(243,234,217,.35); }
 .lista { margin: 0 16px; display: grid; gap: 10px; }
 .card { display: flex; align-items: center; gap: 14px; padding: 13px 14px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); text-decoration: none; }
 .card .ic { width: 42px; height: 42px; border-radius: 12px; background: #221c19; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1.2rem; }
@@ -141,6 +162,7 @@ video::-webkit-media-controls, video::-webkit-media-controls-panel, video::-webk
     <div class="linha"><span class="momento" id="m-rotulo">Gabba Burger</span><div class="status" id="status"><span class="bola"></span><span id="status-txt">Gabba Burger</span></div></div>
     <h1 id="m-titulo">Gabba Burger</h1>
     <p class="sub" id="m-sub">Burger, defumados e drinks · Paracuru</p>
+    <button class="evhoje" id="evhoje" type="button" hidden></button>
     <div class="aviso" id="aviso" hidden><small>Hoje no Gabba</small><span id="aviso-txt"></span></div>
     <div class="botoes">
       <a class="b1" id="b1" href="https://gabbaburger.saipos.com">PEDIR DELIVERY</a>
@@ -155,6 +177,10 @@ video::-webkit-media-controls, video::-webkit-media-controls-panel, video::-webk
   <section aria-labelledby="t-mes" id="sec-esp">
     <div class="titulo col"><h2 id="t-mes">Especiais do mês</h2></div>
     <div class="esp col" id="esp"></div>
+  </section>
+  <section aria-labelledby="t-agenda" id="sec-agenda" class="agenda" hidden>
+    <div class="titulo col"><h2 id="t-agenda">Agenda</h2><small id="agenda-dica">toque no cartaz</small></div>
+    <div class="trilho" id="agenda"></div>
   </section>
   <section>
     <div class="titulo col"><h2 id="t1">Pra agora</h2><small>arraste ›</small></div>
@@ -182,12 +208,17 @@ video::-webkit-media-controls, video::-webkit-media-controls-panel, video::-webk
     </div>
   </section>
 </main>
+<div class="luz" id="luz" hidden role="dialog" aria-modal="true" aria-label="Cartaz do evento">
+  <img id="luz-img" alt="">
+  <p class="txt" id="luz-txt"></p>
+  <div class="acoes"><a class="ir" id="luz-ir" data-ev="bio3-evento-mapa" data-link="mapa" href="https://maps.app.goo.gl/ck9mdvzTTk1EoMLC9">COMO CHEGAR</a><button class="fechar" id="luz-x" type="button">FECHAR</button></div>
+</div>
 <footer>Gabba Burger · Hamburgueria artesanal · Paracuru-CE</footer>
 
 <script src="../contador.js"></script>
 <script>
 /* ===== Vitrine: padrão; a versão atual vem de vitrine.json (alterada em /bio3/adm/) ===== */
-var VIT = {"titulos": {"especiais": "Especiais do mês", "antes": ["Pra hoje à noite", "No happy hour"], "happy": ["Do bar", "Pra acompanhar"], "noite": ["Mais pedidos", "Pra beber"], "fechado": ["Pra próxima", "Do bar"]}, "especiais": [{"selo": "🔥 Burger do mês", "nome": "PORK BURGER", "desc": "Nosso burger suíno", "preco": "", "foto": "../bio2/img/pork-burger.jpg", "video": "", "oculto": false}, {"selo": "Opção light", "nome": "NO BREAD", "desc": "Sem pão", "preco": "", "foto": "../bio2/vid/nobread.jpg", "video": "../bio2/vid/nobread.mp4", "oculto": false}, {"selo": "Harmonização", "nome": "BURGER + TURATTI IPA", "desc": "", "preco": "", "foto": "../bio2/img/harmonizacao.jpg", "video": "", "oculto": false}], "comida": [{"nome": "Smash Axl Rose", "desc": "Smash burger", "preco": "", "foto": "../bio2/img/axl-rose.jpg", "oculto": false}, {"nome": "Smoked Ribs", "desc": "Costela suína defumada, coleslaw e fritas", "preco": "", "foto": "../bio2/img/ribs.jpg", "oculto": false}, {"nome": "Coxinhas", "desc": "Com molho da casa", "preco": "", "foto": "../bio2/img/coxinhas.jpg", "oculto": false}, {"nome": "Onion rings", "desc": "Com barbecue", "preco": "", "foto": "../bio2/img/onion-rings.jpg", "oculto": false}, {"nome": "Pasteizinhos", "desc": "Com molho da casa", "preco": "", "foto": "../bio2/img/pasteizinhos.jpg", "oculto": false}, {"nome": "Pudim", "desc": "Sobremesa", "preco": "", "foto": "../bio2/img/pudim.jpg", "nome2": "Brownie", "desc2": "Sobremesa · com sorvete", "preco2": "", "foto2": "../bio2/img/brownie.jpg", "oculto": false}], "drinks": [{"nome": "Caipirinha", "desc": "", "preco": "", "foto": "../bio2/img/caipirinha.jpg", "oculto": false}, {"nome": "Drink da casa", "desc": "", "preco": "", "foto": "../bio2/img/drink-laranja.jpg", "oculto": false}, {"nome": "Drink PQP Jabuticaba", "desc": "Com energético PQP", "preco": "", "foto": "../bio2/img/pqp-jabuticaba.jpg", "oculto": false}, {"nome": "Drink PQP Maçã Verde", "desc": "Com energético PQP", "preco": "", "foto": "../bio2/img/pqp-maca-verde.jpg", "oculto": false}]};
+var VIT = {"titulos": {"especiais": "Especiais do mês", "antes": ["Pra hoje à noite", "No happy hour"], "happy": ["Do bar", "Pra acompanhar"], "noite": ["Mais pedidos", "Pra beber"], "fechado": ["Pra próxima", "Do bar"], "eventos": "Agenda"}, "especiais": [{"selo": "🔥 Burger do mês", "nome": "PORK BURGER", "desc": "Nosso burger suíno", "preco": "", "foto": "../bio2/img/pork-burger.jpg", "video": "", "oculto": false}, {"selo": "Opção light", "nome": "NO BREAD", "desc": "Sem pão", "preco": "", "foto": "../bio2/vid/nobread.jpg", "video": "../bio2/vid/nobread.mp4", "oculto": false}, {"selo": "Harmonização", "nome": "BURGER + TURATTI IPA", "desc": "", "preco": "", "foto": "../bio2/img/harmonizacao.jpg", "video": "", "oculto": false}], "comida": [{"nome": "Smash Axl Rose", "desc": "Smash burger", "preco": "", "foto": "../bio2/img/axl-rose.jpg", "oculto": false}, {"nome": "Smoked Ribs", "desc": "Costela suína defumada, coleslaw e fritas", "preco": "", "foto": "../bio2/img/ribs.jpg", "oculto": false}, {"nome": "Coxinhas", "desc": "Com molho da casa", "preco": "", "foto": "../bio2/img/coxinhas.jpg", "oculto": false}, {"nome": "Onion rings", "desc": "Com barbecue", "preco": "", "foto": "../bio2/img/onion-rings.jpg", "oculto": false}, {"nome": "Pasteizinhos", "desc": "Com molho da casa", "preco": "", "foto": "../bio2/img/pasteizinhos.jpg", "oculto": false}, {"nome": "Pudim", "desc": "Sobremesa", "preco": "", "foto": "../bio2/img/pudim.jpg", "nome2": "Brownie", "desc2": "Sobremesa · com sorvete", "preco2": "", "foto2": "../bio2/img/brownie.jpg", "oculto": false}], "drinks": [{"nome": "Caipirinha", "desc": "", "preco": "", "foto": "../bio2/img/caipirinha.jpg", "oculto": false}, {"nome": "Drink da casa", "desc": "", "preco": "", "foto": "../bio2/img/drink-laranja.jpg", "oculto": false}, {"nome": "Drink PQP Jabuticaba", "desc": "Com energético PQP", "preco": "", "foto": "../bio2/img/pqp-jabuticaba.jpg", "oculto": false}, {"nome": "Drink PQP Maçã Verde", "desc": "Com energético PQP", "preco": "", "foto": "../bio2/img/pqp-maca-verde.jpg", "oculto": false}], "eventos": [{"data": "2026-10-17", "hora": "18:30", "titulo": "Uma noite de Blues & Rock", "desc": "18h30 Arthur Leite (Blues Rock) · 20h Banda 3 Elementos (Pop Rock nacional e internacional)", "foto": "fotos/evento-blues-rock.jpg", "oculto": false}]};
 
 /* ===== Os 4 momentos do dia ===== */
 var ZAP = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3z"/></svg>';
@@ -288,6 +319,51 @@ var MOMENTOS = {
     var el = document.getElementById(id); el.innerHTML = '';
     visiveis(qual === 'drinks' ? VIT.drinks : VIT.comida).forEach(function (it, k) { el.append(card(it, 'bio3-item-' + qual + '-' + (it.nome || k).toString().toLowerCase().replace(/[^a-z0-9]+/g, '-'))); });
   }
+  // ===== Agenda de eventos: mostra de hoje em diante; o de hoje também aparece na capa =====
+  var SEM = ['DOM','SEG','TER','QUA','QUI','SEX','SÁB'];
+  function eventosFuturos() {
+    var hoje = hojeStr();
+    return (VIT.eventos || []).filter(function (e) { return e && !e.oculto && e.data && e.data >= hoje && e.titulo; })
+      .sort(function (a, b) { return (a.data + (a.hora || '')).localeCompare(b.data + (b.hora || '')); });
+  }
+  function quando(e) {
+    var hoje = hojeStr(), am = new Date(Date.now() - 3 * 3600 * 1000 + 864e5).toISOString().slice(0, 10);
+    var d = new Date(e.data + 'T12:00:00Z'), dm = e.data.slice(8, 10) + '/' + e.data.slice(5, 7);
+    var dia = e.data === hoje ? 'HOJE' : e.data === am ? 'AMANHÃ' : SEM[d.getUTCDay()] + ' ' + dm;
+    return dia + (e.hora ? ' · ' + hm(e.hora) : '');
+  }
+  function abreCartaz(e) {
+    document.getElementById('luz-img').src = e.foto; document.getElementById('luz-img').alt = e.titulo;
+    document.getElementById('luz-txt').textContent = quando(e) + ' — ' + e.titulo + (e.desc ? '. ' + e.desc : '');
+    document.getElementById('luz').hidden = false; document.body.style.overflow = 'hidden';
+    if (window.gabbaConta) window.gabbaConta('bio3-evento-cartaz', 'Bio3: abriu cartaz de evento');
+  }
+  document.getElementById('luz-x').addEventListener('click', function () { document.getElementById('luz').hidden = true; document.body.style.overflow = ''; });
+  function agenda() {
+    var lista = eventosFuturos(), box = document.getElementById('agenda'); box.innerHTML = '';
+    document.getElementById('sec-agenda').hidden = !lista.length;
+    document.getElementById('t-agenda').textContent = (VIT.titulos && VIT.titulos.eventos) || 'Agenda';
+    lista.forEach(function (e) {
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'ev' + (e.data === hojeStr() ? ' hoje' : '');
+      var c = document.createElement('span'); c.className = 'cartaz';
+      if (e.foto) { var im = document.createElement('img'); im.src = e.foto; im.alt = e.titulo; im.loading = 'lazy'; c.append(im); }
+      var q = document.createElement('span'); q.className = 'quando'; q.textContent = quando(e); c.append(q);
+      var t = document.createElement('b'); t.textContent = e.titulo;
+      b.append(c, t);
+      if (e.desc) { var d = document.createElement('small'); d.textContent = e.desc; b.append(d); }
+      b.addEventListener('click', function () { abreCartaz(e); });
+      box.append(b);
+    });
+    var hj = lista.filter(function (e) { return e.data === hojeStr(); })[0], eh = document.getElementById('evhoje');
+    eh.hidden = !hj; eh.innerHTML = '';
+    if (hj) {
+      if (hj.foto) { var mi = document.createElement('img'); mi.src = hj.foto; mi.alt = ''; eh.append(mi); }
+      var tx = document.createElement('span'); var sm = document.createElement('small'); sm.textContent = 'Hoje no Gabba' + (hj.hora ? ' · ' + hm(hj.hora) : ''); var bb = document.createElement('b'); bb.textContent = hj.titulo; tx.append(sm, bb);
+      var se = document.createElement('span'); se.className = 'seta'; se.textContent = '›';
+      eh.append(tx, se); eh.onclick = function () { abreCartaz(hj); };
+    }
+  }
+
   function especiais() {
     var box = document.getElementById('esp'); box.innerHTML = '';
     var lista = visiveis(VIT.especiais);
@@ -354,6 +430,7 @@ var MOMENTOS = {
       if (window.gabbaConta) window.gabbaConta('bio3-momento-' + x.momento, 'Bio3: abriu no momento ' + x.momento);
     }
     document.getElementById('aviso').hidden = !C.aviso || x.momento === 'fechado';
+    if (x.momento === 'fechado') document.getElementById('evhoje').hidden = true;
     var r = document.getElementById('m-rotulo'); r.textContent = M.rotulo; r.classList.toggle('quente', M.quente);
     document.getElementById('m-titulo').textContent = M.titulo(x);
     document.getElementById('m-sub').textContent = typeof M.sub === 'function' ? M.sub(x) : M.sub;
@@ -396,9 +473,9 @@ var MOMENTOS = {
   }
 
   if (previa) { var p = document.createElement('div'); p.className = 'previa'; p.textContent = 'Prévia: momento "' + previa + '"'; document.body.append(p); }
-  especiais(); aplica(); setInterval(atualiza, 60000);
+  especiais(); agenda(); aplica(); setInterval(atualiza, 60000);
   fetch('vitrine.json?v=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (v) {
-    if (!v) return; VIT = v; especiais(); atualMomento = null; atualiza();
+    if (!v) return; VIT = v; especiais(); agenda(); atualMomento = null; atualiza();
   }).catch(function () {});
   fetch('../bio/config.json?v=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (c) {
     if (!c) return;

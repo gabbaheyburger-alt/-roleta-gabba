@@ -42,7 +42,7 @@ h2 { font-family: var(--display); font-weight: 400; font-size: 1rem; margin: 0; 
 .foto.vazia { display: flex; align-items: center; justify-content: center; color: var(--muted); font: 700 .8rem var(--body); text-align: center; padding: 6px; }
 .campos { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 label { display: flex; flex-direction: column; gap: 4px; font-weight: 700; font-size: .85rem; color: var(--muted); }
-input[type=text], input[type=password], select { font: 600 1rem var(--body); color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 10px; width: 100%; min-width: 0; }
+input[type=text], input[type=password], input[type=date], input[type=time], select { font: 600 1rem var(--body); color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 10px; width: 100%; min-width: 0; }
 input:focus-visible, button:focus-visible, select:focus-visible, a:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
 .dois { display: grid; grid-template-columns: 1fr; gap: 8px; }
 .acoes { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -64,6 +64,8 @@ input:focus-visible, button:focus-visible, select:focus-visible, a:focus-visible
 .steps b { color: var(--fg); }
 .tit-grupo { display: flex; flex-direction: column; gap: 8px; }
 .tit-grupo b { font-size: .95rem; }
+.passou { font: 700 .75rem var(--body); letter-spacing: .1em; text-transform: uppercase; color: var(--bad); }
+.foto.cartaz { aspect-ratio: 9 / 16; }
 .sujo::after { content: ' •'; color: var(--mustard); }
 </style>
 </head>
@@ -80,6 +82,7 @@ input:focus-visible, button:focus-visible, select:focus-visible, a:focus-visible
       <button type="button" role="tab" data-aba="especiais" aria-selected="true">Especiais</button>
       <button type="button" role="tab" data-aba="comida" aria-selected="false">Comida</button>
       <button type="button" role="tab" data-aba="drinks" aria-selected="false">Drinks</button>
+      <button type="button" role="tab" data-aba="eventos" aria-selected="false">Eventos</button>
       <button type="button" role="tab" data-aba="titulos" aria-selected="false">Títulos</button>
     </nav>
     <p class="note" id="dica"></p>
@@ -125,6 +128,7 @@ input:focus-visible, button:focus-visible, select:focus-visible, a:focus-visible
     especiais: 'O primeiro visível vira o card grande (Burger do mês, com botão Pedir agora). Os outros aparecem em dupla embaixo.',
     comida: 'Carrossel de comida. A "foto alternada" faz o card trocar sozinho a cada 4 segundos (ex.: pudim ↔ brownie).',
     drinks: 'Carrossel de drinks. Fica primeiro no happy hour.',
+    eventos: 'Agenda da bio: aparece do dia de hoje em diante e some sozinha depois que passa. No dia do evento, ele também aparece na capa. Use o cartaz como foto.',
     titulos: 'Nome das seções. Cada horário tem dois carrosséis: o de cima e o de baixo.'
   };
 
@@ -231,18 +235,47 @@ input:focus-visible, button:focus-visible, select:focus-visible, a:focus-visible
     return false;
   }
 
+  function cartaoEvento(lista, i) {
+    const ev = lista[i], hoje = new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 10);
+    const c = el('div', { className: 'card' + (ev.oculto ? ' oculto' : '') });
+    const tipo = (t, chave, rot) => { const inp = el('input', { type: t, value: ev[chave] || '' }); inp.addEventListener('change', () => { ev[chave] = inp.value; marca(); }); return el('label', {}, [rot, inp]); };
+    const campos = el('div', { className: 'campos' }, [
+      el('div', { className: 'dois' }, [tipo('date', 'data', 'Data'), tipo('time', 'hora', 'Horário (opcional)')]),
+      campo('Nome do evento', ev, 'titulo', 'Ex.: Noite de Blues & Rock'),
+      campo('Detalhes', ev, 'desc', 'Ex.: 20h Banda 3 Elementos')
+    ]);
+    if (ev.data && ev.data < hoje) campos.prepend(el('span', { className: 'passou', textContent: 'Já passou · não aparece mais' }));
+    const fb = fotoBox(ev, 'foto', 'Cartaz do evento'); fb.classList.add('cartaz');
+    c.append(el('div', { className: 'item-top' }, [fb, campos]));
+    const bt = (t, f, cls) => { const b = el('button', { type: 'button', className: 'mini' + (cls ? ' ' + cls : ''), textContent: t }); b.addEventListener('click', f); return b; };
+    c.append(el('div', { className: 'acoes' }, [
+      bt(ev.oculto ? 'Mostrar' : 'Esconder', () => { ev.oculto = !ev.oculto; marca(); desenha(); }),
+      bt('Apagar', () => { if (confirmaApagar(ev)) { lista.splice(i, 1); marca(); desenha(); } }, 'perigo')
+    ]));
+    return c;
+  }
+
   function desenha() {
     document.querySelectorAll('.abas button').forEach(b => b.setAttribute('aria-selected', b.dataset.aba === aba));
     $('dica').textContent = DICAS[aba];
     const box = $('lista'); box.innerHTML = '';
     if (aba === 'titulos') {
       V.titulos = V.titulos || {};
-      box.append(el('div', { className: 'card' }, [campo('Seção dos especiais', V.titulos, 'especiais', 'Especiais do mês')]));
+      box.append(el('div', { className: 'card' }, [campo('Seção dos especiais', V.titulos, 'especiais', 'Especiais do mês'), campo('Seção de eventos', V.titulos, 'eventos', 'Agenda')]));
       MOM.forEach(([k, nome]) => {
         const par = V.titulos[k] = V.titulos[k] || ['', ''];
         const mk = (n, rot) => { const i = el('input', { type: 'text', value: par[n] || '' }); i.addEventListener('input', () => { par[n] = i.value; marca(); }); return el('label', {}, [rot, i]); };
         box.append(el('div', { className: 'card tit-grupo' }, [el('b', { textContent: nome }), mk(0, 'Carrossel de cima'), mk(1, 'Carrossel de baixo')]));
       });
+      return;
+    }
+    if (aba === 'eventos') {
+      const evs = V.eventos = V.eventos || [];
+      evs.sort((a, b) => ((a.data || '9') + (a.hora || '')).localeCompare((b.data || '9') + (b.hora || '')));
+      evs.forEach((_, i) => box.append(cartaoEvento(evs, i)));
+      const addE = el('button', { type: 'button', className: 'add', textContent: '+ Adicionar evento' });
+      addE.addEventListener('click', () => { const novo = { data: '', hora: '', titulo: '', desc: '', foto: '', oculto: false }; evs.push(novo); marca(); desenha(); escolheFoto(novo, 'foto'); });
+      box.append(addE);
       return;
     }
     const lista = V[aba] = V[aba] || [];
@@ -269,6 +302,8 @@ input:focus-visible, button:focus-visible, select:focus-visible, a:focus-visible
     if (!V) return;
     const semFoto = ['especiais', 'comida', 'drinks'].some(k => (V[k] || []).some(it => !it.oculto && !it.foto));
     if (semFoto) { msg($('msg'), 'Tem item sem foto. Coloque a foto ou toque em Esconder.', 'err'); return; }
+    const evRuim = (V.eventos || []).find(e => !e.oculto && (!e.data || !e.titulo || !e.foto));
+    if (evRuim) { msg($('msg'), 'Evento incompleto: precisa de data, nome e cartaz (ou toque em Esconder).', 'err'); aba = 'eventos'; desenha(); return; }
     ['comida', 'drinks'].forEach(k => (V[k] || []).forEach(it => { if (it.foto2 === '') { delete it.foto2; delete it.nome2; delete it.desc2; delete it.preco2; } }));
     $('salvar').disabled = true; msg($('msg'), 'Salvando…');
     try {
