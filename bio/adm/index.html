@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Adm · Link da bio</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#120d0c">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Barlow:wght@400;600;700;800&display=swap">
+<style>
+/* Área do dono da bio: cartões de Hoje (fechado/aviso), Horários por dia, Happy hour e Links; botão Salvar fixo embaixo. Mesmo visual do /adm/ */
+:root {
+  --bg: #120d0c; --surface: #1f1816; --surface-2: #2a201d; --line: #3b2e29;
+  --fg: #f6ece2; --muted: #b5a397; --red: #e8102e; --red-deep: #9c0b1f;
+  --mustard: #f2b632; --ok: #6fbf73; --bad: #ff8a80;
+  --display: 'Bungee', Impact, 'Arial Black', sans-serif;
+  --body: 'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { background: var(--bg); color: var(--fg); }
+body { margin: 0; padding-top: env(safe-area-inset-top, 0px); font-family: var(--body); font-size: 16px; line-height: 1.45; }
+[hidden] { display: none !important; }
+.wrap { max-width: 520px; margin: 0 auto; padding: 22px 16px 120px; display: flex; flex-direction: column; gap: 18px; }
+header .tag { font-size: .72rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--mustard); }
+h1 { font-family: var(--display); font-weight: 400; font-size: clamp(1.6rem, 8vw, 2rem); line-height: 1; margin: 4px 0 0; }
+h1 span { color: var(--red); }
+h2 { font-family: var(--display); font-weight: 400; font-size: 1rem; margin: 0; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+label { display: flex; flex-direction: column; gap: 6px; font-weight: 700; }
+label small, .note { color: var(--muted); font-weight: 600; font-size: .88rem; }
+.note { margin: 0; }
+input[type=text], input[type=url], input[type=time], input[type=password] { font: 600 1.05rem var(--body); color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 11px; width: 100%; min-width: 0; }
+input:focus-visible, button:focus-visible, a:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
+.switch { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 12px; font-weight: 700; }
+.switch small { display: block; color: var(--muted); font-weight: 600; font-size: .85rem; }
+.switch input { width: 52px; height: 30px; accent-color: var(--ok); flex-shrink: 0; }
+.dia { display: grid; grid-template-columns: 74px 1fr 1fr; gap: 8px; align-items: center; }
+.dia .nome { font-weight: 800; display: flex; flex-direction: column; gap: 2px; }
+.dia .nome label { flex-direction: row; align-items: center; gap: 6px; font-size: .8rem; color: var(--muted); font-weight: 700; }
+.dia.off input[type=time] { opacity: .35; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chips button { background: var(--surface-2); border: 1px solid var(--line); color: var(--fg); border-radius: 999px; padding: 8px 13px; font: 700 .9rem var(--body); cursor: pointer; }
+.chips button[aria-pressed="true"] { background: var(--red); border-color: var(--red); color: #fff4e6; }
+.dois { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.btn { font-family: var(--display); font-size: 1.1rem; letter-spacing: .03em; background: var(--red); color: #fff4e6; border: none; border-radius: 14px; padding: 14px 18px; cursor: pointer; box-shadow: 0 5px 0 var(--red-deep); width: 100%; }
+.btn:active { transform: translateY(4px); box-shadow: none; }
+.btn:disabled { opacity: .5; }
+.ghost { background: transparent; border: 1px solid var(--line); color: var(--muted); border-radius: 10px; padding: 9px 12px; font: 700 .88rem var(--body); cursor: pointer; text-decoration: none; text-align: center; flex: 1; }
+.row { display: flex; gap: 8px; }
+.barra { position: fixed; left: 0; right: 0; bottom: 0; background: rgba(18,13,12,.96); border-top: 1px solid var(--line); padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px)); }
+.barra > div { max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; gap: 6px; }
+.msg { margin: 0; font-weight: 700; min-height: 1.3em; text-align: center; font-size: .92rem; }
+.msg.ok { color: var(--ok); } .msg.err { color: var(--bad); }
+.steps { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; color: var(--muted); }
+.steps b { color: var(--fg); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="tag">Área do dono</div>
+    <h1>Link da <span>bio</span></h1>
+  </header>
+
+  <div id="cfg" hidden>
+    <div style="display:flex;flex-direction:column;gap:18px">
+      <p class="note" id="current">Carregando a configuração atual…</p>
+
+      <section class="card">
+        <h2>HOJE</h2>
+        <div class="switch"><span>Fechado hoje<small>Volta ao normal sozinho amanhã</small></span><input type="checkbox" id="fechado" aria-label="Fechado hoje"></div>
+        <label for="aviso">Aviso no topo <small>Ex.: "Hoje tem karaokê a partir das 20h 🎤". Deixe vazio para não mostrar.</small>
+          <input type="text" id="aviso" maxlength="80" autocomplete="off">
+        </label>
+      </section>
+
+      <section class="card">
+        <h2>HORÁRIOS</h2>
+        <div id="dias"></div>
+        <p class="note">Desmarque "aberto" no dia em que a loja não abre. Se fechar depois da meia-noite, coloque o horário normalmente (ex.: 00:30).</p>
+      </section>
+
+      <section class="card">
+        <h2>HAPPY HOUR</h2>
+        <div class="switch"><span>Tem happy hour</span><input type="checkbox" id="happy" aria-label="Tem happy hour"></div>
+        <div class="chips" id="happy-dias" aria-label="Dias do happy hour"></div>
+        <div class="dois">
+          <label for="happy-ini">Começa <input type="time" id="happy-ini"></label>
+          <label for="happy-fim">Termina <input type="time" id="happy-fim"></label>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>LINKS DOS BOTÕES</h2>
+        <label for="l-pedir">Pedir delivery (cardápio online) <input type="url" id="l-pedir" data-k="pedir" autocomplete="off"></label>
+        <label for="l-whatsapp">WhatsApp <input type="url" id="l-whatsapp" data-k="whatsapp" autocomplete="off"></label>
+        <label for="l-jam">Jam Session / Happy hour <input type="url" id="l-jam" data-k="jam" autocomplete="off"></label>
+        <label for="l-cardapio">Cardápio da loja <input type="url" id="l-cardapio" data-k="cardapio" autocomplete="off"></label>
+        <label for="l-mapa">Como chegar (mapa) <input type="url" id="l-mapa" data-k="mapa" autocomplete="off"></label>
+        <p class="note">Para trocar um cardápio em PDF: suba o arquivo novo no Google Drive, toque em Compartilhar → "Qualquer pessoa com o link", copie o link e cole aqui.</p>
+      </section>
+
+      <div class="row">
+        <a class="ghost" href="../" target="_blank" rel="noopener">Abrir a bio</a>
+        <button class="ghost" id="sair" type="button">Desconectar este celular</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Conexão (só na primeira vez; usa a mesma chave da área do Desafio) -->
+  <section class="card" id="setup" hidden>
+    <h2>Conectar este celular</h2>
+    <p class="note">É a <b>mesma chave do GitHub</b> que você usa para trocar o prêmio do Desafio. Se este celular já está conectado lá, esta tela nem aparece.</p>
+    <ol class="steps">
+      <li>Abra <b>github.com/settings/personal-access-tokens/new</b>.</li>
+      <li>Nome: <b>adm gabba</b>. Expiration: <b>366 days</b> ou <b>No expiration</b>.</li>
+      <li>Repository access: <b>Only select repositories</b> → <b>-roleta-gabba</b>.</li>
+      <li>Permissions → Repository permissions → <b>Contents: Read and write</b>.</li>
+      <li><b>Generate token</b>, copie (começa com <b>github_pat_</b>) e cole aqui.</li>
+    </ol>
+    <label for="token">Chave do GitHub <input type="password" id="token" autocomplete="off" placeholder="github_pat_…"></label>
+    <button class="btn" id="conectar" type="button">CONECTAR</button>
+    <p class="msg" id="msg-setup" aria-live="polite"></p>
+    <p class="note">A chave fica guardada só neste celular. Não mande para ninguém.</p>
+  </section>
+</div>
+
+<div class="barra" id="barra" hidden><div>
+  <button class="btn" id="salvar" type="button">SALVAR</button>
+  <p class="msg" id="msg" aria-live="polite"></p>
+</div></div>
+
+<script>
+(function () {
+  const OWNER = 'gabbaheyburger-alt', REPO = '-roleta-gabba', PATH = 'bio/config.json', BRANCH = 'main';
+  const API = 'https://api.github.com/repos/' + OWNER + '/' + REPO + '/contents/' + PATH;
+  const KEY = 'gabba-adm-token';
+  const $ = id => document.getElementById(id);
+  const NOMES = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+  const CURTO = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+  const ORDEM = [1, 2, 3, 4, 5, 6, 0];
+
+  let token = null, sha = null, cfg = null, happyDias = [];
+  try { token = localStorage.getItem(KEY); } catch (e) {}
+
+  const b64enc = s => btoa(unescape(encodeURIComponent(s)));
+  const b64dec = s => decodeURIComponent(escape(atob(s.replace(/\n/g, ''))));
+  const headers = () => ({ 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' });
+  const hojeStr = () => new Date(Date.now() - 3 * 3600 * 1000).toISOString().slice(0, 10);
+  function msg(el, text, kind) { el.textContent = text; el.className = 'msg' + (kind ? ' ' + kind : ''); }
+
+  // Linhas dos dias
+  ORDEM.forEach(d => {
+    const row = document.createElement('div'); row.className = 'dia'; row.dataset.d = d; row.style.marginBottom = '10px';
+    row.innerHTML = '<div class="nome"><span>' + NOMES[d] + '</span><label><input type="checkbox" class="aberto"> aberto</label></div>' +
+      '<input type="time" class="ini" aria-label="' + NOMES[d] + ' abre"><input type="time" class="fim" aria-label="' + NOMES[d] + ' fecha">';
+    row.querySelector('.aberto').addEventListener('change', e => row.classList.toggle('off', !e.target.checked));
+    $('dias').append(row);
+  });
+  ORDEM.forEach(d => {
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = CURTO[d]; b.dataset.d = d;
+    b.addEventListener('click', () => { const i = happyDias.indexOf(d); if (i >= 0) happyDias.splice(i, 1); else happyDias.push(d); pintaHappy(); });
+    $('happy-dias').append(b);
+  });
+  function pintaHappy() { $('happy-dias').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', happyDias.indexOf(+b.dataset.d) >= 0)); }
+
+  function preenche(c) {
+    $('fechado').checked = c.fechadoEm === hojeStr();
+    $('aviso').value = c.aviso || '';
+    document.querySelectorAll('.dia').forEach(row => {
+      const h = (c.horarios || {})[row.dataset.d];
+      row.querySelector('.aberto').checked = !!h; row.classList.toggle('off', !h);
+      row.querySelector('.ini').value = h ? h[0] : '17:00'; row.querySelector('.fim').value = h ? h[1] : '22:30';
+    });
+    const hp = c.happy || {};
+    $('happy').checked = !!hp.ativo; happyDias = (hp.dias || []).slice(); pintaHappy();
+    $('happy-ini').value = hp.inicio || '17:00'; $('happy-fim').value = hp.fim || '20:00';
+    document.querySelectorAll('[data-k]').forEach(i => { i.value = (c.links || {})[i.dataset.k] || ''; });
+  }
+
+  function coleta() {
+    const horarios = {};
+    let erro = '';
+    document.querySelectorAll('.dia').forEach(row => {
+      if (!row.querySelector('.aberto').checked) return;
+      const a = row.querySelector('.ini').value, b = row.querySelector('.fim').value;
+      if (!a || !b) erro = 'Preencha o horário de ' + NOMES[row.dataset.d] + '.';
+      horarios[row.dataset.d] = [a, b];
+    });
+    const links = {};
+    document.querySelectorAll('[data-k]').forEach(i => {
+      const v = i.value.trim();
+      if (v && !/^https?:\/\//.test(v)) erro = 'O link de "' + i.closest('label').firstChild.textContent.trim() + '" precisa começar com https://';
+      links[i.dataset.k] = v;
+    });
+    if ($('happy').checked && (!happyDias.length || !$('happy-ini').value || !$('happy-fim').value)) erro = 'Escolha os dias e o horário do happy hour, ou desligue.';
+    return { erro, cfg: {
+      horarios,
+      happy: { ativo: $('happy').checked, dias: happyDias.slice().sort(), inicio: $('happy-ini').value, fim: $('happy-fim').value },
+      fechadoEm: $('fechado').checked ? hojeStr() : '',
+      aviso: $('aviso').value.trim(),
+      links
+    } };
+  }
+
+  async function carregar() {
+    $('setup').hidden = true; $('cfg').hidden = false; $('barra').hidden = false;
+    msg($('msg'), '');
+    try {
+      const r = await fetch(API + '?ref=' + BRANCH + '&t=' + Date.now(), { headers: headers(), cache: 'no-store' });
+      if (r.status === 401 || r.status === 403) { sair('A chave não funcionou ou não tem permissão de escrita. Crie uma nova e conecte de novo.'); return; }
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const j = await r.json(); sha = j.sha; cfg = JSON.parse(b64dec(j.content));
+      preenche(cfg); $('current').textContent = 'Configuração atual carregada. Mude o que precisar e toque em Salvar.';
+    } catch (e) { $('current').textContent = 'Não consegui carregar a configuração. Verifique a internet e atualize a página.'; }
+  }
+
+  async function salvar() {
+    const { erro, cfg: novo } = coleta();
+    if (erro) { msg($('msg'), erro, 'err'); return; }
+    $('salvar').disabled = true; msg($('msg'), 'Salvando…');
+    try {
+      const body = { message: 'Bio: horários e links atualizados pela área do dono', content: b64enc(JSON.stringify(novo, null, 2) + '\n'), branch: BRANCH };
+      if (sha) body.sha = sha;
+      const put = () => fetch(API, { method: 'PUT', headers: Object.assign({ 'Content-Type': 'application/json' }, headers()), body: JSON.stringify(body) });
+      let r = await put();
+      if (r.status === 409 || r.status === 422) { const g = await fetch(API + '?ref=' + BRANCH + '&t=' + Date.now(), { headers: headers(), cache: 'no-store' }); if (g.ok) body.sha = (await g.json()).sha; r = await put(); }
+      if (r.status === 401 || r.status === 403) { sair('A chave não tem permissão para salvar. Crie uma nova com "Contents: Read and write".'); return; }
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const j = await r.json(); sha = j.content && j.content.sha;
+      msg($('msg'), 'Salvo! Em 1 a 2 minutos a bio já mostra a mudança.', 'ok');
+    } catch (e) { msg($('msg'), 'Não consegui salvar. Verifique a internet e tente de novo.', 'err'); }
+    finally { $('salvar').disabled = false; }
+  }
+
+  async function conectar() {
+    const t = $('token').value.trim();
+    if (!/^(github_pat_|ghp_)/.test(t)) { msg($('msg-setup'), 'Essa não parece uma chave do GitHub. Ela começa com github_pat_.', 'err'); return; }
+    token = t; $('conectar').disabled = true; msg($('msg-setup'), 'Testando a chave…');
+    try {
+      const r = await fetch(API + '?ref=' + BRANCH, { headers: headers() });
+      if (!r.ok) { token = null; msg($('msg-setup'), r.status === 404 ? 'A chave não enxerga a pasta -roleta-gabba. Confira o passo 3.' : 'A chave não funcionou. Confira os passos e tente de novo.', 'err'); return; }
+      try { localStorage.setItem(KEY, t); } catch (e) {}
+      $('token').value = ''; carregar();
+    } catch (e) { token = null; msg($('msg-setup'), 'Sem conexão. Tente de novo.', 'err'); }
+    finally { $('conectar').disabled = false; }
+  }
+
+  function sair(motivo) {
+    token = null; sha = null;
+    try { localStorage.removeItem(KEY); } catch (e) {}
+    $('cfg').hidden = true; $('barra').hidden = true; $('setup').hidden = false;
+    msg($('msg-setup'), motivo || '', motivo ? 'err' : '');
+  }
+
+  $('salvar').addEventListener('click', salvar);
+  $('conectar').addEventListener('click', conectar);
+  $('sair').addEventListener('click', () => sair());
+  if (token) carregar(); else sair();
+})();
+</script>
+</body>
+</html>

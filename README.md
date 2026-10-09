@@ -103,3 +103,7 @@ Página para o funcionário conferir o setor ao chegar, no endereço `/checklist
 ## Link da bio (Instagram)
 
 Página `/bio/` para colocar no link da bio do Instagram, no lugar do bio.site. Botão principal **Pedir delivery** (cardápio online do Saipos), WhatsApp, Jam Session, cardápio da loja, como chegar e o Fliperama Delivery. Cada clique vira um evento no GoatCounter O topo mostra a logo (`bio/logo.png`), "Aberto agora" ou "Fechado" pelo horário (seg a qui 17h–22h30, sex a dom 17h–23h30) e destaca o happy hour (seg a sex 17h–20h); os horários ficam no script do fim da página. (`bio-pedir`, `bio-whatsapp`, `bio-jam`, `bio-cardapio-loja`, `bio-localizacao`, `bio-fliperama`, `bio-instagram`), para saber qual botão os clientes mais usam. Os links ficam direto no `bio/index.html`.
+
+### Área do dono da bio
+
+`bio/adm/` deixa o dono mudar pelo celular, sem mexer em código: **fechado hoje** (volta ao normal sozinho no dia seguinte), **aviso no topo**, **horário de cada dia**, **happy hour** (dias e horário) e os **links dos botões**. Grava `bio/config.json` pela API do GitHub, com a mesma chave da área do Desafio (`adm/`). A bio lê esse arquivo ao abrir; se não conseguir, usa os valores padrão do script.

@@ -1,0 +1,21 @@
+{
+  "horarios": {
+    "0": ["17:00", "23:30"],
+    "1": ["17:00", "22:30"],
+    "2": ["17:00", "22:30"],
+    "3": ["17:00", "22:30"],
+    "4": ["17:00", "22:30"],
+    "5": ["17:00", "23:30"],
+    "6": ["17:00", "23:30"]
+  },
+  "happy": { "ativo": true, "dias": [1, 2, 3, 4, 5], "inicio": "17:00", "fim": "20:00" },
+  "fechadoEm": "",
+  "aviso": "",
+  "links": {
+    "pedir": "https://gabbaburger.saipos.com",
+    "whatsapp": "https://wa.me/message/QXY4DJK6HWG6N1",
+    "jam": "https://drive.google.com/file/d/1su-nbrSu-AS9AikEyHxsbkgV3jZbYX84/view?usp=drivesdk",
+    "cardapio": "https://drive.google.com/file/d/1euJpGexVkUlRfaj6BTdJ4an4jWUEet9E/view?usp=drivesdk",
+    "mapa": "https://maps.app.goo.gl/ck9mdvzTTk1EoMLC9"
+  }
+}
