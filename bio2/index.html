@@ -8,11 +8,11 @@
 <meta name="theme-color" content="#0b0908">
 <meta property="og:title" content="Gabba Burger">
 <meta property="og:description" content="Burger, defumados e drinks em Paracuru. Peça agora.">
-<meta property="og:image" content="img/costela.jpg">
+<meta property="og:image" content="vid/ribs.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap">
-<link rel="preload" as="image" href="img/costela.jpg">
+<link rel="preload" as="image" href="vid/ribs.jpg">
 <style>
 /* Bio "cardápio vivo": capa com foto real em tela cheia, destaques em vídeo, carrosséis da cozinha e do bar, happy hour, horários.
    Visual sóbrio: preto, creme e o vermelho só no botão de pedir. Dados de status/aviso/links vêm de ../bio/config.json (mesmo adm). */
@@ -41,12 +41,13 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--cream); outline
 
 /* ---------- Capa ---------- */
 .capa { position: relative; height: 92svh; min-height: 560px; max-height: 900px; overflow: hidden; display: flex; flex-direction: column; }
-.capa .foto { position: absolute; top: -26%; left: 0; width: 100%; height: 126%; object-fit: cover; object-position: 50% 78%; transform-origin: 50% 40%; animation: zoom 24s ease-in-out infinite alternate; z-index: 0; }
+.capa .foto { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 0; z-index: 0; }
 @keyframes zoom { from { transform: scale(1); } to { transform: scale(1.12); } }
 .capa::after { content: ''; position: absolute; inset: 0; z-index: 0; background:
-  linear-gradient(180deg, rgba(11,9,8,.65) 0%, rgba(11,9,8,0) 18%, rgba(11,9,8,0) 46%, rgba(11,9,8,.85) 62%, rgba(11,9,8,.97) 76%, var(--bg) 100%); }
+  linear-gradient(180deg, rgba(11,9,8,0) 0%, rgba(11,9,8,0) 48%, rgba(11,9,8,.8) 64%, rgba(11,9,8,.96) 78%, var(--bg) 100%); }
 .capa > * { position: relative; z-index: 1; }
 .topo { padding: max(18px, env(safe-area-inset-top)) 16px 0; display: flex; justify-content: center; }
+.capa h1 .logo { width: 150px; height: auto; display: block; filter: drop-shadow(0 2px 10px rgba(0,0,0,.6)); }
 .topo img { width: 132px; height: auto; filter: drop-shadow(0 2px 10px rgba(0,0,0,.6)); }
 .base { margin-top: auto; padding: 0 16px 22px; width: 100%; max-width: 520px; align-self: center; }
 .status { display: inline-flex; align-items: center; gap: 8px; font: 600 .95rem var(--label); letter-spacing: .06em; text-transform: uppercase; color: var(--cream); background: rgba(11,9,8,.55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); border: 1px solid rgba(243,234,217,.18); padding: 6px 12px; border-radius: 999px; }
@@ -134,17 +135,16 @@ footer { padding: 34px 16px calc(30px + env(safe-area-inset-bottom)); text-align
 .visor .pedir { position: absolute; left: 16px; right: 16px; bottom: calc(18px + env(safe-area-inset-bottom)); max-width: 488px; margin: 0 auto; }
 
 @media (min-width: 700px) { .capa { max-height: 760px; } }
-@media (prefers-reduced-motion: reduce) { .capa .foto, .status.aberto .bola { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .status.aberto .bola { animation: none; } }
 </style>
 </head>
 <body>
 
 <header class="capa">
-  <img class="foto" src="img/costela.jpg" alt="Costela defumada ao molho barbecue com fritas e salada" width="1080" height="1440" fetchpriority="high">
-  <div class="topo"><img src="../bio/logo.png" alt="Gabba" width="720" height="461"></div>
+  <video class="foto" src="vid/ribs.mp4" poster="vid/ribs.jpg" autoplay muted loop playsinline aria-label="Smoked Ribs: costela suína defumada com coleslaw e fritas"></video>
   <div class="base">
     <div class="status" id="status"><span class="bola"></span><span id="status-txt">Seg a qui 17h–22h30 · Sex a dom 17h–23h30</span></div>
-    <h1>Gabba Burger</h1>
+    <h1><img class="logo" src="../bio/logo.png" alt="Gabba Burger" width="720" height="461"></h1>
     <p class="sub">Burger, defumados e drinks · Paracuru</p>
     <div class="aviso" id="aviso" hidden><small>Hoje no Gabba</small><span id="aviso-txt"></span></div>
     <div class="acoes">
@@ -228,7 +228,7 @@ footer { padding: 34px 16px calc(30px + env(safe-area-inset-bottom)); text-align
 <script>
 /* ===== Conteúdo da vitrine. Nome, descrição e preço: preencher depois (preço vazio = não aparece) ===== */
 var COZINHA = [
-  { img: 'costela-close', nome: 'Costela BBQ', desc: 'Com fritas e salada', preco: '' },
+  { img: 'costela-close', nome: 'Smoked Ribs', desc: 'Costela suína defumada, coleslaw e fritas', preco: '' },
   { img: 'coxinhas', nome: 'Coxinhas', desc: 'Com molho da casa', preco: '' },
   { img: 'onion-rings', nome: 'Onion rings', desc: 'Com barbecue', preco: '' },
   { img: 'pasteizinhos', nome: 'Pasteizinhos', desc: 'Com molho da casa', preco: '' },
