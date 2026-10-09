@@ -1,5 +1,5 @@
 {
-  "_comentario": "Ligação com o Formulário Google. 'form' é o endereço que termina em /formResponse; cada campo é o número entry.XXXX da pergunta. Enquanto 'form' estiver vazio, a página mostra 'em configuração'.",
+  "_comentario": "Ligação com os Formulários Google. 'form'/'campos' = Insumos das lojas (aba Respostas ao formulário 1). 'estoque' = página da estoquista (aba Estoque central). 'material' (quando existir) = Material e Equipamento.",
   "form": "https://docs.google.com/forms/d/e/1FAIpQLSfqiBnaqHrUxpRdh03knBbscYuWYEoUnaMWGBhf7ZX-9Bt0Rg/formResponse",
   "campos": {
     "loja": "entry.1111801695",
@@ -8,5 +8,16 @@
     "urgencia": "entry.1160809239",
     "motivo": "entry.796775247",
     "nome": "entry.1701895569"
+  },
+  "estoque": {
+    "form": "https://docs.google.com/forms/d/e/1FAIpQLSetvbYje7Hw1MMmTA8TcMswuGBoi-kAs2wTz4fpqscR7TBjmQ/formResponse",
+    "campos": {
+      "loja": "entry.1627150514",
+      "item": "entry.1621038148",
+      "quantidade": "entry.551132883",
+      "urgencia": "entry.1588775357",
+      "motivo": "entry.1510479188",
+      "nome": "entry.1457539566"
+    }
   }
 }
