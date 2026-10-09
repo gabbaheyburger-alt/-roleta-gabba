@@ -78,6 +78,16 @@ input:focus-visible, button:focus-visible, a:focus-visible { outline: 3px solid 
       </section>
 
       <section class="card">
+        <h2>POSTE E GANHE · VIRE UM GABBA</h2>
+        <div class="switch"><span>Promoção ligada<small>Quem postar a foto do filtro marcando @gabbaburger ganha</small></span><input type="checkbox" id="promo" aria-label="Promoção ligada"></div>
+        <label for="promo-premio">Prêmio <small>Aparece na bio e no filtro (até 50 letras)</small>
+          <input type="text" id="promo-premio" maxlength="50" autocomplete="off">
+        </label>
+        <div class="chips" id="promo-sug"></div>
+        <p class="note">Como conferir no caixa: o cliente mostra o story publicado com a foto do filtro e a marcação @gabbaburger. Um prêmio por pessoa por dia.</p>
+      </section>
+
+      <section class="card">
         <h2>HORÁRIOS</h2>
         <div id="dias"></div>
         <p class="note">Desmarque "aberto" no dia em que a loja não abre. Se fechar depois da meia-noite, coloque o horário normalmente (ex.: 00:30).</p>
@@ -167,7 +177,14 @@ input:focus-visible, button:focus-visible, a:focus-visible { outline: 3px solid 
   });
   function pintaHappy() { $('happy-dias').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', happyDias.indexOf(+b.dataset.d) >= 0)); }
 
+  ['Batata pequena grátis', 'Refri lata grátis', 'Sobremesa da casa', 'Chopp 300 ml grátis', '10% no próximo pedido'].forEach(t => {
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = t;
+    b.addEventListener('click', () => { $('promo-premio').value = t; $('promo').checked = true; });
+    $('promo-sug').append(b);
+  });
+
   function preenche(c) {
+    const pr = c.promo || {}; $('promo').checked = !!pr.ativo; $('promo-premio').value = pr.premio || '';
     $('fechado').checked = c.fechadoEm === hojeStr();
     $('aviso').value = c.aviso || '';
     document.querySelectorAll('.dia').forEach(row => {
@@ -196,12 +213,14 @@ input:focus-visible, button:focus-visible, a:focus-visible { outline: 3px solid 
       if (v && !/^https?:\/\//.test(v)) erro = 'O link de "' + i.closest('label').firstChild.textContent.trim() + '" precisa começar com https://';
       links[i.dataset.k] = v;
     });
+    if ($('promo').checked && !$('promo-premio').value.trim()) erro = 'Escreva o prêmio do Poste e ganhe, ou desligue a promoção.';
     if ($('happy').checked && (!happyDias.length || !$('happy-ini').value || !$('happy-fim').value)) erro = 'Escolha os dias e o horário do happy hour, ou desligue.';
     return { erro, cfg: {
       horarios,
       happy: { ativo: $('happy').checked, dias: happyDias.slice().sort(), inicio: $('happy-ini').value, fim: $('happy-fim').value },
       fechadoEm: $('fechado').checked ? hojeStr() : '',
       aviso: $('aviso').value.trim(),
+      promo: { ativo: $('promo').checked, premio: $('promo-premio').value.trim() },
       links
     } };
   }

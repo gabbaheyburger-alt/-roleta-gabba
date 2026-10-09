@@ -58,6 +58,10 @@ body {
 .aviso .frase { display: block; font-family: var(--display); font-size: clamp(1.7rem, 8.5vw, 2.2rem); line-height: 1; letter-spacing: .01em; text-shadow: 0 2px 0 rgba(0,0,0,.25); }
 @keyframes chama { 0%,100% { transform: rotate(-1.5deg) scale(1); box-shadow: 0 0 0 3px var(--cream), 0 6px 0 3px var(--red-deep), 0 0 24px rgba(227,18,45,.45); } 50% { transform: rotate(-1.5deg) scale(1.025); box-shadow: 0 0 0 3px var(--cream), 0 6px 0 3px var(--red-deep), 0 0 44px rgba(227,18,45,.8); } }
 [hidden] { display: none !important; }
+.tile.vire { background: linear-gradient(135deg, #2a1416, var(--surface) 75%); }
+.tile.vire.premio { border-color: var(--red); box-shadow: 0 0 0 1px var(--red), 0 8px 24px rgba(227,18,45,.25); }
+.tile.vire .selo { display: inline-block; margin-bottom: 4px; }
+.horarios span:last-child { white-space: nowrap; }
 .tile.agora { border-color: var(--red); box-shadow: 0 0 0 1px var(--red), 0 8px 24px rgba(227,18,45,.25); }
 @keyframes balanca { 0%,100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
 h1 { font-family: var(--display); font-weight: 400; font-size: clamp(3.4rem, 18vw, 4.6rem); line-height: .85; margin: 0; letter-spacing: .01em; }
@@ -159,6 +163,14 @@ a:focus-visible { outline: 3px solid var(--cream); outline-offset: 3px; }
     </a>
   </div>
 
+  <h2>VIRE UM GABBA</h2>
+  <div class="grade">
+    <a class="tile largo vire" id="vire" data-ev="bio-vire" href="../vire/">
+      <span class="ico">📸</span>
+      <span><span id="vire-selo" hidden><span class="selo">🎁 Poste e ganhe</span><br></span><span class="t">TIRE SUA FOTO DE GABBA</span><br><span class="s" id="vire-s">Ganhe o moicano e os óculos do mascote e marque @gabbaburger</span></span>
+    </a>
+  </div>
+
   <h2>HORÁRIOS</h2>
   <div class="horarios" id="horarios">
     <div data-dias="1,2,3,4"><span>Segunda a quinta</span><span>17h às 22h30</span></div>
@@ -196,7 +208,7 @@ a:focus-visible { outline: 3px solid var(--cream); outline-offset: 3px; }
   var C = {
     horarios: { 0: ['17:00','23:30'], 1: ['17:00','22:30'], 2: ['17:00','22:30'], 3: ['17:00','22:30'], 4: ['17:00','22:30'], 5: ['17:00','23:30'], 6: ['17:00','23:30'] },
     happy: { ativo: true, dias: [1,2,3,4,5], inicio: '17:00', fim: '20:00' },
-    fechadoEm: '', aviso: '', links: {}
+    fechadoEm: '', aviso: '', links: {}, promo: { ativo: false, premio: '' }
   };
   var NOMES = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
   var CURTO = ['dom','seg','ter','qua','qui','sex','sáb'];
@@ -231,7 +243,7 @@ a:focus-visible { outline: 3px solid var(--cream); outline-offset: 3px; }
     };
     grupos.forEach(function (g) { linha(diasTexto(g.dias), g.h ? hm(g.h[0]) + ' às ' + hm(g.h[1]) : 'Fechado', g.dias.indexOf(dia) >= 0); });
     var hp = C.happy;
-    if (hp && hp.ativo && hp.dias && hp.dias.length) linha('Happy hour (' + diasTexto(hp.dias).toLowerCase() + ')', hm(hp.inicio) + ' às ' + hm(hp.fim), false);
+    if (hp && hp.ativo && hp.dias && hp.dias.length) linha('Happy hour' + (hp.dias.length === 5 && [1,2,3,4,5].every(function (d) { return hp.dias.indexOf(d) >= 0; }) ? ' (seg a sex)' : ''), hm(hp.inicio) + ' às ' + hm(hp.fim), false);
   }
 
   function atualiza() {
@@ -262,6 +274,10 @@ a:focus-visible { outline: 3px solid var(--cream); outline-offset: 3px; }
     var av = document.getElementById('aviso');
     av.innerHTML = ''; av.hidden = !C.aviso;
     if (C.aviso) { var r = document.createElement('span'); r.className = 'rotulo'; r.textContent = '🔥 Hoje no Gabba'; var f = document.createElement('span'); f.className = 'frase'; f.textContent = C.aviso; av.append(r, f); }
+    var pr = C.promo || {}, on = !!(pr.ativo && pr.premio);
+    document.getElementById('vire').classList.toggle('premio', on);
+    document.getElementById('vire-selo').hidden = !on;
+    document.getElementById('vire-s').textContent = on ? 'Poste nos stories marcando @gabbaburger e ganhe: ' + pr.premio : 'Ganhe o moicano e os óculos do mascote e marque @gabbaburger';
     var L = C.links || {};
     document.querySelectorAll('[data-link]').forEach(function (a) { var u = L[a.getAttribute('data-link')]; if (u && /^https?:\/\//.test(u)) a.href = u; });
     atualiza();
@@ -270,7 +286,7 @@ a:focus-visible { outline: 3px solid var(--cream); outline-offset: 3px; }
   aplica(); setInterval(atualiza, 60000);
   fetch('config.json?v=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (c) {
     if (!c) return;
-    ['horarios','happy','fechadoEm','aviso','links'].forEach(function (k) { if (c[k] !== undefined) C[k] = c[k]; });
+    ['horarios','happy','fechadoEm','aviso','links','promo'].forEach(function (k) { if (c[k] !== undefined) C[k] = c[k]; });
     aplica();
   }).catch(function () {});
 })();

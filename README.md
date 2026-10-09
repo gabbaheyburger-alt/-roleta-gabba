@@ -69,7 +69,7 @@ Página `/avalie/` para o cliente avaliar a visita com um toque (😍 Amei, 😐
 
 ## Vire um Gabba (teste)
 
-Filtro de câmera no endereço `/vire/`: coloca o moicano e os óculos do mascote no rosto do cliente (detecção de rosto MediaPipe, roda no próprio celular, nada é enviado) e gera uma foto 4:5 com a moldura "Eu virei um Gabba! @gabbaheyburger" para compartilhar. Sem detecção, os acessórios ficam fixos e o cliente encaixa o rosto. Eventos: `vire-abriu`, `vire-foto`, `vire-compartilhou`, `vire-salvou`.
+Filtro de câmera no endereço `/vire/`: coloca o moicano e os óculos do mascote no rosto do cliente (detecção de rosto MediaPipe, roda no próprio celular, nada é enviado) e gera uma foto 4:5 com a moldura "Eu virei um Gabba! @gabbaburger" para compartilhar. Sem detecção, os acessórios ficam fixos e o cliente encaixa o rosto. Eventos: `vire-abriu`, `vire-foto`, `vire-compartilhou`, `vire-salvou`.
 
 ## Gabba Hero
 
@@ -106,4 +106,4 @@ Página `/bio/` para colocar no link da bio do Instagram, no lugar do bio.site. 
 
 ### Área do dono da bio
 
-`bio/adm/` deixa o dono mudar pelo celular, sem mexer em código: **fechado hoje** (volta ao normal sozinho no dia seguinte), **aviso no topo**, **horário de cada dia**, **happy hour** (dias e horário) e os **links dos botões**. Grava `bio/config.json` pela API do GitHub, com a mesma chave da área do Desafio (`adm/`). A bio lê esse arquivo ao abrir; se não conseguir, usa os valores padrão do script.
+`bio/adm/` deixa o dono mudar pelo celular, sem mexer em código: **fechado hoje** (volta ao normal sozinho no dia seguinte), **aviso no topo**, **horário de cada dia**, **happy hour** (dias e horário), a promoção **Poste e ganhe** do Vire um Gabba (aparece na bio e no filtro) e os **links dos botões**. Grava `bio/config.json` pela API do GitHub, com a mesma chave da área do Desafio (`adm/`). A bio lê esse arquivo ao abrir; se não conseguir, usa os valores padrão do script.

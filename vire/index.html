@@ -63,6 +63,9 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--mustard); outli
 #result img { width: min(100%, calc((100dvh - 230px) * 0.8)); aspect-ratio: 4 / 5; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,.6); }
 .row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; width: min(100%, 420px); }
 .row .btn { flex: 1; min-width: 150px; }
+.promo { margin: 0; background: linear-gradient(135deg, #e3122d, #a50c21); color: #fff6ea; border: 2px solid #f4e9d8; border-radius: 14px; padding: 10px 14px; max-width: 34ch; text-align: center; font-weight: 700; line-height: 1.3; box-shadow: 0 0 24px rgba(227,18,45,.45); }
+.promo b { display: block; font-size: 1.15rem; }
+.promo small { display: block; margin-top: 4px; font-weight: 600; opacity: .9; }
 .tip { margin: 0; color: var(--muted); font-size: .85rem; text-align: center; max-width: 34ch; }
 @media (prefers-reduced-motion: reduce) { #start img { animation: none; } }
 </style>
@@ -71,13 +74,14 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--mustard); outli
 <body>
 
 <section class="screen" id="start">
-  <img src="../corre/mascote.png" alt="Mascote do Gabba Hey Burger">
+  <img src="../corre/mascote.png" alt="Mascote do Gabba Burger">
   <h1>Vire um <span>Gabba!</span></h1>
-  <p class="lead">Ganhe o <b>moicano</b> e os <b>óculos</b> do nosso mascote, tire a foto e marque <b>@gabbaheyburger</b>.</p>
+  <p class="lead">Ganhe o <b>moicano</b> e os <b>óculos</b> do nosso mascote, tire a foto e marque <b>@gabbaburger</b>.</p>
+  <p class="promo" data-promo hidden></p>
   <button class="btn" id="open" type="button">📸 ABRIR CÂMERA</button>
   <p class="err" id="start-err" hidden></p>
   <p class="note">A foto é feita e fica só no seu celular. Nada é enviado para a gente.</p>
-  <a class="link" href="../jogos/">‹ Voltar aos jogos</a>
+  <a class="link" id="voltar" href="../jogos/">‹ Voltar aos jogos</a>
 </section>
 
 <section class="screen" id="cam" hidden>
@@ -99,11 +103,28 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--mustard); outli
     <a class="btn ghost" id="save" download="vire-um-gabba.jpg" href="#">Salvar foto</a>
   </div>
   <button class="btn ghost" id="again" type="button">Tirar outra</button>
-  <p class="tip" id="tip">Posta no Instagram e marca <b>@gabbaheyburger</b> que a gente reposta!</p>
+  <p class="promo" data-promo hidden></p>
+  <p class="tip" id="tip">Posta no Instagram e marca <b>@gabbaburger</b> que a gente reposta!</p>
 </section>
 
 <div class="flash" id="flash"></div>
 
+<script>
+// Veio da bio? O "Voltar" leva para a bio. Promoção "poste e ganhe" ligada pela área do dono da bio (bio/config.json)
+(function () {
+  try { if (/\/bio\/?/.test(document.referrer) || sessionStorage.getItem('gabba-veio-bio')) { sessionStorage.setItem('gabba-veio-bio', '1'); var v = document.getElementById('voltar'); v.href = '../bio/'; v.textContent = '‹ Voltar'; } } catch (e) {}
+  fetch('../bio/config.json?v=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (c) {
+    var p = c && c.promo; if (!p || !p.ativo || !p.premio) return;
+    document.querySelectorAll('[data-promo]').forEach(function (el) {
+      el.innerHTML = '';
+      var t = document.createElement('span'); t.textContent = '🎁 Poste e ganhe';
+      var b = document.createElement('b'); b.textContent = p.premio;
+      var sm = document.createElement('small'); sm.textContent = 'Poste a foto nos stories marcando @gabbaburger e mostre no caixa.';
+      el.append(t, b, sm); el.hidden = false;
+    });
+  }).catch(function () {});
+})();
+</script>
 <script type="module">
 const $ = id => document.getElementById(id);
 const conta = (n, t) => { try { window.gabbaConta && window.gabbaConta(n, t); } catch (e) {} };
@@ -277,7 +298,7 @@ function drawFrame(ctx) {
   ctx.fillStyle = '#f3e6cc'; ctx.font = '76px Bungee, Impact, sans-serif';
   ctx.fillText('GABBA!', 44, OUT_H - 82);
   ctx.fillStyle = '#b5a397'; ctx.font = '700 32px Barlow, sans-serif';
-  ctx.fillText('@gabbaheyburger', 48, OUT_H - 36);
+  ctx.fillText('@gabbaburger', 48, OUT_H - 36);
   // selo no topo
   ctx.save();
   ctx.font = '30px Bungee, Impact, sans-serif'; const label = 'GABBA HEY BURGER';
@@ -382,7 +403,7 @@ $('share').addEventListener('click', async () => {
   if (!blob) return;
   const file = new File([blob], 'vire-um-gabba.jpg', { type: 'image/jpeg' });
   try {
-    await navigator.share({ files: [file], text: 'Virei um Gabba! 🤘 @gabbaheyburger #GabbaHeyBurger' });
+    await navigator.share({ files: [file], text: 'Virei um Gabba! 🤘 @gabbaburger #GabbaBurger' });
     conta('vire-compartilhou', 'Vire um Gabba: compartilhou');
   } catch (e) {}
 });
