@@ -108,7 +108,10 @@ input::placeholder, textarea::placeholder { color: #a39f95; font-weight: 400; }
 .selo.pendente { background: #fbf0d4; color: #6b4e00; }
 .selo.resolvido { background: #dcefe0; color: #1f5c32; }
 .selo.enviado { background: #eceae4; color: #55524a; }
-.hist .tipo { font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.hist .tipo { display: block; margin-top: 2px; font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.hist-filtro { display: flex; flex-wrap: wrap; gap: 6px; padding: 2px 16px 10px; }
+.hist-filtro button { border: 1px solid var(--line-2); background: #fff; color: var(--ink-2); border-radius: 999px; padding: 7px 12px; font: 600 .85rem var(--font); cursor: pointer; }
+.hist-filtro button[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
 .hist-nota { padding: 0 16px 12px; margin: 0; font-size: .78rem; color: var(--muted); }
 
 button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
@@ -247,6 +250,9 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
 
   <div class="panel hist" id="hist" hidden>
     <div class="hist-h" id="hist-h">Pedidos recentes</div>
+    <div class="hist-filtro" id="hist-filtro" hidden>
+      <button type="button" data-f="Todas">Todas</button><button type="button" data-f="Gabba">Gabba</button><button type="button" data-f="Uau">Uau!</button><button type="button" data-f="Feijuca">Feijuca</button><button type="button" data-f="Estoque central">Estoque</button>
+    </div>
     <p class="hist-nota" id="hist-nota" hidden></p>
     <ul id="hist-lista"></ul>
   </div>
@@ -455,25 +461,32 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
   }
   const tipoTxt = t => t === 'Material' ? 'material' : t === 'Producao' ? 'produção' : '';
   const descr = (tipo, qtd, urg) => (tipo === 'Material' || tipo === 'Producao') ? String(qtd).toLowerCase() : (urg === 'Acabou' ? 'acabou' : String(qtd).toLowerCase());
+  const lojaDoLink = () => ({ gabba: 'Gabba', uau: 'Uau', feijuca: 'Feijuca' })[(new URLSearchParams(location.search).get('loja') || '').toLowerCase()];
+  let histFiltro = 'Todas';
+  document.getElementById('hist-filtro').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; histFiltro = b.dataset.f; mostrarHist(); });
   function mostrarHist() {
     const lim = Date.now() - 7 * 864e5;
-    const loja = estado.loja;
-    const local = LS.get(K.hist, []).filter(h => h.loja === loja && new Date(h.quando).getTime() >= lim);
+    const adm = !lojaDoLink();
+    const loja = adm ? histFiltro : estado.loja;
+    const daLoja = l => loja === 'Todas' || l === loja;
+    const local = LS.get(K.hist, []).filter(h => daLoja(h.loja) && new Date(h.quando).getTime() >= lim);
     const lista = [];
     if (LINHAS) {
-      LINHAS.filter(l => l.loja === loja && l.ms >= lim).forEach(l => lista.push({ ms: l.ms, item: l.item, tipo: l.tipo, txt: descr(l.tipo, l.quantidade, l.urgencia), selo: l.status }));
+      LINHAS.filter(l => daLoja(l.loja) && l.ms >= lim).forEach(l => lista.push({ ms: l.ms, item: l.item, tipo: l.tipo, loja: l.loja, txt: descr(l.tipo, l.quantidade, l.urgencia), selo: l.status }));
       local.filter(h => !window.gabbaJaNaPlanilha(LINHAS, { tipo: h.tipo === 'Material' || h.tipo === 'Producao' ? h.tipo : 'Insumo', loja: h.loja, item: h.item, quando: h.quando }))
-        .forEach(h => lista.push({ ms: new Date(h.quando).getTime(), item: h.item, tipo: h.tipo, txt: descr(h.tipo, h.quantidade, h.urgencia), aviso: h.pendente ? 'Aguardando internet' : 'Enviado' }));
+        .forEach(h => lista.push({ ms: new Date(h.quando).getTime(), item: h.item, tipo: h.tipo, loja: h.loja, txt: descr(h.tipo, h.quantidade, h.urgencia), aviso: h.pendente ? 'Aguardando internet' : 'Enviado' }));
     } else {
-      local.forEach(h => lista.push({ ms: new Date(h.quando).getTime(), item: h.item, tipo: h.tipo, txt: descr(h.tipo, h.quantidade, h.urgencia), aviso: h.pendente ? 'Aguardando internet' : '' }));
+      local.forEach(h => lista.push({ ms: new Date(h.quando).getTime(), item: h.item, tipo: h.tipo, loja: h.loja, txt: descr(h.tipo, h.quantidade, h.urgencia), aviso: h.pendente ? 'Aguardando internet' : '' }));
     }
     lista.sort((x, y) => y.ms - x.ms);
-    $('hist-h').textContent = 'Pedidos recentes · ' + (loja ? nomeLoja(loja) : '');
-    $('hist').hidden = !loja;
-    $('hist-lista').replaceChildren(...lista.slice(0, 40).map(h => {
+    $('hist-h').textContent = 'Pedidos recentes · ' + (loja === 'Todas' ? 'todas as lojas' : loja === 'Estoque central' ? 'Estoque central' : nomeLoja(loja || ''));
+    $('hist').hidden = !adm && !loja;
+    $('hist-filtro').hidden = !adm;
+    document.querySelectorAll('#hist-filtro button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.f === histFiltro)));
+    $('hist-lista').replaceChildren(...lista.slice(0, 80).map(h => {
       const li = document.createElement('li');
       const a = document.createElement('span'); a.textContent = h.item + ' · ' + h.txt;
-      const tt = tipoTxt(h.tipo); if (tt) { const s = document.createElement('small'); s.className = 'tipo'; s.textContent = tt; a.append(' ', s); }
+      const tt = [loja === 'Todas' ? (h.loja === 'Estoque central' ? 'estoque central' : nomeLoja(h.loja)) : '', tipoTxt(h.tipo)].filter(Boolean).join(' · '); if (tt) { const s = document.createElement('small'); s.className = 'tipo'; s.textContent = tt; a.append(' ', s); }
       const dir = document.createElement('span'); dir.className = 'dir';
       const b = document.createElement('span'); const dq = new Date(h.ms);
       b.textContent = (diaDe(dq) === diaDe(new Date()) ? '' : pad(dq.getDate()) + '/' + pad(dq.getMonth() + 1) + ' ') + hora(dq);
@@ -484,7 +497,7 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
     }));
     const nota = $('hist-nota');
     nota.hidden = false;
-    nota.textContent = !lista.length ? 'Nenhum pedido desta loja nos últimos 7 dias.'
+    nota.textContent = !lista.length ? 'Nenhum pedido nos últimos 7 dias.'
       : statusErro ? 'Não foi possível ver a situação agora. Feche a página e abra de novo em alguns minutos.'
       : !LINHAS ? 'Carregando…'
       : 'Últimos 7 dias. A situação é atualizada pela gerência e pode levar alguns minutos para aparecer aqui.';
