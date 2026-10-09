@@ -200,6 +200,7 @@ footer { padding: 30px 16px calc(28px + env(safe-area-inset-bottom)); text-align
 <script>
 /* ===== Vitrine (nomes e preços provisórios; preço vazio não aparece) ===== */
 var COMIDA = [
+  { img: 'axl-rose', nome: 'Smash Axl Rose', desc: 'Smash burger', preco: '' },
   { img: 'ribs', nome: 'Smoked Ribs', desc: 'Costela suína defumada, coleslaw e fritas', preco: '' },
   { img: 'coxinhas', nome: 'Coxinhas', desc: 'Com molho da casa', preco: '' },
   { img: 'onion-rings', nome: 'Onion rings', desc: 'Com barbecue', preco: '' },
@@ -221,8 +222,8 @@ var ZAP = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path
 var PIN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></svg>';
 var MOMENTOS = {
   antes: {
-    midia: { video: 'cozinha' }, rotulo: 'Preparando a chapa', quente: false,
-    titulo: function (x) { return 'Abrimos às ' + x.abre; }, sub: 'A cozinha já tá se preparando. Vai escolhendo o que vai pedir hoje.',
+    midia: { video: 'axl-rose' }, limpo: true, rotulo: 'Pra hoje', quente: true,
+    titulo: function (x) { return 'Abrimos às ' + x.abre; }, sub: 'Hoje tem Smash Axl Rose na chapa. Vai escolhendo o que vai pedir.',
     b1: { txt: 'VER CARDÁPIO', link: 'pedir', ev: 'bio3-antes-cardapio' }, b2: { html: PIN, link: 'mapa', ev: 'bio3-antes-mapa', label: 'Como chegar' },
     t1: 'Pra hoje à noite', r1: 'comida', t2: 'No happy hour', r2: 'drinks'
   },
