@@ -1,12 +1,12 @@
 {
   "_comentario": "Ligação com o Formulário Google. 'form' é o endereço que termina em /formResponse; cada campo é o número entry.XXXX da pergunta. Enquanto 'form' estiver vazio, a página mostra 'em configuração'.",
-  "form": "",
+  "form": "https://docs.google.com/forms/d/e/1FAIpQLSfqiBnaqHrUxpRdh03knBbscYuWYEoUnaMWGBhf7ZX-9Bt0Rg/formResponse",
   "campos": {
-    "loja": "",
-    "item": "",
-    "quantidade": "",
-    "urgencia": "",
-    "motivo": "",
-    "nome": ""
+    "loja": "entry.1111801695",
+    "item": "entry.443214422",
+    "quantidade": "entry.538836595",
+    "urgencia": "entry.1160809239",
+    "motivo": "entry.796775247",
+    "nome": "entry.1701895569"
   }
 }
