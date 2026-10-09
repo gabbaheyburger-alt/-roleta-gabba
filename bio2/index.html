@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gabba Burger · Paracuru</title>
+<meta name="description" content="Gabba Burger, Paracuru-CE. Burger, defumados e drinks. Peça delivery, veja o cardápio e o happy hour.">
+<meta name="theme-color" content="#0b0908">
+<meta property="og:title" content="Gabba Burger">
+<meta property="og:description" content="Burger, defumados e drinks em Paracuru. Peça agora.">
+<meta property="og:image" content="img/costela.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap">
+<link rel="preload" as="image" href="img/costela.jpg">
+<style>
+/* Bio "cardápio vivo": capa com foto real em tela cheia, destaques em vídeo, carrosséis da cozinha e do bar, happy hour, horários.
+   Visual sóbrio: preto, creme e o vermelho só no botão de pedir. Dados de status/aviso/links vêm de ../bio/config.json (mesmo adm). */
+:root {
+  --bg: #0b0908;
+  --surface: #161210;
+  --line: #2c2420;
+  --cream: #f3ead9;
+  --muted: #a8998a;
+  --red: #d8122b;
+  --red-deep: #8f0a1c;
+  --ok: #4cd964;
+  --display: 'Bebas Neue', Impact, 'Arial Narrow', sans-serif;
+  --label: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  --body: 'Barlow', system-ui, -apple-system, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--cream); }
+body { font-family: var(--body); font-size: 16px; line-height: 1.4; -webkit-font-smoothing: antialiased; }
+[hidden] { display: none !important; }
+a { color: inherit; }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--cream); outline-offset: 3px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.col { max-width: 520px; margin: 0 auto; }
+
+/* ---------- Capa ---------- */
+.capa { position: relative; height: 92svh; min-height: 560px; max-height: 900px; overflow: hidden; display: flex; flex-direction: column; }
+.capa .foto { position: absolute; top: -26%; left: 0; width: 100%; height: 126%; object-fit: cover; object-position: 50% 78%; transform-origin: 50% 40%; animation: zoom 24s ease-in-out infinite alternate; z-index: 0; }
+@keyframes zoom { from { transform: scale(1); } to { transform: scale(1.12); } }
+.capa::after { content: ''; position: absolute; inset: 0; z-index: 0; background:
+  linear-gradient(180deg, rgba(11,9,8,.65) 0%, rgba(11,9,8,0) 18%, rgba(11,9,8,0) 46%, rgba(11,9,8,.85) 62%, rgba(11,9,8,.97) 76%, var(--bg) 100%); }
+.capa > * { position: relative; z-index: 1; }
+.topo { padding: max(18px, env(safe-area-inset-top)) 16px 0; display: flex; justify-content: center; }
+.topo img { width: 132px; height: auto; filter: drop-shadow(0 2px 10px rgba(0,0,0,.6)); }
+.base { margin-top: auto; padding: 0 16px 22px; width: 100%; max-width: 520px; align-self: center; }
+.status { display: inline-flex; align-items: center; gap: 8px; font: 600 .95rem var(--label); letter-spacing: .06em; text-transform: uppercase; color: var(--cream); background: rgba(11,9,8,.55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); border: 1px solid rgba(243,234,217,.18); padding: 6px 12px; border-radius: 999px; }
+.status .bola { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+.status.aberto .bola { background: var(--ok); box-shadow: 0 0 0 0 rgba(76,217,100,.6); animation: pulsa 1.8s infinite; }
+@keyframes pulsa { 70% { box-shadow: 0 0 0 8px rgba(76,217,100,0); } 100% { box-shadow: 0 0 0 0 rgba(76,217,100,0); } }
+h1 { font: 400 clamp(2.9rem, 14vw, 3.9rem)/.9 var(--display); margin: 12px 0 6px; letter-spacing: .01em; }
+.sub { margin: 0 0 18px; color: #d9cfbf; font-size: 1.02rem; }
+.aviso { margin: 0 0 16px; border-left: 3px solid var(--red); background: rgba(11,9,8,.6); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); padding: 10px 14px; border-radius: 0 12px 12px 0; }
+.aviso small { display: block; font: 700 .72rem var(--label); letter-spacing: .16em; text-transform: uppercase; color: #ff8a96; }
+.aviso span { font: 600 1.08rem/1.25 var(--body); }
+.acoes { display: grid; grid-template-columns: 1fr auto; gap: 10px; }
+.pedir { display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 56px; border-radius: 14px; background: var(--red); color: #fff; text-decoration: none; font: 400 1.6rem var(--display); letter-spacing: .04em; box-shadow: 0 10px 28px rgba(216,18,43,.35); }
+.pedir:active { background: var(--red-deep); }
+.zap { width: 56px; height: 56px; border-radius: 14px; border: 1px solid rgba(243,234,217,.35); background: rgba(11,9,8,.45); display: flex; align-items: center; justify-content: center; }
+.zap svg { width: 26px; height: 26px; }
+
+/* ---------- Destaques ---------- */
+.destaques { display: flex; gap: 14px; overflow-x: auto; padding: 4px 16px 6px; scrollbar-width: none; justify-content: flex-start; }
+.destaques::-webkit-scrollbar { display: none; }
+.dq { flex: 0 0 auto; width: 74px; background: none; border: none; padding: 0; color: var(--cream); cursor: pointer; text-align: center; }
+.dq .anel { width: 74px; height: 74px; border-radius: 50%; padding: 3px; background: conic-gradient(var(--red), #f3a33a, var(--red)); }
+.dq img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid var(--bg); display: block; }
+.dq span { display: block; margin-top: 6px; font: 600 .82rem/1.1 var(--label); letter-spacing: .03em; color: #d9cfbf; }
+
+/* ---------- Seções ---------- */
+section { padding: 30px 0 0; }
+.titulo { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 0 16px 12px; }
+h2 { font: 400 1.9rem/1 var(--display); letter-spacing: .03em; margin: 0; }
+.titulo small { color: var(--muted); font: 600 .9rem var(--label); letter-spacing: .04em; }
+.trilho { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 0 16px 6px; scroll-padding: 16px; scrollbar-width: none; }
+.trilho::-webkit-scrollbar { display: none; }
+.item { flex: 0 0 auto; width: min(68vw, 250px); scroll-snap-align: start; text-decoration: none; color: var(--cream); }
+.item .img { position: relative; aspect-ratio: 4 / 5; border-radius: 16px; overflow: hidden; background: var(--surface); }
+.item img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .4s; }
+.item:active img { transform: scale(1.04); }
+.item .preco { position: absolute; right: 10px; bottom: 10px; background: rgba(11,9,8,.75); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); padding: 4px 10px; border-radius: 999px; font: 700 .95rem var(--label); }
+.item .nome { display: block; margin-top: 8px; font: 600 1.15rem/1.15 var(--label); letter-spacing: .02em; }
+.item .desc { display: block; color: var(--muted); font-size: .88rem; margin-top: 2px; }
+
+/* Happy hour */
+.happy { position: relative; margin: 0 16px 14px; border-radius: 18px; overflow: hidden; min-height: 210px; display: flex; align-items: flex-end; text-decoration: none; color: var(--cream); }
+.happy img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; }
+.happy::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(11,9,8,0) 25%, rgba(11,9,8,.9) 100%); }
+.happy div { position: relative; z-index: 1; padding: 16px; }
+.happy .selo { display: inline-block; font: 700 .75rem var(--label); letter-spacing: .14em; text-transform: uppercase; background: var(--cream); color: var(--bg); padding: 3px 9px; border-radius: 999px; }
+.happy.agora .selo { background: var(--red); color: #fff; }
+.happy b { display: block; font: 400 2rem/1 var(--display); letter-spacing: .03em; margin-top: 8px; }
+.happy span.s { color: #d9cfbf; }
+
+/* Cartões simples */
+.lista { margin: 0 16px; display: grid; gap: 10px; }
+.card { display: flex; align-items: center; gap: 14px; padding: 14px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); text-decoration: none; color: var(--cream); }
+.card:active { border-color: var(--cream); }
+.card .ic { width: 44px; height: 44px; border-radius: 12px; background: #221c19; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.card .ic svg { width: 22px; height: 22px; }
+.card b { display: block; font: 600 1.12rem var(--label); letter-spacing: .02em; }
+.card span { color: var(--muted); font-size: .9rem; }
+.card .seta { margin-left: auto; color: var(--muted); font-size: 1.4rem; }
+.card.premio { border-color: var(--red); background: linear-gradient(135deg, #2a1214, var(--surface) 70%); }
+.card .tag { display: inline-block; font: 700 .7rem var(--label); letter-spacing: .14em; text-transform: uppercase; background: var(--red); color: #fff; padding: 2px 8px; border-radius: 999px; margin-bottom: 3px; }
+
+.horarios { margin: 0 16px; border-top: 1px solid var(--line); }
+.horarios div { display: flex; justify-content: space-between; gap: 12px; padding: 12px 2px; border-bottom: 1px solid var(--line); }
+.horarios span:first-child { color: var(--muted); }
+.horarios span:last-child { font-weight: 600; white-space: nowrap; }
+.horarios .hoje span { color: var(--cream); }
+.horarios .hoje span:first-child::after { content: ' · hoje'; color: #ff8a96; font-weight: 600; }
+
+footer { padding: 34px 16px calc(30px + env(safe-area-inset-bottom)); text-align: center; color: var(--muted); font-size: .9rem; }
+.redes { display: flex; justify-content: center; gap: 12px; margin-bottom: 14px; }
+.redes a { width: 48px; height: 48px; border-radius: 50%; border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; }
+.redes svg { width: 22px; height: 22px; }
+
+/* ---------- Visor de vídeo ---------- */
+.visor { position: fixed; inset: 0; z-index: 50; background: #000; display: flex; align-items: center; justify-content: center; }
+.visor video { width: 100%; height: 100%; object-fit: contain; }
+.visor .barras { position: absolute; top: max(10px, env(safe-area-inset-top)); left: 10px; right: 10px; display: flex; gap: 4px; }
+.visor .barras i { flex: 1; height: 3px; border-radius: 2px; background: rgba(255,255,255,.3); overflow: hidden; }
+.visor .barras i b { display: block; height: 100%; width: 0; background: #fff; }
+.visor .cab { position: absolute; top: calc(max(10px, env(safe-area-inset-top)) + 12px); left: 14px; right: 14px; display: flex; align-items: center; gap: 10px; font: 600 1rem var(--label); letter-spacing: .03em; text-shadow: 0 1px 6px rgba(0,0,0,.7); }
+.visor .fechar { margin-left: auto; width: 44px; height: 44px; border: none; background: rgba(0,0,0,.35); color: #fff; border-radius: 50%; font-size: 1.5rem; cursor: pointer; }
+.visor .lado { position: absolute; top: 80px; bottom: 110px; width: 40%; background: none; border: none; cursor: pointer; }
+.visor .lado.esq { left: 0; } .visor .lado.dir { right: 0; }
+.visor .pedir { position: absolute; left: 16px; right: 16px; bottom: calc(18px + env(safe-area-inset-bottom)); max-width: 488px; margin: 0 auto; }
+
+@media (min-width: 700px) { .capa { max-height: 760px; } }
+@media (prefers-reduced-motion: reduce) { .capa .foto, .status.aberto .bola { animation: none; } }
+</style>
+</head>
+<body>
+
+<header class="capa">
+  <img class="foto" src="img/costela.jpg" alt="Costela defumada ao molho barbecue com fritas e salada" width="1080" height="1440" fetchpriority="high">
+  <div class="topo"><img src="../bio/logo.png" alt="Gabba" width="720" height="461"></div>
+  <div class="base">
+    <div class="status" id="status"><span class="bola"></span><span id="status-txt">Seg a qui 17h–22h30 · Sex a dom 17h–23h30</span></div>
+    <h1>Gabba Burger</h1>
+    <p class="sub">Burger, defumados e drinks · Paracuru</p>
+    <div class="aviso" id="aviso" hidden><small>Hoje no Gabba</small><span id="aviso-txt"></span></div>
+    <div class="acoes">
+      <a class="pedir" data-ev="bio2-pedir" data-link="pedir" href="https://gabbaburger.saipos.com">PEDIR DELIVERY</a>
+      <a class="zap" data-ev="bio2-whatsapp" data-link="whatsapp" href="https://wa.me/message/QXY4DJK6HWG6N1" aria-label="Falar no WhatsApp">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3z"/></svg>
+      </a>
+    </div>
+  </div>
+</header>
+
+<nav class="destaques col" id="destaques" aria-label="Vídeos em destaque"></nav>
+
+<section aria-labelledby="t-cozinha">
+  <div class="titulo col"><h2 id="t-cozinha">Da cozinha</h2><small>arraste ›</small></div>
+  <div class="trilho" id="cozinha"></div>
+</section>
+
+<section aria-labelledby="t-bar">
+  <div class="titulo col"><h2 id="t-bar">Do bar</h2><small>arraste ›</small></div>
+  <div class="col">
+    <a class="happy" id="happy" data-ev="bio2-jam" data-link="jam" href="https://drive.google.com/file/d/1su-nbrSu-AS9AikEyHxsbkgV3jZbYX84/view?usp=drivesdk">
+      <img src="img/caipirinha.jpg" alt="Caipirinha no balcão, com o salão do Gabba ao fundo" loading="lazy">
+      <div><span class="selo" id="happy-selo">Happy hour</span><b>JAM SESSION &amp; HAPPY HOUR</b><span class="s" style="display:block">Caipirinha e drinks da casa</span><span class="s" id="happy-s">Segunda a sexta, 17h às 20h</span></div>
+    </a>
+  </div>
+  <div class="trilho" id="bar"></div>
+</section>
+
+<section aria-labelledby="t-mais">
+  <div class="titulo col"><h2 id="t-mais">No Gabba</h2></div>
+  <div class="lista col">
+    <a class="card" id="vire" data-ev="bio2-vire" href="../vire/">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></span>
+      <span><span class="tag" id="vire-tag" hidden>Poste e ganhe</span><b>Vire um Gabba</b><span id="vire-s">Filtro de câmera com o moicano do mascote</span></span>
+      <span class="seta">›</span>
+    </a>
+    <a class="card" data-ev="bio2-cardapio-loja" data-link="cardapio" href="https://drive.google.com/file/d/1euJpGexVkUlRfaj6BTdJ4an4jWUEet9E/view?usp=drivesdk">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M9 9h6M9 13h6"/></svg></span>
+      <span><b>Cardápio da loja</b><span>Pra quem vem comer aqui</span></span>
+      <span class="seta">›</span>
+    </a>
+    <a class="card" data-ev="bio2-fliperama" href="../delivery/">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="7" width="18" height="11" rx="4"/><path d="M8 11v3M6.5 12.5h3M15 12h.01M17.5 13.5h.01"/></svg></span>
+      <span><b>Fliperama Gabba</b><span>Jogos enquanto o lanche chega</span></span>
+      <span class="seta">›</span>
+    </a>
+  </div>
+</section>
+
+<section aria-labelledby="t-hor">
+  <div class="titulo col"><h2 id="t-hor">Horários</h2></div>
+  <div class="horarios col" id="horarios"></div>
+  <div class="lista col" style="margin-top:14px">
+    <a class="card" data-ev="bio2-localizacao" data-link="mapa" href="https://maps.app.goo.gl/ck9mdvzTTk1EoMLC9">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></svg></span>
+      <span><b>Como chegar</b><span>Abrir no mapa · Paracuru-CE</span></span>
+      <span class="seta">›</span>
+    </a>
+  </div>
+</section>
+
+<footer>
+  <div class="redes">
+    <a data-ev="bio2-instagram" href="https://www.instagram.com/gabbaburger" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg></a>
+    <a data-ev="bio2-whatsapp-icone" data-link="whatsapp" href="https://wa.me/message/QXY4DJK6HWG6N1" aria-label="WhatsApp"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2z"/></svg></a>
+  </div>
+  @gabbaburger · Hamburgueria artesanal · Paracuru-CE
+</footer>
+
+<div class="visor" id="visor" hidden role="dialog" aria-modal="true" aria-label="Vídeo">
+  <video id="visor-v" playsinline muted preload="auto"></video>
+  <div class="barras" id="visor-barras"></div>
+  <div class="cab"><span id="visor-t"></span><button class="fechar" id="visor-x" type="button" aria-label="Fechar">×</button></div>
+  <button class="lado esq" id="visor-ant" type="button" aria-label="Vídeo anterior"></button>
+  <button class="lado dir" id="visor-prox" type="button" aria-label="Próximo vídeo"></button>
+  <a class="pedir" data-ev="bio2-pedir-video" data-link="pedir" href="https://gabbaburger.saipos.com">PEDIR DELIVERY</a>
+</div>
+
+<script src="../contador.js"></script>
+<script>
+/* ===== Conteúdo da vitrine. Nome, descrição e preço: preencher depois (preço vazio = não aparece) ===== */
+var COZINHA = [
+  { img: 'costela-close', nome: 'Costela BBQ', desc: 'Com fritas e salada', preco: '' },
+  { img: 'coxinhas', nome: 'Coxinhas', desc: 'Com molho da casa', preco: '' },
+  { img: 'onion-rings', nome: 'Onion rings', desc: 'Com barbecue', preco: '' },
+  { img: 'pasteizinhos', nome: 'Pasteizinhos', desc: 'Com molho da casa', preco: '' },
+  { img: 'pudim', nome: 'Pudim', desc: 'Sobremesa', preco: '' }
+];
+var BAR = [
+  { img: 'drink-laranja', nome: 'Drink da casa', desc: '', preco: '' },
+  { img: 'pqp-jabuticaba', nome: 'Drink PQP Jabuticaba', desc: 'Com energético PQP', preco: '' },
+  { img: 'pqp-maca-verde', nome: 'Drink PQP Maçã Verde', desc: 'Com energético PQP', preco: '' }
+];
+var VIDEOS = [
+  { v: 'cordel', nome: 'Fritas Cordel' },
+  { v: 'cozinha', nome: 'Saindo da cozinha' },
+  { v: 'pasteis', nome: 'Pastéis' },
+  { v: 'brownie', nome: 'Brownie' }
+];
+
+(function () {
+  var PEDIR = 'https://gabbaburger.saipos.com';
+  function card(it, ev) {
+    var a = document.createElement('a'); a.className = 'item'; a.href = PEDIR; a.setAttribute('data-link', 'pedir'); a.setAttribute('data-ev', ev);
+    var box = document.createElement('span'); box.className = 'img';
+    var im = document.createElement('img'); im.src = 'img/' + it.img + '.jpg'; im.alt = it.nome; im.loading = 'lazy'; im.width = 720; im.height = 900;
+    box.append(im);
+    if (it.preco) { var p = document.createElement('span'); p.className = 'preco'; p.textContent = it.preco; box.append(p); }
+    var n = document.createElement('span'); n.className = 'nome'; n.textContent = it.nome;
+    a.append(box, n);
+    if (it.desc) { var d = document.createElement('span'); d.className = 'desc'; d.textContent = it.desc; a.append(d); }
+    return a;
+  }
+  COZINHA.forEach(function (it) { document.getElementById('cozinha').append(card(it, 'bio2-item-' + it.img)); });
+  BAR.forEach(function (it) { document.getElementById('bar').append(card(it, 'bio2-item-' + it.img)); });
+
+  // Destaques + visor
+  var dq = document.getElementById('destaques');
+  VIDEOS.forEach(function (v, i) {
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'dq';
+    b.innerHTML = '<span class="anel"><img alt="" loading="lazy"></span><span></span>';
+    b.querySelector('img').src = 'vid/' + v.v + '.jpg'; b.lastChild.textContent = v.nome;
+    b.addEventListener('click', function () { abre(i); });
+    dq.append(b);
+  });
+  var visor = document.getElementById('visor'), vid = document.getElementById('visor-v'), barras = document.getElementById('visor-barras'), atual = 0;
+  VIDEOS.forEach(function () { var i = document.createElement('i'); i.append(document.createElement('b')); barras.append(i); });
+  function toca(i) {
+    atual = i;
+    barras.querySelectorAll('b').forEach(function (b, k) { b.style.width = k < i ? '100%' : '0'; });
+    document.getElementById('visor-t').textContent = VIDEOS[i].nome;
+    vid.src = 'vid/' + VIDEOS[i].v + '.mp4'; vid.poster = 'vid/' + VIDEOS[i].v + '.jpg';
+    vid.play().catch(function () {});
+    if (window.gabbaConta) window.gabbaConta('bio2-video-' + VIDEOS[i].v, 'Bio2: vídeo ' + VIDEOS[i].nome);
+  }
+  function abre(i) { visor.hidden = false; document.body.style.overflow = 'hidden'; toca(i); }
+  function fecha() { vid.pause(); vid.removeAttribute('src'); vid.load(); visor.hidden = true; document.body.style.overflow = ''; }
+  vid.addEventListener('timeupdate', function () { if (vid.duration) barras.children[atual].firstChild.style.width = (vid.currentTime / vid.duration * 100) + '%'; });
+  vid.addEventListener('ended', function () { if (atual < VIDEOS.length - 1) toca(atual + 1); else fecha(); });
+  document.getElementById('visor-x').addEventListener('click', fecha);
+  document.getElementById('visor-prox').addEventListener('click', function () { if (atual < VIDEOS.length - 1) toca(atual + 1); else fecha(); });
+  document.getElementById('visor-ant').addEventListener('click', function () { toca(Math.max(0, atual - 1)); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !visor.hidden) fecha(); });
+})();
+
+/* ===== Aberto/fechado, aviso, happy hour, Poste e ganhe e links: lidos de ../bio/config.json (área do dono em /bio/adm/) ===== */
+(function () {
+  var C = {
+    horarios: { 0: ['17:00','23:30'], 1: ['17:00','22:30'], 2: ['17:00','22:30'], 3: ['17:00','22:30'], 4: ['17:00','22:30'], 5: ['17:00','23:30'], 6: ['17:00','23:30'] },
+    happy: { ativo: true, dias: [1,2,3,4,5], inicio: '17:00', fim: '20:00' },
+    fechadoEm: '', aviso: '', links: {}, promo: { ativo: false, premio: '' }
+  };
+  var NOMES = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+  var CURTO = ['dom','seg','ter','qua','qui','sex','sáb'];
+  var toMin = function (t) { var p = String(t || '').split(':'); return (+p[0]) * 60 + (+p[1] || 0); };
+  var hm = function (t) { var m = toMin(t), h = Math.floor(m / 60) % 24, r = m % 60; return h + 'h' + (r ? String(r).padStart(2, '0') : ''); };
+  var agora = function () { return new Date(Date.now() - 3 * 3600 * 1000); };
+  var hojeStr = function () { return agora().toISOString().slice(0, 10); };
+  var faixa = function (d) { var h = C.horarios[d]; return (h && h[0] && h[1]) ? h : null; };
+  var fim = function (h) { var a = toMin(h[0]), b = toMin(h[1]); return b <= a ? b + 1440 : b; };
+  var seg5 = function (l) { return l.length === 5 && [1,2,3,4,5].every(function (d) { return l.indexOf(d) >= 0; }); };
+
+  function diasTexto(lista) {
+    if (lista.length === 7) return 'Todos os dias';
+    var ord = [1,2,3,4,5,6,0].filter(function (d) { return lista.indexOf(d) >= 0; });
+    var seq = [1,2,3,4,5,6,0], i0 = seq.indexOf(ord[0]), cont = ord.every(function (d, i) { return seq[i0 + i] === d; });
+    if (ord.length === 1) return NOMES[ord[0]];
+    if (cont) return NOMES[ord[0]] + ' a ' + NOMES[ord[ord.length - 1]].toLowerCase();
+    return ord.map(function (d) { return CURTO[d]; }).join(', ');
+  }
+
+  function montaHorarios(dia) {
+    var grupos = [];
+    [1,2,3,4,5,6,0].forEach(function (d) {
+      var h = faixa(d), k = h ? h.join('-') : 'fechado';
+      var g = grupos.filter(function (x) { return x.k === k; })[0];
+      if (g) g.dias.push(d); else grupos.push({ k: k, h: h, dias: [d] });
+    });
+    var box = document.getElementById('horarios'); box.innerHTML = '';
+    var linha = function (a, b, hoje) {
+      var div = document.createElement('div'); if (hoje) div.className = 'hoje';
+      var s1 = document.createElement('span'); s1.textContent = a; var s2 = document.createElement('span'); s2.textContent = b;
+      div.append(s1, s2); box.append(div);
+    };
+    grupos.forEach(function (g) { linha(diasTexto(g.dias), g.h ? hm(g.h[0]) + ' às ' + hm(g.h[1]) : 'Fechado', g.dias.indexOf(dia) >= 0); });
+    var hp = C.happy;
+    if (hp && hp.ativo && hp.dias && hp.dias.length) linha('Happy hour' + (seg5(hp.dias) ? ' (seg a sex)' : ''), hm(hp.inicio) + ' às ' + hm(hp.fim), false);
+  }
+
+  function atualiza() {
+    var d = agora(), dia = d.getUTCDay(), min = d.getUTCHours() * 60 + d.getUTCMinutes();
+    var hOntem = faixa((dia + 6) % 7), h = faixa(dia);
+    var fechadoHoje = C.fechadoEm && C.fechadoEm === hojeStr();
+    var abertoMadrugada = hOntem && fim(hOntem) > 1440 && min < fim(hOntem) - 1440;
+    var aberto = !fechadoHoje && ((h && min >= toMin(h[0]) && min < fim(h)) || abertoMadrugada);
+    var el = document.getElementById('status'), txt = document.getElementById('status-txt');
+    el.classList.toggle('aberto', !!aberto);
+    if (aberto) txt.textContent = 'Aberto agora · até ' + hm(abertoMadrugada && !(h && min >= toMin(h[0])) ? hOntem[1] : h[1]);
+    else if (fechadoHoje) txt.textContent = 'Hoje estamos fechados';
+    else if (h && min < toMin(h[0])) txt.textContent = 'Fechado · abre hoje às ' + hm(h[0]);
+    else {
+      var prox = null;
+      for (var i = 1; i <= 7 && !prox; i++) { var dd = (dia + i) % 7; if (faixa(dd)) prox = { d: dd, i: i }; }
+      txt.textContent = prox ? 'Fechado · abre ' + (prox.i === 1 ? 'amanhã' : NOMES[prox.d].toLowerCase()) + ' às ' + hm(faixa(prox.d)[0]) : 'Fechado';
+    }
+    var hp = C.happy || {};
+    var happy = aberto && hp.ativo && (hp.dias || []).indexOf(dia) >= 0 && min >= toMin(hp.inicio) && min < toMin(hp.fim);
+    document.getElementById('happy').classList.toggle('agora', !!happy);
+    document.getElementById('happy-selo').textContent = happy ? 'Rolando agora · até ' + hm(hp.fim) : 'Happy hour';
+    document.getElementById('happy-s').textContent = hp.ativo && hp.dias && hp.dias.length ? diasTexto(hp.dias) + ', ' + hm(hp.inicio) + ' às ' + hm(hp.fim) : 'Música e drinks no Gabba';
+    montaHorarios(dia);
+  }
+
+  function aplica() {
+    document.getElementById('aviso').hidden = !C.aviso;
+    document.getElementById('aviso-txt').textContent = C.aviso || '';
+    var pr = C.promo || {}, on = !!(pr.ativo && pr.premio);
+    document.getElementById('vire').classList.toggle('premio', on);
+    document.getElementById('vire-tag').hidden = !on;
+    document.getElementById('vire-s').textContent = on ? 'Poste marcando @gabbaburger e ganhe: ' + pr.premio : 'Filtro de câmera com o moicano do mascote';
+    var L = C.links || {};
+    document.querySelectorAll('[data-link]').forEach(function (a) { var u = L[a.getAttribute('data-link')]; if (u && /^https?:\/\//.test(u)) a.href = u; });
+    atualiza();
+  }
+
+  aplica(); setInterval(atualiza, 60000);
+  fetch('../bio/config.json?v=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (c) {
+    if (!c) return;
+    ['horarios','happy','fechadoEm','aviso','links','promo'].forEach(function (k) { if (c[k] !== undefined) C[k] = c[k]; });
+    aplica();
+  }).catch(function () {});
+})();
+
+// Conta cada clique (evento bio2-*) e só depois abre o link
+document.addEventListener('click', function (e) {
+  var a = e.target.closest && e.target.closest('a[data-ev]');
+  if (!a || e.metaKey || e.ctrlKey || e.shiftKey) return;
+  e.preventDefault();
+  var ev = a.getAttribute('data-ev'), href = a.href;
+  if (window.gabbaConta) window.gabbaConta(ev, 'Bio2: ' + ev.replace('bio2-', ''));
+  setTimeout(function () { location.href = href; }, 220);
+});
+</script>
+</body>
+</html>

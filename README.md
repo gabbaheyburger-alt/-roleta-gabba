@@ -107,3 +107,7 @@ Página `/bio/` para colocar no link da bio do Instagram, no lugar do bio.site. 
 ### Área do dono da bio
 
 `bio/adm/` deixa o dono mudar pelo celular, sem mexer em código: **fechado hoje** (volta ao normal sozinho no dia seguinte), **aviso no topo**, **horário de cada dia**, **happy hour** (dias e horário), a promoção **Poste e ganhe** do Vire um Gabba (aparece na bio e no filtro) e os **links dos botões**. Grava `bio/config.json` pela API do GitHub, com a mesma chave da área do Desafio (`adm/`). A bio lê esse arquivo ao abrir; se não conseguir, usa os valores padrão do script.
+
+## Bio realista (teste)
+
+`/bio2/` é uma versão da bio com fotos e vídeos reais da casa: capa com foto em tela cheia, destaques em vídeo (estilo stories), carrosséis "Da cozinha" e "Do bar", happy hour, Vire um Gabba, horários e mapa. Usa o mesmo `bio/config.json` (status, aviso, happy hour, Poste e ganhe e links), então o `bio/adm/` controla as duas. Fotos em `bio2/img/`, vídeos (H.264, 720p, sem som) em `bio2/vid/`. Nomes, descrições e preços ficam nas listas `COZINHA`, `BAR` e `VIDEOS` no fim de `bio2/index.html`; preço vazio não aparece. Cliques contam como `bio2-*` no GoatCounter.

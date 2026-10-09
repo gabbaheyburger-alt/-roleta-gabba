@@ -112,7 +112,11 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--mustard); outli
 <script>
 // Veio da bio? O "Voltar" leva para a bio. Promoção "poste e ganhe" ligada pela área do dono da bio (bio/config.json)
 (function () {
-  try { if (/\/bio\/?/.test(document.referrer) || sessionStorage.getItem('gabba-veio-bio')) { sessionStorage.setItem('gabba-veio-bio', '1'); var v = document.getElementById('voltar'); v.href = '../bio/'; v.textContent = '‹ Voltar'; } } catch (e) {}
+  try {
+    var m = document.referrer.match(/\/(bio2?)\//), alvo = m ? m[1] : sessionStorage.getItem('gabba-veio-bio');
+    if (alvo === '1') alvo = 'bio';
+    if (alvo) { sessionStorage.setItem('gabba-veio-bio', alvo); var v = document.getElementById('voltar'); v.href = '../' + alvo + '/'; v.textContent = '‹ Voltar'; }
+  } catch (e) {}
   fetch('../bio/config.json?v=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (c) {
     var p = c && c.promo; if (!p || !p.ativo || !p.premio) return;
     document.querySelectorAll('[data-promo]').forEach(function (el) {
