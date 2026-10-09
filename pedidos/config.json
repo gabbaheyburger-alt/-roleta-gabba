@@ -1,0 +1,12 @@
+{
+  "_comentario": "Ligação com o Formulário Google. 'form' é o endereço que termina em /formResponse; cada campo é o número entry.XXXX da pergunta. Enquanto 'form' estiver vazio, a página mostra 'em configuração'.",
+  "form": "",
+  "campos": {
+    "loja": "",
+    "item": "",
+    "quantidade": "",
+    "urgencia": "",
+    "motivo": "",
+    "nome": ""
+  }
+}

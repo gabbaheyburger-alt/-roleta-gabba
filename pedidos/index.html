@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pedido de Compra · Sistema Gabba</title>
+<meta name="theme-color" content="#0f0b0a">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Barlow:wght@400;600;700;800&display=swap">
+<style>
+/* Layout: formulário em coluna única para celular; cada pergunta é um cartão com botões grandes; envio fixo no fim */
+:root {
+  --bg: #0f0b0a;
+  --surface: #1e1715;
+  --surface-2: #2a201d;
+  --line: #3b2e29;
+  --fg: #f6ece2;
+  --muted: #b5a397;
+  --red: #e8102e;
+  --mustard: #f2b632;
+  --ok: #6fbf73;
+  --display: 'Bungee', Impact, 'Arial Black', sans-serif;
+  --body: 'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { min-height: 100%; background: var(--bg); color: var(--fg); }
+body { margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); font-family: var(--body); font-size: 17px; line-height: 1.4; }
+[hidden] { display: none !important; }
+.wrap { max-width: 480px; margin: 0 auto; padding: 22px 16px 40px; display: flex; flex-direction: column; gap: 16px; }
+
+header { display: flex; align-items: center; gap: 14px; }
+header img { width: 58px; height: auto; transform: scaleX(-1); }
+.kicker { font-family: var(--display); font-size: .75rem; letter-spacing: .06em; color: var(--mustard); }
+h1 { font-family: var(--display); font-weight: 400; font-size: 1.75rem; line-height: 1; margin: 2px 0 0; }
+h1 span { color: var(--red); }
+.sub { margin: 0; color: var(--muted); font-size: .95rem; }
+
+.aviso { background: rgba(242,182,50,.12); border: 1px solid rgba(242,182,50,.45); color: var(--fg); border-radius: 14px; padding: 12px 14px; font-size: .95rem; }
+.aviso.erro { background: rgba(232,16,46,.12); border-color: rgba(232,16,46,.5); }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.card label, .card .q { font-weight: 800; font-size: 1rem; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.card .q small, .card label small { font-weight: 600; color: var(--muted); font-size: .8rem; }
+
+input[type=text], input[type=number], textarea {
+  width: 100%; font: 600 1.1rem var(--body); color: var(--fg); background: var(--surface-2);
+  border: 2px solid var(--line); border-radius: 12px; padding: 13px 14px; outline: none;
+}
+textarea { min-height: 70px; resize: vertical; font-size: 1rem; }
+input:focus, textarea:focus { border-color: var(--mustard); }
+input::placeholder, textarea::placeholder { color: #7d6d63; font-weight: 400; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  border: 2px solid var(--line); background: var(--surface-2); color: var(--fg); border-radius: 999px;
+  padding: 10px 14px; font: 700 .98rem var(--body); cursor: pointer; min-height: 44px;
+}
+.chip[aria-pressed="true"] { border-color: var(--mustard); background: rgba(242,182,50,.16); }
+.chips.grande .chip { flex: 1 1 0; border-radius: 14px; padding: 14px 8px; font-size: 1.05rem; text-align: center; }
+.chip.u-acabou[aria-pressed="true"] { border-color: var(--red); background: rgba(232,16,46,.18); }
+.chip.u-esperar[aria-pressed="true"] { border-color: var(--ok); background: rgba(111,191,115,.16); }
+
+.qtd { display: flex; gap: 10px; align-items: stretch; }
+.qtd input { flex: 0 0 110px; text-align: center; font-size: 1.4rem; }
+.passo { flex: 0 0 52px; border: 2px solid var(--line); background: var(--surface-2); color: var(--fg); border-radius: 12px; font: 800 1.5rem var(--body); cursor: pointer; }
+
+.enviar {
+  width: 100%; padding: 17px; border: 0; border-radius: 16px; background: var(--red); color: #fff;
+  font: 400 1.15rem var(--display); letter-spacing: .02em; cursor: pointer; box-shadow: 0 8px 24px rgba(232,16,46,.35);
+}
+.enviar:disabled { opacity: .45; box-shadow: none; }
+.enviar:active:not(:disabled) { transform: scale(.98); }
+.falta { color: var(--muted); font-size: .88rem; text-align: center; margin: -6px 0 0; }
+
+.ok-box { text-align: center; align-items: center; animation: pop .3s ease-out; }
+@keyframes pop { from { transform: scale(.95); opacity: 0; } to { transform: none; opacity: 1; } }
+.ok-box .big { font-size: 3rem; line-height: 1; }
+.ok-box h2 { font-family: var(--display); font-weight: 400; font-size: 1.4rem; margin: 0; }
+.ok-box p { margin: 0; color: var(--muted); }
+.btn2 { width: 100%; padding: 15px; border-radius: 14px; border: 2px solid var(--mustard); background: transparent; color: var(--fg); font: 800 1.05rem var(--body); cursor: pointer; }
+
+.hist h3 { margin: 0; font-size: .95rem; color: var(--muted); font-weight: 700; }
+.hist ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.hist li { display: flex; justify-content: space-between; gap: 10px; font-size: .95rem; border-top: 1px solid var(--line); padding-top: 8px; }
+.hist li span:last-child { color: var(--muted); white-space: nowrap; }
+.hist .pend { color: var(--mustard); }
+
+button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
+footer { text-align: center; color: #7d6d63; font-size: .8rem; }
+</style>
+</head>
+<body>
+<script src="../contador.js"></script>
+<div class="wrap">
+  <header>
+    <img src="../corre/mascote.png" alt="">
+    <div>
+      <div class="kicker">SISTEMA GABBA</div>
+      <h1>Pedido de <span>compra</span></h1>
+    </div>
+  </header>
+  <p class="sub">Viu que vai faltar alguma coisa? Lança aqui. Um item por vez.</p>
+
+  <div class="aviso" id="aviso-config" hidden>⚙️ Esta página ainda está em configuração. Os pedidos ainda não estão sendo enviados.</div>
+  <div class="aviso erro" id="aviso-fila" hidden></div>
+
+  <form id="form" novalidate>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="card">
+        <div class="q">Qual loja?</div>
+        <div class="chips grande" data-grupo="loja">
+          <button type="button" class="chip" data-v="Gabba">🍔 Gabba</button>
+          <button type="button" class="chip" data-v="Uau">🥟 Uau!</button>
+          <button type="button" class="chip" data-v="Feijuca">🍲 Feijuca</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <label for="item">O que precisa comprar?</label>
+        <input type="text" id="item" list="itens-usados" maxlength="80" autocomplete="off" placeholder="Ex.: Queijo muçarela, copo 300 ml">
+        <datalist id="itens-usados"></datalist>
+      </div>
+
+      <div class="card">
+        <div class="q">Quanto?</div>
+        <div class="qtd">
+          <button type="button" class="passo" id="menos" aria-label="Diminuir">−</button>
+          <input type="number" id="qtd" inputmode="decimal" min="0" step="any" value="1" aria-label="Quantidade">
+          <button type="button" class="passo" id="mais" aria-label="Aumentar">+</button>
+        </div>
+        <div class="chips" data-grupo="unidade">
+          <button type="button" class="chip" data-v="un">unidade</button>
+          <button type="button" class="chip" data-v="cx">caixa</button>
+          <button type="button" class="chip" data-v="pct">pacote</button>
+          <button type="button" class="chip" data-v="fardo">fardo</button>
+          <button type="button" class="chip" data-v="kg">kg</button>
+          <button type="button" class="chip" data-v="L">litro</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="q">Qual a urgência?</div>
+        <div class="chips grande" data-grupo="urgencia">
+          <button type="button" class="chip u-acabou" data-v="Acabou">🔴 Acabou</button>
+          <button type="button" class="chip" data-v="Acabando">🟡 Acabando</button>
+          <button type="button" class="chip u-esperar" data-v="Pode esperar">🟢 Pode esperar</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="q">Por que está pedindo?</div>
+        <div class="chips" data-grupo="motivo">
+          <button type="button" class="chip" data-v="Estoque baixo">Estoque baixo</button>
+          <button type="button" class="chip" data-v="Movimento maior (evento/fim de semana)">Movimento maior</button>
+          <button type="button" class="chip" data-v="Quebrou ou estragou">Quebrou / estragou</button>
+          <button type="button" class="chip" data-v="Não veio no abastecimento">Não veio no abastecimento</button>
+          <button type="button" class="chip" data-v="Item novo">Item novo</button>
+          <button type="button" class="chip" data-v="Outro">Outro</button>
+        </div>
+        <textarea id="motivo-txt" maxlength="200" placeholder="Explique em poucas palavras (opcional)"></textarea>
+      </div>
+
+      <div class="card">
+        <label for="nome">Seu nome</label>
+        <input type="text" id="nome" maxlength="40" autocomplete="given-name" placeholder="Quem está pedindo">
+      </div>
+
+      <button type="submit" class="enviar" id="enviar">Enviar pedido</button>
+      <p class="falta" id="falta"></p>
+    </div>
+  </form>
+
+  <div class="card ok-box" id="ok" hidden>
+    <div class="big">✅</div>
+    <h2>Pedido enviado!</h2>
+    <p id="ok-txt"></p>
+    <button type="button" class="btn2" id="outro">Pedir outro item</button>
+  </div>
+
+  <div class="card hist" id="hist" hidden>
+    <h3>Seus pedidos de hoje (neste celular)</h3>
+    <ul id="hist-lista"></ul>
+  </div>
+
+  <footer>Gabba Hey Burger · Uau! Pastelaria · Feijuca</footer>
+</div>
+
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const LS = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  };
+  const K = { loja: 'pc-loja', nome: 'pc-nome', itens: 'pc-itens', hist: 'pc-hist', fila: 'pc-fila' };
+  const pad = n => String(n).padStart(2, '0');
+  const agora = () => new Date();
+  const hojeStr = () => { const d = agora(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
+
+  let CONFIG = null;
+  const estado = { loja: null, unidade: 'un', urgencia: null, motivo: null };
+
+  // ---------- escolha por botões ----------
+  document.querySelectorAll('[data-grupo]').forEach(g => {
+    const nome = g.dataset.grupo;
+    g.addEventListener('click', e => {
+      const b = e.target.closest('.chip'); if (!b) return;
+      estado[nome] = b.dataset.v;
+      marcar(nome);
+      if (nome === 'loja') LS.set(K.loja, estado.loja);
+      validar();
+    });
+  });
+  function marcar(nome) {
+    document.querySelectorAll('[data-grupo="' + nome + '"] .chip').forEach(b => {
+      b.setAttribute('aria-pressed', String(b.dataset.v === estado[nome]));
+    });
+  }
+
+  // ---------- quantidade ----------
+  const qtd = $('qtd');
+  $('mais').onclick = () => { qtd.value = Math.max(0, (parseFloat(qtd.value) || 0) + 1); validar(); };
+  $('menos').onclick = () => { qtd.value = Math.max(1, (parseFloat(qtd.value) || 0) - 1); validar(); };
+
+  ['item', 'qtd', 'nome', 'motivo-txt'].forEach(id => $(id).addEventListener('input', validar));
+
+  // ---------- validação ----------
+  function faltando() {
+    const f = [];
+    if (!estado.loja) f.push('loja');
+    if (!$('item').value.trim()) f.push('item');
+    if (!(parseFloat(qtd.value) > 0)) f.push('quantidade');
+    if (!estado.urgencia) f.push('urgência');
+    if (!estado.motivo) f.push('motivo');
+    if (estado.motivo === 'Outro' && !$('motivo-txt').value.trim()) f.push('explicar o motivo');
+    if (!$('nome').value.trim()) f.push('seu nome');
+    return f;
+  }
+  function validar() {
+    const f = faltando();
+    $('enviar').disabled = f.length > 0 || !configOk();
+    $('falta').textContent = !configOk() ? '' : (f.length ? 'Falta: ' + f.join(', ') : '');
+  }
+  const configOk = () => !!(CONFIG && CONFIG.form && CONFIG.campos && CONFIG.campos.item);
+
+  // ---------- envio ----------
+  function montar() {
+    const det = $('motivo-txt').value.trim();
+    return {
+      loja: estado.loja,
+      item: $('item').value.trim(),
+      quantidade: String(parseFloat(qtd.value)).replace('.', ',') + ' ' + estado.unidade,
+      urgencia: estado.urgencia,
+      motivo: estado.motivo + (det ? ' — ' + det : ''),
+      nome: $('nome').value.trim(),
+      quando: agora().toISOString()
+    };
+  }
+  async function postar(p) {
+    const body = new URLSearchParams();
+    for (const k of ['loja', 'item', 'quantidade', 'urgencia', 'motivo', 'nome']) {
+      const id = CONFIG.campos[k]; if (id) body.append(id.startsWith('entry.') ? id : 'entry.' + id, p[k]);
+    }
+    // O Google não devolve resposta legível para outros sites (no-cors); se a rede falhar, cai no catch.
+    await fetch(CONFIG.form, { method: 'POST', mode: 'no-cors', body });
+  }
+
+  $('form').addEventListener('submit', async e => {
+    e.preventDefault();
+    if (faltando().length || !configOk()) return;
+    const p = montar();
+    $('enviar').disabled = true; $('enviar').textContent = 'Enviando…';
+    let enviado = true;
+    try { await postar(p); } catch (err) { enviado = false; const fila = LS.get(K.fila, []); fila.push(p); LS.set(K.fila, fila); }
+
+    LS.set(K.nome, p.nome);
+    const itens = LS.get(K.itens, []).filter(i => i.toLowerCase() !== p.item.toLowerCase());
+    itens.unshift(p.item); LS.set(K.itens, itens.slice(0, 40));
+    const hist = LS.get(K.hist, []);
+    hist.unshift({ ...p, pendente: !enviado }); LS.set(K.hist, hist.slice(0, 30));
+    window.gabbaConta && gabbaConta('pedido-compra-' + p.loja.toLowerCase(), 'Pedido de compra: ' + p.loja + ' (' + p.urgencia + ')');
+
+    $('ok-txt').textContent = enviado
+      ? p.quantidade + ' de ' + p.item + ' para ' + (p.loja === 'Uau' ? 'Uau!' : p.loja) + '.'
+      : 'Sem internet agora. O pedido ficou guardado e será enviado sozinho quando a internet voltar.';
+    $('ok').querySelector('h2').textContent = enviado ? 'Pedido enviado!' : 'Pedido guardado';
+    $('form').hidden = true; $('ok').hidden = false;
+    $('enviar').textContent = 'Enviar pedido';
+    mostrarHist(); mostrarFila();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  $('outro').onclick = () => {
+    $('item').value = ''; qtd.value = 1; $('motivo-txt').value = '';
+    estado.unidade = 'un'; estado.urgencia = null; estado.motivo = null;
+    ['unidade', 'urgencia', 'motivo'].forEach(marcar);
+    $('ok').hidden = true; $('form').hidden = false; validar();
+    $('item').focus();
+  };
+
+  // ---------- fila (sem internet) ----------
+  async function esvaziarFila() {
+    if (!configOk()) return;
+    const fila = LS.get(K.fila, []); if (!fila.length) return;
+    const resto = [];
+    for (const p of fila) { try { await postar(p); marcarEnviado(p.quando); } catch (e) { resto.push(p); } }
+    LS.set(K.fila, resto); mostrarFila(); mostrarHist();
+  }
+  function marcarEnviado(quando) {
+    const hist = LS.get(K.hist, []); hist.forEach(h => { if (h.quando === quando) h.pendente = false; }); LS.set(K.hist, hist);
+  }
+  function mostrarFila() {
+    const n = LS.get(K.fila, []).length;
+    $('aviso-fila').hidden = !n;
+    $('aviso-fila').textContent = '📶 ' + n + (n === 1 ? ' pedido aguardando' : ' pedidos aguardando') + ' internet para ser enviado.';
+  }
+  window.addEventListener('online', esvaziarFila);
+
+  // ---------- histórico do dia ----------
+  function mostrarHist() {
+    const hoje = hojeStr();
+    const lista = LS.get(K.hist, []).filter(h => { const d = new Date(h.quando); return (d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate())) === hoje; });
+    $('hist').hidden = !lista.length;
+    $('hist-lista').replaceChildren(...lista.map(h => {
+      const li = document.createElement('li');
+      const a = document.createElement('span'); a.textContent = h.quantidade + ' · ' + h.item;
+      const b = document.createElement('span');
+      const d = new Date(h.quando);
+      b.textContent = (h.pendente ? '⏳ ' : '') + pad(d.getHours()) + ':' + pad(d.getMinutes());
+      if (h.pendente) b.className = 'pend';
+      li.append(a, b); return li;
+    }));
+    $('itens-usados').replaceChildren(...LS.get(K.itens, []).map(i => { const o = document.createElement('option'); o.value = i; return o; }));
+  }
+
+  // ---------- início ----------
+  const qs = new URLSearchParams(location.search);
+  const lojaLink = { gabba: 'Gabba', uau: 'Uau', feijuca: 'Feijuca' }[(qs.get('loja') || '').toLowerCase()];
+  estado.loja = lojaLink || LS.get(K.loja, null);
+  $('nome').value = LS.get(K.nome, '');
+  ['loja', 'unidade'].forEach(marcar);
+  mostrarHist(); mostrarFila(); validar();
+
+  fetch('config.json?v=' + Date.now(), { cache: 'no-store' })
+    .then(r => r.json())
+    .then(c => { CONFIG = c; })
+    .catch(() => { CONFIG = null; })
+    .finally(() => { $('aviso-config').hidden = configOk(); validar(); esvaziarFila(); });
+})();
+</script>
+</body>
+</html>
