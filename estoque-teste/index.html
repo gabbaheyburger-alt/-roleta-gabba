@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Alerta do Estoque (teste) · Grupo Gabba</title>
+<meta name="theme-color" content="#111111">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: barra preta da marca no topo; formulário em um único painel claro, seções numeradas separadas por linhas finas; botão preto no fim */
+:root {
+  --ink: #111111;
+  --ink-2: #2b2b2b;
+  --cream: #f5f2dc;
+  --page: #f3f2ee;
+  --panel: #ffffff;
+  --line: #e4e2db;
+  --line-2: #d3d0c6;
+  --muted: #6e6b63;
+  --soft: #f7f6f2;
+  --red: #c8102e;
+  --amber: #c98a00;
+  --green: #2f7d45;
+  --font: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; background: var(--page); color: var(--ink); }
+body { font-family: var(--font); font-size: 16px; line-height: 1.45; padding-bottom: env(safe-area-inset-bottom, 0px); -webkit-font-smoothing: antialiased; }
+[hidden] { display: none !important; }
+
+.topbar { background: var(--ink); color: var(--cream); padding: calc(env(safe-area-inset-top, 0px) + 18px) 16px 22px; }
+.topbar .in { max-width: 520px; margin: 0 auto; display: flex; align-items: center; gap: 16px; }
+.topbar img { height: 66px; width: auto; display: block; }
+.topbar .sep { width: 1px; align-self: stretch; background: rgba(245,242,220,.22); }
+.topbar .eyebrow { font-size: .68rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: rgba(245,242,220,.62); }
+.topbar h1 { margin: 2px 0 0; font-size: 1.3rem; font-weight: 700; letter-spacing: -.01em; color: var(--cream); }
+
+.main { max-width: 520px; margin: 0 auto; padding: 18px 16px 40px; display: flex; flex-direction: column; gap: 14px; }
+.intro { margin: 0; color: var(--muted); font-size: .92rem; }
+
+.notice { border-radius: 10px; padding: 11px 13px; font-size: .9rem; border: 1px solid #ead9a6; background: #fbf5e2; color: #5b4810; }
+.notice.err { border-color: #efc3c9; background: #fcf0f1; color: #7a1222; }
+
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+.field { padding: 18px 16px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 10px; }
+.field:first-child { border-top: 0; }
+.label { display: flex; align-items: baseline; gap: 10px; font-size: .78rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); }
+.label .n { font-variant-numeric: tabular-nums; color: var(--muted); font-weight: 500; }
+.label .opt { margin-left: auto; text-transform: none; letter-spacing: 0; font-weight: 500; color: var(--muted); font-size: .8rem; }
+
+input[type=text], input[type=number], textarea {
+  width: 100%; font: 500 1.02rem var(--font); color: var(--ink); background: var(--soft);
+  border: 1px solid var(--line-2); border-radius: 10px; padding: 13px 14px; outline: none; -webkit-appearance: none; appearance: none;
+}
+textarea { min-height: 64px; resize: vertical; font-size: .96rem; }
+input:focus, textarea:focus { border-color: var(--ink); background: #fff; box-shadow: 0 0 0 3px rgba(17,17,17,.08); }
+input::placeholder, textarea::placeholder { color: #a39f95; font-weight: 400; }
+
+.seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border: 1px solid var(--line-2); border-radius: 10px; overflow: hidden; background: var(--soft); }
+.seg .opt-b { border: 0; border-left: 1px solid var(--line-2); background: transparent; color: var(--ink-2); font: 600 .95rem var(--font); padding: 13px 6px; min-height: 48px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 7px; }
+.seg .opt-b:first-child { border-left: 0; }
+.seg .opt-b[aria-pressed="true"] { background: var(--ink); color: var(--cream); }
+.dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.d-red { background: var(--red); } .d-amb { background: var(--amber); } .d-grn { background: var(--green); }
+.seg.prio .opt-b { font-size: .86rem; gap: 6px; padding: 12px 4px; text-align: center; line-height: 1.15; }
+.seg .opt-b[aria-pressed="true"] .dot { box-shadow: 0 0 0 2px var(--cream); }
+
+.tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.tag { border: 1px solid var(--line-2); background: #fff; color: var(--ink-2); border-radius: 8px; padding: 9px 12px; font: 500 .92rem var(--font); cursor: pointer; min-height: 42px; }
+.tag[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--cream); }
+
+.qtd { display: grid; grid-template-columns: 48px 1fr 48px; gap: 8px; }
+.qtd input { text-align: center; font-size: 1.25rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.step { border: 1px solid var(--line-2); background: #fff; border-radius: 10px; font: 500 1.3rem var(--font); color: var(--ink); cursor: pointer; }
+
+.summary { background: var(--soft); border: 1px dashed var(--line-2); border-radius: 10px; padding: 12px 14px; font-size: .92rem; color: var(--ink-2); }
+.summary b { font-weight: 600; }
+
+.submit { width: 100%; padding: 16px; border: 0; border-radius: 12px; background: var(--ink); color: var(--cream); font: 600 1.02rem var(--font); letter-spacing: .01em; cursor: pointer; }
+.submit:disabled { background: #bdbab1; color: #f3f2ee; }
+.submit:active:not(:disabled) { transform: scale(.99); }
+.missing { margin: -4px 0 0; text-align: center; color: var(--muted); font-size: .85rem; }
+
+.done { padding: 26px 18px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.check { width: 52px; height: 52px; border-radius: 50%; background: var(--ink); color: var(--cream); display: flex; align-items: center; justify-content: center; }
+.done h2 { margin: 4px 0 0; font-size: 1.2rem; font-weight: 700; }
+.done p { margin: 0; color: var(--muted); font-size: .95rem; }
+.done dl { width: 100%; margin: 8px 0 4px; border-top: 1px solid var(--line); text-align: left; font-size: .92rem; }
+.done dl div { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--line); }
+.done dt { color: var(--muted); } .done dd { margin: 0; font-weight: 600; text-align: right; }
+.ghost { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid var(--ink); background: #fff; color: var(--ink); font: 600 1rem var(--font); cursor: pointer; }
+
+.hist-h { padding: 14px 16px 6px; font-size: .78rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); }
+.hist ul { list-style: none; margin: 0; padding: 0 16px 8px; }
+.hist li { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); font-size: .92rem; }
+.hist li span:last-child { color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.hist .pend { color: var(--amber); }
+
+button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spacing: .04em; padding-top: 6px; }
+
+.testbar { background: #c98a00; color: #1b1300; text-align: center; font-size: .78rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; padding: 7px 10px; }
+.seg.sit { grid-template-columns: 1fr 1fr; }
+.seg.sit .opt-b { flex-direction: column; gap: 3px; padding: 12px 6px; line-height: 1.15; }
+.seg.sit .dot { display: inline-block; vertical-align: middle; margin-right: 4px; }
+.seg.sit .opt-b small { font-weight: 500; font-size: .76rem; opacity: .75; }
+.preview { background: #111; color: var(--cream); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+.preview .k { font-size: .7rem; letter-spacing: .14em; text-transform: uppercase; color: rgba(245,242,220,.6); font-weight: 600; }
+.preview .alerta { font-size: 1.05rem; font-weight: 700; line-height: 1.3; }
+.preview .det { font-size: .9rem; color: rgba(245,242,220,.8); }
+.pill { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 999px; font-size: .78rem; font-weight: 700; }
+.pill.red { background: #c8102e; color: #fff; } .pill.amb { background: #f2b632; color: #1b1300; }
+.lista li { flex-direction: column; align-items: flex-start; gap: 3px; }
+.lista li .l1 { display: flex; gap: 8px; align-items: center; font-weight: 600; }
+.lista li .l2 { color: var(--muted); font-size: .85rem; }
+.explica { font-size: .9rem; color: var(--ink-2); line-height: 1.5; }
+.explica b { font-weight: 600; }
+.explica ol { margin: 6px 0 0; padding-left: 18px; }
+.linkbtn { background: none; border: 0; color: var(--muted); text-decoration: underline; font: 500 .85rem var(--font); cursor: pointer; padding: 6px; align-self: center; }
+</style>
+</head>
+<body>
+<div class="testbar">Modo teste · nada é enviado</div>
+<header class="topbar">
+  <div class="in">
+    <img src="../pedidos/logo-grupo-gabba.svg" alt="Grupo Gabba">
+    <div class="sep" aria-hidden="true"></div>
+    <div>
+      <div class="eyebrow">Estoque central</div>
+      <h1>Alerta de estoque</h1>
+    </div>
+  </div>
+</header>
+
+<main class="main">
+  <p class="intro">Pegou o último ou viu que está acabando? Avise aqui. Um item por vez.</p>
+
+  <form id="form" novalidate style="display:flex;flex-direction:column;gap:14px">
+    <div class="panel">
+      <div class="field">
+        <div class="label"><span class="n">01</span>Situação</div>
+        <div class="seg sit" data-grupo="situacao">
+          <button type="button" class="opt-b" data-v="Acabou"><span><span class="dot d-red"></span> Peguei o último</span><small>Acabou no estoque</small></button>
+          <button type="button" class="opt-b" data-v="Pouco"><span><span class="dot d-amb"></span> Tem pouco</span><small>Vai acabar logo</small></button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="label" for="item"><span class="n">02</span>Produto</label>
+        <input type="text" id="item" list="itens" maxlength="80" autocomplete="off" placeholder="Ex.: Kraft, copo 300 ml, queijo">
+        <datalist id="itens"></datalist>
+      </div>
+
+      <div class="field">
+        <div class="label"><span class="n">03</span>Saiu para qual loja?</div>
+        <div class="seg" data-grupo="loja">
+          <button type="button" class="opt-b" data-v="Gabba">Gabba</button>
+          <button type="button" class="opt-b" data-v="Uau">Uau!</button>
+          <button type="button" class="opt-b" data-v="Feijuca">Feijuca</button>
+        </div>
+      </div>
+
+      <div class="field" id="campo-sobrou">
+        <div class="label"><span class="n">04</span>Quanto sobrou no estoque<span class="opt">aproximado</span></div>
+        <div class="qtd">
+          <button type="button" class="step" data-alvo="sobrou" data-d="-1" aria-label="Diminuir">−</button>
+          <input type="number" id="sobrou" inputmode="decimal" min="0" step="any" value="1" aria-label="Quanto sobrou">
+          <button type="button" class="step" data-alvo="sobrou" data-d="1" aria-label="Aumentar">+</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="label"><span class="n" id="n-comprar">05</span>Quanto comprar<span class="opt">sugestão</span></div>
+        <div class="qtd">
+          <button type="button" class="step" data-alvo="comprar" data-d="-1" aria-label="Diminuir">−</button>
+          <input type="number" id="comprar" inputmode="decimal" min="0" step="any" value="1" aria-label="Quanto comprar">
+          <button type="button" class="step" data-alvo="comprar" data-d="1" aria-label="Aumentar">+</button>
+        </div>
+        <div class="tags" data-grupo="unidade">
+          <button type="button" class="tag" data-v="un">Unidade</button>
+          <button type="button" class="tag" data-v="cx">Caixa</button>
+          <button type="button" class="tag" data-v="pct">Pacote</button>
+          <button type="button" class="tag" data-v="fardo">Fardo</button>
+          <button type="button" class="tag" data-v="g">Grama</button>
+          <button type="button" class="tag" data-v="kg">kg</button>
+          <button type="button" class="tag" data-v="L">Litro</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="label" for="obs"><span class="n" id="n-obs">06</span>Observação<span class="opt">opcional</span></label>
+        <textarea id="obs" maxlength="200" placeholder="Ex.: comprar a marca de sempre, fornecedor X"></textarea>
+      </div>
+
+      <div class="field">
+        <label class="label" for="nome"><span class="n" id="n-nome">07</span>Quem avisa</label>
+        <input type="text" id="nome" maxlength="40" placeholder="Seu nome">
+      </div>
+    </div>
+
+    <div class="preview" id="preview" hidden>
+      <div class="k">Como o alerta vai chegar</div>
+      <div class="alerta" id="pv-alerta"></div>
+      <div class="det" id="pv-det"></div>
+    </div>
+
+    <button type="submit" class="submit" id="enviar">Enviar alerta (teste)</button>
+    <p class="missing" id="falta"></p>
+  </form>
+
+  <div class="panel" id="ok" hidden>
+    <div class="done">
+      <div class="check"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+      <h2>Alerta registrado (teste)</h2>
+      <p>Na versão de verdade, isso entraria na lista de compras e no Painel de Compras.</p>
+      <button type="button" class="ghost" id="outro">Avisar outro item</button>
+    </div>
+  </div>
+
+  <div class="panel hist lista" id="hist" hidden>
+    <div class="hist-h">Alertas deste teste</div>
+    <ul id="hist-lista"></ul>
+    <button type="button" class="linkbtn" id="limpar">Apagar alertas de teste</button>
+  </div>
+
+  <div class="panel"><div class="field explica">
+    <div class="label">Como funcionaria de verdade</div>
+    <ol>
+      <li>A estoquista avisa aqui quando pega o <b>último</b> ou vê que está <b>acabando</b>.</li>
+      <li>O alerta entra na mesma lista de compras dos pedidos das lojas, marcado como <b>Estoque central</b>.</li>
+      <li>No Painel, "Peguei o último" aparece como <b>Acabou</b> (vermelho) e "Tem pouco" como <b>Acabando</b>.</li>
+      <li>Você compra e marca a caixinha <b>Comprado</b>, como já faz hoje.</li>
+    </ol>
+  </div></div>
+
+  <footer>GRUPO GABBA · ESTOQUE CENTRAL</footer>
+</main>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const LS = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  };
+  const K = { nome: 'et-nome', itens: 'et-itens', hist: 'et-hist' };
+  const pad = (n) => String(n).padStart(2, '0');
+  const hora = (d) => pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  const nomeLoja = (v) => v === 'Uau' ? 'Uau!' : v;
+  const unNome = { un: 'unidade(s)', cx: 'caixa(s)', pct: 'pacote(s)', fardo: 'fardo(s)', g: 'g', kg: 'kg', L: 'litro(s)' };
+  const est = { situacao: null, loja: null, unidade: 'un' };
+
+  document.querySelectorAll('[data-grupo]').forEach((g) => {
+    const nome = g.dataset.grupo;
+    g.addEventListener('click', (e) => {
+      const b = e.target.closest('button'); if (!b) return;
+      est[nome] = b.dataset.v; marcar(nome);
+      if (nome === 'situacao') ajustaSituacao();
+      atualiza();
+    });
+  });
+  function marcar(nome) { document.querySelectorAll('[data-grupo="' + nome + '"] button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.v === est[nome]))); }
+  function ajustaSituacao() {
+    const acabou = est.situacao === 'Acabou';
+    $('campo-sobrou').hidden = acabou;
+    $('n-comprar').textContent = acabou ? '04' : '05';
+    $('n-obs').textContent = acabou ? '05' : '06';
+    $('n-nome').textContent = acabou ? '06' : '07';
+  }
+  document.querySelectorAll('.step').forEach((b) => b.addEventListener('click', () => {
+    const el = $(b.dataset.alvo); const min = b.dataset.alvo === 'sobrou' ? 0 : 1;
+    el.value = Math.max(min, (parseFloat(el.value) || 0) + Number(b.dataset.d)); atualiza();
+  }));
+  ['item', 'sobrou', 'comprar', 'obs', 'nome'].forEach((id) => $(id).addEventListener('input', atualiza));
+
+  function faltando() {
+    const f = [];
+    if (!est.situacao) f.push('situação');
+    if (!$('item').value.trim()) f.push('produto');
+    if (!est.loja) f.push('loja');
+    if (!(parseFloat($('comprar').value) > 0)) f.push('quanto comprar');
+    if (!$('nome').value.trim()) f.push('quem avisa');
+    return f;
+  }
+  function monta() {
+    const acabou = est.situacao === 'Acabou';
+    const qtd = String(parseFloat($('comprar').value)).replace('.', ',') + ' ' + est.unidade;
+    const sobrou = acabou ? '0' : String(parseFloat($('sobrou').value) || 0).replace('.', ',') + ' ' + est.unidade;
+    return { situacao: est.situacao, item: $('item').value.trim(), loja: est.loja, comprar: qtd, sobrou, obs: $('obs').value.trim(), nome: $('nome').value.trim(), quando: new Date().toISOString() };
+  }
+  function atualiza() {
+    const f = faltando();
+    $('enviar').disabled = f.length > 0;
+    $('falta').textContent = f.length ? 'Falta preencher: ' + f.join(', ') : '';
+    const pv = $('preview');
+    if (!est.situacao || !$('item').value.trim()) { pv.hidden = true; return; }
+    const p = monta();
+    pv.hidden = false;
+    const pill = document.createElement('span');
+    pill.className = 'pill ' + (p.situacao === 'Acabou' ? 'red' : 'amb');
+    pill.textContent = p.situacao === 'Acabou' ? 'ACABOU' : 'TEM POUCO';
+    const t = document.createElement('span');
+    t.textContent = ' ' + p.item + (p.loja ? ' · saiu para ' + nomeLoja(p.loja) : '');
+    $('pv-alerta').replaceChildren(pill, t);
+    const partes = [];
+    if (p.situacao !== 'Acabou') partes.push('Sobrou no estoque: ' + p.sobrou);
+    partes.push('Comprar: ' + p.comprar);
+    if (p.obs) partes.push('Obs.: ' + p.obs);
+    if (p.nome) partes.push('Avisado por ' + p.nome);
+    $('pv-det').textContent = partes.join(' · ');
+  }
+
+  $('form').addEventListener('submit', (e) => {
+    e.preventDefault(); if (faltando().length) return;
+    const p = monta();
+    LS.set(K.nome, p.nome);
+    const itens = LS.get(K.itens, []).filter((i) => i.toLowerCase() !== p.item.toLowerCase()); itens.unshift(p.item); LS.set(K.itens, itens.slice(0, 40));
+    const h = LS.get(K.hist, []); h.unshift(p); LS.set(K.hist, h.slice(0, 50));
+    $('form').hidden = true; $('ok').hidden = false; mostraHist(); window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+  $('outro').addEventListener('click', () => {
+    $('item').value = ''; $('obs').value = ''; $('sobrou').value = 1; $('comprar').value = 1;
+    est.situacao = null; est.loja = null; est.unidade = 'un'; ['situacao', 'loja', 'unidade'].forEach(marcar); ajustaSituacao();
+    $('ok').hidden = true; $('form').hidden = false; atualiza();
+  });
+  $('limpar').addEventListener('click', () => { LS.set(K.hist, []); mostraHist(); });
+
+  function mostraHist() {
+    const h = LS.get(K.hist, []);
+    $('hist').hidden = !h.length;
+    $('hist-lista').replaceChildren(...h.map((p) => {
+      const li = document.createElement('li');
+      const l1 = document.createElement('div'); l1.className = 'l1';
+      const pill = document.createElement('span'); pill.className = 'pill ' + (p.situacao === 'Acabou' ? 'red' : 'amb'); pill.textContent = p.situacao === 'Acabou' ? 'ACABOU' : 'POUCO';
+      const t = document.createElement('span'); t.textContent = p.item + ' → ' + nomeLoja(p.loja);
+      l1.append(pill, t);
+      const l2 = document.createElement('div'); l2.className = 'l2';
+      l2.textContent = 'Comprar ' + p.comprar + (p.situacao !== 'Acabou' ? ' · sobrou ' + p.sobrou : '') + ' · ' + p.nome + ' · ' + hora(new Date(p.quando));
+      li.append(l1, l2); return li;
+    }));
+    $('itens').replaceChildren(...LS.get(K.itens, []).map((i) => { const o = document.createElement('option'); o.value = i; return o; }));
+  }
+
+  $('nome').value = LS.get(K.nome, '');
+  marcar('unidade'); ajustaSituacao(); mostraHist(); atualiza();
+})();
+</script>
+</body>
+</html>
