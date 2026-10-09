@@ -450,7 +450,7 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
   async function buscaStatus() {
     if (!CONFIG || !CONFIG.status_csv) return;
     try { LINHAS = await window.gabbaLinhasStatus(CONFIG.status_csv); statusErro = ''; }
-    catch (e) { statusErro = String(e && e.message || e); }
+    catch (e) { statusErro = String(e && e.message || e); console.warn('status', statusErro); }
     mostrarHist();
   }
   const tipoTxt = t => t === 'Material' ? 'material' : t === 'Producao' ? 'produção' : '';
@@ -485,7 +485,7 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
     const nota = $('hist-nota');
     nota.hidden = false;
     nota.textContent = !lista.length ? 'Nenhum pedido desta loja nos últimos 7 dias.'
-      : statusErro ? 'Não foi possível ver a situação agora (' + statusErro + ').'
+      : statusErro ? 'Não foi possível ver a situação agora. Feche a página e abra de novo em alguns minutos.'
       : !LINHAS ? 'Carregando…'
       : 'Últimos 7 dias. A situação é atualizada pela gerência e pode levar alguns minutos para aparecer aqui.';
     $('itens-usados').replaceChildren(...LS.get(K.itens, []).map(i => { const o = document.createElement('option'); o.value = i; return o; }));
