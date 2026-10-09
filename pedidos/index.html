@@ -63,6 +63,7 @@ input::placeholder, textarea::placeholder { color: #a39f95; font-weight: 400; }
 .seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border: 1px solid var(--line-2); border-radius: 10px; overflow: hidden; background: var(--soft); }
 .seg .opt-b { border: 0; border-left: 1px solid var(--line-2); background: transparent; color: var(--ink-2); font: 600 .95rem var(--font); padding: 13px 6px; min-height: 48px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 7px; }
 .seg .opt-b:first-child { border-left: 0; }
+.seg.uma { grid-template-columns: 1fr; } .seg.uma .opt-b { border-left: 0; }
 .seg .opt-b[aria-pressed="true"] { background: var(--ink); color: var(--cream); }
 .dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
 .d-red { background: var(--red); } .d-amb { background: var(--amber); } .d-grn { background: var(--green); }
@@ -106,6 +107,8 @@ input::placeholder, textarea::placeholder { color: #a39f95; font-weight: 400; }
 .selo { font-size: .72rem; font-weight: 700; letter-spacing: .04em; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
 .selo.pendente { background: #fbf0d4; color: #6b4e00; }
 .selo.resolvido { background: #dcefe0; color: #1f5c32; }
+.selo.enviado { background: #eceae4; color: #55524a; }
+.hist .tipo { font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
 .hist-nota { padding: 0 16px 12px; margin: 0; font-size: .78rem; color: var(--muted); }
 
 button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
@@ -135,7 +138,7 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
 
   <form id="form" novalidate style="display:flex;flex-direction:column;gap:14px">
     <div class="panel">
-      <div class="field">
+      <div class="field" id="campo-loja">
         <div class="label"><span class="n">01</span>Loja</div>
         <div class="seg" data-grupo="loja">
           <button type="button" class="opt-b" data-v="Gabba">Gabba</button>
@@ -243,7 +246,7 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
   </div>
 
   <div class="panel hist" id="hist" hidden>
-    <div class="hist-h">Seus pedidos recentes (neste celular)</div>
+    <div class="hist-h" id="hist-h">Pedidos recentes</div>
     <p class="hist-nota" id="hist-nota" hidden></p>
     <ul id="hist-lista"></ul>
   </div>
@@ -301,7 +304,7 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
       const b = e.target.closest('button'); if (!b) return;
       estado[nome] = b.dataset.v;
       marcar(nome);
-      if (nome === 'loja') { LS.set(K.loja, estado.loja); aplicaLoja(); }
+      if (nome === 'loja') { LS.set(K.loja, estado.loja); aplicaLoja(); mostrarHist(); }
       if (nome === 'tipo') limpaEscolhas();
       if (nome === 'tipo' || nome === 'urgencia' || nome === 'loja') aplicaTipo();
       validar();
@@ -441,43 +444,58 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
   }
   window.addEventListener('online', esvaziarFila);
 
-  let STATUS = new Map(), statusOk = false, statusErro = '';
-  const tipoStatus = t => t === 'Material' ? 'Material' : t === 'Producao' ? 'Producao' : 'Insumo';
+  // Histórico da loja: lê a aba Status publicada (pedidos de todos os celulares, sem nomes)
+  // e junta os pedidos deste celular que ainda não chegaram à planilha.
+  let LINHAS = null, statusErro = '';
   async function buscaStatus() {
     if (!CONFIG || !CONFIG.status_csv) return;
-    const lim = Date.now() - 7 * 864e5;
-    const lista = LS.get(K.hist, []).filter(h => !h.pendente && new Date(h.quando).getTime() >= lim);
-    try {
-      STATUS = await window.gabbaStatus(CONFIG.status_csv, lista.map(h => ({ tipo: tipoStatus(h.tipo), loja: h.loja, item: h.item, quando: h.quando })));
-      statusOk = true; statusErro = STATUS.size + '/' + lista.length;
-    } catch (e) { statusOk = false; statusErro = String(e && e.message || e); }
+    try { LINHAS = await window.gabbaLinhasStatus(CONFIG.status_csv); statusErro = ''; }
+    catch (e) { statusErro = String(e && e.message || e); }
     mostrarHist();
   }
+  const tipoTxt = t => t === 'Material' ? 'material' : t === 'Producao' ? 'produção' : '';
+  const descr = (tipo, qtd, urg) => (tipo === 'Material' || tipo === 'Producao') ? String(qtd).toLowerCase() : (urg === 'Acabou' ? 'acabou' : String(qtd).toLowerCase());
   function mostrarHist() {
     const lim = Date.now() - 7 * 864e5;
-    const lista = LS.get(K.hist, []).filter(h => new Date(h.quando).getTime() >= lim);
-    $('hist').hidden = !lista.length;
-    $('hist-lista').replaceChildren(...lista.map(h => {
+    const loja = estado.loja;
+    const local = LS.get(K.hist, []).filter(h => h.loja === loja && new Date(h.quando).getTime() >= lim);
+    const lista = [];
+    if (LINHAS) {
+      LINHAS.filter(l => l.loja === loja && l.ms >= lim).forEach(l => lista.push({ ms: l.ms, item: l.item, tipo: l.tipo, txt: descr(l.tipo, l.quantidade, l.urgencia), selo: l.status }));
+      local.filter(h => !window.gabbaJaNaPlanilha(LINHAS, { tipo: h.tipo === 'Material' || h.tipo === 'Producao' ? h.tipo : 'Insumo', loja: h.loja, item: h.item, quando: h.quando }))
+        .forEach(h => lista.push({ ms: new Date(h.quando).getTime(), item: h.item, tipo: h.tipo, txt: descr(h.tipo, h.quantidade, h.urgencia), aviso: h.pendente ? 'Aguardando internet' : 'Enviado' }));
+    } else {
+      local.forEach(h => lista.push({ ms: new Date(h.quando).getTime(), item: h.item, tipo: h.tipo, txt: descr(h.tipo, h.quantidade, h.urgencia), aviso: h.pendente ? 'Aguardando internet' : '' }));
+    }
+    lista.sort((x, y) => y.ms - x.ms);
+    $('hist-h').textContent = 'Pedidos recentes · ' + (loja ? nomeLoja(loja) : '');
+    $('hist').hidden = !loja;
+    $('hist-lista').replaceChildren(...lista.slice(0, 40).map(h => {
       const li = document.createElement('li');
-      const a = document.createElement('span'); a.textContent = h.item + ' · ' + ((h.tipo === 'Material' || h.tipo === 'Producao') ? h.quantidade.toLowerCase() : (h.urgencia === 'Acabou' ? 'acabou' : h.quantidade.toLowerCase()));
+      const a = document.createElement('span'); a.textContent = h.item + ' · ' + h.txt;
+      const tt = tipoTxt(h.tipo); if (tt) { const s = document.createElement('small'); s.className = 'tipo'; s.textContent = tt; a.append(' ', s); }
       const dir = document.createElement('span'); dir.className = 'dir';
-      const b = document.createElement('span'); const dq = new Date(h.quando);
-      b.textContent = (h.pendente ? 'Aguardando internet · ' : '') + (diaDe(dq) === diaDe(new Date()) ? '' : String(dq.getDate()).padStart(2, '0') + '/' + String(dq.getMonth() + 1).padStart(2, '0') + ' ') + hora(dq);
-      if (h.pendente) b.className = 'pend';
+      const b = document.createElement('span'); const dq = new Date(h.ms);
+      b.textContent = (diaDe(dq) === diaDe(new Date()) ? '' : pad(dq.getDate()) + '/' + pad(dq.getMonth() + 1) + ' ') + hora(dq);
       dir.append(b);
-      const st = STATUS.get(h.quando);
-      if (st) { const sel = document.createElement('span'); sel.className = 'selo ' + st; sel.textContent = st === 'resolvido' ? '✓ Resolvido' : 'Pendente'; dir.append(sel); }
+      if (h.selo) { const sel = document.createElement('span'); sel.className = 'selo ' + h.selo; sel.textContent = h.selo === 'resolvido' ? '✓ Resolvido' : 'Pendente'; dir.append(sel); }
+      else if (h.aviso) { const sel = document.createElement('span'); sel.className = 'selo enviado'; sel.textContent = h.aviso; dir.append(sel); }
       li.append(a, dir); return li;
     }));
     const nota = $('hist-nota');
-    nota.hidden = !(CONFIG && CONFIG.status_csv);
-    nota.textContent = statusOk ? 'A situação é atualizada pela gerência e pode levar alguns minutos para aparecer aqui. (' + statusErro + ')' : 'Não foi possível ver a situação agora' + (statusErro ? ' (' + statusErro + ')' : '') + '.';
+    nota.hidden = false;
+    nota.textContent = !lista.length ? 'Nenhum pedido desta loja nos últimos 7 dias.'
+      : statusErro ? 'Não foi possível ver a situação agora (' + statusErro + ').'
+      : !LINHAS ? 'Carregando…'
+      : 'Últimos 7 dias. A situação é atualizada pela gerência e pode levar alguns minutos para aparecer aqui.';
     $('itens-usados').replaceChildren(...LS.get(K.itens, []).map(i => { const o = document.createElement('option'); o.value = i; return o; }));
   }
 
   const qs = new URLSearchParams(location.search);
   const lojaLink = { gabba: 'Gabba', uau: 'Uau', feijuca: 'Feijuca' }[(qs.get('loja') || '').toLowerCase()];
   estado.loja = lojaLink || LS.get(K.loja, null);
+  // Link da loja: mostra só aquela loja, sem opção de trocar
+  if (lojaLink) document.querySelectorAll('[data-grupo="loja"] button').forEach(b => { b.hidden = b.dataset.v !== lojaLink; b.disabled = b.dataset.v !== lojaLink; }), document.querySelector('[data-grupo="loja"]').classList.add('uma');
   $('nome').value = LS.get(K.nome, '');
   const tq = (qs.get('tipo') || '').toLowerCase();
   if (tq === 'material') estado.tipo = 'Material';
