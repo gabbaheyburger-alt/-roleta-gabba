@@ -307,11 +307,13 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
     };
   }
   async function postar(p) {
+    // Vai para o formulário próprio do estoque quando ele existir; senão, para o principal
+    const dest = CONFIG.estoque && CONFIG.estoque.form ? CONFIG.estoque : CONFIG;
     const l = linha(p); const body = new URLSearchParams();
     for (const k of ['loja', 'item', 'quantidade', 'urgencia', 'motivo', 'nome']) {
-      const id = CONFIG.campos[k]; if (id) body.append(id.startsWith('entry.') ? id : 'entry.' + id, l[k]);
+      const id = dest.campos[k]; if (id) body.append(id.startsWith('entry.') ? id : 'entry.' + id, l[k]);
     }
-    await fetch(CONFIG.form, { method: 'POST', mode: 'no-cors', body });
+    await fetch(dest.form, { method: 'POST', mode: 'no-cors', body });
   }
   function mostraFila() {
     const n = LS.get(K.fila, []).length;

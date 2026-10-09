@@ -120,7 +120,7 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
 </header>
 
 <main class="main">
-  <p class="intro">Acabou ou está acabando? Avise aqui. Um item por vez — quanto comprar, a gerência decide.</p>
+  <p class="intro" id="intro">Acabou ou está acabando? Avise aqui. Um item por vez — quanto comprar, a gerência decide.</p>
 
   <div class="notice" id="aviso-config" hidden>Página em configuração. Os pedidos ainda não estão sendo enviados.</div>
   <div class="notice err" id="aviso-fila" hidden></div>
@@ -137,21 +137,37 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
       </div>
 
       <div class="field">
-        <label class="label" for="item"><span class="n">02</span>Produto</label>
+        <div class="label"><span class="n">02</span>O que você precisa?</div>
+        <div class="seg sit2" data-grupo="tipo">
+          <button type="button" class="opt-b" data-v="Insumo">Insumo<br>do dia a dia</button>
+          <button type="button" class="opt-b" data-v="Material">Material ou<br>equipamento</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="label" for="item"><span class="n">03</span>Produto</label>
         <input type="text" id="item" list="itens-usados" maxlength="80" autocomplete="off" placeholder="Ex.: Queijo muçarela, copo 300 ml">
         <datalist id="itens-usados"></datalist>
       </div>
 
-      <div class="field">
-        <div class="label"><span class="n">03</span>Situação</div>
+      <div class="field modo-insumo">
+        <div class="label"><span class="n">04</span>Situação</div>
         <div class="seg prio sit2" data-grupo="urgencia">
           <button type="button" class="opt-b" data-v="Acabou"><span class="dot d-red"></span>Acabou</button>
           <button type="button" class="opt-b" data-v="Tem pouco"><span class="dot d-amb"></span>Tem pouco</button>
         </div>
       </div>
 
+      <div class="field modo-material" hidden>
+        <div class="label"><span class="n">04</span>Urgência</div>
+        <div class="seg prio sit2" data-grupo="urgmat">
+          <button type="button" class="opt-b" data-v="Urgente"><span class="dot d-red"></span>Urgente</button>
+          <button type="button" class="opt-b" data-v="Pode esperar"><span class="dot d-grn"></span>Pode esperar</button>
+        </div>
+      </div>
+
       <div class="field" id="campo-qtd" hidden>
-        <div class="label"><span class="n">04</span>Quanto tem na loja<span class="opt">aproximado</span></div>
+        <div class="label"><span class="n">05</span><span id="qtd-label">Quanto tem na loja</span><span class="opt" id="qtd-opt">aproximado</span></div>
         <div class="qtd">
           <button type="button" class="step" id="menos" aria-label="Diminuir">−</button>
           <input type="number" id="qtd" inputmode="decimal" min="0" step="any" value="1" aria-label="Quanto tem na loja">
@@ -168,8 +184,19 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
         </div>
       </div>
 
-      <div class="field">
-        <div class="label"><span class="n">05</span>Motivo</div>
+      <div class="field modo-material" hidden>
+        <div class="label"><span class="n">06</span>Motivo</div>
+        <div class="tags" data-grupo="motivomat">
+          <button type="button" class="tag" data-v="Quebrou">Quebrou</button>
+          <button type="button" class="tag" data-v="Desgastado">Desgastado</button>
+          <button type="button" class="tag" data-v="Falta na loja">Falta na loja</button>
+          <button type="button" class="tag" data-v="Item novo">Item novo</button>
+          <button type="button" class="tag" data-v="Outro">Outro</button>
+        </div>
+      </div>
+
+      <div class="field modo-insumo">
+        <div class="label"><span class="n">06</span>Motivo</div>
         <div class="tags" data-grupo="motivo">
           <button type="button" class="tag" data-v="Estoque baixo">Estoque baixo</button>
           <button type="button" class="tag" data-v="Movimento maior (evento/fim de semana)">Movimento maior</button>
@@ -178,11 +205,15 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
           <button type="button" class="tag" data-v="Item novo">Item novo</button>
           <button type="button" class="tag" data-v="Outro">Outro</button>
         </div>
+      </div>
+
+      <div class="field">
+        <label class="label" for="motivo-txt"><span class="n">07</span>Detalhes<span class="opt" id="det-opt">opcional</span></label>
         <textarea id="motivo-txt" maxlength="200" placeholder="Detalhes (opcional)"></textarea>
       </div>
 
       <div class="field">
-        <label class="label" for="nome"><span class="n">06</span>Solicitante</label>
+        <label class="label" for="nome"><span class="n">08</span>Solicitante</label>
         <input type="text" id="nome" maxlength="40" autocomplete="given-name" placeholder="Seu nome">
       </div>
     </div>
@@ -225,7 +256,20 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
   const nomeLoja = v => v === 'Uau' ? 'Uau!' : v;
 
   let CONFIG = null;
-  const estado = { loja: null, unidade: 'un', urgencia: null, motivo: null };
+  const estado = { loja: null, tipo: 'Insumo', unidade: 'un', urgencia: null, motivo: null, urgmat: null, motivomat: null };
+  const ehMat = () => estado.tipo === 'Material';
+  function aplicaTipo() {
+    const m = ehMat();
+    document.querySelectorAll('.modo-insumo').forEach(el => { el.hidden = m; });
+    document.querySelectorAll('.modo-material').forEach(el => { el.hidden = !m; });
+    $('campo-qtd').hidden = m ? false : estado.urgencia !== 'Tem pouco';
+    $('qtd-label').textContent = m ? 'Quantos precisa' : 'Quanto tem na loja';
+    $('qtd-opt').textContent = m ? '' : 'aproximado';
+    $('item').placeholder = m ? 'Ex.: liquidificador, panela grande, tábua de corte' : 'Ex.: Queijo muçarela, copo 300 ml';
+    $('intro').textContent = m ? 'Precisa de um material ou equipamento? Descreva aqui. Um item por vez.' : 'Acabou ou está acabando? Avise aqui. Um item por vez — quanto comprar, a gerência decide.';
+    let n = 1;
+    document.querySelectorAll('#form .field').forEach(f => { if (!f.hidden) { const s = f.querySelector('.n'); if (s) s.textContent = String(n++).padStart(2, '0'); } });
+  }
 
   document.querySelectorAll('[data-grupo]').forEach(g => {
     const nome = g.dataset.grupo;
@@ -234,7 +278,8 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
       estado[nome] = b.dataset.v;
       marcar(nome);
       if (nome === 'loja') LS.set(K.loja, estado.loja);
-      if (nome === 'urgencia') $('campo-qtd').hidden = estado.urgencia !== 'Tem pouco';
+      if (nome === 'tipo') { estado.urgencia = null; estado.motivo = null; estado.urgmat = null; estado.motivomat = null; ['urgencia', 'motivo', 'urgmat', 'motivomat'].forEach(marcar); }
+      if (nome === 'tipo' || nome === 'urgencia') aplicaTipo();
       validar();
     });
   });
@@ -254,21 +299,31 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
     const f = [];
     if (!estado.loja) f.push('loja');
     if (!$('item').value.trim()) f.push('produto');
-    if (!estado.urgencia) f.push('situação');
-    if (estado.urgencia === 'Tem pouco' && !(parseFloat(qtd.value) > 0)) f.push('quanto tem');
-    if (!estado.motivo) f.push('motivo');
-    if (estado.motivo === 'Outro' && !$('motivo-txt').value.trim()) f.push('detalhar o motivo');
+    if (ehMat()) {
+      if (!estado.urgmat) f.push('urgência');
+      if (!(parseFloat(qtd.value) > 0)) f.push('quantos precisa');
+      if (!estado.motivomat) f.push('motivo');
+      if (estado.motivomat === 'Outro' && !$('motivo-txt').value.trim()) f.push('detalhes');
+    } else {
+      if (!estado.urgencia) f.push('situação');
+      if (estado.urgencia === 'Tem pouco' && !(parseFloat(qtd.value) > 0)) f.push('quanto tem');
+      if (!estado.motivo) f.push('motivo');
+      if (estado.motivo === 'Outro' && !$('motivo-txt').value.trim()) f.push('detalhes');
+    }
     if (!$('nome').value.trim()) f.push('solicitante');
     return f;
   }
   function montar() {
     const det = $('motivo-txt').value.trim();
+    const n = String(parseFloat(qtd.value)).replace('.', ',') + ' ' + estado.unidade;
+    const m = ehMat();
     return {
+      tipo: estado.tipo,
       loja: estado.loja,
       item: $('item').value.trim(),
-      quantidade: estado.urgencia === 'Acabou' ? '0' : 'Tem ' + String(parseFloat(qtd.value)).replace('.', ',') + ' ' + estado.unidade,
-      urgencia: estado.urgencia,
-      motivo: estado.motivo + (det ? ' — ' + det : ''),
+      quantidade: m ? 'Precisa ' + n : (estado.urgencia === 'Acabou' ? '0' : 'Tem ' + n),
+      urgencia: m ? estado.urgmat : estado.urgencia,
+      motivo: (m ? estado.motivomat : estado.motivo) + (det ? ' — ' + det : ''),
       nome: $('nome').value.trim(),
       quando: new Date().toISOString()
     };
@@ -281,18 +336,24 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
     if (!f.length) {
       const p = montar();
       r.innerHTML = '';
-      const b = document.createElement('b'); b.textContent = p.item + ' · ' + (p.urgencia === 'Acabou' ? 'acabou' : 'tem pouco');
-      r.append('Resumo: ', b, ' na ' + nomeLoja(p.loja) + (p.urgencia === 'Acabou' ? '.' : ' (' + p.quantidade.toLowerCase() + ').'));
+      const b = document.createElement('b');
+      if (p.tipo === 'Material') { b.textContent = p.quantidade.replace(/^Precisa /, '') + ' · ' + p.item; r.append('Resumo: material/equipamento para a ' + nomeLoja(p.loja) + ': ', b, ' (' + p.urgencia.toLowerCase() + ').'); }
+      else { b.textContent = p.item + ' · ' + (p.urgencia === 'Acabou' ? 'acabou' : 'tem pouco'); r.append('Resumo: ', b, ' na ' + nomeLoja(p.loja) + (p.urgencia === 'Acabou' ? '.' : ' (' + p.quantidade.toLowerCase() + ').')); }
       r.hidden = false;
     } else r.hidden = true;
   }
 
+  // Material/equipamento vai para o formulário próprio quando ele existir; senão vai para o principal, marcado no motivo
   async function postar(p) {
+    const mat = p.tipo === 'Material';
+    const dest = mat && CONFIG.material && CONFIG.material.form ? CONFIG.material : CONFIG;
+    const dados = { ...p };
+    if (mat && dest === CONFIG) dados.motivo = 'Material/Equipamento · ' + p.motivo;
     const body = new URLSearchParams();
     for (const k of ['loja', 'item', 'quantidade', 'urgencia', 'motivo', 'nome']) {
-      const id = CONFIG.campos[k]; if (id) body.append(id.startsWith('entry.') ? id : 'entry.' + id, p[k]);
+      const id = dest.campos[k]; if (id) body.append(id.startsWith('entry.') ? id : 'entry.' + id, dados[k]);
     }
-    await fetch(CONFIG.form, { method: 'POST', mode: 'no-cors', body });
+    await fetch(dest.form, { method: 'POST', mode: 'no-cors', body });
   }
 
   $('form').addEventListener('submit', async e => {
@@ -311,7 +372,9 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
 
     $('ok-tit').textContent = enviado ? 'Alerta enviado' : 'Alerta guardado';
     $('ok-txt').textContent = enviado ? 'O setor de compras já recebeu.' : 'Sem internet agora. Será enviado automaticamente quando a conexão voltar.';
-    const linhas = [['Loja', nomeLoja(p.loja)], ['Produto', p.item], ['Situação', p.urgencia], ['Tem na loja', p.urgencia === 'Acabou' ? 'Nada' : p.quantidade.replace(/^Tem /, '')], ['Solicitante', p.nome], ['Horário', hora(new Date(p.quando))]];
+    const linhas = p.tipo === 'Material'
+      ? [['Loja', nomeLoja(p.loja)], ['Tipo', 'Material / equipamento'], ['Item', p.item], ['Quantidade', p.quantidade.replace(/^Precisa /, '')], ['Urgência', p.urgencia], ['Solicitante', p.nome], ['Horário', hora(new Date(p.quando))]]
+      : [['Loja', nomeLoja(p.loja)], ['Produto', p.item], ['Situação', p.urgencia], ['Tem na loja', p.urgencia === 'Acabou' ? 'Nada' : p.quantidade.replace(/^Tem /, '')], ['Solicitante', p.nome], ['Horário', hora(new Date(p.quando))]];
     $('ok-dl').replaceChildren(...linhas.map(([a, b]) => { const d = document.createElement('div'); const t = document.createElement('dt'); t.textContent = a; const v = document.createElement('dd'); v.textContent = b; d.append(t, v); return d; }));
     $('form').hidden = true; $('ok').hidden = false;
     $('enviar').textContent = 'Enviar alerta';
@@ -321,9 +384,9 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
 
   $('outro').onclick = () => {
     $('item').value = ''; qtd.value = 1; $('motivo-txt').value = '';
-    estado.unidade = 'un'; estado.urgencia = null; estado.motivo = null;
-    ['unidade', 'urgencia', 'motivo'].forEach(marcar);
-    $('campo-qtd').hidden = true;
+    estado.unidade = 'un'; estado.urgencia = null; estado.motivo = null; estado.urgmat = null; estado.motivomat = null;
+    ['unidade', 'urgencia', 'motivo', 'urgmat', 'motivomat'].forEach(marcar);
+    aplicaTipo();
     $('ok').hidden = true; $('form').hidden = false; validar();
     $('item').focus();
   };
@@ -351,7 +414,7 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
     $('hist').hidden = !lista.length;
     $('hist-lista').replaceChildren(...lista.map(h => {
       const li = document.createElement('li');
-      const a = document.createElement('span'); a.textContent = h.item + ' · ' + (h.urgencia === 'Acabou' ? 'acabou' : h.quantidade.toLowerCase());
+      const a = document.createElement('span'); a.textContent = h.item + ' · ' + (h.tipo === 'Material' ? h.quantidade.toLowerCase() : (h.urgencia === 'Acabou' ? 'acabou' : h.quantidade.toLowerCase()));
       const b = document.createElement('span'); b.textContent = (h.pendente ? 'Pendente · ' : '') + hora(new Date(h.quando));
       if (h.pendente) b.className = 'pend';
       li.append(a, b); return li;
@@ -363,7 +426,9 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
   const lojaLink = { gabba: 'Gabba', uau: 'Uau', feijuca: 'Feijuca' }[(qs.get('loja') || '').toLowerCase()];
   estado.loja = lojaLink || LS.get(K.loja, null);
   $('nome').value = LS.get(K.nome, '');
-  ['loja', 'unidade'].forEach(marcar);
+  if ((qs.get('tipo') || '').toLowerCase() === 'material') estado.tipo = 'Material';
+  ['loja', 'tipo', 'unidade'].forEach(marcar);
+  aplicaTipo();
   mostrarHist(); mostrarFila(); validar();
 
   // Usa a mesma ligação com o Formulário Google da página oficial
