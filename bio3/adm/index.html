@@ -193,11 +193,11 @@ input:focus-visible, button:focus-visible, select:focus-visible, a:focus-visible
     if (tipo === 'especiais') campos.append(campo('Selo', it, 'selo', 'Ex.: 🔥 Burger do mês'));
     campos.append(campo('Nome', it, 'nome'));
     campos.append(el('div', { className: 'dois' }, [campo('Descrição', it, 'desc'), campo('Preço', it, 'preco', 'Ex.: R$ 39,90')]));
-    if (tipo === 'especiais') {
+    {
       const s = el('select');
       VIDEOS.forEach(([v, t]) => s.append(el('option', { value: v, textContent: t, selected: (it.video || '') === v })));
       s.addEventListener('change', () => { it.video = s.value; if (s.value && !it.foto) it.foto = s.value.replace('.mp4', '.jpg'); marca(); desenha(); });
-      campos.append(el('label', {}, ['Vídeo (no lugar da foto, menos no card grande)', s]));
+      campos.append(el('label', {}, [tipo === 'especiais' ? 'Vídeo (no lugar da foto, menos no card grande)' : 'Vídeo (no lugar da foto)', s]));
     }
     c.append(el('div', { className: 'item-top' }, [fotoBox(it, 'foto', 'Trocar foto de ' + (it.nome || 'item')), campos]));
 

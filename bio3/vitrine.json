@@ -54,7 +54,8 @@
       "desc": "Smash burger",
       "preco": "",
       "foto": "../bio2/img/axl-rose.jpg",
-      "oculto": false
+      "oculto": false,
+      "video": "../bio2/vid/axl-rose.mp4"
     },
     {
       "nome": "Smoked Ribs",
