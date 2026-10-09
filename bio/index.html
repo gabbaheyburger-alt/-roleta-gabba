@@ -39,11 +39,25 @@ body {
 
 /* Topo */
 .hero { text-align: center; position: relative; }
-.mascote { width: 112px; height: auto; display: block; margin: 0 auto -6px; filter: drop-shadow(0 10px 18px rgba(0,0,0,.6)); animation: balanca 3.2s ease-in-out infinite; transform-origin: 50% 100%; }
+.logo-box { position: relative; width: min(260px, 72vw); margin: 0 auto; }
+.logo { width: 100%; height: auto; display: block; }
+.mascote { position: absolute; right: -34px; bottom: -14px; width: 70px; height: auto; filter: drop-shadow(0 8px 12px rgba(0,0,0,.7)); animation: balanca 3.2s ease-in-out infinite; transform-origin: 50% 100%; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.status { display: inline-flex; align-items: center; gap: 8px; margin-top: 16px; padding: 7px 14px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); font-weight: 700; font-size: 1rem; letter-spacing: .02em; }
+.status .bola { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); }
+.status.aberto .bola { background: #4cd964; box-shadow: 0 0 0 0 rgba(76,217,100,.6); animation: pulsa 1.8s infinite; }
+@keyframes pulsa { 70% { box-shadow: 0 0 0 9px rgba(76,217,100,0); } 100% { box-shadow: 0 0 0 0 rgba(76,217,100,0); } }
+.horarios { margin-top: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 4px 16px; }
+.horarios div { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); font-weight: 600; }
+.horarios div:last-child { border-bottom: none; }
+.horarios span:first-child { color: var(--muted); font-weight: 500; }
+.horarios .hoje span { color: var(--cream); }
+.horarios .hoje span:first-child::after { content: ' · hoje'; color: var(--red); font-weight: 700; }
+.tile.agora { border-color: var(--red); box-shadow: 0 0 0 1px var(--red), 0 8px 24px rgba(227,18,45,.25); }
 @keyframes balanca { 0%,100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
 h1 { font-family: var(--display); font-weight: 400; font-size: clamp(3.4rem, 18vw, 4.6rem); line-height: .85; margin: 0; letter-spacing: .01em; }
 h1 span { color: var(--red); }
-.tag { display: inline-block; margin-top: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; font-size: .86rem; color: var(--muted); }
+.tag { display: block; margin-top: 14px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; font-size: .86rem; color: var(--muted); }
 .tag b { color: var(--cream); }
 
 /* Botão principal */
@@ -101,9 +115,13 @@ a:focus-visible { outline: 3px solid var(--cream); outline-offset: 3px; }
 <body>
 <div class="wrap">
   <header class="hero">
-    <img class="mascote" src="../corre/mascote.png" alt="Mascote do Gabba Burger" width="167" height="240">
-    <h1>GABBA <span>BURGER</span></h1>
-    <div class="tag">Sabor <b>defumado</b> · Paracuru-CE</div>
+    <h1 class="sr">Gabba Burger</h1>
+    <div class="logo-box">
+      <img class="logo" src="logo.png" alt="Gabba" width="720" height="461">
+      <img class="mascote" src="../corre/mascote.png" alt="" width="167" height="240">
+    </div>
+    <div class="tag"><b>Burger</b> · Sabor defumado</div>
+    <div class="status" id="status"><span class="bola"></span><span id="status-txt">Seg a qui 17h–22h30 · Sex a dom 17h–23h30</span></div>
   </header>
 
   <a class="pedir" data-ev="bio-pedir" href="https://gabbaburger.saipos.com">
@@ -119,9 +137,9 @@ a:focus-visible { outline: 3px solid var(--cream); outline-offset: 3px; }
 
   <h2>NA LOJA</h2>
   <div class="grade">
-    <a class="tile destaque largo" data-ev="bio-jam" href="https://drive.google.com/file/d/1su-nbrSu-AS9AikEyHxsbkgV3jZbYX84/view?usp=drivesdk">
+    <a class="tile destaque largo" id="jam" data-ev="bio-jam" href="https://drive.google.com/file/d/1su-nbrSu-AS9AikEyHxsbkgV3jZbYX84/view?usp=drivesdk">
       <span class="ico">🎸</span>
-      <span><span class="selo">Happy hour</span><br><span class="t">JAM SESSION GABBA</span><br><span class="s">Veja a programação</span></span>
+      <span><span class="selo" id="jam-selo">Happy hour</span><br><span class="t">JAM SESSION GABBA</span><br><span class="s">Happy hour seg a sex, 17h às 20h</span></span>
     </a>
     <a class="tile" data-ev="bio-cardapio-loja" href="https://drive.google.com/file/d/1euJpGexVkUlRfaj6BTdJ4an4jWUEet9E/view?usp=drivesdk">
       <span class="ico">📖</span>
@@ -133,6 +151,13 @@ a:focus-visible { outline: 3px solid var(--cream); outline-offset: 3px; }
       <span class="t">COMO CHEGAR</span>
       <span class="s">Abrir no mapa</span>
     </a>
+  </div>
+
+  <h2>HORÁRIOS</h2>
+  <div class="horarios">
+    <div data-dias="1,2,3,4"><span>Segunda a quinta</span><span>17h às 22h30</span></div>
+    <div data-dias="5,6,0"><span>Sexta a domingo</span><span>17h às 23h30</span></div>
+    <div data-dias="1,2,3,4,5"><span>Happy hour (seg a sex)</span><span>17h às 20h</span></div>
   </div>
 
   <h2>ENQUANTO ESPERA</h2>
@@ -159,6 +184,30 @@ a:focus-visible { outline: 3px solid var(--cream); outline-offset: 3px; }
 
 <script src="../contador.js"></script>
 <script>
+// Aberto / fechado pelo horário de Paracuru (UTC-3, sem horário de verão)
+(function () {
+  var ABRE = 17 * 60, HAPPY_FIM = 20 * 60;
+  var fecha = function (dia) { return (dia >= 1 && dia <= 4) ? 22 * 60 + 30 : 23 * 60 + 30; };
+  var hm = function (m) { var h = Math.floor(m / 60), r = m % 60; return h + 'h' + (r ? String(r).padStart(2, '0') : ''); };
+  function atualiza() {
+    var d = new Date(Date.now() - 3 * 3600 * 1000);
+    var dia = d.getUTCDay(), min = d.getUTCHours() * 60 + d.getUTCMinutes();
+    var el = document.getElementById('status'), txt = document.getElementById('status-txt');
+    var aberto = min >= ABRE && min < fecha(dia);
+    el.classList.toggle('aberto', aberto);
+    if (aberto) txt.textContent = 'Aberto agora · até ' + hm(fecha(dia));
+    else if (min < ABRE) txt.textContent = 'Fechado · abre hoje às 17h';
+    else txt.textContent = 'Fechado · abre amanhã às 17h';
+    var happy = aberto && dia >= 1 && dia <= 5 && min < HAPPY_FIM;
+    document.getElementById('jam').classList.toggle('agora', happy);
+    document.getElementById('jam-selo').textContent = happy ? '🍻 Agora · até 20h' : 'Happy hour';
+    document.querySelectorAll('.horarios [data-dias]').forEach(function (r) {
+      r.classList.toggle('hoje', r.getAttribute('data-dias').split(',').indexOf(String(dia)) >= 0 && r.textContent.indexOf('Happy') < 0);
+    });
+  }
+  atualiza(); setInterval(atualiza, 60000);
+})();
+
 // Conta cada clique (evento bio-*) e só depois abre o link, para o contador ter tempo de registrar
 document.querySelectorAll('a[data-ev]').forEach(function (a) {
   a.addEventListener('click', function (e) {
