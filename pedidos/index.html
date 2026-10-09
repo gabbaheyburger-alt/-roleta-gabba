@@ -66,6 +66,7 @@ input::placeholder, textarea::placeholder { color: #a39f95; font-weight: 400; }
 .seg .opt-b[aria-pressed="true"] { background: var(--ink); color: var(--cream); }
 .dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
 .d-red { background: var(--red); } .d-amb { background: var(--amber); } .d-grn { background: var(--green); }
+.seg.sit2 { grid-template-columns: 1fr 1fr; }
 .seg.prio .opt-b { font-size: .86rem; gap: 6px; padding: 12px 4px; text-align: center; line-height: 1.15; }
 .seg .opt-b[aria-pressed="true"] .dot { box-shadow: 0 0 0 2px var(--cream); }
 
@@ -119,7 +120,7 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
 </header>
 
 <main class="main">
-  <p class="intro">Registre aqui o que precisa ser comprado. Um item por pedido.</p>
+  <p class="intro">Acabou ou está acabando? Avise aqui. Um item por vez — quanto comprar, a gerência decide.</p>
 
   <div class="notice" id="aviso-config" hidden>Página em configuração. Os pedidos ainda não estão sendo enviados.</div>
   <div class="notice err" id="aviso-fila" hidden></div>
@@ -127,7 +128,7 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
   <form id="form" novalidate style="display:flex;flex-direction:column;gap:14px">
     <div class="panel">
       <div class="field">
-        <div class="label"><span class="n">01</span>Unidade</div>
+        <div class="label"><span class="n">01</span>Loja</div>
         <div class="seg" data-grupo="loja">
           <button type="button" class="opt-b" data-v="Gabba">Gabba</button>
           <button type="button" class="opt-b" data-v="Uau">Uau!</button>
@@ -142,10 +143,18 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
       </div>
 
       <div class="field">
-        <div class="label"><span class="n">03</span>Quantidade</div>
+        <div class="label"><span class="n">03</span>Situação</div>
+        <div class="seg prio sit2" data-grupo="urgencia">
+          <button type="button" class="opt-b" data-v="Acabou"><span class="dot d-red"></span>Acabou</button>
+          <button type="button" class="opt-b" data-v="Tem pouco"><span class="dot d-amb"></span>Tem pouco</button>
+        </div>
+      </div>
+
+      <div class="field" id="campo-qtd" hidden>
+        <div class="label"><span class="n">04</span>Quanto tem na loja<span class="opt">aproximado</span></div>
         <div class="qtd">
           <button type="button" class="step" id="menos" aria-label="Diminuir">−</button>
-          <input type="number" id="qtd" inputmode="decimal" min="0" step="any" value="1" aria-label="Quantidade">
+          <input type="number" id="qtd" inputmode="decimal" min="0" step="any" value="1" aria-label="Quanto tem na loja">
           <button type="button" class="step" id="mais" aria-label="Aumentar">+</button>
         </div>
         <div class="tags" data-grupo="unidade">
@@ -156,15 +165,6 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
           <button type="button" class="tag" data-v="g">Grama</button>
           <button type="button" class="tag" data-v="kg">kg</button>
           <button type="button" class="tag" data-v="L">Litro</button>
-        </div>
-      </div>
-
-      <div class="field">
-        <div class="label"><span class="n">04</span>Prioridade</div>
-        <div class="seg prio" data-grupo="urgencia">
-          <button type="button" class="opt-b" data-v="Acabou"><span class="dot d-red"></span>Acabou</button>
-          <button type="button" class="opt-b" data-v="Acabando"><span class="dot d-amb"></span>Acabando</button>
-          <button type="button" class="opt-b" data-v="Pode esperar"><span class="dot d-grn"></span>Pode esperar</button>
         </div>
       </div>
 
@@ -188,17 +188,17 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
     </div>
 
     <div class="summary" id="resumo" hidden></div>
-    <button type="submit" class="submit" id="enviar">Registrar pedido</button>
+    <button type="submit" class="submit" id="enviar">Enviar alerta</button>
     <p class="missing" id="falta"></p>
   </form>
 
   <div class="panel" id="ok" hidden>
     <div class="done">
       <div class="check"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
-      <h2 id="ok-tit">Pedido registrado</h2>
+      <h2 id="ok-tit">Alerta enviado</h2>
       <p id="ok-txt">O setor de compras já recebeu.</p>
       <dl id="ok-dl"></dl>
-      <button type="button" class="ghost" id="outro">Registrar outro item</button>
+      <button type="button" class="ghost" id="outro">Avisar outro item</button>
     </div>
   </div>
 
@@ -234,6 +234,7 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
       estado[nome] = b.dataset.v;
       marcar(nome);
       if (nome === 'loja') LS.set(K.loja, estado.loja);
+      if (nome === 'urgencia') $('campo-qtd').hidden = estado.urgencia !== 'Tem pouco';
       validar();
     });
   });
@@ -251,10 +252,10 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
   const configOk = () => !!(CONFIG && CONFIG.form && CONFIG.campos && CONFIG.campos.item);
   function faltando() {
     const f = [];
-    if (!estado.loja) f.push('unidade');
+    if (!estado.loja) f.push('loja');
     if (!$('item').value.trim()) f.push('produto');
-    if (!(parseFloat(qtd.value) > 0)) f.push('quantidade');
-    if (!estado.urgencia) f.push('prioridade');
+    if (!estado.urgencia) f.push('situação');
+    if (estado.urgencia === 'Tem pouco' && !(parseFloat(qtd.value) > 0)) f.push('quanto tem');
     if (!estado.motivo) f.push('motivo');
     if (estado.motivo === 'Outro' && !$('motivo-txt').value.trim()) f.push('detalhar o motivo');
     if (!$('nome').value.trim()) f.push('solicitante');
@@ -265,7 +266,7 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
     return {
       loja: estado.loja,
       item: $('item').value.trim(),
-      quantidade: String(parseFloat(qtd.value)).replace('.', ',') + ' ' + estado.unidade,
+      quantidade: estado.urgencia === 'Acabou' ? '0' : 'Tem ' + String(parseFloat(qtd.value)).replace('.', ',') + ' ' + estado.unidade,
       urgencia: estado.urgencia,
       motivo: estado.motivo + (det ? ' — ' + det : ''),
       nome: $('nome').value.trim(),
@@ -280,8 +281,8 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
     if (!f.length) {
       const p = montar();
       r.innerHTML = '';
-      const b = document.createElement('b'); b.textContent = p.quantidade + ' · ' + p.item;
-      r.append('Resumo: ', b, ' para ' + nomeLoja(p.loja) + ', prioridade ' + p.urgencia.toLowerCase() + '.');
+      const b = document.createElement('b'); b.textContent = p.item + ' · ' + (p.urgencia === 'Acabou' ? 'acabou' : 'tem pouco');
+      r.append('Resumo: ', b, ' na ' + nomeLoja(p.loja) + (p.urgencia === 'Acabou' ? '.' : ' (' + p.quantidade.toLowerCase() + ').'));
       r.hidden = false;
     } else r.hidden = true;
   }
@@ -298,7 +299,7 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
     e.preventDefault();
     if (faltando().length || !configOk()) return;
     const p = montar();
-    $('enviar').disabled = true; $('enviar').textContent = 'Registrando…';
+    $('enviar').disabled = true; $('enviar').textContent = 'Enviando…';
     let enviado = true;
     try { await postar(p); } catch (err) { enviado = false; const fila = LS.get(K.fila, []); fila.push(p); LS.set(K.fila, fila); }
 
@@ -306,14 +307,14 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
     const itens = LS.get(K.itens, []).filter(i => i.toLowerCase() !== p.item.toLowerCase());
     itens.unshift(p.item); LS.set(K.itens, itens.slice(0, 40));
     const hist = LS.get(K.hist, []); hist.unshift({ ...p, pendente: !enviado }); LS.set(K.hist, hist.slice(0, 30));
-    window.gabbaConta && gabbaConta('pedido-compra-' + p.loja.toLowerCase(), 'Pedido de compra: ' + p.loja + ' (' + p.urgencia + ')');
+    window.gabbaConta && gabbaConta('pedido-compra-' + p.loja.toLowerCase(), 'Alerta da loja: ' + p.loja + ' (' + p.urgencia + ')');
 
-    $('ok-tit').textContent = enviado ? 'Pedido registrado' : 'Pedido guardado';
+    $('ok-tit').textContent = enviado ? 'Alerta enviado' : 'Alerta guardado';
     $('ok-txt').textContent = enviado ? 'O setor de compras já recebeu.' : 'Sem internet agora. Será enviado automaticamente quando a conexão voltar.';
-    const linhas = [['Unidade', nomeLoja(p.loja)], ['Produto', p.item], ['Quantidade', p.quantidade], ['Prioridade', p.urgencia], ['Solicitante', p.nome], ['Horário', hora(new Date(p.quando))]];
+    const linhas = [['Loja', nomeLoja(p.loja)], ['Produto', p.item], ['Situação', p.urgencia], ['Tem na loja', p.urgencia === 'Acabou' ? 'Nada' : p.quantidade.replace(/^Tem /, '')], ['Solicitante', p.nome], ['Horário', hora(new Date(p.quando))]];
     $('ok-dl').replaceChildren(...linhas.map(([a, b]) => { const d = document.createElement('div'); const t = document.createElement('dt'); t.textContent = a; const v = document.createElement('dd'); v.textContent = b; d.append(t, v); return d; }));
     $('form').hidden = true; $('ok').hidden = false;
-    $('enviar').textContent = 'Registrar pedido';
+    $('enviar').textContent = 'Enviar alerta';
     mostrarHist(); mostrarFila();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
@@ -322,6 +323,7 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
     $('item').value = ''; qtd.value = 1; $('motivo-txt').value = '';
     estado.unidade = 'un'; estado.urgencia = null; estado.motivo = null;
     ['unidade', 'urgencia', 'motivo'].forEach(marcar);
+    $('campo-qtd').hidden = true;
     $('ok').hidden = true; $('form').hidden = false; validar();
     $('item').focus();
   };
@@ -349,7 +351,7 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
     $('hist').hidden = !lista.length;
     $('hist-lista').replaceChildren(...lista.map(h => {
       const li = document.createElement('li');
-      const a = document.createElement('span'); a.textContent = h.quantidade + ' · ' + h.item;
+      const a = document.createElement('span'); a.textContent = h.item + ' · ' + (h.urgencia === 'Acabou' ? 'acabou' : h.quantidade.toLowerCase());
       const b = document.createElement('span'); b.textContent = (h.pendente ? 'Pendente · ' : '') + hora(new Date(h.quando));
       if (h.pendente) b.className = 'pend';
       li.append(a, b); return li;

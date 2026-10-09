@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Alerta do Estoque (teste) · Grupo Gabba</title>
+<title>Alerta do Estoque · Grupo Gabba</title>
 <meta name="theme-color" content="#111111">
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -124,7 +124,7 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
 </style>
 </head>
 <body>
-<div class="testbar">Modo teste · nada é enviado</div>
+<script src="../contador.js"></script>
 <header class="topbar">
   <div class="in">
     <img src="../pedidos/logo-grupo-gabba.svg" alt="Grupo Gabba">
@@ -138,6 +138,8 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
 
 <main class="main">
   <p class="intro">Pegou o último ou viu que está acabando? Avise aqui. Um item por vez.</p>
+  <div class="notice" id="aviso-config" hidden>Página em configuração. Os alertas ainda não estão sendo enviados.</div>
+  <div class="notice err" id="aviso-fila" hidden></div>
 
   <form id="form" novalidate style="display:flex;flex-direction:column;gap:14px">
     <div class="panel">
@@ -200,34 +202,24 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
       <div class="det" id="pv-det"></div>
     </div>
 
-    <button type="submit" class="submit" id="enviar">Enviar alerta (teste)</button>
+    <button type="submit" class="submit" id="enviar">Enviar alerta</button>
     <p class="missing" id="falta"></p>
   </form>
 
   <div class="panel" id="ok" hidden>
     <div class="done">
       <div class="check"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
-      <h2>Alerta registrado (teste)</h2>
-      <p>Na versão de verdade, isso entraria na lista de compras e no Painel de Compras.</p>
+      <h2 id="ok-tit">Alerta enviado</h2>
+      <p id="ok-txt">Já está na lista de compras.</p>
       <button type="button" class="ghost" id="outro">Avisar outro item</button>
     </div>
   </div>
 
   <div class="panel hist lista" id="hist" hidden>
-    <div class="hist-h">Alertas deste teste</div>
+    <div class="hist-h">Seus alertas recentes (neste celular)</div>
     <ul id="hist-lista"></ul>
-    <button type="button" class="linkbtn" id="limpar">Apagar alertas de teste</button>
+    <button type="button" class="linkbtn" id="limpar">Limpar esta lista do celular</button>
   </div>
-
-  <div class="panel"><div class="field explica">
-    <div class="label">Como funcionaria de verdade</div>
-    <ol>
-      <li>A estoquista avisa aqui quando pega o <b>último</b> ou vê que está <b>acabando</b>. Quanto comprar quem decide é a gerência.</li>
-      <li>O alerta entra na mesma lista de compras dos pedidos das lojas, marcado como <b>Estoque central</b>.</li>
-      <li>No Painel, "Peguei o último" aparece como <b>Acabou</b> (vermelho) e "Tem pouco" como <b>Acabando</b>.</li>
-      <li>Você compra e marca a caixinha <b>Comprado</b>, como já faz hoje.</li>
-    </ol>
-  </div></div>
 
   <footer>GRUPO GABBA · ESTOQUE CENTRAL</footer>
 </main>
@@ -239,7 +231,9 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
     get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
   };
-  const K = { nome: 'et-nome', itens: 'et-itens', hist: 'et-hist' };
+  const K = { nome: 'es-nome', itens: 'es-itens', hist: 'es-hist', fila: 'es-fila' };
+  let CONFIG = null;
+  const configOk = () => !!(CONFIG && CONFIG.form && CONFIG.campos && CONFIG.campos.item);
   const pad = (n) => String(n).padStart(2, '0');
   const hora = (d) => pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
   const nomeLoja = (v) => v === 'Uau' ? 'Uau!' : v;
@@ -283,7 +277,7 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
   }
   function atualiza() {
     const f = faltando();
-    $('enviar').disabled = f.length > 0;
+    $('enviar').disabled = f.length > 0 || !configOk();
     $('falta').textContent = f.length ? 'Falta preencher: ' + f.join(', ') : '';
     const pv = $('preview');
     if (!est.situacao || !$('item').value.trim()) { pv.hidden = true; return; }
@@ -302,13 +296,52 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
     $('pv-det').textContent = partes.join(' · ');
   }
 
-  $('form').addEventListener('submit', (e) => {
-    e.preventDefault(); if (faltando().length) return;
+  function linha(p) {
+    return {
+      loja: 'Estoque central',
+      item: p.item,
+      quantidade: p.situacao === 'Acabou' ? '0' : 'Tem ' + p.sobrou,
+      urgencia: p.situacao === 'Acabou' ? 'Acabou' : 'Tem pouco',
+      motivo: 'Saiu para ' + nomeLoja(p.loja) + (p.obs ? ' — ' + p.obs : ''),
+      nome: p.nome
+    };
+  }
+  async function postar(p) {
+    const l = linha(p); const body = new URLSearchParams();
+    for (const k of ['loja', 'item', 'quantidade', 'urgencia', 'motivo', 'nome']) {
+      const id = CONFIG.campos[k]; if (id) body.append(id.startsWith('entry.') ? id : 'entry.' + id, l[k]);
+    }
+    await fetch(CONFIG.form, { method: 'POST', mode: 'no-cors', body });
+  }
+  function mostraFila() {
+    const n = LS.get(K.fila, []).length;
+    $('aviso-fila').hidden = !n;
+    $('aviso-fila').textContent = n + (n === 1 ? ' alerta aguardando' : ' alertas aguardando') + ' internet para ser enviado.';
+  }
+  async function esvaziaFila() {
+    if (!configOk()) return;
+    const fila = LS.get(K.fila, []); if (!fila.length) return;
+    const resto = [];
+    for (const p of fila) { try { await postar(p); const h = LS.get(K.hist, []); h.forEach((x) => { if (x.quando === p.quando) x.pendente = false; }); LS.set(K.hist, h); } catch (e) { resto.push(p); } }
+    LS.set(K.fila, resto); mostraFila(); mostraHist();
+  }
+  window.addEventListener('online', esvaziaFila);
+
+  $('form').addEventListener('submit', async (e) => {
+    e.preventDefault(); if (faltando().length || !configOk()) return;
     const p = monta();
+    $('enviar').disabled = true; $('enviar').textContent = 'Enviando…';
+    let ok = true;
+    try { await postar(p); } catch (err) { ok = false; const f = LS.get(K.fila, []); f.push(p); LS.set(K.fila, f); }
+    p.pendente = !ok;
     LS.set(K.nome, p.nome);
     const itens = LS.get(K.itens, []).filter((i) => i.toLowerCase() !== p.item.toLowerCase()); itens.unshift(p.item); LS.set(K.itens, itens.slice(0, 40));
     const h = LS.get(K.hist, []); h.unshift(p); LS.set(K.hist, h.slice(0, 50));
-    $('form').hidden = true; $('ok').hidden = false; mostraHist(); window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.gabbaConta && gabbaConta('alerta-estoque', 'Alerta do estoque: ' + p.situacao);
+    $('ok-tit').textContent = ok ? 'Alerta enviado' : 'Alerta guardado';
+    $('ok-txt').textContent = ok ? 'Já está na lista de compras.' : 'Sem internet agora. Será enviado sozinho quando a conexão voltar.';
+    $('enviar').textContent = 'Enviar alerta';
+    $('form').hidden = true; $('ok').hidden = false; mostraHist(); mostraFila(); window.scrollTo({ top: 0, behavior: 'smooth' });
   });
   $('outro').addEventListener('click', () => {
     $('item').value = ''; $('obs').value = ''; $('sobrou').value = 1;
@@ -327,14 +360,17 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
       const t = document.createElement('span'); t.textContent = p.item + ' → ' + nomeLoja(p.loja);
       l1.append(pill, t);
       const l2 = document.createElement('div'); l2.className = 'l2';
-      l2.textContent = (p.situacao !== 'Acabou' ? 'Sobrou ' + p.sobrou + ' · ' : '') + p.nome + ' · ' + hora(new Date(p.quando));
+      l2.textContent = (p.pendente ? 'Aguardando internet · ' : '') + (p.situacao !== 'Acabou' ? 'Sobrou ' + p.sobrou + ' · ' : '') + p.nome + ' · ' + hora(new Date(p.quando));
       li.append(l1, l2); return li;
     }));
     $('itens').replaceChildren(...LS.get(K.itens, []).map((i) => { const o = document.createElement('option'); o.value = i; return o; }));
   }
 
   $('nome').value = LS.get(K.nome, '');
-  marcar('unidade'); ajustaSituacao(); mostraHist(); atualiza();
+  marcar('unidade'); ajustaSituacao(); mostraHist(); mostraFila(); atualiza();
+  fetch('../pedidos/config.json?v=' + Date.now(), { cache: 'no-store' })
+    .then((r) => r.json()).then((c) => { CONFIG = c; }).catch(() => { CONFIG = null; })
+    .finally(() => { $('aviso-config').hidden = configOk(); atualiza(); esvaziaFila(); });
 })();
 </script>
 </body>
