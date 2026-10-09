@@ -124,11 +124,27 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
 .explica b { font-weight: 600; }
 .explica ol { margin: 6px 0 0; padding-left: 18px; }
 .linkbtn { background: none; border: 0; color: var(--muted); text-decoration: underline; font: 500 .85rem var(--font); cursor: pointer; padding: 6px; align-self: center; }
+.ped-h { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 14px 16px 6px; font-size: .78rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink); }
+.ped-prazo { color: var(--red); letter-spacing: .04em; }
+.ped ul { list-style: none; margin: 0; padding: 0 16px 4px; }
+.ped li { padding: 12px 0; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 8px; }
+.ped .l1 { display: flex; justify-content: space-between; gap: 10px; font-size: .95rem; }
+.ped .l1 b { font-weight: 700; }
+.ped .l1 .h { color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.ped .lj { display: inline-block; font-size: .7rem; font-weight: 700; letter-spacing: .05em; padding: 2px 7px; border-radius: 999px; background: var(--soft); color: var(--ink-2); margin-right: 6px; }
+.ped .lj.tarde { background: #fde8e8; color: #8a1c1c; }
+.ped .acoes { display: flex; gap: 8px; }
+.ped .acoes button { flex: 1; min-height: 44px; border-radius: 10px; border: 1px solid var(--line); background: #fff; font: 700 .95rem var(--font); cursor: pointer; color: var(--ink); }
+.ped .acoes button.env { background: var(--ink); border-color: var(--ink); color: #fff; }
+.ped .st { font-size: .85rem; color: var(--muted); }
+.ped .st .ok { color: var(--green); font-weight: 700; }
+.ped .st .nao { color: var(--red); font-weight: 700; }
+.ped-nota { margin: 0; padding: 4px 16px 14px; font-size: .78rem; color: var(--muted); }
 </style>
 </head>
 <body>
 <script src="../contador.js"></script>
-<script src="../comum/status.js?v=5"></script>
+<script src="../comum/status.js?v=6"></script>
 <header class="topbar">
   <div class="in">
     <img src="../pedidos/logo-grupo-gabba.svg" alt="Grupo Gabba">
@@ -144,6 +160,12 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
   <p class="intro">Pegou o último ou viu que está acabando? Avise aqui. Um item por vez.</p>
   <div class="notice" id="aviso-config" hidden>Página em configuração. Os alertas ainda não estão sendo enviados.</div>
   <div class="notice err" id="aviso-fila" hidden></div>
+
+  <div class="panel ped" id="ped" hidden>
+    <div class="ped-h"><span>Pedidos das lojas · hoje</span><span class="ped-prazo">Entregar até 17h40</span></div>
+    <ul id="ped-lista"></ul>
+    <p class="ped-nota" id="ped-nota"></p>
+  </div>
 
   <form id="form" novalidate style="display:flex;flex-direction:column;gap:14px">
     <div class="panel">
@@ -381,12 +403,69 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
     $('itens').replaceChildren(...LS.get(K.itens, []).map((i) => { const o = document.createElement('option'); o.value = i; return o; }));
   }
 
+  // ===== Pedidos das lojas (Gabba e Uau!) de hoje: Enviei / Sem estoque =====
+  let PED = null, pedErro = false;
+  const EV = 'es-ev';
+  const hhmm = (d) => pad(d.getHours()) + ':' + pad(d.getMinutes());
+  async function buscaPedidos() {
+    if (!CONFIG || !CONFIG.status_csv) return;
+    try { PED = await window.gabbaLinhasStatus(CONFIG.status_csv); pedErro = false; } catch (e) { pedErro = true; }
+    mostraPedidos();
+  }
+  function mostraPedidos() {
+    const ok = !!(CONFIG && CONFIG.entregas && CONFIG.entregas.form);
+    $('ped').hidden = !ok || (!PED && !pedErro);
+    if ($('ped').hidden) return;
+    const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+    const locais = LS.get(EV, {});
+    const lista = (PED || []).filter((l) => l.tipo === 'Insumo' && (l.loja === 'Gabba' || l.loja === 'Uau') && l.ms >= hoje.getTime()).sort((a, b) => a.ms - b.ms);
+    $('ped-lista').replaceChildren(...lista.map((l) => {
+      const ch = window.gabbaChave(l), loc = locais[ch];
+      const li = document.createElement('li');
+      const l1 = document.createElement('div'); l1.className = 'l1';
+      const a = document.createElement('span');
+      const tg = document.createElement('span'); tg.className = 'lj'; tg.textContent = nomeLoja(l.loja).toUpperCase(); a.append(tg);
+      const dq = new Date(l.ms); const tarde = dq.getHours() * 3600 + dq.getMinutes() * 60 + dq.getSeconds() > 17 * 3600;
+      if (tarde) { const t2 = document.createElement('span'); t2.className = 'lj tarde'; t2.textContent = 'FORA DO HORÁRIO'; a.append(t2); }
+      const b = document.createElement('b'); b.textContent = l.item; a.append(document.createElement('br'), b, ' · ' + (l.urgencia === 'Acabou' ? 'acabou' : String(l.quantidade).toLowerCase()));
+      const h = document.createElement('span'); h.className = 'h'; h.textContent = hhmm(dq);
+      l1.append(a, h); li.append(l1);
+      const enviado = l.enviado ? new Date(l.enviado) : (loc && loc.evento === 'Enviei' ? new Date(loc.ms) : null);
+      const semEst = l.semEstoque || l.status === 'sem estoque' || (loc && loc.evento === 'Sem estoque');
+      const st = document.createElement('div'); st.className = 'st';
+      if (enviado) {
+        st.innerHTML = 'Enviado às <b>' + hhmm(enviado) + '</b> · ' + (l.confirmacao === 'Recebi' ? '<span class="ok">✓ Loja recebeu</span>' : l.confirmacao ? '<span class="nao">Loja disse que não chegou</span>' : 'aguardando a loja confirmar');
+        li.append(st);
+      } else if (semEst) {
+        st.innerHTML = '<span class="nao">Sem estoque</span> · avisado';
+        li.append(st);
+      } else {
+        const ac = document.createElement('div'); ac.className = 'acoes';
+        const mk = (txt, ev, cls) => { const bt = document.createElement('button'); bt.type = 'button'; bt.textContent = txt; if (cls) bt.className = cls;
+          bt.onclick = async () => {
+            bt.disabled = true;
+            try { await window.gabbaEvento(CONFIG.entregas, { ref: l.ref, loja: l.loja, item: l.item, evento: ev, nome: $('nome').value.trim() || 'Eliza' });
+              const m = LS.get(EV, {}); m[ch] = { evento: ev, ms: Date.now() }; LS.set(EV, m); }
+            catch (e) { bt.disabled = false; bt.textContent = 'Sem internet · toque de novo'; return; }
+            mostraPedidos();
+          }; return bt; };
+        ac.append(mk('Enviei', 'Enviei', 'env'), mk('Sem estoque', 'Sem estoque'));
+        li.append(ac);
+      }
+      return li;
+    }));
+    $('ped-nota').textContent = pedErro ? 'Não foi possível ver os pedidos agora. Feche a página e abra de novo em alguns minutos.'
+      : !lista.length ? 'Nenhum pedido das lojas hoje. Pedidos novos aparecem aqui em até 5 minutos.'
+      : 'Pedidos novos aparecem aqui em até 5 minutos. Sem estoque: avise também pelo alerta abaixo.';
+  }
+  setInterval(() => { if (!document.hidden) buscaPedidos(); }, 60000);
+
   $('nome').value = LS.get(K.nome, '');
   marcar('unidade'); ajustaSituacao(); mostraHist(); mostraFila(); atualiza();
   fetch('../pedidos/config.json?v=' + Date.now(), { cache: 'no-store' })
     .then((r) => r.json()).then((c) => { CONFIG = c; if (c && c.limpar_hist && LS.get('es-limpo', '') !== c.limpar_hist) { const lim = new Date(c.limpar_hist).getTime(); LS.set(K.hist, LS.get(K.hist, []).filter(h => new Date(h.quando).getTime() >= lim)); LS.set('es-limpo', c.limpar_hist); mostraHist(); } }).catch(() => { CONFIG = null; })
-    .finally(() => { $('aviso-config').hidden = configOk(); atualiza(); esvaziaFila(); buscaStatus(); });
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) buscaStatus(); });
+    .finally(() => { $('aviso-config').hidden = configOk(); atualiza(); esvaziaFila(); buscaStatus(); buscaPedidos(); });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) { buscaStatus(); buscaPedidos(); } });
 })();
 </script>
 </body>

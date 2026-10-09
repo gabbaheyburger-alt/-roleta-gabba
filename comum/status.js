@@ -48,11 +48,21 @@
     if (!r.ok) throw new Error('status ' + r.status);
     return parseCSV(await r.text()).slice(1).filter((l) => l[0] && !isNaN(hora(l[0])))
       .map((l) => ({ ms: hora(l[0]), tipo: String(l[1] || '').trim(), loja: String(l[2] || '').trim(), item: String(l[3] || '').trim(),
-        status: norm(l[4]), quantidade: String(l[5] || '').trim(), urgencia: String(l[6] || '').trim() }));
+        status: norm(l[4]), quantidade: String(l[5] || '').trim(), urgencia: String(l[6] || '').trim(),
+        ref: 'R' + String(l[0]).replace(/\D/g, ''), enviado: hora(l[7] || ''), semEstoque: norm(l[8]) === 'sim', confirmacao: String(l[9] || '').trim() }));
   };
   // Diz se um pedido guardado neste celular já está na planilha (mesmo tipo, loja e item, até 5 min de diferença)
   window.gabbaJaNaPlanilha = function (linhas, p) {
     const t = new Date(p.quando).getTime();
     return linhas.some((l) => norm(l.tipo) === norm(p.tipo) && norm(l.loja) === norm(p.loja) && norm(l.item) === norm(p.item) && Math.abs(l.ms - t) <= 5 * 60 * 1000);
+  };
+  // Chave única de um pedido (usada pelos toques Enviei / Recebi)
+  window.gabbaChave = (l) => l.ref + '|' + l.loja + '|' + l.item;
+  // Grava um toque (Enviei, Sem estoque, Recebi, Não chegou) no formulário "Entregas"
+  window.gabbaEvento = async function (cfg, ev) {
+    if (!cfg || !cfg.form || !cfg.campos) throw new Error('sem config');
+    const body = new URLSearchParams();
+    for (const k of ['ref', 'loja', 'item', 'evento', 'nome']) { const id = cfg.campos[k]; if (id) body.append(id, ev[k] || ''); }
+    await fetch(cfg.form, { method: 'POST', mode: 'no-cors', body });
   };
 })();

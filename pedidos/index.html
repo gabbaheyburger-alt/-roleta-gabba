@@ -107,8 +107,21 @@ input::placeholder, textarea::placeholder { color: #a39f95; font-weight: 400; }
 .selo { font-size: .72rem; font-weight: 700; letter-spacing: .04em; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
 .selo.pendente { background: #fbf0d4; color: #6b4e00; }
 .selo.resolvido { background: #dcefe0; color: #1f5c32; }
+.selo.semest { background: #fde8e8; color: #8a1c1c; }
 .selo.enviado { background: #eceae4; color: #55524a; }
 .hist .tipo { display: block; margin-top: 2px; font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.nomes { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.nomes:empty { display: none; }
+.nomes button { border: 1px solid var(--line-2); background: #fff; color: var(--ink); border-radius: 10px; padding: 10px 16px; font: 600 .95rem var(--font); cursor: pointer; }
+.nomes button[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
+.hist li { flex-wrap: wrap; }
+.entrega { flex-basis: 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: .82rem; color: var(--muted); }
+.entrega b { color: var(--ink); font-weight: 600; }
+.entrega:has(button) > span:first-child { flex-basis: 100%; }
+.entrega .ok { color: #1f5c32; font-weight: 700; }
+.entrega .nao { color: #8a1c1c; font-weight: 700; }
+.entrega button { border: 1px solid var(--line-2); background: #fff; border-radius: 8px; padding: 8px 12px; font: 700 .85rem var(--font); cursor: pointer; }
+.entrega button.rec { background: #1f5c32; border-color: #1f5c32; color: #fff; }
 .hist-filtro { display: flex; flex-wrap: wrap; gap: 6px; padding: 2px 16px 10px; }
 .hist-filtro button { border: 1px solid var(--line-2); background: #fff; color: var(--ink-2); border-radius: 999px; padding: 7px 12px; font: 600 .85rem var(--font); cursor: pointer; }
 .hist-filtro button[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
@@ -120,7 +133,7 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
 </head>
 <body>
 <script src="../contador.js"></script>
-<script src="../comum/status.js?v=5"></script>
+<script src="../comum/status.js?v=6"></script>
 
 <header class="topbar">
   <div class="in">
@@ -229,7 +242,8 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
 
       <div class="field">
         <label class="label" for="nome"><span class="n">08</span>Solicitante</label>
-        <input type="text" id="nome" maxlength="40" autocomplete="given-name" placeholder="Seu nome">
+        <div class="nomes" id="nomes"></div>
+        <input type="text" id="nome" maxlength="40" autocomplete="given-name" placeholder="Ou escreva outro nome">
       </div>
     </div>
 
@@ -280,7 +294,18 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
   const ehProd = () => estado.tipo === 'Producao';
   const modo = () => ehMat() ? 'material' : ehProd() ? 'producao' : 'insumo';
   // Produção só existe no Gabba
+  const EQUIPE = { Gabba: ['Natália', 'Paulo'], Uau: ['Tuany', 'Uly'], Feijuca: ['Inara'] };
+  function mostraNomes() {
+    const atual = $('nome').value.trim();
+    $('nomes').replaceChildren(...(EQUIPE[estado.loja] || []).map(n => {
+      const b = document.createElement('button'); b.type = 'button'; b.textContent = n;
+      b.setAttribute('aria-pressed', String(n === atual));
+      b.onclick = () => { $('nome').value = n; mostraNomes(); validar(); };
+      return b;
+    }));
+  }
   function aplicaLoja() {
+    mostraNomes();
     const temProd = estado.loja === 'Gabba';
     $('btn-producao').hidden = !temProd;
     $('seg-tipo').classList.toggle('dois', !temProd);
@@ -326,6 +351,7 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
   $('mais').onclick = () => { qtd.value = Math.max(0, (parseFloat(qtd.value) || 0) + 1); validar(); };
   $('menos').onclick = () => { qtd.value = Math.max(1, (parseFloat(qtd.value) || 0) - 1); validar(); };
   ['item', 'qtd', 'nome', 'motivo-txt'].forEach(id => $(id).addEventListener('input', validar));
+  $('nome').addEventListener('input', () => mostraNomes());
 
   const configOk = () => !!(CONFIG && CONFIG.form && CONFIG.campos && CONFIG.campos.item);
   function faltando() {
@@ -459,6 +485,30 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
     catch (e) { statusErro = String(e && e.message || e); console.warn('status', statusErro); }
     mostrarHist();
   }
+  // Entrega do estoque (só pedidos de insumo do Gabba e da Uau!): mostra Enviei do estoque e os botões Recebi / Não chegou
+  const CONF = 'pc-conf';
+  function entregaDe(l) {
+    if (l.tipo !== 'Insumo' || (l.loja !== 'Gabba' && l.loja !== 'Uau')) return null;
+    const ch = window.gabbaChave(l), loc = LS.get(CONF, {})[ch];
+    if (!l.enviado && !l.semEstoque) return null;
+    const d = document.createElement('div'); d.className = 'entrega';
+    if (l.semEstoque && !l.enviado) { d.innerHTML = 'Estoque: <b>sem estoque</b>'; return d; }
+    const he = new Date(l.enviado);
+    const t = document.createElement('span'); t.innerHTML = 'Estoque enviou às <b>' + hora(he) + '</b>'; d.append(t);
+    const conf = l.confirmacao || (loc && loc.evento) || '';
+    if (conf) { const c = document.createElement('span'); c.className = conf === 'Recebi' ? 'ok' : 'nao'; c.textContent = conf === 'Recebi' ? '✓ Recebido' : 'Não chegou'; d.append(c); return d; }
+    if (!lojaDoLink() || !(CONFIG && CONFIG.entregas && CONFIG.entregas.form)) return d;
+    const mk = (txt, ev, cls) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = txt; if (cls) b.className = cls;
+      b.onclick = async () => {
+        b.disabled = true;
+        const nome = $('nome').value.trim() || LS.get(K.nome, '') || nomeLoja(l.loja);
+        try { await window.gabbaEvento(CONFIG.entregas, { ref: l.ref, loja: l.loja, item: l.item, evento: ev, nome }); const m = LS.get(CONF, {}); m[ch] = { evento: ev, ms: Date.now() }; LS.set(CONF, m); }
+        catch (e) { b.disabled = false; b.textContent = 'Sem internet · toque de novo'; return; }
+        mostrarHist();
+      }; return b; };
+    d.append(mk('Recebi', 'Recebi', 'rec'), mk('Não chegou', 'Não chegou'));
+    return d;
+  }
   const tipoTxt = t => t === 'Material' ? 'material' : t === 'Producao' ? 'produção' : '';
   const descr = (tipo, qtd, urg) => (tipo === 'Material' || tipo === 'Producao') ? String(qtd).toLowerCase() : (urg === 'Acabou' ? 'acabou' : String(qtd).toLowerCase());
   const lojaDoLink = () => ({ gabba: 'Gabba', uau: 'Uau', feijuca: 'Feijuca' })[(new URLSearchParams(location.search).get('loja') || '').toLowerCase()];
@@ -472,7 +522,7 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
     const local = LS.get(K.hist, []).filter(h => daLoja(h.loja) && new Date(h.quando).getTime() >= lim);
     const lista = [];
     if (LINHAS) {
-      LINHAS.filter(l => daLoja(l.loja) && l.ms >= lim).forEach(l => lista.push({ ms: l.ms, item: l.item, tipo: l.tipo, loja: l.loja, txt: descr(l.tipo, l.quantidade, l.urgencia), selo: l.status }));
+      LINHAS.filter(l => daLoja(l.loja) && l.ms >= lim).forEach(l => lista.push({ ms: l.ms, item: l.item, tipo: l.tipo, loja: l.loja, txt: descr(l.tipo, l.quantidade, l.urgencia), selo: ((l.confirmacao || ((LS.get(CONF, {})[window.gabbaChave(l)] || {}).evento)) === 'Recebi' ? 'resolvido' : l.status), linha: l }));
       local.filter(h => !window.gabbaJaNaPlanilha(LINHAS, { tipo: h.tipo === 'Material' || h.tipo === 'Producao' ? h.tipo : 'Insumo', loja: h.loja, item: h.item, quando: h.quando }))
         .forEach(h => lista.push({ ms: new Date(h.quando).getTime(), item: h.item, tipo: h.tipo, loja: h.loja, txt: descr(h.tipo, h.quantidade, h.urgencia), aviso: h.pendente ? 'Aguardando internet' : 'Enviado' }));
     } else {
@@ -491,9 +541,11 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
       const b = document.createElement('span'); const dq = new Date(h.ms);
       b.textContent = (diaDe(dq) === diaDe(new Date()) ? '' : pad(dq.getDate()) + '/' + pad(dq.getMonth() + 1) + ' ') + hora(dq);
       dir.append(b);
-      if (h.selo) { const sel = document.createElement('span'); sel.className = 'selo ' + h.selo; sel.textContent = h.selo === 'resolvido' ? '✓ Resolvido' : 'Pendente'; dir.append(sel); }
+      if (h.selo) { const sel = document.createElement('span'); const SEL = { resolvido: ['resolvido', '✓ Resolvido'], 'sem estoque': ['semest', 'Sem estoque'], 'comprar fora': ['pendente', 'Comprando'] }; const v = SEL[h.selo] || ['pendente', 'Pendente']; sel.className = 'selo ' + v[0]; sel.textContent = v[1]; dir.append(sel); }
       else if (h.aviso) { const sel = document.createElement('span'); sel.className = 'selo enviado'; sel.textContent = h.aviso; dir.append(sel); }
-      li.append(a, dir); return li;
+      li.append(a, dir);
+      if (h.linha) { const e = entregaDe(h.linha); if (e) li.append(e); }
+      return li;
     }));
     const nota = $('hist-nota');
     nota.hidden = false;
