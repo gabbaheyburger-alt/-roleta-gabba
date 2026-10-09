@@ -1,0 +1,28 @@
+{
+  "titulos": {
+    "especiais": "Especiais do mês",
+    "antes": ["Pra hoje à noite", "No happy hour"],
+    "happy": ["Do bar", "Pra acompanhar"],
+    "noite": ["Mais pedidos", "Pra beber"],
+    "fechado": ["Pra próxima", "Do bar"]
+  },
+  "especiais": [
+    { "selo": "🔥 Burger do mês", "nome": "PORK BURGER", "desc": "Nosso burger suíno", "preco": "", "foto": "../bio2/img/pork-burger.jpg", "video": "", "oculto": false },
+    { "selo": "Opção light", "nome": "NO BREAD", "desc": "Sem pão", "preco": "", "foto": "../bio2/vid/nobread.jpg", "video": "../bio2/vid/nobread.mp4", "oculto": false },
+    { "selo": "Harmonização", "nome": "BURGER + TURATTI IPA", "desc": "", "preco": "", "foto": "../bio2/img/harmonizacao.jpg", "video": "", "oculto": false }
+  ],
+  "comida": [
+    { "nome": "Smash Axl Rose", "desc": "Smash burger", "preco": "", "foto": "../bio2/img/axl-rose.jpg", "oculto": false },
+    { "nome": "Smoked Ribs", "desc": "Costela suína defumada, coleslaw e fritas", "preco": "", "foto": "../bio2/img/ribs.jpg", "oculto": false },
+    { "nome": "Coxinhas", "desc": "Com molho da casa", "preco": "", "foto": "../bio2/img/coxinhas.jpg", "oculto": false },
+    { "nome": "Onion rings", "desc": "Com barbecue", "preco": "", "foto": "../bio2/img/onion-rings.jpg", "oculto": false },
+    { "nome": "Pasteizinhos", "desc": "Com molho da casa", "preco": "", "foto": "../bio2/img/pasteizinhos.jpg", "oculto": false },
+    { "nome": "Pudim", "desc": "Sobremesa", "preco": "", "foto": "../bio2/img/pudim.jpg", "nome2": "Brownie", "desc2": "Sobremesa · com sorvete", "preco2": "", "foto2": "../bio2/img/brownie.jpg", "oculto": false }
+  ],
+  "drinks": [
+    { "nome": "Caipirinha", "desc": "", "preco": "", "foto": "../bio2/img/caipirinha.jpg", "oculto": false },
+    { "nome": "Drink da casa", "desc": "", "preco": "", "foto": "../bio2/img/drink-laranja.jpg", "oculto": false },
+    { "nome": "Drink PQP Jabuticaba", "desc": "Com energético PQP", "preco": "", "foto": "../bio2/img/pqp-jabuticaba.jpg", "oculto": false },
+    { "nome": "Drink PQP Maçã Verde", "desc": "Com energético PQP", "preco": "", "foto": "../bio2/img/pqp-maca-verde.jpg", "oculto": false }
+  ]
+}

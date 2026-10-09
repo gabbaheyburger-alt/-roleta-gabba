@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Adm · Vitrine da bio</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#120d0c">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Barlow:wght@400;600;700;800&display=swap">
+<style>
+/* Adm da Vitrine (bio3): abas Especiais / Comida / Drinks / Títulos; cada item é um cartão com foto (trocar pela galeria),
+   textos, foto alternada opcional, esconder, subir/descer e apagar. Salvar grava bio3/vitrine.json pela API do GitHub. */
+:root {
+  --bg: #120d0c; --surface: #1f1816; --surface-2: #2a201d; --line: #3b2e29;
+  --fg: #f6ece2; --muted: #b5a397; --red: #e8102e; --red-deep: #9c0b1f;
+  --mustard: #f2b632; --ok: #6fbf73; --bad: #ff8a80;
+  --display: 'Bungee', Impact, 'Arial Black', sans-serif;
+  --body: 'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { background: var(--bg); color: var(--fg); }
+body { margin: 0; padding-top: env(safe-area-inset-top, 0px); font-family: var(--body); font-size: 16px; line-height: 1.45; }
+[hidden] { display: none !important; }
+.wrap { max-width: 560px; margin: 0 auto; padding: 22px 16px 130px; display: flex; flex-direction: column; gap: 16px; }
+header .tag { font-size: .72rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--mustard); }
+h1 { font-family: var(--display); font-weight: 400; font-size: clamp(1.6rem, 8vw, 2rem); line-height: 1; margin: 4px 0 0; }
+h1 span { color: var(--red); }
+h2 { font-family: var(--display); font-weight: 400; font-size: 1rem; margin: 0; }
+.note { margin: 0; color: var(--muted); font-size: .88rem; font-weight: 600; }
+.abas { position: sticky; top: 0; z-index: 5; background: var(--bg); padding: 8px 0; display: flex; gap: 6px; overflow-x: auto; }
+.abas button { flex: 1 0 auto; background: var(--surface-2); border: 1px solid var(--line); color: var(--fg); border-radius: 999px; padding: 9px 14px; font: 700 .92rem var(--body); cursor: pointer; }
+.abas button[aria-selected="true"] { background: var(--red); border-color: var(--red); color: #fff4e6; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+.card.oculto { opacity: .55; }
+.item-top { display: grid; grid-template-columns: 96px 1fr; gap: 12px; align-items: start; }
+.foto { position: relative; width: 96px; aspect-ratio: 4 / 5; border-radius: 12px; overflow: hidden; background: var(--bg); border: 1px dashed var(--line); cursor: pointer; }
+.foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.foto span { position: absolute; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.65); color: #fff; font: 700 .72rem var(--body); text-align: center; padding: 4px 2px; }
+.foto.vazia { display: flex; align-items: center; justify-content: center; color: var(--muted); font: 700 .8rem var(--body); text-align: center; padding: 6px; }
+.campos { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+label { display: flex; flex-direction: column; gap: 4px; font-weight: 700; font-size: .85rem; color: var(--muted); }
+input[type=text], input[type=password], select { font: 600 1rem var(--body); color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 10px; width: 100%; min-width: 0; }
+input:focus-visible, button:focus-visible, select:focus-visible, a:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
+.dois { display: grid; grid-template-columns: 1fr; gap: 8px; }
+.acoes { display: flex; gap: 6px; flex-wrap: wrap; }
+.mini { background: transparent; border: 1px solid var(--line); color: var(--fg); border-radius: 10px; padding: 8px 11px; font: 700 .85rem var(--body); cursor: pointer; }
+.mini.perigo { color: var(--bad); }
+.alt { border-top: 1px dashed var(--line); padding-top: 12px; }
+.alt h3 { margin: 0 0 8px; font: 800 .8rem var(--body); letter-spacing: .1em; text-transform: uppercase; color: var(--mustard); }
+.add { background: var(--surface-2); border: 1px dashed var(--muted); color: var(--fg); border-radius: 14px; padding: 14px; font: 800 1rem var(--body); cursor: pointer; }
+.btn { font-family: var(--display); font-size: 1.1rem; letter-spacing: .03em; background: var(--red); color: #fff4e6; border: none; border-radius: 14px; padding: 14px 18px; cursor: pointer; box-shadow: 0 5px 0 var(--red-deep); width: 100%; }
+.btn:active { transform: translateY(4px); box-shadow: none; }
+.btn:disabled { opacity: .5; }
+.ghost { background: transparent; border: 1px solid var(--line); color: var(--muted); border-radius: 10px; padding: 9px 12px; font: 700 .88rem var(--body); cursor: pointer; text-decoration: none; text-align: center; flex: 1; }
+.row { display: flex; gap: 8px; }
+.barra { position: fixed; left: 0; right: 0; bottom: 0; z-index: 9; background: rgba(18,13,12,.96); border-top: 1px solid var(--line); padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px)); }
+.barra > div { max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; gap: 6px; }
+.msg { margin: 0; font-weight: 700; min-height: 1.3em; text-align: center; font-size: .9rem; }
+.msg.ok { color: var(--ok); } .msg.err { color: var(--bad); }
+.steps { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; color: var(--muted); }
+.steps b { color: var(--fg); }
+.tit-grupo { display: flex; flex-direction: column; gap: 8px; }
+.tit-grupo b { font-size: .95rem; }
+.sujo::after { content: ' •'; color: var(--mustard); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="tag">Área do dono</div>
+    <h1>Vitrine da <span>bio</span></h1>
+  </header>
+
+  <div id="app" hidden>
+    <p class="note" id="current">Carregando a vitrine…</p>
+    <nav class="abas" role="tablist" aria-label="Partes da vitrine">
+      <button type="button" role="tab" data-aba="especiais" aria-selected="true">Especiais</button>
+      <button type="button" role="tab" data-aba="comida" aria-selected="false">Comida</button>
+      <button type="button" role="tab" data-aba="drinks" aria-selected="false">Drinks</button>
+      <button type="button" role="tab" data-aba="titulos" aria-selected="false">Títulos</button>
+    </nav>
+    <p class="note" id="dica"></p>
+    <div id="lista" style="display:flex;flex-direction:column;gap:12px"></div>
+    <div class="row" style="margin-top:16px">
+      <a class="ghost" href="../" target="_blank" rel="noopener">Abrir a bio</a>
+      <a class="ghost" href="../../bio/adm/" target="_blank" rel="noopener">Horários e aviso</a>
+    </div>
+  </div>
+
+  <section class="card" id="setup" hidden>
+    <h2>Conectar este celular</h2>
+    <p class="note">É a <b>mesma chave do GitHub</b> do Desafio e do adm da bio. Se este celular já está conectado lá, esta tela nem aparece.</p>
+    <ol class="steps">
+      <li>Abra <b>github.com/settings/personal-access-tokens/new</b>.</li>
+      <li>Nome: <b>adm gabba</b>. Expiration: <b>366 days</b> ou <b>No expiration</b>.</li>
+      <li>Repository access: <b>Only select repositories</b> → <b>-roleta-gabba</b>.</li>
+      <li>Permissions → Repository permissions → <b>Contents: Read and write</b>.</li>
+      <li><b>Generate token</b>, copie (começa com <b>github_pat_</b>) e cole aqui.</li>
+    </ol>
+    <label for="token">Chave do GitHub <input type="password" id="token" autocomplete="off" placeholder="github_pat_…"></label>
+    <button class="btn" id="conectar" type="button">CONECTAR</button>
+    <p class="msg" id="msg-setup" aria-live="polite"></p>
+  </section>
+</div>
+
+<div class="barra" id="barra" hidden><div>
+  <button class="btn" id="salvar" type="button">SALVAR VITRINE</button>
+  <p class="msg" id="msg" aria-live="polite"></p>
+</div></div>
+<input type="file" id="arquivo" accept="image/*" hidden>
+
+<script>
+(function () {
+  const OWNER = 'gabbaheyburger-alt', REPO = '-roleta-gabba', BRANCH = 'main';
+  const API = 'https://api.github.com/repos/' + OWNER + '/' + REPO + '/contents/';
+  const ARQ = 'bio3/vitrine.json';
+  const KEY = 'gabba-adm-token';
+  const $ = id => document.getElementById(id);
+  const VIDEOS = [['', 'Sem vídeo (só foto)'], ['../bio2/vid/nobread.mp4', 'No Bread'], ['../bio2/vid/ribs.mp4', 'Smoked Ribs'], ['../bio2/vid/axl-rose.mp4', 'Smash Axl Rose'], ['../bio2/vid/cordel.mp4', 'Fritas Cordel'], ['../bio2/vid/brownie.mp4', 'Brownie'], ['../bio2/vid/pasteis.mp4', 'Pastéis'], ['../bio2/vid/cozinha.mp4', 'Cozinha']];
+  const MOM = [['antes', 'Antes de abrir (Pra hoje)'], ['happy', 'Happy hour'], ['noite', 'Noite'], ['fechado', 'Fechado']];
+  const DICAS = {
+    especiais: 'O primeiro visível vira o card grande (Burger do mês, com botão Pedir agora). Os outros aparecem em dupla embaixo.',
+    comida: 'Carrossel de comida. A "foto alternada" faz o card trocar sozinho a cada 4 segundos (ex.: pudim ↔ brownie).',
+    drinks: 'Carrossel de drinks. Fica primeiro no happy hour.',
+    titulos: 'Nome das seções. Cada horário tem dois carrosséis: o de cima e o de baixo.'
+  };
+
+  let token = null, sha = null, V = null, aba = 'especiais', sujo = false;
+  const previas = {}; // foto enviada agora → imagem local, até o site atualizar
+  try { token = localStorage.getItem(KEY); } catch (e) {}
+
+  const b64enc = s => btoa(unescape(encodeURIComponent(s)));
+  const b64dec = s => decodeURIComponent(escape(atob(s.replace(/\n/g, ''))));
+  const headers = () => ({ 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' });
+  const msg = (el, t, k) => { el.textContent = t; el.className = 'msg' + (k ? ' ' + k : ''); };
+  const src = p => previas[p] || (!p ? '' : /^(https?:|data:)/.test(p) ? p : '../' + p);
+  const marca = () => { sujo = true; $('salvar').classList.add('sujo'); msg($('msg'), 'Alterações ainda não salvas.'); };
+  const el = (tag, props, kids) => { const e = document.createElement(tag); Object.assign(e, props || {}); (kids || []).forEach(k => e.append(k)); return e; };
+
+  function campo(rot, obj, chave, ph) {
+    const i = el('input', { type: 'text', value: obj[chave] || '', placeholder: ph || '' });
+    i.addEventListener('input', () => { obj[chave] = i.value; marca(); });
+    return el('label', {}, [rot, i]);
+  }
+
+  function fotoBox(obj, chave, rotulo) {
+    const box = el('div', { className: 'foto' + (obj[chave] ? '' : ' vazia'), tabIndex: 0, role: 'button', ariaLabel: rotulo });
+    if (obj[chave]) { box.append(el('img', { src: src(obj[chave]), alt: '' }), el('span', { textContent: 'Trocar foto' })); }
+    else box.textContent = '+ Foto';
+    const abre = () => escolheFoto(obj, chave);
+    box.addEventListener('click', abre);
+    box.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abre(); } });
+    return box;
+  }
+
+  // Foto da galeria → reduz para no máximo 900 px → envia para bio3/fotos/ → guarda o caminho no item
+  let alvo = null;
+  function escolheFoto(obj, chave) { alvo = { obj, chave }; $('arquivo').value = ''; $('arquivo').click(); }
+  $('arquivo').addEventListener('change', async () => {
+    const f = $('arquivo').files[0]; if (!f || !alvo) return;
+    msg($('msg'), 'Preparando a foto…');
+    try {
+      const url = URL.createObjectURL(f);
+      const img = await new Promise((ok, erro) => { const i = new Image(); i.onload = () => ok(i); i.onerror = erro; i.src = url; });
+      const MAX = 900, esc = Math.min(1, MAX / img.naturalWidth);
+      const c = document.createElement('canvas'); c.width = Math.round(img.naturalWidth * esc); c.height = Math.round(img.naturalHeight * esc);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      const dataUrl = c.toDataURL('image/jpeg', 0.82);
+      URL.revokeObjectURL(url);
+      const nome = 'fotos/' + Date.now() + '.jpg';
+      msg($('msg'), 'Enviando a foto…');
+      const r = await fetch(API + 'bio3/' + nome, { method: 'PUT', headers: Object.assign({ 'Content-Type': 'application/json' }, headers()), body: JSON.stringify({ message: 'Vitrine: foto nova', content: dataUrl.split(',')[1], branch: BRANCH }) });
+      if (r.status === 401 || r.status === 403) { sair('A chave não tem permissão para salvar. Crie uma nova com "Contents: Read and write".'); return; }
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      previas[nome] = dataUrl;
+      alvo.obj[alvo.chave] = nome; alvo = null;
+      desenha(); marca();
+      msg($('msg'), 'Foto enviada. Toque em SALVAR VITRINE para publicar.', 'ok');
+    } catch (e) { msg($('msg'), 'Não consegui enviar a foto. Verifique a internet e tente de novo.', 'err'); }
+  });
+
+  function cartao(lista, i, tipo) {
+    const it = lista[i];
+    const c = el('div', { className: 'card' + (it.oculto ? ' oculto' : '') });
+    const campos = el('div', { className: 'campos' });
+    if (tipo === 'especiais') campos.append(campo('Selo', it, 'selo', 'Ex.: 🔥 Burger do mês'));
+    campos.append(campo('Nome', it, 'nome'));
+    campos.append(el('div', { className: 'dois' }, [campo('Descrição', it, 'desc'), campo('Preço', it, 'preco', 'Ex.: R$ 39,90')]));
+    if (tipo === 'especiais') {
+      const s = el('select');
+      VIDEOS.forEach(([v, t]) => s.append(el('option', { value: v, textContent: t, selected: (it.video || '') === v })));
+      s.addEventListener('change', () => { it.video = s.value; if (s.value && !it.foto) it.foto = s.value.replace('.mp4', '.jpg'); marca(); desenha(); });
+      campos.append(el('label', {}, ['Vídeo (no lugar da foto, menos no card grande)', s]));
+    }
+    c.append(el('div', { className: 'item-top' }, [fotoBox(it, 'foto', 'Trocar foto de ' + (it.nome || 'item')), campos]));
+
+    if (tipo !== 'especiais') {
+      const alt = el('div', { className: 'alt' });
+      if (it.foto2 !== undefined && it.foto2 !== null) {
+        const c2 = el('div', { className: 'campos' }, [campo('Nome', it, 'nome2'), el('div', { className: 'dois' }, [campo('Descrição', it, 'desc2'), campo('Preço', it, 'preco2')])]);
+        alt.append(el('h3', { textContent: 'Foto alternada (troca a cada 4 s)' }), el('div', { className: 'item-top' }, [fotoBox(it, 'foto2', 'Foto alternada'), c2]));
+        const tira = el('button', { type: 'button', className: 'mini perigo', textContent: 'Tirar foto alternada' });
+        tira.addEventListener('click', () => { delete it.foto2; delete it.nome2; delete it.desc2; delete it.preco2; marca(); desenha(); });
+        alt.append(el('div', { className: 'acoes', style: 'margin-top:8px' }, [tira]));
+      } else {
+        const add = el('button', { type: 'button', className: 'mini', textContent: '+ Foto alternada' });
+        add.addEventListener('click', () => { it.foto2 = ''; it.nome2 = ''; it.desc2 = ''; it.preco2 = ''; marca(); desenha(); });
+        alt.append(add);
+      }
+      c.append(alt);
+    }
+
+    const bt = (t, f, cls) => { const b = el('button', { type: 'button', className: 'mini' + (cls ? ' ' + cls : ''), textContent: t }); b.addEventListener('click', f); return b; };
+    c.append(el('div', { className: 'acoes' }, [
+      bt('↑', () => { if (i > 0) { [lista[i - 1], lista[i]] = [lista[i], lista[i - 1]]; marca(); desenha(); } }),
+      bt('↓', () => { if (i < lista.length - 1) { [lista[i + 1], lista[i]] = [lista[i], lista[i + 1]]; marca(); desenha(); } }),
+      bt(it.oculto ? 'Mostrar' : 'Esconder', () => { it.oculto = !it.oculto; marca(); desenha(); }),
+      bt('Apagar', () => { if (confirmaApagar(it)) { lista.splice(i, 1); marca(); desenha(); } }, 'perigo')
+    ]));
+    return c;
+  }
+  // Apagar pede um segundo toque (sem janela do navegador)
+  let apagarPendente = null;
+  function confirmaApagar(it) {
+    if (apagarPendente === it) { apagarPendente = null; return true; }
+    apagarPendente = it; msg($('msg'), 'Toque em Apagar de novo para confirmar.', 'err');
+    setTimeout(() => { if (apagarPendente === it) apagarPendente = null; }, 4000);
+    return false;
+  }
+
+  function desenha() {
+    document.querySelectorAll('.abas button').forEach(b => b.setAttribute('aria-selected', b.dataset.aba === aba));
+    $('dica').textContent = DICAS[aba];
+    const box = $('lista'); box.innerHTML = '';
+    if (aba === 'titulos') {
+      V.titulos = V.titulos || {};
+      box.append(el('div', { className: 'card' }, [campo('Seção dos especiais', V.titulos, 'especiais', 'Especiais do mês')]));
+      MOM.forEach(([k, nome]) => {
+        const par = V.titulos[k] = V.titulos[k] || ['', ''];
+        const mk = (n, rot) => { const i = el('input', { type: 'text', value: par[n] || '' }); i.addEventListener('input', () => { par[n] = i.value; marca(); }); return el('label', {}, [rot, i]); };
+        box.append(el('div', { className: 'card tit-grupo' }, [el('b', { textContent: nome }), mk(0, 'Carrossel de cima'), mk(1, 'Carrossel de baixo')]));
+      });
+      return;
+    }
+    const lista = V[aba] = V[aba] || [];
+    lista.forEach((_, i) => box.append(cartao(lista, i, aba)));
+    const add = el('button', { type: 'button', className: 'add', textContent: '+ Adicionar ' + (aba === 'especiais' ? 'especial' : aba === 'drinks' ? 'drink' : 'prato') });
+    add.addEventListener('click', () => { lista.push(aba === 'especiais' ? { selo: '', nome: '', desc: '', preco: '', foto: '', video: '', oculto: false } : { nome: '', desc: '', preco: '', foto: '', oculto: false }); marca(); desenha(); escolheFoto(lista[lista.length - 1], 'foto'); });
+    box.append(add);
+  }
+  document.querySelectorAll('.abas button').forEach(b => b.addEventListener('click', () => { aba = b.dataset.aba; desenha(); window.scrollTo(0, 0); }));
+
+  async function carregar() {
+    $('setup').hidden = true; $('app').hidden = false; $('barra').hidden = false;
+    try {
+      const r = await fetch(API + ARQ + '?ref=' + BRANCH + '&t=' + Date.now(), { headers: headers(), cache: 'no-store' });
+      if (r.status === 401 || r.status === 403) { sair('A chave não funcionou. Crie uma nova e conecte de novo.'); return; }
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const j = await r.json(); sha = j.sha; V = JSON.parse(b64dec(j.content));
+      $('current').textContent = 'Toque numa foto para trocar. Mude o que precisar e toque em Salvar.';
+      desenha();
+    } catch (e) { $('current').textContent = 'Não consegui carregar a vitrine. Verifique a internet e atualize a página.'; }
+  }
+
+  async function salvar() {
+    if (!V) return;
+    const semFoto = ['especiais', 'comida', 'drinks'].some(k => (V[k] || []).some(it => !it.oculto && !it.foto));
+    if (semFoto) { msg($('msg'), 'Tem item sem foto. Coloque a foto ou toque em Esconder.', 'err'); return; }
+    ['comida', 'drinks'].forEach(k => (V[k] || []).forEach(it => { if (it.foto2 === '') { delete it.foto2; delete it.nome2; delete it.desc2; delete it.preco2; } }));
+    $('salvar').disabled = true; msg($('msg'), 'Salvando…');
+    try {
+      const body = { message: 'Vitrine da bio atualizada pela área do dono', content: b64enc(JSON.stringify(V, null, 2) + '\n'), branch: BRANCH };
+      if (sha) body.sha = sha;
+      const put = () => fetch(API + ARQ, { method: 'PUT', headers: Object.assign({ 'Content-Type': 'application/json' }, headers()), body: JSON.stringify(body) });
+      let r = await put();
+      if (r.status === 409 || r.status === 422) { const g = await fetch(API + ARQ + '?ref=' + BRANCH + '&t=' + Date.now(), { headers: headers(), cache: 'no-store' }); if (g.ok) body.sha = (await g.json()).sha; r = await put(); }
+      if (r.status === 401 || r.status === 403) { sair('A chave não tem permissão para salvar.'); return; }
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      sha = (await r.json()).content.sha; sujo = false; $('salvar').classList.remove('sujo');
+      desenha();
+      msg($('msg'), 'Salvo! Em 1 a 2 minutos a bio já mostra a mudança.', 'ok');
+    } catch (e) { msg($('msg'), 'Não consegui salvar. Verifique a internet e tente de novo.', 'err'); }
+    finally { $('salvar').disabled = false; }
+  }
+
+  async function conectar() {
+    const t = $('token').value.trim();
+    if (!/^(github_pat_|ghp_)/.test(t)) { msg($('msg-setup'), 'Essa não parece uma chave do GitHub. Ela começa com github_pat_.', 'err'); return; }
+    token = t; $('conectar').disabled = true; msg($('msg-setup'), 'Testando a chave…');
+    try {
+      const r = await fetch(API + ARQ + '?ref=' + BRANCH, { headers: headers() });
+      if (!r.ok) { token = null; msg($('msg-setup'), 'A chave não funcionou. Confira os passos e tente de novo.', 'err'); return; }
+      try { localStorage.setItem(KEY, t); } catch (e) {}
+      $('token').value = ''; carregar();
+    } catch (e) { token = null; msg($('msg-setup'), 'Sem conexão. Tente de novo.', 'err'); }
+    finally { $('conectar').disabled = false; }
+  }
+  function sair(motivo) {
+    token = null;
+    try { localStorage.removeItem(KEY); } catch (e) {}
+    $('app').hidden = true; $('barra').hidden = true; $('setup').hidden = false;
+    msg($('msg-setup'), motivo || '', motivo ? 'err' : '');
+  }
+  window.addEventListener('beforeunload', e => { if (sujo) { e.preventDefault(); e.returnValue = ''; } });
+  $('salvar').addEventListener('click', salvar);
+  $('conectar').addEventListener('click', conectar);
+  if (token) carregar(); else sair();
+})();
+</script>
+</body>
+</html>

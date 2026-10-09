@@ -115,3 +115,7 @@ Página `/bio/` para colocar no link da bio do Instagram, no lugar do bio.site. 
 ## Bio "O Gabba agora" (teste)
 
 `/bio3/` tem a seção **Especiais do mês** (Burger do mês, No Bread e Harmonização, editável direto no HTML) e a primeira tela inteira com vídeo ou foto, que muda conforme o horário: **antes de abrir** (cozinha se preparando, "Abrimos às 17h", botão Ver cardápio), **happy hour** (caipirinha, "Happy hour rolando", botão Como chegar, drinks primeiro), **noite** (Fritas Cordel, "A chapa tá quente", botão Pedir delivery, comida primeiro) e **fechado** (brownie, "Até amanhã!"). Usa as fotos e vídeos de `bio2/` e o mesmo `bio/config.json`. Para ver cada momento: `/bio3/?momento=antes`, `happy`, `noite` ou `fechado`. Eventos `bio3-*`, incluindo `bio3-momento-<momento>`.
+
+### Vitrine da bio3 (área do dono)
+
+`bio3/adm/` edita `bio3/vitrine.json`: os **Especiais do mês** (o primeiro vira o card grande), os carrosséis de **Comida** e **Drinks** (nome, descrição, preço, foto, foto alternada, esconder, ordem, apagar, adicionar) e os **títulos** das seções em cada horário. Fotos novas vêm da galeria do celular, são reduzidas para no máximo 900 px e enviadas para `bio3/fotos/`. Mesma chave do GitHub das outras áreas do dono. Vídeos continuam sendo preparados à parte (em `bio2/vid/`) e escolhidos numa lista.
