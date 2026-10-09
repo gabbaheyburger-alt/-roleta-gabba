@@ -113,7 +113,7 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--mustard); outli
 // Veio da bio? O "Voltar" leva para a bio. Promoção "poste e ganhe" ligada pela área do dono da bio (bio/config.json)
 (function () {
   try {
-    var m = document.referrer.match(/\/(bio2?)\//), alvo = m ? m[1] : sessionStorage.getItem('gabba-veio-bio');
+    var m = document.referrer.match(/\/(bio[23]?)\//), alvo = m ? m[1] : sessionStorage.getItem('gabba-veio-bio');
     if (alvo === '1') alvo = 'bio';
     if (alvo) { sessionStorage.setItem('gabba-veio-bio', alvo); var v = document.getElementById('voltar'); v.href = '../' + alvo + '/'; v.textContent = '‹ Voltar'; }
   } catch (e) {}

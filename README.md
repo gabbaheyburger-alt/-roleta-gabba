@@ -111,3 +111,7 @@ Página `/bio/` para colocar no link da bio do Instagram, no lugar do bio.site. 
 ## Bio realista (teste)
 
 `/bio2/` é uma versão da bio com fotos e vídeos reais da casa: capa com foto em tela cheia, destaques em vídeo (estilo stories), carrosséis "Da cozinha" e "Do bar", happy hour, Vire um Gabba, horários e mapa. Usa o mesmo `bio/config.json` (status, aviso, happy hour, Poste e ganhe e links), então o `bio/adm/` controla as duas. Fotos em `bio2/img/`, vídeos (H.264, 720p, sem som) em `bio2/vid/`. Nomes, descrições e preços ficam nas listas `COZINHA`, `BAR` e `VIDEOS` no fim de `bio2/index.html`; preço vazio não aparece. Cliques contam como `bio2-*` no GoatCounter.
+
+## Bio "O Gabba agora" (teste)
+
+`/bio3/` tem a primeira tela inteira com vídeo ou foto, que muda conforme o horário: **antes de abrir** (cozinha se preparando, "Abrimos às 17h", botão Ver cardápio), **happy hour** (caipirinha, "Happy hour rolando", botão Como chegar, drinks primeiro), **noite** (Fritas Cordel, "A chapa tá quente", botão Pedir delivery, comida primeiro) e **fechado** (brownie, "Até amanhã!"). Usa as fotos e vídeos de `bio2/` e o mesmo `bio/config.json`. Para ver cada momento: `/bio3/?momento=antes`, `happy`, `noite` ou `fechado`. Eventos `bio3-*`, incluindo `bio3-momento-<momento>`.

@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gabba Burger · Agora</title>
+<meta name="description" content="Gabba Burger, Paracuru-CE. Veja o que está rolando agora: happy hour, delivery, karaokê.">
+<meta name="theme-color" content="#0b0908">
+<meta property="og:title" content="Gabba Burger">
+<meta property="og:description" content="O que está rolando agora no Gabba.">
+<meta property="og:image" content="../bio2/img/costela.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap">
+<style>
+/* Bio "O Gabba agora": a primeira tela é um vídeo/foto em tela cheia que muda com o horário
+   (antes de abrir, happy hour, noite, fechado), com título, botões e a vitrine na ordem certa para aquele momento.
+   Mesmo config da bio (../bio/config.json). Prévia de cada momento: ?momento=antes|happy|noite|fechado */
+:root {
+  --bg: #0b0908; --surface: #161210; --line: #2c2420;
+  --cream: #f3ead9; --muted: #a8998a; --red: #d8122b; --red-deep: #8f0a1c; --ok: #4cd964;
+  --display: 'Bebas Neue', Impact, 'Arial Narrow', sans-serif;
+  --label: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  --body: 'Barlow', system-ui, -apple-system, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--cream); }
+body { font-family: var(--body); font-size: 16px; line-height: 1.4; -webkit-font-smoothing: antialiased; }
+[hidden] { display: none !important; }
+a { color: inherit; }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--cream); outline-offset: 3px; }
+.col { max-width: 520px; margin: 0 auto; }
+
+/* ---------- Tela 1 ---------- */
+.tela { position: relative; height: 100svh; min-height: 600px; overflow: hidden; display: flex; flex-direction: column; }
+.midia { position: absolute; inset: 0; z-index: 0; }
+.midia video, .midia img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.midia img.zoom { animation: zoom 20s ease-in-out infinite alternate; }
+@keyframes zoom { from { transform: scale(1); } to { transform: scale(1.1); } }
+.tela::after { content: ''; position: absolute; inset: 0; z-index: 0; background:
+  linear-gradient(180deg, rgba(11,9,8,.7) 0%, rgba(11,9,8,0) 20%, rgba(11,9,8,0) 42%, rgba(11,9,8,.8) 64%, rgba(11,9,8,.96) 84%, var(--bg) 100%); }
+.tela > :not(.midia) { position: relative; z-index: 1; }
+.topo { padding: max(16px, env(safe-area-inset-top)) 16px 0; display: flex; align-items: center; justify-content: space-between; max-width: 520px; width: 100%; align-self: center; }
+.topo img { width: 96px; height: auto; filter: drop-shadow(0 2px 8px rgba(0,0,0,.6)); }
+.status { display: inline-flex; align-items: center; gap: 7px; font: 600 .82rem var(--label); letter-spacing: .07em; text-transform: uppercase; background: rgba(11,9,8,.55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); border: 1px solid rgba(243,234,217,.18); padding: 6px 11px; border-radius: 999px; }
+.status .bola { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+.status.aberto .bola { background: var(--ok); animation: pulsa 1.8s infinite; }
+@keyframes pulsa { 0% { box-shadow: 0 0 0 0 rgba(76,217,100,.6); } 70%, 100% { box-shadow: 0 0 0 8px rgba(76,217,100,0); } }
+.base { margin-top: auto; padding: 0 16px 18px; width: 100%; max-width: 520px; align-self: center; }
+.momento { display: inline-block; font: 700 .78rem var(--label); letter-spacing: .16em; text-transform: uppercase; background: var(--cream); color: var(--bg); padding: 4px 10px; border-radius: 999px; }
+.momento.quente { background: var(--red); color: #fff; }
+h1 { font: 400 clamp(3.2rem, 16vw, 4.4rem)/.88 var(--display); margin: 12px 0 8px; letter-spacing: .01em; }
+.sub { margin: 0 0 16px; color: #ddd3c3; font-size: 1.05rem; max-width: 34ch; }
+.aviso { margin: 0 0 14px; border-left: 3px solid var(--red); background: rgba(11,9,8,.6); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); padding: 9px 13px; border-radius: 0 12px 12px 0; font-weight: 600; }
+.aviso small { display: block; font: 700 .7rem var(--label); letter-spacing: .16em; text-transform: uppercase; color: #ff8a96; }
+.botoes { display: grid; grid-template-columns: 1fr auto; gap: 10px; }
+.b1 { display: flex; align-items: center; justify-content: center; min-height: 56px; border-radius: 14px; background: var(--red); color: #fff; text-decoration: none; font: 400 1.55rem var(--display); letter-spacing: .04em; box-shadow: 0 10px 28px rgba(216,18,43,.35); padding: 0 14px; text-align: center; }
+.b1:active { background: var(--red-deep); }
+.b2 { min-width: 56px; height: 56px; border-radius: 14px; border: 1px solid rgba(243,234,217,.35); background: rgba(11,9,8,.45); display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0 14px; text-decoration: none; font: 600 1rem var(--label); letter-spacing: .04em; }
+.b2 svg { width: 24px; height: 24px; flex-shrink: 0; }
+.desce { display: block; margin: 14px auto 0; text-align: center; color: var(--muted); font: 600 .85rem var(--label); letter-spacing: .1em; text-transform: uppercase; text-decoration: none; }
+.desce i { display: block; font-style: normal; font-size: 1.2rem; animation: desce 1.6s ease-in-out infinite; }
+@keyframes desce { 50% { transform: translateY(4px); } }
+
+/* ---------- Abaixo ---------- */
+section { padding: 26px 0 0; }
+.titulo { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 0 16px 12px; }
+h2 { font: 400 1.9rem/1 var(--display); letter-spacing: .03em; margin: 0; }
+.titulo small { color: var(--muted); font: 600 .9rem var(--label); }
+.trilho { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 0 16px 6px; scroll-padding: 16px; scrollbar-width: none; }
+.trilho::-webkit-scrollbar { display: none; }
+.item { flex: 0 0 auto; width: min(64vw, 240px); scroll-snap-align: start; text-decoration: none; }
+.item .img { position: relative; display: block; aspect-ratio: 4 / 5; border-radius: 16px; overflow: hidden; background: var(--surface); }
+.item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.item .preco { position: absolute; right: 10px; bottom: 10px; background: rgba(11,9,8,.75); padding: 4px 10px; border-radius: 999px; font: 700 .95rem var(--label); }
+.item .nome { display: block; margin-top: 8px; font: 600 1.12rem/1.15 var(--label); }
+.item .desc { display: block; color: var(--muted); font-size: .88rem; }
+.lista { margin: 0 16px; display: grid; gap: 10px; }
+.card { display: flex; align-items: center; gap: 14px; padding: 13px 14px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); text-decoration: none; }
+.card .ic { width: 42px; height: 42px; border-radius: 12px; background: #221c19; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1.2rem; }
+.card b { display: block; font: 600 1.1rem var(--label); }
+.card span { color: var(--muted); font-size: .9rem; }
+.card .seta { margin-left: auto; font-size: 1.4rem; }
+.card.premio { border-color: var(--red); background: linear-gradient(135deg, #2a1214, var(--surface) 70%); }
+.card .tag { display: inline-block; font: 700 .7rem var(--label); letter-spacing: .14em; text-transform: uppercase; background: var(--red); color: #fff; padding: 2px 8px; border-radius: 999px; margin-bottom: 3px; }
+.horarios { margin: 0 16px; border-top: 1px solid var(--line); }
+.horarios div { display: flex; justify-content: space-between; gap: 12px; padding: 12px 2px; border-bottom: 1px solid var(--line); }
+.horarios span:first-child { color: var(--muted); }
+.horarios span:last-child { font-weight: 600; white-space: nowrap; }
+.horarios .hoje span { color: var(--cream); }
+.horarios .hoje span:first-child::after { content: ' · hoje'; color: #ff8a96; }
+footer { padding: 30px 16px calc(28px + env(safe-area-inset-bottom)); text-align: center; color: var(--muted); font-size: .9rem; }
+.previa { position: fixed; left: 50%; bottom: 10px; transform: translateX(-50%); z-index: 9; background: #ffd77a; color: #000; font: 700 .8rem var(--label); padding: 4px 10px; border-radius: 999px; }
+@media (prefers-reduced-motion: reduce) { .midia img.zoom, .status.aberto .bola, .desce i { animation: none; } }
+</style>
+</head>
+<body>
+
+<header class="tela" id="tela">
+  <div class="midia" id="midia"></div>
+  <div class="topo">
+    <img src="../bio/logo.png" alt="Gabba" width="720" height="461">
+    <div class="status" id="status"><span class="bola"></span><span id="status-txt">Gabba Burger</span></div>
+  </div>
+  <div class="base">
+    <span class="momento" id="m-rotulo">Gabba Burger</span>
+    <h1 id="m-titulo">Gabba Burger</h1>
+    <p class="sub" id="m-sub">Burger, defumados e drinks · Paracuru</p>
+    <div class="aviso" id="aviso" hidden><small>Hoje no Gabba</small><span id="aviso-txt"></span></div>
+    <div class="botoes">
+      <a class="b1" id="b1" href="https://gabbaburger.saipos.com">PEDIR DELIVERY</a>
+      <a class="b2" id="b2" href="https://wa.me/message/QXY4DJK6HWG6N1" aria-label="WhatsApp"></a>
+    </div>
+    <a class="desce" href="#mais">Ver mais<i>⌄</i></a>
+  </div>
+</header>
+
+<main id="mais">
+  <section>
+    <div class="titulo col"><h2 id="t1">Pra agora</h2><small>arraste ›</small></div>
+    <div class="trilho" id="r1"></div>
+  </section>
+  <section>
+    <div class="titulo col"><h2 id="t2">Também tem</h2><small>arraste ›</small></div>
+    <div class="trilho" id="r2"></div>
+  </section>
+  <section>
+    <div class="titulo col"><h2>No Gabba</h2></div>
+    <div class="lista col">
+      <a class="card" data-ev="bio3-jam" data-link="jam" href="https://drive.google.com/file/d/1su-nbrSu-AS9AikEyHxsbkgV3jZbYX84/view?usp=drivesdk"><span class="ic">🎸</span><span><b>Jam Session &amp; Happy hour</b><span id="happy-s">Segunda a sexta, 17h às 20h</span></span><span class="seta">›</span></a>
+      <a class="card" id="vire" data-ev="bio3-vire" href="../vire/"><span class="ic">📸</span><span><span class="tag" id="vire-tag" hidden>Poste e ganhe</span><b>Vire um Gabba</b><span id="vire-s">Filtro de câmera com o moicano do mascote</span></span><span class="seta">›</span></a>
+      <a class="card" data-ev="bio3-cardapio-loja" data-link="cardapio" href="https://drive.google.com/file/d/1euJpGexVkUlRfaj6BTdJ4an4jWUEet9E/view?usp=drivesdk"><span class="ic">📖</span><span><b>Cardápio da loja</b><span>Pra quem vem comer aqui</span></span><span class="seta">›</span></a>
+      <a class="card" data-ev="bio3-fliperama" href="../delivery/"><span class="ic">🎮</span><span><b>Fliperama Gabba</b><span>Jogos enquanto o lanche chega</span></span><span class="seta">›</span></a>
+    </div>
+  </section>
+  <section>
+    <div class="titulo col"><h2>Horários</h2></div>
+    <div class="horarios col" id="horarios"></div>
+    <div class="lista col" style="margin-top:14px">
+      <a class="card" data-ev="bio3-localizacao" data-link="mapa" href="https://maps.app.goo.gl/ck9mdvzTTk1EoMLC9"><span class="ic">📍</span><span><b>Como chegar</b><span>Abrir no mapa · Paracuru-CE</span></span><span class="seta">›</span></a>
+      <a class="card" data-ev="bio3-instagram" href="https://www.instagram.com/gabbaburger"><span class="ic">📷</span><span><b>@gabbaburger</b><span>Siga no Instagram</span></span><span class="seta">›</span></a>
+    </div>
+  </section>
+</main>
+<footer>Gabba Burger · Hamburgueria artesanal · Paracuru-CE</footer>
+
+<script src="../contador.js"></script>
+<script>
+/* ===== Vitrine (nomes e preços provisórios; preço vazio não aparece) ===== */
+var COMIDA = [
+  { img: 'costela-close', nome: 'Costela BBQ', desc: 'Com fritas e salada', preco: '' },
+  { img: 'coxinhas', nome: 'Coxinhas', desc: 'Com molho da casa', preco: '' },
+  { img: 'onion-rings', nome: 'Onion rings', desc: 'Com barbecue', preco: '' },
+  { img: 'pasteizinhos', nome: 'Pasteizinhos', desc: 'Com molho da casa', preco: '' },
+  { img: 'pudim', nome: 'Pudim', desc: 'Sobremesa', preco: '' }
+];
+var DRINKS = [
+  { img: 'caipirinha', nome: 'Caipirinha', desc: '', preco: '' },
+  { img: 'drink-laranja', nome: 'Drink da casa', desc: '', preco: '' },
+  { img: 'pqp-jabuticaba', nome: 'Drink PQP Jabuticaba', desc: 'Com energético PQP', preco: '' },
+  { img: 'pqp-maca-verde', nome: 'Drink PQP Maçã Verde', desc: 'Com energético PQP', preco: '' }
+];
+
+/* ===== Os 4 momentos do dia ===== */
+var ZAP = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3z"/></svg>';
+var PIN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></svg>';
+var MOMENTOS = {
+  antes: {
+    midia: { video: 'cozinha' }, rotulo: 'Preparando a chapa', quente: false,
+    titulo: function (x) { return 'Abrimos às ' + x.abre; }, sub: 'A cozinha já tá se preparando. Vai escolhendo o que vai pedir hoje.',
+    b1: { txt: 'VER CARDÁPIO', link: 'pedir', ev: 'bio3-antes-cardapio' }, b2: { html: PIN, link: 'mapa', ev: 'bio3-antes-mapa', label: 'Como chegar' },
+    t1: 'Pra hoje à noite', r1: 'comida', t2: 'No happy hour', r2: 'drinks'
+  },
+  happy: {
+    midia: { img: 'caipirinha' }, rotulo: 'Happy hour', quente: true,
+    titulo: function () { return 'Happy hour rolando'; }, sub: function (x) { return 'Drinks e Jam Session até as ' + x.happyFim + '. Chega mais!'; },
+    b1: { txt: 'COMO CHEGAR', link: 'mapa', ev: 'bio3-happy-mapa' }, b2: { html: ZAP, link: 'whatsapp', ev: 'bio3-happy-whatsapp', label: 'WhatsApp' },
+    t1: 'Do bar', r1: 'drinks', t2: 'Pra acompanhar', r2: 'comida'
+  },
+  noite: {
+    midia: { video: 'cordel' }, rotulo: 'Cozinha aberta', quente: true,
+    titulo: function () { return 'A chapa tá quente'; }, sub: function (x) { return 'Peça agora e receba em casa, ou vem pra cá. Aberto até ' + x.fecha + '.'; },
+    b1: { txt: 'PEDIR DELIVERY', link: 'pedir', ev: 'bio3-noite-pedir' }, b2: { html: ZAP, link: 'whatsapp', ev: 'bio3-noite-whatsapp', label: 'WhatsApp' },
+    t1: 'Mais pedidos', r1: 'comida', t2: 'Pra beber', r2: 'drinks'
+  },
+  fechado: {
+    midia: { video: 'brownie' }, rotulo: 'Fechado agora', quente: false,
+    titulo: function () { return 'Até amanhã!'; }, sub: function (x) { return x.proxima ? 'Abrimos ' + x.proxima + '. Já deixa salvo o que vai pedir.' : 'Já deixa salvo o que vai pedir.'; },
+    b1: { txt: 'VER CARDÁPIO', link: 'pedir', ev: 'bio3-fechado-cardapio' }, b2: { html: PIN, link: 'mapa', ev: 'bio3-fechado-mapa', label: 'Como chegar' },
+    t1: 'Pra próxima', r1: 'comida', t2: 'Do bar', r2: 'drinks'
+  }
+};
+
+(function () {
+  var C = {
+    horarios: { 0: ['17:00','23:30'], 1: ['17:00','22:30'], 2: ['17:00','22:30'], 3: ['17:00','22:30'], 4: ['17:00','22:30'], 5: ['17:00','23:30'], 6: ['17:00','23:30'] },
+    happy: { ativo: true, dias: [1,2,3,4,5], inicio: '17:00', fim: '20:00' },
+    fechadoEm: '', aviso: '', links: {}, promo: { ativo: false, premio: '' }
+  };
+  var LINKS = { pedir: 'https://gabbaburger.saipos.com', whatsapp: 'https://wa.me/message/QXY4DJK6HWG6N1', mapa: 'https://maps.app.goo.gl/ck9mdvzTTk1EoMLC9' };
+  var NOMES = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'], CURTO = ['dom','seg','ter','qua','qui','sex','sáb'];
+  var toMin = function (t) { var p = String(t || '').split(':'); return (+p[0]) * 60 + (+p[1] || 0); };
+  var hm = function (t) { var m = toMin(t), h = Math.floor(m / 60) % 24, r = m % 60; return h + 'h' + (r ? String(r).padStart(2, '0') : ''); };
+  var agora = function () { return new Date(Date.now() - 3 * 3600 * 1000); };
+  var hojeStr = function () { return agora().toISOString().slice(0, 10); };
+  var faixa = function (d) { var h = C.horarios[d]; return (h && h[0] && h[1]) ? h : null; };
+  var fim = function (h) { var a = toMin(h[0]), b = toMin(h[1]); return b <= a ? b + 1440 : b; };
+  var link = function (k) { var u = (C.links || {})[k]; return (u && /^https?:\/\//.test(u)) ? u : LINKS[k]; };
+  var previa = (location.search.match(/momento=(antes|happy|noite|fechado)/) || [])[1];
+  var atualMomento = null;
+
+  function diasTexto(lista) {
+    if (lista.length === 7) return 'Todos os dias';
+    var ord = [1,2,3,4,5,6,0].filter(function (d) { return lista.indexOf(d) >= 0; });
+    var seq = [1,2,3,4,5,6,0], i0 = seq.indexOf(ord[0]), cont = ord.every(function (d, i) { return seq[i0 + i] === d; });
+    if (ord.length === 1) return NOMES[ord[0]];
+    if (cont) return NOMES[ord[0]] + ' a ' + NOMES[ord[ord.length - 1]].toLowerCase();
+    return ord.map(function (d) { return CURTO[d]; }).join(', ');
+  }
+
+  function estado() {
+    var d = agora(), dia = d.getUTCDay(), min = d.getUTCHours() * 60 + d.getUTCMinutes();
+    var hOntem = faixa((dia + 6) % 7), h = faixa(dia);
+    var fechadoHoje = C.fechadoEm && C.fechadoEm === hojeStr();
+    var madrugada = hOntem && fim(hOntem) > 1440 && min < fim(hOntem) - 1440;
+    var aberto = !fechadoHoje && ((h && min >= toMin(h[0]) && min < fim(h)) || madrugada);
+    var hp = C.happy || {};
+    var happy = aberto && hp.ativo && (hp.dias || []).indexOf(dia) >= 0 && min >= toMin(hp.inicio) && min < toMin(hp.fim);
+    var prox = null;
+    for (var i = 1; i <= 7 && !prox; i++) { var dd = (dia + i) % 7; if (faixa(dd)) prox = (i === 1 ? 'amanhã' : NOMES[dd].toLowerCase()) + ' às ' + hm(faixa(dd)[0]); }
+    var momento = aberto ? (happy ? 'happy' : 'noite') : (!fechadoHoje && h && min < toMin(h[0]) ? 'antes' : 'fechado');
+    return {
+      dia: dia, aberto: aberto, fechadoHoje: fechadoHoje, momento: previa || momento,
+      abre: h ? hm(h[0]) : '17h', fecha: madrugada && !(h && min >= toMin(h[0])) ? hm(hOntem[1]) : (h ? hm(h[1]) : ''),
+      happyFim: hm(hp.fim || '20:00'), proxima: prox
+    };
+  }
+
+  function card(it, ev) {
+    var a = document.createElement('a'); a.className = 'item'; a.href = link('pedir'); a.setAttribute('data-ev', ev); a.setAttribute('data-link', 'pedir');
+    var box = document.createElement('span'); box.className = 'img';
+    var im = document.createElement('img'); im.src = '../bio2/img/' + it.img + '.jpg'; im.alt = it.nome; im.loading = 'lazy';
+    box.append(im);
+    if (it.preco) { var p = document.createElement('span'); p.className = 'preco'; p.textContent = it.preco; box.append(p); }
+    var n = document.createElement('span'); n.className = 'nome'; n.textContent = it.nome; a.append(box, n);
+    if (it.desc) { var dd = document.createElement('span'); dd.className = 'desc'; dd.textContent = it.desc; a.append(dd); }
+    return a;
+  }
+  function trilho(id, qual) {
+    var el = document.getElementById(id); el.innerHTML = '';
+    (qual === 'drinks' ? DRINKS : COMIDA).forEach(function (it) { el.append(card(it, 'bio3-item-' + it.img)); });
+  }
+
+  function montaMomento(x) {
+    var M = MOMENTOS[x.momento];
+    if (atualMomento !== x.momento) {
+      atualMomento = x.momento;
+      var midia = document.getElementById('midia'); midia.innerHTML = '';
+      if (M.midia.video) {
+        var v = document.createElement('video');
+        v.muted = true; v.loop = true; v.autoplay = true; v.playsInline = true; v.setAttribute('playsinline', ''); v.setAttribute('muted', '');
+        v.poster = '../bio2/vid/' + M.midia.video + '.jpg'; v.src = '../bio2/vid/' + M.midia.video + '.mp4';
+        midia.append(v); v.play().catch(function () {});
+      } else {
+        var im = document.createElement('img'); im.className = 'zoom'; im.src = '../bio2/img/' + M.midia.img + '.jpg'; im.alt = ''; midia.append(im);
+      }
+      trilho('r1', M.r1); trilho('r2', M.r2);
+      document.getElementById('t1').textContent = M.t1; document.getElementById('t2').textContent = M.t2;
+      if (window.gabbaConta) window.gabbaConta('bio3-momento-' + x.momento, 'Bio3: abriu no momento ' + x.momento);
+    }
+    document.getElementById('aviso').hidden = !C.aviso || x.momento === 'fechado';
+    var r = document.getElementById('m-rotulo'); r.textContent = M.rotulo; r.classList.toggle('quente', M.quente);
+    document.getElementById('m-titulo').textContent = M.titulo(x);
+    document.getElementById('m-sub').textContent = typeof M.sub === 'function' ? M.sub(x) : M.sub;
+    var b1 = document.getElementById('b1'); b1.textContent = M.b1.txt; b1.href = link(M.b1.link); b1.setAttribute('data-ev', M.b1.ev);
+    var b2 = document.getElementById('b2'); b2.innerHTML = M.b2.html; b2.href = link(M.b2.link); b2.setAttribute('data-ev', M.b2.ev); b2.setAttribute('aria-label', M.b2.label);
+  }
+
+  function montaHorarios(dia) {
+    var grupos = [];
+    [1,2,3,4,5,6,0].forEach(function (d) {
+      var h = faixa(d), k = h ? h.join('-') : 'fechado';
+      var g = grupos.filter(function (q) { return q.k === k; })[0];
+      if (g) g.dias.push(d); else grupos.push({ k: k, h: h, dias: [d] });
+    });
+    var box = document.getElementById('horarios'); box.innerHTML = '';
+    var linha = function (a, b, hoje) { var div = document.createElement('div'); if (hoje) div.className = 'hoje'; var s1 = document.createElement('span'); s1.textContent = a; var s2 = document.createElement('span'); s2.textContent = b; div.append(s1, s2); box.append(div); };
+    grupos.forEach(function (g) { linha(diasTexto(g.dias), g.h ? hm(g.h[0]) + ' às ' + hm(g.h[1]) : 'Fechado', g.dias.indexOf(dia) >= 0); });
+    var hp = C.happy;
+    if (hp && hp.ativo && hp.dias && hp.dias.length) linha('Happy hour', hm(hp.inicio) + ' às ' + hm(hp.fim), false);
+  }
+
+  function atualiza() {
+    var x = estado();
+    var st = document.getElementById('status'); st.classList.toggle('aberto', !!x.aberto);
+    document.getElementById('status-txt').textContent = x.aberto ? 'Aberto · até ' + x.fecha : (x.fechadoHoje ? 'Fechado hoje' : 'Fechado');
+    montaMomento(x);
+    var hp = C.happy || {};
+    document.getElementById('happy-s').textContent = hp.ativo && hp.dias && hp.dias.length ? diasTexto(hp.dias) + ', ' + hm(hp.inicio) + ' às ' + hm(hp.fim) : 'Música e drinks no Gabba';
+    montaHorarios(x.dia);
+  }
+
+  function aplica() {
+    document.getElementById('aviso-txt').textContent = C.aviso || '';
+    var pr = C.promo || {}, on = !!(pr.ativo && pr.premio);
+    document.getElementById('vire').classList.toggle('premio', on);
+    document.getElementById('vire-tag').hidden = !on;
+    document.getElementById('vire-s').textContent = on ? 'Poste marcando @gabbaburger e ganhe: ' + pr.premio : 'Filtro de câmera com o moicano do mascote';
+    document.querySelectorAll('[data-link]').forEach(function (a) { a.href = link(a.getAttribute('data-link')); });
+    atualMomento = null; atualiza();
+  }
+
+  if (previa) { var p = document.createElement('div'); p.className = 'previa'; p.textContent = 'Prévia: momento "' + previa + '"'; document.body.append(p); }
+  aplica(); setInterval(atualiza, 60000);
+  fetch('../bio/config.json?v=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (c) {
+    if (!c) return;
+    ['horarios','happy','fechadoEm','aviso','links','promo'].forEach(function (k) { if (c[k] !== undefined) C[k] = c[k]; });
+    aplica();
+  }).catch(function () {});
+})();
+
+// Conta cada clique (evento bio3-*) e só depois abre o link
+document.addEventListener('click', function (e) {
+  var a = e.target.closest && e.target.closest('a[data-ev]');
+  if (!a || e.metaKey || e.ctrlKey || e.shiftKey) return;
+  e.preventDefault();
+  var ev = a.getAttribute('data-ev'), href = a.href;
+  if (window.gabbaConta) window.gabbaConta(ev, 'Bio3: ' + ev.replace('bio3-', ''));
+  setTimeout(function () { location.href = href; }, 220);
+});
+</script>
+</body>
+</html>
