@@ -485,6 +485,28 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
     catch (e) { statusErro = String(e && e.message || e); console.warn('status', statusErro); }
     mostrarHist();
   }
+
+  // ===== Modo demonstração (?demo=1): dados de exemplo, nada é gravado =====
+  const DEMO = new URLSearchParams(location.search).get('demo') === '1';
+  if (DEMO) {
+    const p2 = (n) => String(n).padStart(2, '0');
+    const f = (h, m) => { const d = new Date(); d.setHours(h, m, 0, 0); return d; };
+    const tx = (d) => d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate()) + ' ' + p2(d.getHours()) + ':' + p2(d.getMinutes()) + ':00';
+    const L = (h, m, loja, item, st, q, u, env, sem, conf) => ({ ms: f(h, m).getTime(), tipo: 'Insumo', loja, item, status: st, quantidade: q, urgencia: u, ref: 'R' + tx(f(h, m)).replace(/\D/g, ''), enviado: env ? f(env[0], env[1]).getTime() : NaN, semEstoque: !!sem, confirmacao: conf || '' });
+    const EXEMPLO = [
+      L(14, 38, 'Gabba', 'Bacon (exemplo)', 'resolvido', 'Tem 300 g', 'Tem pouco', [16, 50], false, 'Recebi'),
+      L(15, 0, 'Gabba', 'Queijo (exemplo)', 'pendente', '0', 'Acabou', [17, 20]),
+      L(15, 10, 'Gabba', 'Base (exemplo)', 'pendente', 'Tem 1 cx', 'Tem pouco'),
+      L(15, 39, 'Uau', 'Leite pó (exemplo)', 'sem estoque', 'Tem 100 g', 'Tem pouco', null, true),
+      L(17, 10, 'Uau', 'Coalho (exemplo)', 'pendente', 'Tem 1 kg', 'Tem pouco')
+    ];
+    window.gabbaLinhasStatus = async () => EXEMPLO;
+    window.gabbaEvento = async () => {};
+    const aviso = document.createElement('div'); aviso.className = 'notice';
+    aviso.style.cssText = 'background:#fff4d6;border:1px solid #e8c766;color:#5c4400;padding:10px 12px;border-radius:10px;font-weight:600;margin-bottom:12px';
+    aviso.textContent = 'MODO DEMONSTRAÇÃO — dados de exemplo. Os botões não gravam nada.';
+    document.querySelector('main').prepend(aviso);
+  }
   // Entrega do estoque (só pedidos de insumo do Gabba e da Uau!): mostra Enviei do estoque e os botões Recebi / Não chegou
   const CONF = 'pc-conf';
   function entregaDe(l) {
@@ -572,7 +594,7 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
   // Usa a mesma ligação com o Formulário Google da página oficial
   fetch('config.json?v=' + Date.now(), { cache: 'no-store' })
     .then(r => r.json())
-    .then(c => { CONFIG = c; if (c && c.limpar_hist && LS.get('pc-limpo', '') !== c.limpar_hist) { const lim = new Date(c.limpar_hist).getTime(); LS.set(K.hist, LS.get(K.hist, []).filter(h => new Date(h.quando).getTime() >= lim)); LS.set('pc-limpo', c.limpar_hist); mostrarHist(); } })
+    .then(c => { CONFIG = c; if (DEMO) { CONFIG.entregas = { form: 'demo', campos: {} }; } if (c && c.limpar_hist && LS.get('pc-limpo', '') !== c.limpar_hist) { const lim = new Date(c.limpar_hist).getTime(); LS.set(K.hist, LS.get(K.hist, []).filter(h => new Date(h.quando).getTime() >= lim)); LS.set('pc-limpo', c.limpar_hist); mostrarHist(); } })
     .catch(() => { CONFIG = null; })
     .finally(() => { $('aviso-config').hidden = configOk(); validar(); esvaziarFila(); buscaStatus(); });
   document.addEventListener('visibilitychange', () => { if (!document.hidden) buscaStatus(); });
