@@ -117,6 +117,9 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
 .lista li { flex-direction: column; align-items: flex-start; gap: 3px; }
 .lista li .l1 { display: flex; gap: 8px; align-items: center; font-weight: 600; }
 .lista li .l2 { color: var(--muted); font-size: .85rem; }
+.selo { font-size: .72rem; font-weight: 700; letter-spacing: .04em; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.selo.pendente { background: #fbf0d4; color: #6b4e00; }
+.selo.resolvido { background: #dcefe0; color: #1f5c32; }
 .explica { font-size: .9rem; color: var(--ink-2); line-height: 1.5; }
 .explica b { font-weight: 600; }
 .explica ol { margin: 6px 0 0; padding-left: 18px; }
@@ -125,6 +128,7 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
 </head>
 <body>
 <script src="../contador.js"></script>
+<script src="../comum/status.js"></script>
 <header class="topbar">
   <div class="in">
     <img src="../pedidos/logo-grupo-gabba.svg" alt="Grupo Gabba">
@@ -352,6 +356,13 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
   });
   $('limpar').addEventListener('click', () => { LS.set(K.hist, []); mostraHist(); });
 
+  let STATUS = new Map();
+  async function buscaStatus() {
+    if (!CONFIG || !CONFIG.status_csv) return;
+    const lista = LS.get(K.hist, []).filter((x) => !x.pendente);
+    try { STATUS = await window.gabbaStatus(CONFIG.status_csv, lista.map((x) => ({ tipo: 'Estoque', loja: 'Estoque central', item: x.item, quando: x.quando }))); } catch (e) {}
+    mostraHist();
+  }
   function mostraHist() {
     const h = LS.get(K.hist, []);
     $('hist').hidden = !h.length;
@@ -361,6 +372,8 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
       const pill = document.createElement('span'); pill.className = 'pill ' + (p.situacao === 'Acabou' ? 'red' : 'amb'); pill.textContent = p.situacao === 'Acabou' ? 'ACABOU' : 'POUCO';
       const t = document.createElement('span'); t.textContent = p.item + ' → ' + nomeLoja(p.loja);
       l1.append(pill, t);
+      const st = STATUS.get(p.quando);
+      if (st) { const sel = document.createElement('span'); sel.className = 'selo ' + st; sel.textContent = st === 'resolvido' ? '✓ Resolvido' : 'Pendente'; l1.append(sel); }
       const l2 = document.createElement('div'); l2.className = 'l2';
       l2.textContent = (p.pendente ? 'Aguardando internet · ' : '') + (p.situacao !== 'Acabou' ? 'Sobrou ' + p.sobrou + ' · ' : '') + p.nome + ' · ' + hora(new Date(p.quando));
       li.append(l1, l2); return li;
@@ -372,7 +385,8 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
   marcar('unidade'); ajustaSituacao(); mostraHist(); mostraFila(); atualiza();
   fetch('../pedidos/config.json?v=' + Date.now(), { cache: 'no-store' })
     .then((r) => r.json()).then((c) => { CONFIG = c; }).catch(() => { CONFIG = null; })
-    .finally(() => { $('aviso-config').hidden = configOk(); atualiza(); esvaziaFila(); });
+    .finally(() => { $('aviso-config').hidden = configOk(); atualiza(); esvaziaFila(); buscaStatus(); });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) buscaStatus(); });
 })();
 </script>
 </body>
