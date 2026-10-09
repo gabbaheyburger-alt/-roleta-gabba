@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Relatório de pedidos · Grupo Gabba</title>
+<meta name="theme-color" content="#111111">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: barra preta da marca; painel de filtros (loja, mostrar, tipo, datas); botão Imprimir; abaixo a folha do relatório, que é a única coisa que sai na impressão */
+:root {
+  --ink: #111111; --ink-2: #2b2b2b; --cream: #f5f2dc; --page: #f3f2ee; --panel: #ffffff;
+  --line: #e4e2db; --line-2: #d3d0c6; --muted: #6e6b63; --soft: #f7f6f2;
+  --red: #c8102e; --amber: #c98a00; --green: #2f7d45;
+  --font: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; background: var(--page); color: var(--ink); }
+body { font-family: var(--font); font-size: 16px; line-height: 1.45; -webkit-font-smoothing: antialiased; }
+[hidden] { display: none !important; }
+.topbar { background: var(--ink); color: var(--cream); padding: calc(env(safe-area-inset-top, 0px) + 18px) 16px 22px; }
+.topbar .in { max-width: 760px; margin: 0 auto; display: flex; align-items: center; gap: 16px; }
+.topbar img { height: 60px; width: auto; display: block; }
+.topbar .sep { width: 1px; align-self: stretch; background: rgba(245,242,220,.22); }
+.topbar .eyebrow { font-size: .68rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: rgba(245,242,220,.62); }
+.topbar h1 { margin: 2px 0 0; font-size: 1.3rem; font-weight: 700; color: var(--cream); }
+.main { max-width: 760px; margin: 0 auto; padding: 18px 16px 40px; display: flex; flex-direction: column; gap: 14px; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; display: flex; flex-direction: column; gap: 14px; }
+.label { font-size: .74rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); margin-bottom: 6px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chips button { border: 1px solid var(--line-2); background: #fff; color: var(--ink); border-radius: 10px; padding: 10px 14px; font: 600 .95rem var(--font); cursor: pointer; min-height: 44px; }
+.chips button[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
+.datas { display: flex; gap: 10px; flex-wrap: wrap; }
+.datas label { flex: 1; min-width: 140px; display: flex; flex-direction: column; gap: 4px; font-size: .8rem; color: var(--muted); }
+.datas input { font: 500 1rem var(--font); padding: 10px; border: 1px solid var(--line-2); border-radius: 10px; background: #fff; color: var(--ink); min-height: 44px; width: 100%; }
+.imprimir { width: 100%; min-height: 54px; border: 0; border-radius: 12px; background: var(--ink); color: #fff; font: 700 1.05rem var(--font); cursor: pointer; }
+.dica { margin: 0; font-size: .82rem; color: var(--muted); }
+.folha { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 22px 18px; }
+.folha .t1 { font-size: .72rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.folha h2 { margin: 2px 0 2px; font-size: 1.35rem; }
+.folha .t3 { font-size: .85rem; color: var(--muted); margin-bottom: 14px; }
+table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+th { text-align: left; font-size: .72rem; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-2); border-bottom: 1.5px solid var(--ink); padding: 6px 6px; }
+td { border-bottom: 1px solid var(--line); padding: 8px 6px; vertical-align: top; }
+td.ck { color: var(--green); font-weight: 700; width: 22px; }
+td.box { width: 22px; }
+td.box::before { content: ''; display: inline-block; width: 12px; height: 12px; border: 1.5px solid var(--ink-2); border-radius: 2px; }
+.sit-red { color: var(--red); font-weight: 700; }
+.sub { display: block; font-size: .76rem; color: var(--muted); }
+.vazio { padding: 18px 4px; color: var(--muted); }
+.assina { margin-top: 26px; font-size: .9rem; color: var(--ink-2); }
+.aviso { padding: 12px 14px; border-radius: 10px; background: #fff4d6; border: 1px solid #e8c766; color: #5c4400; font-size: .9rem; }
+@media (max-width: 480px) { .folha { padding: 18px 12px; } table { font-size: .78rem; } th, td { padding: 6px 3px; } th { font-size: .62rem; letter-spacing: .02em; } }
+.tabwrap { overflow-x: auto; }
+@media print {
+  @page { size: A4; margin: 12mm; }
+  html, body { background: #fff; }
+  .topbar, .filtros, .aviso { display: none !important; }
+  .main { padding: 0; max-width: none; }
+  .folha { border: 0; padding: 0; border-radius: 0; }
+  table { font-size: 10pt; }
+  tr { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="in">
+    <img src="../pedidos/logo-grupo-gabba.svg" alt="Grupo Gabba">
+    <div class="sep"></div>
+    <div><div class="eyebrow">Suprimentos</div><h1>Relatório de pedidos</h1></div>
+  </div>
+</header>
+
+<main class="main">
+  <div class="aviso" id="erro" hidden>Não foi possível carregar os pedidos agora. Feche e abra a página de novo em alguns minutos.</div>
+
+  <div class="panel filtros">
+    <div><div class="label">Loja</div>
+      <div class="chips" data-f="loja">
+        <button type="button" data-v="Todas">Todas</button><button type="button" data-v="Gabba">Gabba</button><button type="button" data-v="Uau">Uau!</button><button type="button" data-v="Feijuca">Feijuca</button><button type="button" data-v="Estoque central">Estoque</button>
+      </div></div>
+    <div><div class="label">Mostrar</div>
+      <div class="chips" data-f="mostrar">
+        <button type="button" data-v="pendentes">Pendentes</button><button type="button" data-v="resolvidos">Resolvidos</button><button type="button" data-v="urgentes">Urgentes</button><button type="button" data-v="todos">Todos</button>
+      </div></div>
+    <div><div class="label">Tipo</div>
+      <div class="chips" data-f="tipo">
+        <button type="button" data-v="Todos">Todos</button><button type="button" data-v="Insumo">Insumos</button><button type="button" data-v="Material">Material</button><button type="button" data-v="Producao">Produção</button>
+      </div></div>
+    <div><div class="label">Período</div>
+      <div class="chips" data-f="per">
+        <button type="button" data-v="hoje">Hoje</button><button type="button" data-v="ontem">Ontem</button><button type="button" data-v="7">7 dias</button><button type="button" data-v="30">30 dias</button><button type="button" data-v="faixa">Escolher datas</button>
+      </div>
+      <div class="datas" id="datas" hidden style="margin-top:10px">
+        <label>De<input type="date" id="de"></label>
+        <label>Até<input type="date" id="ate"></label>
+      </div></div>
+    <button type="button" class="imprimir" id="imprimir">Imprimir / salvar PDF</button>
+    <p class="dica">Abre a tela de impressão do celular: escolha a impressora, ou toque em compartilhar para salvar em PDF ou mandar no WhatsApp. A lista atualiza até 5 minutos depois de mexer na planilha.</p>
+  </div>
+
+  <section class="folha" id="folha">
+    <div class="t1">Grupo Gabba · Suprimentos</div>
+    <h2 id="titulo">Carregando…</h2>
+    <div class="t3" id="sub"></div>
+    <div class="tabwrap"><table>
+      <thead><tr><th></th><th>Situação</th><th>Produto</th><th>Tem / precisa</th><th>Loja</th><th>Data</th></tr></thead>
+      <tbody id="linhas"></tbody>
+    </table></div>
+    <div class="vazio" id="vazio" hidden>Nada para essa seleção.</div>
+    <div class="assina">Conferido por: ______________________________ &nbsp;&nbsp; Data: ____/____/______</div>
+  </section>
+</main>
+
+<script src="../comum/status.js?v=7"></script>
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const pad = (n) => String(n).padStart(2, '0');
+  const iso = (d) => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  const br = (s) => s ? s.slice(8, 10) + '/' + s.slice(5, 7) + '/' + s.slice(0, 4) : '';
+  const nomeLoja = (v) => v === 'Uau' ? 'Uau!' : v;
+  const qs = new URLSearchParams(location.search);
+  const F = { loja: qs.get('loja') || 'Todas', mostrar: qs.get('mostrar') || 'pendentes', tipo: qs.get('tipo') || 'Todos', per: qs.get('per') || 'hoje' };
+  let LINHAS = null;
+
+  function marca() {
+    document.querySelectorAll('.chips').forEach((g) => g.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.v === F[g.dataset.f]))));
+    $('datas').hidden = F.per !== 'faixa';
+  }
+  document.querySelectorAll('.chips').forEach((g) => g.addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    F[g.dataset.f] = b.dataset.v;
+    if (g.dataset.f === 'per' && F.per === 'faixa' && !$('de').value) { $('de').value = iso(new Date()); $('ate').value = iso(new Date()); }
+    marca(); mostra();
+  }));
+  ['de', 'ate'].forEach((id) => $(id).addEventListener('change', mostra));
+  $('imprimir').addEventListener('click', () => window.print());
+
+  function faixa() {
+    const h = new Date();
+    if (F.per === 'hoje') return [iso(h), iso(h)];
+    if (F.per === 'ontem') { const o = new Date(h); o.setDate(o.getDate() - 1); return [iso(o), iso(o)]; }
+    if (F.per === '7' || F.per === '30') { const o = new Date(h); o.setDate(o.getDate() - (+F.per - 1)); return [iso(o), iso(h)]; }
+    let de = $('de').value, ate = $('ate').value; if (de && ate && de > ate) [de, ate] = [ate, de]; return [de, ate];
+  }
+
+  const ORDEM = { 'Acabou': 0, 'Urgente': 0, 'Tem pouco': 1, 'Acabando': 1, 'Pode esperar': 2 };
+  const NOMES = { pendentes: 'Pendentes', resolvidos: 'Resolvidos', urgentes: 'Urgentes ou acabou', todos: 'Todos os pedidos' };
+  const TIPOS = { Insumo: 'Insumos', Material: 'Material e equipamento', Producao: 'Produção', Estoque: 'Estoque central' };
+
+  function mostra() {
+    marca();
+    if (!LINHAS) return;
+    const [de, ate] = faixa();
+    const resolvido = (l) => l.status === 'resolvido';
+    let lista = LINHAS.filter((l) => {
+      const dia = iso(new Date(l.ms));
+      if (de && dia < de) return false;
+      if (ate && dia > ate) return false;
+      if (F.loja !== 'Todas' && l.loja !== F.loja) return false;
+      if (F.tipo !== 'Todos' && l.tipo !== F.tipo) return false;
+      if (F.mostrar === 'pendentes') return !resolvido(l);
+      if (F.mostrar === 'resolvidos') return resolvido(l);
+      if (F.mostrar === 'urgentes') return !resolvido(l) && (l.urgencia === 'Acabou' || l.urgencia === 'Urgente');
+      return true;
+    });
+    lista.sort((a, b) => F.mostrar === 'resolvidos' || F.mostrar === 'todos' ? a.ms - b.ms : ((ORDEM[a.urgencia] ?? 3) - (ORDEM[b.urgencia] ?? 3)) || (a.ms - b.ms));
+    const periodo = de && ate && de === ate ? br(de) : (de ? br(de) : 'início') + ' a ' + (ate ? br(ate) : 'hoje');
+    $('titulo').textContent = NOMES[F.mostrar] + ' · ' + (F.loja === 'Todas' ? 'todas as lojas' : F.loja === 'Estoque central' ? 'Estoque central' : nomeLoja(F.loja)) + (F.tipo === 'Todos' ? '' : ' · ' + TIPOS[F.tipo]);
+    const agora = new Date();
+    $('sub').textContent = 'Período: ' + periodo + ' · ' + lista.length + (lista.length === 1 ? ' item' : ' itens') + ' · gerado em ' + br(iso(agora)) + ' ' + pad(agora.getHours()) + ':' + pad(agora.getMinutes());
+    $('vazio').hidden = lista.length > 0;
+    $('linhas').replaceChildren(...lista.map((l) => {
+      const tr = document.createElement('tr');
+      const c0 = document.createElement('td'); if (resolvido(l)) { c0.className = 'ck'; c0.textContent = '✓'; } else c0.className = 'box';
+      const c1 = document.createElement('td'); c1.textContent = resolvido(l) ? 'Resolvido' : (l.status === 'sem estoque' ? 'Sem estoque' : l.status === 'comprar fora' ? 'Comprar fora' : l.urgencia);
+      if (!resolvido(l) && (l.urgencia === 'Acabou' || l.urgencia === 'Urgente')) c1.className = 'sit-red';
+      if (resolvido(l) && l.urgencia) { const s = document.createElement('span'); s.className = 'sub'; s.textContent = 'Pedido: ' + l.urgencia; c1.append(s); }
+      const c2 = document.createElement('td'); c2.textContent = l.item;
+      if (F.tipo === 'Todos' && l.tipo !== 'Insumo' && l.tipo !== 'Estoque') { const s = document.createElement('span'); s.className = 'sub'; s.textContent = TIPOS[l.tipo] || l.tipo; c2.append(s); }
+      const c3 = document.createElement('td'); c3.textContent = l.quantidade === '0' ? 'Acabou' : l.quantidade;
+      const c4 = document.createElement('td'); c4.textContent = l.loja === 'Estoque central' ? 'Estoque' : nomeLoja(l.loja);
+      const d = new Date(l.ms); const c5 = document.createElement('td'); c5.textContent = pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+      tr.append(c0, c1, c2, c3, c4, c5); return tr;
+    }));
+  }
+
+  marca();
+  fetch('../pedidos/config.json?v=' + Date.now(), { cache: 'no-store' }).then((r) => r.json())
+    .then((c) => window.gabbaLinhasStatus(c.status_csv))
+    .then((l) => { LINHAS = l; mostra(); })
+    .catch(() => { $('erro').hidden = false; $('titulo').textContent = 'Sem dados'; });
+})();
+</script>
+</body>
+</html>
