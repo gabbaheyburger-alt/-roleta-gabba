@@ -99,3 +99,7 @@ Página para o funcionário conferir o setor ao chegar, no endereço `/checklist
 - `vire/index.html`: o filtro Vire um Gabba (teste).
 - `hero/index.html`: o jogo Gabba Hero.
 - `corre/index.html` e `corre/mascote.png`: o jogo Corre, Gabba!.
+
+## Link da bio (Instagram)
+
+Página `/bio/` para colocar no link da bio do Instagram, no lugar do bio.site. Botão principal **Pedir delivery** (cardápio online do Saipos), WhatsApp, Jam Session, cardápio da loja, como chegar e o Fliperama Delivery. Cada clique vira um evento no GoatCounter (`bio-pedir`, `bio-whatsapp`, `bio-jam`, `bio-cardapio-loja`, `bio-localizacao`, `bio-fliperama`, `bio-instagram`), para saber qual botão os clientes mais usam. Os links ficam direto no `bio/index.html`.
