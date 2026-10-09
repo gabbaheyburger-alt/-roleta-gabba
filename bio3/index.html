@@ -33,13 +33,18 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--cream); outline
 .col { max-width: 520px; margin: 0 auto; }
 
 /* ---------- Tela 1 ---------- */
-.tela { position: relative; height: 100svh; min-height: 600px; overflow: hidden; display: flex; flex-direction: column; }
+.tela { position: relative; height: min(100svh, 177.8vw); min-height: 600px; overflow: hidden; display: flex; flex-direction: column; }
 .midia { position: absolute; inset: 0; z-index: 0; }
 .midia video, .midia img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .midia img.zoom { animation: zoom 20s ease-in-out infinite alternate; }
 @keyframes zoom { from { transform: scale(1); } to { transform: scale(1.1); } }
 .tela::after { content: ''; position: absolute; inset: 0; z-index: 0; background:
   linear-gradient(180deg, rgba(11,9,8,.7) 0%, rgba(11,9,8,0) 20%, rgba(11,9,8,0) 42%, rgba(11,9,8,.8) 64%, rgba(11,9,8,.96) 84%, var(--bg) 100%); }
+.tela.limpo::after { background: linear-gradient(180deg, rgba(11,9,8,0) 0%, rgba(11,9,8,0) 46%, rgba(11,9,8,.8) 62%, rgba(11,9,8,.96) 80%, var(--bg) 100%); }
+.tela.limpo .topo { visibility: hidden; }
+.base .status { margin-bottom: 10px; }
+.base .linha { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.base .linha .status { margin: 0; }
 .tela > :not(.midia) { position: relative; z-index: 1; }
 .topo { padding: max(16px, env(safe-area-inset-top)) 16px 0; display: flex; align-items: center; justify-content: space-between; max-width: 520px; width: 100%; align-self: center; }
 .topo img { width: 96px; height: auto; filter: drop-shadow(0 2px 8px rgba(0,0,0,.6)); }
@@ -101,10 +106,9 @@ footer { padding: 30px 16px calc(28px + env(safe-area-inset-bottom)); text-align
   <div class="midia" id="midia"></div>
   <div class="topo">
     <img src="../bio/logo.png" alt="Gabba" width="720" height="461">
-    <div class="status" id="status"><span class="bola"></span><span id="status-txt">Gabba Burger</span></div>
   </div>
   <div class="base">
-    <span class="momento" id="m-rotulo">Gabba Burger</span>
+    <div class="linha"><span class="momento" id="m-rotulo">Gabba Burger</span><div class="status" id="status"><span class="bola"></span><span id="status-txt">Gabba Burger</span></div></div>
     <h1 id="m-titulo">Gabba Burger</h1>
     <p class="sub" id="m-sub">Burger, defumados e drinks · Paracuru</p>
     <div class="aviso" id="aviso" hidden><small>Hoje no Gabba</small><span id="aviso-txt"></span></div>
@@ -149,7 +153,7 @@ footer { padding: 30px 16px calc(28px + env(safe-area-inset-bottom)); text-align
 <script>
 /* ===== Vitrine (nomes e preços provisórios; preço vazio não aparece) ===== */
 var COMIDA = [
-  { img: 'costela-close', nome: 'Smoked Ribs', desc: 'Costela suína defumada, coleslaw e fritas', preco: '' },
+  { img: 'ribs', nome: 'Smoked Ribs', desc: 'Costela suína defumada, coleslaw e fritas', preco: '' },
   { img: 'coxinhas', nome: 'Coxinhas', desc: 'Com molho da casa', preco: '' },
   { img: 'onion-rings', nome: 'Onion rings', desc: 'Com barbecue', preco: '' },
   { img: 'pasteizinhos', nome: 'Pasteizinhos', desc: 'Com molho da casa', preco: '' },
@@ -179,7 +183,7 @@ var MOMENTOS = {
     t1: 'Do bar', r1: 'drinks', t2: 'Pra acompanhar', r2: 'comida'
   },
   noite: {
-    midia: { video: 'cordel' }, rotulo: 'Cozinha aberta', quente: true,
+    midia: { video: 'ribs' }, limpo: true, rotulo: 'Cozinha aberta', quente: true,
     titulo: function () { return 'A chapa tá quente'; }, sub: function (x) { return 'Peça agora e receba em casa, ou vem pra cá. Aberto até ' + x.fecha + '.'; },
     b1: { txt: 'PEDIR DELIVERY', link: 'pedir', ev: 'bio3-noite-pedir' }, b2: { html: ZAP, link: 'whatsapp', ev: 'bio3-noite-whatsapp', label: 'WhatsApp' },
     t1: 'Mais pedidos', r1: 'comida', t2: 'Pra beber', r2: 'drinks'
@@ -256,6 +260,7 @@ var MOMENTOS = {
     var M = MOMENTOS[x.momento];
     if (atualMomento !== x.momento) {
       atualMomento = x.momento;
+      document.getElementById('tela').classList.toggle('limpo', !!M.limpo);
       var midia = document.getElementById('midia'); midia.innerHTML = '';
       if (M.midia.video) {
         var v = document.createElement('video');
