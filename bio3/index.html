@@ -125,6 +125,9 @@ h2 { font: 400 1.9rem/1 var(--display); letter-spacing: .03em; margin: 0; }
 footer { padding: 30px 16px calc(28px + env(safe-area-inset-bottom)); text-align: center; color: var(--muted); font-size: .9rem; }
 .previa { position: fixed; left: 50%; bottom: 10px; transform: translateX(-50%); z-index: 9; background: #ffd77a; color: #000; font: 700 .8rem var(--label); padding: 4px 10px; border-radius: 999px; }
 @media (prefers-reduced-motion: reduce) { .midia img.zoom, .status.aberto .bola, .desce i { animation: none; } }
+
+/* iPhone em Modo de Pouca Energia (ou navegador do Instagram) bloqueia o autoplay e mostra um botão de play: escondemos o botão e tentamos tocar no primeiro toque/rolagem */
+video::-webkit-media-controls, video::-webkit-media-controls-panel, video::-webkit-media-controls-start-playback-button, video::-webkit-media-controls-overlay-play-button { display: none !important; -webkit-appearance: none; opacity: 0; }
 </style>
 </head>
 <body>
@@ -425,6 +428,16 @@ document.addEventListener('click', function (e) {
   if (window.gabbaConta) window.gabbaConta(ev, 'Bio3: ' + ev.replace('bio3-', ''));
   setTimeout(function () { location.href = href; }, 220);
 });
+</script>
+
+<script>
+// Faz os vídeos tocarem mesmo quando o iPhone segura o autoplay: tenta ao abrir, ao tocar na tela e ao rolar
+(function () {
+  function toca() { document.querySelectorAll('video').forEach(function (v) { if (v.closest('#visor')) return; v.muted = true; v.setAttribute('muted', ''); v.setAttribute('playsinline', ''); if (v.paused) { var p = v.play(); if (p && p.catch) p.catch(function () {}); } }); }
+  ['touchstart', 'touchend', 'click', 'scroll'].forEach(function (ev) { window.addEventListener(ev, toca, { passive: true }); });
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) toca(); });
+  window.addEventListener('load', toca); setTimeout(toca, 800); setTimeout(toca, 2500);
+})();
 </script>
 </body>
 </html>
