@@ -544,7 +544,13 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
     const local = LS.get(K.hist, []).filter(h => daLoja(h.loja) && new Date(h.quando).getTime() >= lim);
     const lista = [];
     if (LINHAS) {
-      LINHAS.filter(l => daLoja(l.loja) && l.ms >= lim).forEach(l => lista.push({ ms: l.ms, item: l.item, tipo: l.tipo, loja: l.loja, txt: descr(l.tipo, l.quantidade, l.urgencia), selo: ((l.confirmacao || ((LS.get(CONF, {})[window.gabbaChave(l)] || {}).evento)) === 'Recebi' ? 'resolvido' : l.status), linha: l }));
+      // Pendentes ficam até serem resolvidos; resolvidos só aparecem no dia em que foram pedidos (somem no dia seguinte)
+      const hoje0 = new Date(); hoje0.setHours(0, 0, 0, 0);
+      LINHAS.filter(l => daLoja(l.loja)).forEach(l => {
+        const selo = (l.confirmacao || ((LS.get(CONF, {})[window.gabbaChave(l)] || {}).evento)) === 'Recebi' ? 'resolvido' : l.status;
+        if (selo === 'resolvido' ? l.ms < hoje0.getTime() : l.ms < Date.now() - 60 * 864e5) return;
+        lista.push({ ms: l.ms, item: l.item, tipo: l.tipo, loja: l.loja, txt: descr(l.tipo, l.quantidade, l.urgencia), selo, linha: l });
+      });
       local.filter(h => !window.gabbaJaNaPlanilha(LINHAS, { tipo: h.tipo === 'Material' || h.tipo === 'Producao' ? h.tipo : 'Insumo', loja: h.loja, item: h.item, quando: h.quando }))
         .forEach(h => lista.push({ ms: new Date(h.quando).getTime(), item: h.item, tipo: h.tipo, loja: h.loja, txt: descr(h.tipo, h.quantidade, h.urgencia), aviso: h.pendente ? 'Aguardando internet' : 'Enviado' }));
     } else {
@@ -571,10 +577,10 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
     }));
     const nota = $('hist-nota');
     nota.hidden = false;
-    nota.textContent = !lista.length ? 'Nenhum pedido nos últimos 7 dias.'
+    nota.textContent = !lista.length ? 'Nenhum pedido pendente. Os resolvidos aparecem só no dia.'
       : statusErro ? 'Não foi possível ver a situação agora. Feche a página e abra de novo em alguns minutos.'
       : !LINHAS ? 'Carregando…'
-      : 'Últimos 7 dias. A situação é atualizada pela gerência e pode levar alguns minutos para aparecer aqui.';
+      : 'Pendentes ficam aqui até serem resolvidos. Os resolvidos somem no dia seguinte. A situação pode levar alguns minutos para atualizar.';
     $('itens-usados').replaceChildren(...LS.get(K.itens, []).map(i => { const o = document.createElement('option'); o.value = i; return o; }));
   }
 
