@@ -18,7 +18,7 @@
 
   // Exemplos que se revezam no botão da capa
   (function () {
-    var ex = ['Eu te ajudo a escolher 🍔', '“Quero algo com gorgonzola”', '“Tô com pouca fome”', '“Sem pão, por favor”', '“Bacon até R$ 30”', '“Algo pra dividir”'], k = 0, alvo = $('ass-ex');
+    var ex = ['Me conta tua vontade…', 'Quero algo com gorgonzola', 'Tô com pouca fome', 'Bacon até R$ 30', 'Algo pra dividir com a galera', 'Um burger sem cebola?'], k = 0, alvo = $('ass-ex');
     if (!alvo || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
     setInterval(function () { alvo.style.opacity = 0; setTimeout(function () { k = (k + 1) % ex.length; alvo.textContent = ex[k]; alvo.style.opacity = 1; }, 350); }, 2800);
   })();
@@ -33,6 +33,17 @@
   }
   function fecha() { $('ass').hidden = true; document.body.style.overflow = ''; }
   $('ass-abrir').addEventListener('click', abre);
+  // Atalhos direto na capa: abrem a janela já com a vontade escolhida e buscam
+  document.querySelectorAll('[data-rapido]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var t = b.getAttribute('data-rapido');
+      abre(); historico = [];
+      txt.value = t; contador();
+      document.querySelectorAll('#ass .atalho').forEach(function (x) { x.setAttribute('aria-pressed', x.getAttribute('data-t') === t ? 'true' : 'false'); });
+      conta('bio3-assistente-atalho-capa', 'Bio3: atalho da capa ' + t);
+      envia();
+    });
+  });
   $('ass-x').addEventListener('click', fecha);
   $('ass').addEventListener('click', function (e) { if (e.target === $('ass')) fecha(); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !$('ass').hidden) fecha(); });
