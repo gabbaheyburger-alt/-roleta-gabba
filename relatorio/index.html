@@ -180,7 +180,7 @@ td.box::before { content: ''; display: inline-block; width: 12px; height: 12px; 
     $('linhas').replaceChildren(...lista.map((l) => {
       const tr = document.createElement('tr');
       const c0 = document.createElement('td'); if (resolvido(l)) { c0.className = 'ck'; c0.textContent = '✓'; } else c0.className = 'box';
-      const c1 = document.createElement('td'); c1.textContent = resolvido(l) ? 'Resolvido' : (l.status === 'sem estoque' ? 'Sem estoque' : l.status === 'comprar fora' ? 'Comprar fora' : l.urgencia);
+      const c1 = document.createElement('td'); c1.textContent = resolvido(l) ? 'Resolvido' : (l.status === 'sem estoque' ? 'Sem estoque' : l.status === 'comprar fora' ? 'Comprar fora' : l.status === 'aguardando compra' ? 'Aguardando compra' : l.urgencia);
       if (!resolvido(l) && (l.urgencia === 'Acabou' || l.urgencia === 'Urgente')) c1.className = 'sit-red';
       if (resolvido(l) && l.urgencia) { const s = document.createElement('span'); s.className = 'sub'; s.textContent = 'Pedido: ' + l.urgencia; c1.append(s); }
       const c2 = document.createElement('td'); c2.textContent = l.item;

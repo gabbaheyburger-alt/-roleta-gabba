@@ -110,6 +110,7 @@ input::placeholder, textarea::placeholder { color: #a39f95; font-weight: 400; }
 .selo.semest { background: #fde8e8; color: #8a1c1c; }
 .selo.enviado { background: #eceae4; color: #55524a; }
 .aviso-lista { margin: 8px 0 0; font-size: .82rem; color: #6b5a8e; line-height: 1.4; }
+.selo.aguard { background: #fde9cc; color: #7a4300; }
 .selo.avulsa { background: #c8102e; color: #fff; }
 .aviso-avulsa { margin-top: 10px; border-left: 4px solid #c8102e; background: #fdeaea; color: #6e0f1d; padding: 8px 12px; border-radius: 6px; font-size: .86rem; line-height: 1.4; }
 .hist .tipo { display: block; margin-top: 2px; font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
@@ -710,7 +711,7 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
         } else esq.append(nm, meta);
       } else esq.append(nm, meta);
       const dir = document.createElement('div'); dir.className = 'h-dir';
-      if (h.selo) { const sel = document.createElement('span'); const SEL = { resolvido: ['resolvido', '✓ Resolvido'], 'sem estoque': ['semest', 'Sem estoque'], 'comprar fora': ['pendente', 'Comprando'] }; const nch = h.linha && h.selo === 'resolvido' && LS.get(NAOCH, {})[window.gabbaChave(h.linha)];
+      if (h.selo) { const sel = document.createElement('span'); const SEL = { resolvido: ['resolvido', '✓ Resolvido'], 'sem estoque': ['semest', 'Sem estoque'], 'comprar fora': ['pendente', 'Comprando'], 'aguardando compra': ['aguard', 'Aguardando compra'] }; const nch = h.linha && h.selo === 'resolvido' && LS.get(NAOCH, {})[window.gabbaChave(h.linha)];
         const v = nch ? ['semest', 'Não chegou'] : avulsa && h.selo === 'pendente' ? ['avulsa', 'Retirada avulsa'] : SEL[h.selo] || ['pendente', 'Pendente']; sel.className = 'selo ' + v[0]; sel.textContent = v[1]; dir.append(sel); }
       else if (h.aviso) { const sel = document.createElement('span'); sel.className = 'selo enviado'; sel.textContent = h.aviso; dir.append(sel); }
       li.append(esq, dir);
