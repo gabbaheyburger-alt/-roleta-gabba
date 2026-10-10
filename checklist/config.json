@@ -28,11 +28,11 @@
             "Itens abertos com etiqueta de validade"
           ],
           "grupos": [
-            ["Verduras", [["Tomate","P"],["Cebola","P"],["Cebola Crispy","P"],["Alface","P"],["Repolho","P"],["Cenoura","P"],["Cebolinha","P"]]],
+            ["Verduras", [["Tomate","P"],["Cebola","P"],["Cebola roxa","P"],["Cebola Crispy","P"],["Alface","P"],["Repolho","P"],["Cenoura","P"],["Cebolinha","P"]]],
             ["Carnes e proteínas", [["Carnes (blend)","P"],["Smashs","P"],["Fraldinha","R"],["Carne do sol","P"],["Bacon em cubos","P"],["Bacon em fatias","R"],["Frango Bon Jovi","P"],["Pulled","P"],["Smoked Ribs","P"],["Ovos","R"]]],
-            ["Porções e fritura", [["Batata frita","R"],["Batata Smile","R"],["Onion Ring (cebola frita)","P"],["Coxinha sem massa","P"],["Pastelzim de carne","P"],["Pastelzim de queijo","P"],["Croqueta do fogo","P"],["Croqueta do mar","P"],["Croc Ball","P"],["Dadinho de tapioca (Luar do Sertão)","P"]]],
+            ["Porções e fritura", [["Batata frita","R"],["Batata Smile","R"],["Onion Ring (cebola frita)","P"],["Coxinha sem massa","P"],["Pastelzim de carne","P"],["Pastelzim de queijo","P"],["Croqueta do mar","P"],["Croc Ball","P"],["Dadinho de tapioca (Luar do Sertão)","P"]]],
             ["Empanamento e temperos", [["Empanamento do frango (líquido e seco)","P"],["Farinha de trigo","R"],["Farinha Panko","R"],["Dry rub","P"],["Tempero da batata","P"],["Tempero da carne","P"]]],
-            ["Pães e acompanhamentos", [["Pães (11 cm / 9 cm)","R"],["Manteiga","R"],["Picles","P"],["Cebola caramelizada","P"],["Geleia","P"],["Melaço de cana","R"],["Creme de leite","R"]]],
+            ["Pães e acompanhamentos", [["Pães (11 cm / 9 cm)","R"],["Manteiga","R"],["Manteiga da terra","R"],["Picles","P"],["Cebola caramelizada","P"],["Geleia","P"],["Melaço de cana","R"],["Creme de leite","R"]]],
             ["Molhos", [["Mayo Gabba","P"],["Molho da casa","P"],["Salsa","P"],["Defumada","P"],["Ketchup","R"],["BBQ","P"]]],
             ["Queijos", [["Cheddar","P"],["Cheddar bisnaga","P"],["Coalho","R"],["Mussarela","R"],["Cream Cheese","R"]]],
             ["Especiais da casa", [["Chuck Berry","P"],["Madonna","P"],["Rita Lee","P"]]]
