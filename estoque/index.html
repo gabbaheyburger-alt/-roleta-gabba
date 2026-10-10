@@ -144,7 +144,7 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
 </head>
 <body>
 <script src="../contador.js"></script>
-<script src="../comum/status.js?v=6"></script>
+<script src="../comum/status.js?v=8"></script>
 <header class="topbar">
   <div class="in">
     <img src="../pedidos/logo-grupo-gabba.svg" alt="Grupo Gabba">
@@ -440,7 +440,7 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
     if ($('ped').hidden) return;
     const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
     const locais = LS.get(EV, {});
-    const lista = (PED || []).filter((l) => l.tipo === 'Insumo' && (l.loja === 'Gabba' || l.loja === 'Uau') && l.ms >= hoje.getTime()).sort((a, b) => a.ms - b.ms);
+    const lista = (PED || []).filter((l) => !l.cancelado && l.tipo === 'Insumo' && (l.loja === 'Gabba' || l.loja === 'Uau') && l.ms >= hoje.getTime()).sort((a, b) => a.ms - b.ms);
     $('ped-lista').replaceChildren(...lista.map((l) => {
       const ch = window.gabbaChave(l), loc = locais[ch];
       const li = document.createElement('li');

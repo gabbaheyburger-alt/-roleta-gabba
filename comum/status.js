@@ -49,7 +49,7 @@
     return parseCSV(await r.text()).slice(1).filter((l) => l[0] && !isNaN(hora(l[0])))
       .map((l) => ({ ms: hora(l[0]), tipo: String(l[1] || '').trim(), loja: String(l[2] || '').trim(), item: String(l[3] || '').trim(),
         status: norm(l[4]), quantidade: String(l[5] || '').trim(), urgencia: String(l[6] || '').trim(),
-        ref: 'R' + String(l[0]).replace(/\D/g, ''), enviado: hora(l[7] || ''), semEstoque: norm(l[8]) === 'sim', confirmacao: String(l[9] || '').trim() }));
+        ref: 'R' + String(l[0]).replace(/\D/g, ''), enviado: hora(l[7] || ''), semEstoque: norm(l[8]) === 'sim', confirmacao: String(l[9] || '').trim(), cancelado: norm(l[10]) === 'sim' }));
   };
   // Diz se um pedido guardado neste celular já está na planilha (mesmo tipo, loja e item, até 5 min de diferença)
   window.gabbaJaNaPlanilha = function (linhas, p) {

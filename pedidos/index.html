@@ -129,6 +129,12 @@ input::placeholder, textarea::placeholder { color: #a39f95; font-weight: 400; }
 .entrega .nao { color: #8a1c1c; font-weight: 700; }
 .entrega button { border: 1px solid var(--line-2); background: #fff; border-radius: 8px; padding: 8px 12px; font: 700 .85rem var(--font); cursor: pointer; }
 .entrega button.rec { background: #1f5c32; border-color: #1f5c32; color: #fff; }
+.corrigindo { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: #fff4d6; border: 1px solid #e8c766; color: #5c4400; border-radius: 12px; padding: 12px 14px; font-size: .9rem; }
+.corrigindo b { display: block; }
+.corrigindo button { border: 1px solid #c9a63d; background: #fff; color: #5c4400; border-radius: 8px; padding: 8px 12px; font: 600 .85rem var(--font); cursor: pointer; white-space: nowrap; }
+.h-acoes { grid-column: 1 / -1; display: flex; gap: 8px; }
+.h-acoes button { border: 1px solid var(--line-2); background: #fff; color: var(--ink-2); border-radius: 8px; padding: 7px 12px; font: 600 .82rem var(--font); cursor: pointer; }
+.h-acoes button.conf { background: var(--red); border-color: var(--red); color: #fff; }
 .hist-filtro { display: flex; flex-wrap: wrap; gap: 6px; padding: 2px 16px 10px; }
 .hist-filtro button { border: 1px solid var(--line-2); background: #fff; color: var(--ink-2); border-radius: 999px; padding: 7px 12px; font: 600 .85rem var(--font); cursor: pointer; }
 .hist-filtro button[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
@@ -140,7 +146,7 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
 </head>
 <body>
 <script src="../contador.js"></script>
-<script src="../comum/status.js?v=6"></script>
+<script src="../comum/status.js?v=8"></script>
 
 <header class="topbar">
   <div class="in">
@@ -158,6 +164,10 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
 
   <div class="notice" id="aviso-config" hidden>Página em configuração. Os pedidos ainda não estão sendo enviados.</div>
   <div class="notice err" id="aviso-fila" hidden></div>
+  <div class="corrigindo" id="corrigindo" hidden>
+    <div><b>Corrigindo pedido</b><span id="corr-txt"></span></div>
+    <button type="button" id="corr-desistir">Desistir</button>
+  </div>
 
   <form id="form" novalidate style="display:flex;flex-direction:column;gap:14px">
     <div class="panel">
@@ -435,6 +445,8 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
     $('enviar').disabled = true; $('enviar').textContent = 'Enviando…';
     let enviado = true;
     try { await postar(p); } catch (err) { enviado = false; const fila = LS.get(K.fila, []); fila.push(p); LS.set(K.fila, fila); }
+    if (CORRIGINDO && enviado) { try { await cancelaPedido(CORRIGINDO, 'Corrigido'); } catch (e) {} }
+    CORRIGINDO = null; $('corrigindo').hidden = true;
 
     LS.set(K.nome, p.nome);
     const itens = LS.get(K.itens, []).filter(i => i.toLowerCase() !== p.item.toLowerCase());
@@ -538,6 +550,41 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
     d.append(mk('Recebi', 'Recebi', 'rec'), mk('Não chegou', 'Não chegou'));
     return d;
   }
+  // ===== Corrigir / cancelar pedido pendente =====
+  const CANC = 'pc-cancel';
+  let CORRIGINDO = null;
+  async function cancelaPedido(l, motivo) {
+    await window.gabbaEvento(CONFIG.cancelar, { ref: l.ref, loja: l.loja, item: l.item, evento: motivo, nome: $('nome').value.trim() || LS.get(K.nome, '') || nomeLoja(l.loja) });
+    const m = LS.get(CANC, {}); m[window.gabbaChave(l)] = Date.now(); LS.set(CANC, m);
+  }
+  function acoesDe(l) {
+    const d = document.createElement('div'); d.className = 'h-acoes';
+    const bc = document.createElement('button'); bc.type = 'button'; bc.textContent = 'Corrigir';
+    bc.onclick = () => corrigir(l);
+    const bx = document.createElement('button'); bx.type = 'button'; bx.textContent = 'Cancelar';
+    bx.onclick = async () => {
+      if (!bx.classList.contains('conf')) { bx.classList.add('conf'); bx.textContent = 'Toque de novo para cancelar'; setTimeout(() => { bx.classList.remove('conf'); bx.textContent = 'Cancelar'; }, 4000); return; }
+      bx.disabled = true; bx.textContent = 'Cancelando…';
+      try { await cancelaPedido(l, 'Cancelado'); mostrarHist(); } catch (e) { bx.disabled = false; bx.textContent = 'Sem internet · toque de novo'; }
+    };
+    d.append(bc, bx); return d;
+  }
+  function corrigir(l) {
+    CORRIGINDO = l;
+    estado.tipo = l.tipo === 'Material' ? 'Material' : l.tipo === 'Producao' ? 'Producao' : 'Insumo';
+    marcar('tipo'); limpaEscolhas();
+    if (estado.tipo === 'Insumo') estado.urgencia = l.urgencia === 'Acabou' ? 'Acabou' : 'Tem pouco'; else estado.urgmat = l.urgencia;
+    const m = String(l.quantidade).match(/([\d.,]+)\s*(\S+)?/);
+    if (m && l.quantidade !== '0') { $('qtd').value = parseFloat(m[1].replace(',', '.')) || 1; if (m[2] && document.querySelector('[data-grupo="unidade"] [data-v="' + m[2] + '"]')) estado.unidade = m[2]; }
+    ['urgencia', 'urgmat', 'unidade'].forEach(marcar);
+    $('item').value = l.item;
+    $('ok').hidden = true; $('form').hidden = false;
+    aplicaLoja(); aplicaTipo(); validar();
+    $('corr-txt').textContent = ' ' + l.item + ' · ' + descr(l.tipo, l.quantidade, l.urgencia) + '. Arrume o que estiver errado e toque em Enviar alerta. O pedido antigo será cancelado.';
+    $('corrigindo').hidden = false;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  $('corr-desistir').onclick = () => { CORRIGINDO = null; $('corrigindo').hidden = true; };
   const tipoTxt = t => t === 'Material' ? 'material' : t === 'Producao' ? 'produção' : '';
   const descr = (tipo, qtd, urg) => (tipo === 'Material' || tipo === 'Producao') ? String(qtd).toLowerCase() : (urg === 'Acabou' ? 'acabou' : String(qtd).toLowerCase());
   const lojaDoLink = () => ({ gabba: 'Gabba', uau: 'Uau', feijuca: 'Feijuca' })[(new URLSearchParams(location.search).get('loja') || '').toLowerCase()];
@@ -553,7 +600,8 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
     if (LINHAS) {
       // Pendentes ficam até serem resolvidos; resolvidos só aparecem no dia em que foram pedidos (somem no dia seguinte)
       const hoje0 = new Date(); hoje0.setHours(0, 0, 0, 0);
-      LINHAS.filter(l => daLoja(l.loja)).forEach(l => {
+      const canc = LS.get(CANC, {});
+      LINHAS.filter(l => daLoja(l.loja) && !l.cancelado && !canc[window.gabbaChave(l)]).forEach(l => {
         const selo = (l.confirmacao || ((LS.get(CONF, {})[window.gabbaChave(l)] || {}).evento)) === 'Recebi' ? 'resolvido' : l.status;
         if (selo === 'resolvido' ? l.ms < hoje0.getTime() : l.ms < Date.now() - 60 * 864e5) return;
         lista.push({ ms: l.ms, item: l.item, tipo: l.tipo, loja: l.loja, txt: descr(l.tipo, l.quantidade, l.urgencia), selo, linha: l });
@@ -582,6 +630,7 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
       else if (h.aviso) { const sel = document.createElement('span'); sel.className = 'selo enviado'; sel.textContent = h.aviso; dir.append(sel); }
       li.append(esq, dir);
       if (h.linha) { const e = entregaDe(h.linha); if (e) li.append(e); }
+      if (h.linha && h.selo === 'pendente' && lojaDoLink() && CONFIG && CONFIG.cancelar && CONFIG.cancelar.form) li.append(acoesDe(h.linha));
       return li;
     }));
     const nota = $('hist-nota');
