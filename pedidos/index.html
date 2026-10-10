@@ -101,7 +101,7 @@ input::placeholder, textarea::placeholder { color: #a39f95; font-weight: 400; }
 .hist-h { padding: 14px 16px 6px; font-size: .78rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); }
 .hist ul { list-style: none; margin: 0; padding: 0 16px 8px; }
 .hist li { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); font-size: .92rem; }
-.hist li span:last-child { color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.hist li:not(.hrow) > span:last-child { color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .hist .pend { color: var(--amber); }
 .hist li .dir { display: inline-flex; align-items: center; gap: 8px; }
 .selo { font-size: .72rem; font-weight: 700; letter-spacing: .04em; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
@@ -115,6 +115,13 @@ input::placeholder, textarea::placeholder { color: #a39f95; font-weight: 400; }
 .nomes button { border: 1px solid var(--line-2); background: #fff; color: var(--ink); border-radius: 10px; padding: 10px 16px; font: 600 .95rem var(--font); cursor: pointer; }
 .nomes button[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
 .hist li { flex-wrap: wrap; }
+.hist li.hrow { display: grid; grid-template-columns: 1fr auto; align-items: center; column-gap: 12px; row-gap: 8px; padding: 12px 0; }
+.hist .h-esq { min-width: 0; }
+.hist .h-item { font-weight: 600; font-size: .98rem; color: var(--ink); line-height: 1.3; }
+.hist .h-meta { margin-top: 2px; font-size: .8rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.hist .h-dir { justify-self: end; }
+.hist .h-dir .selo { display: inline-block; min-width: 96px; text-align: center; padding: 4px 10px; }
+.hist li.hrow .entrega { grid-column: 1 / -1; }
 .entrega { flex-basis: 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: .82rem; color: var(--muted); }
 .entrega b { color: var(--ink); font-weight: 600; }
 .entrega:has(button) > span:first-child { flex-basis: 100%; }
@@ -562,16 +569,18 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
     $('hist-filtro').hidden = !adm;
     document.querySelectorAll('#hist-filtro button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.f === histFiltro)));
     $('hist-lista').replaceChildren(...lista.slice(0, 80).map(h => {
-      const li = document.createElement('li');
-      const a = document.createElement('span'); a.textContent = h.item + ' · ' + h.txt;
-      const tt = [loja === 'Todas' ? (h.loja === 'Estoque central' ? 'estoque central' : nomeLoja(h.loja)) : '', tipoTxt(h.tipo)].filter(Boolean).join(' · '); if (tt) { const s = document.createElement('small'); s.className = 'tipo'; s.textContent = tt; a.append(' ', s); }
-      const dir = document.createElement('span'); dir.className = 'dir';
-      const b = document.createElement('span'); const dq = new Date(h.ms);
-      b.textContent = (diaDe(dq) === diaDe(new Date()) ? '' : pad(dq.getDate()) + '/' + pad(dq.getMonth() + 1) + ' ') + hora(dq);
-      dir.append(b);
+      const li = document.createElement('li'); li.className = 'hrow';
+      const esq = document.createElement('div'); esq.className = 'h-esq';
+      const nm = document.createElement('div'); nm.className = 'h-item'; nm.textContent = h.item;
+      const dq = new Date(h.ms);
+      const quando = (diaDe(dq) === diaDe(new Date()) ? 'hoje ' : pad(dq.getDate()) + '/' + pad(dq.getMonth() + 1) + ' ') + hora(dq);
+      const meta = document.createElement('div'); meta.className = 'h-meta';
+      [h.txt, loja === 'Todas' ? (h.loja === 'Estoque central' ? 'Estoque' : nomeLoja(h.loja)) : '', tipoTxt(h.tipo), quando].filter(Boolean).forEach((t, i) => { if (i) meta.append(' · '); const sp = document.createElement('span'); sp.style.whiteSpace = 'nowrap'; sp.textContent = t; meta.append(sp); });
+      esq.append(nm, meta);
+      const dir = document.createElement('div'); dir.className = 'h-dir';
       if (h.selo) { const sel = document.createElement('span'); const SEL = { resolvido: ['resolvido', '✓ Resolvido'], 'sem estoque': ['semest', 'Sem estoque'], 'comprar fora': ['pendente', 'Comprando'] }; const v = SEL[h.selo] || ['pendente', 'Pendente']; sel.className = 'selo ' + v[0]; sel.textContent = v[1]; dir.append(sel); }
       else if (h.aviso) { const sel = document.createElement('span'); sel.className = 'selo enviado'; sel.textContent = h.aviso; dir.append(sel); }
-      li.append(a, dir);
+      li.append(esq, dir);
       if (h.linha) { const e = entregaDe(h.linha); if (e) li.append(e); }
       return li;
     }));
