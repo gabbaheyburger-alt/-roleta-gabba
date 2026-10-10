@@ -139,6 +139,7 @@ input::placeholder, textarea::placeholder { color: #a39f95; font-weight: 400; }
 .corrigindo button { border: 1px solid #c9a63d; background: #fff; color: #5c4400; border-radius: 8px; padding: 8px 12px; font: 600 .85rem var(--font); cursor: pointer; white-space: nowrap; }
 .h-acoes { grid-column: 1 / -1; display: flex; gap: 8px; }
 .h-acoes button { border: 1px solid var(--line-2); background: #fff; color: var(--ink-2); border-radius: 8px; padding: 7px 12px; font: 600 .82rem var(--font); cursor: pointer; }
+.h-acoes .h-nota { align-self: center; font-size: .78rem; color: var(--ink-3, #77736a); }
 .h-acoes button.conf { background: var(--red); border-color: var(--red); color: #fff; }
 .hist-filtro { display: flex; flex-wrap: wrap; gap: 6px; padding: 2px 16px 10px; }
 .hist-filtro button { border: 1px solid var(--line-2); background: #fff; color: var(--ink-2); border-radius: 999px; padding: 7px 12px; font: 600 .85rem var(--font); cursor: pointer; }
@@ -541,7 +542,7 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
   let LINHAS = null, statusErro = '';
   async function buscaStatus() {
     if (!CONFIG || !CONFIG.status_csv) return;
-    try { LINHAS = await window.gabbaLinhasStatus(CONFIG.status_csv); statusErro = ''; }
+    try { LINHAS = await window.gabbaLinhasStatus(CONFIG.status_csv); statusErro = ''; marcaVistos(); }
     catch (e) { statusErro = String(e && e.message || e); console.warn('status', statusErro); }
     mostrarHist();
   }
@@ -590,6 +591,36 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
       }; return b; };
     d.append(mk('Recebi', 'Recebi', 'rec'), mk('Não chegou', 'Não chegou'));
     return d;
+  }
+  // ===== Não chegou: pedido marcado entregue que a loja não recebeu =====
+  // Guarda neste celular o que estava pendente; quando vira resolvido, o pedido fica na tela até o fim desse dia
+  const PEND = 'pc-viu-pend', RESDIA = 'pc-res-dia', NAOCH = 'pc-nao-chegou';
+  function marcaVistos() {
+    if (!LINHAS) return;
+    const antes = LS.get(PEND, {}), agora = {}, rd = LS.get(RESDIA, {}), hoje = diaDe(new Date());
+    LINHAS.forEach(l => { const k = window.gabbaChave(l); if (l.status === 'resolvido') { if (antes[k]) rd[k] = hoje; } else agora[k] = 1; });
+    const lim = diaDe(new Date(Date.now() - 3 * 864e5));
+    for (const k in rd) if (rd[k] < lim) delete rd[k];
+    LS.set(PEND, agora); LS.set(RESDIA, rd);
+  }
+  function naoChegouDe(l) {
+    const d = document.createElement('div'); d.className = 'h-acoes';
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = 'Não chegou';
+    b.onclick = async () => {
+      if (!b.classList.contains('conf')) { b.classList.add('conf'); b.textContent = 'Toque de novo: não chegou'; setTimeout(() => { if (!b.disabled) { b.classList.remove('conf'); b.textContent = 'Não chegou'; } }, 4000); return; }
+      b.disabled = true; b.textContent = 'Avisando…';
+      const dq = new Date(l.ms);
+      const p = { tipo: 'Insumo', loja: l.loja, item: l.item, quantidade: '0', urgencia: 'Acabou',
+        motivo: NAO_VEIO + ' (entrega do sistema) — marcado entregue, mas não chegou. Pedido de ' + pad(dq.getDate()) + '/' + pad(dq.getMonth() + 1) + ' ' + hora(dq),
+        nome: $('nome').value.trim() || LS.get(K.nome, '') || nomeLoja(l.loja), quando: new Date().toISOString() };
+      try { await postar(p); }
+      catch (e) { b.disabled = false; b.classList.remove('conf'); b.textContent = 'Sem internet · toque de novo'; return; }
+      const m = LS.get(NAOCH, {}); m[window.gabbaChave(l)] = Date.now(); LS.set(NAOCH, m);
+      const hist = LS.get(K.hist, []); hist.unshift({ ...p, pendente: false }); LS.set(K.hist, hist.slice(0, 30));
+      mostrarHist(); setTimeout(buscaStatus, 1500);
+    };
+    const t = document.createElement('span'); t.className = 'h-nota'; t.textContent = 'Não recebeu? Avise a Eliza.';
+    d.append(b, t); return d;
   }
   // ===== Corrigir / cancelar pedido pendente =====
   const CANC = 'pc-cancel';
@@ -646,7 +677,7 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
       const canc = LS.get(CANC, {});
       LINHAS.filter(l => daLoja(l.loja) && !l.cancelado && !canc[window.gabbaChave(l)] && !semMat(l.loja, l.tipo)).forEach(l => {
         const selo = (l.confirmacao || ((LS.get(CONF, {})[window.gabbaChave(l)] || {}).evento)) === 'Recebi' ? 'resolvido' : l.status;
-        if (selo === 'resolvido' ? l.ms < hoje0.getTime() : l.ms < Date.now() - 60 * 864e5) return;
+        if (selo === 'resolvido' ? (l.ms < hoje0.getTime() && LS.get(RESDIA, {})[window.gabbaChave(l)] !== diaDe(new Date())) : l.ms < Date.now() - 60 * 864e5) return;
         lista.push({ ms: l.ms, item: l.item, tipo: l.tipo, loja: l.loja, txt: descr(l.tipo, l.quantidade, l.urgencia), selo, linha: l });
       });
       local.filter(h => !window.gabbaJaNaPlanilha(LINHAS, { tipo: h.tipo === 'Material' || h.tipo === 'Producao' ? h.tipo : 'Insumo', loja: h.loja, item: h.item, quando: h.quando }))
@@ -679,11 +710,16 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
         } else esq.append(nm, meta);
       } else esq.append(nm, meta);
       const dir = document.createElement('div'); dir.className = 'h-dir';
-      if (h.selo) { const sel = document.createElement('span'); const SEL = { resolvido: ['resolvido', '✓ Resolvido'], 'sem estoque': ['semest', 'Sem estoque'], 'comprar fora': ['pendente', 'Comprando'] }; const v = avulsa && h.selo === 'pendente' ? ['avulsa', 'Retirada avulsa'] : SEL[h.selo] || ['pendente', 'Pendente']; sel.className = 'selo ' + v[0]; sel.textContent = v[1]; dir.append(sel); }
+      if (h.selo) { const sel = document.createElement('span'); const SEL = { resolvido: ['resolvido', '✓ Resolvido'], 'sem estoque': ['semest', 'Sem estoque'], 'comprar fora': ['pendente', 'Comprando'] }; const nch = h.linha && h.selo === 'resolvido' && LS.get(NAOCH, {})[window.gabbaChave(h.linha)];
+        const v = nch ? ['semest', 'Não chegou'] : avulsa && h.selo === 'pendente' ? ['avulsa', 'Retirada avulsa'] : SEL[h.selo] || ['pendente', 'Pendente']; sel.className = 'selo ' + v[0]; sel.textContent = v[1]; dir.append(sel); }
       else if (h.aviso) { const sel = document.createElement('span'); sel.className = 'selo enviado'; sel.textContent = h.aviso; dir.append(sel); }
       li.append(esq, dir);
       if (h.linha) { const e = entregaDe(h.linha); if (e) li.append(e); }
       if (h.linha && h.selo === 'pendente' && lojaDoLink() && CONFIG && CONFIG.cancelar && CONFIG.cancelar.form) li.append(acoesDe(h.linha));
+      if (h.linha && h.selo === 'resolvido' && h.tipo === 'Insumo' && !avulsa && lojaDoLink()) {
+        if (LS.get(NAOCH, {})[window.gabbaChave(h.linha)]) { const n = document.createElement('div'); n.className = 'h-dias atraso'; n.textContent = 'Avisado: a Eliza vai ver em roxo na planilha.'; esq.append(n); }
+        else li.append(naoChegouDe(h.linha));
+      }
       return li;
     }));
     const nota = $('hist-nota');
