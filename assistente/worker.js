@@ -1,5 +1,5 @@
 /*
- * Assistente de escolha do Gabba Burger — serviço separado (Cloudflare Worker).
+ * Assistente de escolha do Gabba Burger — serviço separado (Cloudflare Worker, publicado pelo GitHub).
  *
  * O que ele faz:
  *  - recebe a vontade do cliente vinda da bio (POST /recomendar)
