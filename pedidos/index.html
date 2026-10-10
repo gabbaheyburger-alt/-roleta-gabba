@@ -109,6 +109,7 @@ input::placeholder, textarea::placeholder { color: #a39f95; font-weight: 400; }
 .selo.resolvido { background: #dcefe0; color: #1f5c32; }
 .selo.semest { background: #fde8e8; color: #8a1c1c; }
 .selo.enviado { background: #eceae4; color: #55524a; }
+.aviso-lista { margin: 8px 0 0; font-size: .82rem; color: #6b5a8e; line-height: 1.4; }
 .selo.avulsa { background: #c8102e; color: #fff; }
 .aviso-avulsa { margin-top: 10px; border-left: 4px solid #c8102e; background: #fdeaea; color: #6e0f1d; padding: 8px 12px; border-radius: 6px; font-size: .86rem; line-height: 1.4; }
 .hist .tipo { display: block; margin-top: 2px; font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
@@ -265,6 +266,15 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
         </div>
       </div>
 
+      <div class="field" id="campo-lista" hidden>
+        <div class="label"><span class="n">07</span>De qual lista?</div>
+        <div class="seg sit2" data-grupo="lista">
+          <button type="button" class="opt-b" data-v="domingo">Lista de domingo</button>
+          <button type="button" class="opt-b" data-v="sexta">Lista de sexta</button>
+        </div>
+        <p class="aviso-lista">Estava na lista completa e não veio? Marque a lista. A Eliza vai dizer por que não foi enviado.</p>
+      </div>
+
       <div class="field">
         <label class="label" for="motivo-txt"><span class="n">07</span>Detalhes<span class="opt" id="det-opt">opcional</span></label>
         <textarea id="motivo-txt" maxlength="200" placeholder="Detalhes (opcional)"></textarea>
@@ -319,7 +329,10 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
   const nomeLoja = v => v === 'Uau' ? 'Uau!' : v;
 
   let CONFIG = null;
-  const estado = { loja: null, tipo: 'Insumo', unidade: 'un', urgencia: null, motivo: null, urgmat: null, motivomat: null, avulsa: 'Nao' };
+  const estado = { loja: null, tipo: 'Insumo', unidade: 'un', urgencia: null, motivo: null, urgmat: null, motivomat: null, avulsa: 'Nao', lista: null };
+  const NAO_VEIO = 'Não veio no abastecimento';
+  // Lista de domingo roda de terça a sexta; lista de sexta roda de sábado a segunda
+  const listaSugerida = () => [0, 1, 6].includes(new Date().getDay()) ? 'sexta' : 'domingo';
   const ehAvulsa = () => modo() === 'insumo' && estado.avulsa === 'Sim';
   const ehMat = () => estado.tipo === 'Material';
   const ehProd = () => estado.tipo === 'Producao';
@@ -342,7 +355,7 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
     $('seg-tipo').classList.toggle('dois', !temProd);
     if (!temProd && ehProd()) { estado.tipo = 'Insumo'; marcar('tipo'); limpaEscolhas(); }
   }
-  function limpaEscolhas() { estado.urgencia = null; estado.motivo = null; estado.urgmat = null; estado.motivomat = null; estado.avulsa = 'Nao'; ['urgencia', 'motivo', 'urgmat', 'motivomat', 'avulsa'].forEach(marcar); }
+  function limpaEscolhas() { estado.urgencia = null; estado.motivo = null; estado.urgmat = null; estado.motivomat = null; estado.avulsa = 'Nao'; estado.lista = null; ['urgencia', 'motivo', 'urgmat', 'motivomat', 'avulsa', 'lista'].forEach(marcar); }
   function aplicaTipo() {
     const md = modo();
     document.querySelectorAll('#form .field').forEach(el => {
@@ -352,6 +365,8 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
     const av = ehAvulsa();
     if (md === 'insumo') { $('campo-situacao').hidden = av; $('campo-motivo').hidden = av; }
     $('aviso-avulsa').hidden = !av;
+    marcar('avulsa');
+    $('campo-lista').hidden = !(md === 'insumo' && !av && estado.motivo === NAO_VEIO);
     $('campo-qtd').hidden = md === 'insumo' ? (!av && estado.urgencia !== 'Tem pouco') : false;
     $('qtd-label').textContent = av ? 'Quanto retirou' : md === 'material' ? 'Quantos precisa' : md === 'producao' ? 'Quantas tem prontas' : 'Quanto tem na loja';
     $('qtd-opt').textContent = md === 'material' || av ? '' : 'aproximado';
@@ -371,7 +386,8 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
       marcar(nome);
       if (nome === 'loja') { LS.set(K.loja, estado.loja); aplicaLoja(); mostrarHist(); }
       if (nome === 'tipo') limpaEscolhas();
-      if (nome === 'tipo' || nome === 'urgencia' || nome === 'loja' || nome === 'avulsa') aplicaTipo();
+      if (nome === 'motivo' && estado.motivo === NAO_VEIO && !estado.lista) { estado.lista = listaSugerida(); marcar('lista'); }
+      if (nome === 'tipo' || nome === 'urgencia' || nome === 'loja' || nome === 'avulsa' || nome === 'motivo') aplicaTipo();
       validar();
     });
   });
@@ -406,6 +422,7 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
       if (!estado.urgencia) f.push('situação');
       if (estado.urgencia === 'Tem pouco' && !(parseFloat(qtd.value) > 0)) f.push('quanto tem');
       if (!estado.motivo) f.push('motivo');
+      if (estado.motivo === NAO_VEIO && !estado.lista) f.push('qual lista');
       if (estado.motivo === 'Outro' && !$('motivo-txt').value.trim()) f.push('detalhes');
     }
     if (!$('nome').value.trim()) f.push('solicitante');
@@ -423,7 +440,7 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
       item: $('item').value.trim(),
       quantidade: m ? 'Precisa ' + n : pr ? 'Tem ' + n : (estado.urgencia === 'Acabou' ? '0' : 'Tem ' + n),
       urgencia: (m || pr) ? estado.urgmat : estado.urgencia,
-      motivo: pr ? (det || 'Conferência de produção') : ((m ? estado.motivomat : estado.motivo) + (det ? ' — ' + det : '')),
+      motivo: pr ? (det || 'Conferência de produção') : ((m ? estado.motivomat : estado.motivo) + (!m && estado.motivo === NAO_VEIO && estado.lista ? ' (lista de ' + estado.lista + ')' : '') + (det ? ' — ' + det : '')),
       nome: $('nome').value.trim(),
       quando: new Date().toISOString()
     };
@@ -495,8 +512,8 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
 
   $('outro').onclick = () => {
     $('item').value = ''; qtd.value = 1; $('motivo-txt').value = '';
-    estado.unidade = 'un'; estado.urgencia = null; estado.motivo = null; estado.urgmat = null; estado.motivomat = null; estado.avulsa = 'Nao';
-    ['unidade', 'urgencia', 'motivo', 'urgmat', 'motivomat', 'avulsa'].forEach(marcar);
+    estado.unidade = 'un'; estado.urgencia = null; estado.motivo = null; estado.urgmat = null; estado.motivomat = null; estado.avulsa = 'Nao'; estado.lista = null;
+    ['unidade', 'urgencia', 'motivo', 'urgmat', 'motivomat', 'avulsa', 'lista'].forEach(marcar);
     aplicaLoja(); aplicaTipo();
     $('ok').hidden = true; $('form').hidden = false; validar();
     $('item').focus();
