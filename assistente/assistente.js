@@ -16,6 +16,13 @@
   fetch(BASE + 'cardapio.json?v=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (c) { cardapio = c; }).catch(function () {});
   fetch(BASE + 'config.json?v=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (c) { servico = (c && /^https:\/\//.test(c.url || '')) ? c.url.replace(/\/+$/, '') : ''; marcaDemo(); }).catch(function () { marcaDemo(); });
 
+  // Exemplos que se revezam no botão da capa
+  (function () {
+    var ex = ['Eu te ajudo a escolher 🍔', '“Quero algo com gorgonzola”', '“Tô com pouca fome”', '“Sem pão, por favor”', '“Bacon até R$ 30”', '“Algo pra dividir”'], k = 0, alvo = $('ass-ex');
+    if (!alvo || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
+    setInterval(function () { alvo.style.opacity = 0; setTimeout(function () { k = (k + 1) % ex.length; alvo.textContent = ex[k]; alvo.style.opacity = 1; }, 350); }, 2800);
+  })();
+
   function marcaDemo() { $('ass-demo').hidden = !!servico; }
 
   // ---------- abrir / fechar ----------
