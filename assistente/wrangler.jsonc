@@ -1,0 +1,8 @@
+// Configuração do serviço do assistente para a Cloudflare (usada se o Worker for ligado ao GitHub).
+// A chave da OpenAI NÃO fica aqui: ela é um "Secret" no painel da Cloudflare.
+{
+  "name": "gabba-assistente",
+  "main": "worker.js",
+  "compatibility_date": "2026-10-01",
+  "keep_vars": true
+}
