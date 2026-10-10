@@ -43,5 +43,15 @@
     }
   },
   "status_csv": "https://docs.google.com/spreadsheets/d/e/2PACX-1vTNu_W3yN84St_ohaUk3NNd7OnILv1V1p8FPV1Xrwww4ZiCQDZ7-T_yf0yRCyQec_JuUmOKXa8qWXSt/pub?gid=1186569857&single=true&output=csv",
-  "limpar_hist": "2026-10-09T17:34:00Z"
+  "limpar_hist": "2026-10-09T17:34:00Z",
+  "cancelar": {
+    "form": "https://docs.google.com/forms/d/e/1FAIpQLSehY-uR6GvotwtkA1A8pnGR0ZcqqCOmt0yBbFuX631yNxh-nQ/formResponse",
+    "campos": {
+      "ref": "entry.1627150514",
+      "loja": "entry.1621038148",
+      "item": "entry.551132883",
+      "evento": "entry.1588775357",
+      "nome": "entry.1510479188"
+    }
+  }
 }
