@@ -1,0 +1,4 @@
+{
+  "url": "",
+  "obs": "Endereço do serviço do assistente (Cloudflare Worker), ex.: https://gabba-assistente.SEU-NOME.workers.dev. Vazio = modo demonstração sem IA."
+}

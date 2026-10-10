@@ -1,0 +1,526 @@
+{
+  "versao": "2026-10-09",
+  "fonte": "Cardápio impresso do Gabba Burger (fotos enviadas pelo dono em 09/10/2026). Produtos e preços confirmados pelo dono.",
+  "loja": {
+    "nome": "Gabba Burger",
+    "instagram": "@gabbaburger",
+    "whatsapp": "(85) 99851-5015",
+    "endereco": "R. Natanael Rodrigues de Oliveira, 59 · Paracuru-CE"
+  },
+  "regras": {
+    "combo": "Nos burgers e smash há dois preços: só o burger, ou combo = burger + batata + refri.",
+    "couvert": "Na loja é cobrado couvert artístico.",
+    "adicionais": "O cardápio lista adicionais com preço, mas não diz em quais itens cada um pode entrar. Confirmar com a equipe.",
+    "alergias": "O cardápio não informa alérgenos nem contaminação cruzada. Confirmar com a equipe.",
+    "disponibilidade": "Não há consulta de estoque. Não garantir disponibilidade."
+  },
+  "itens": [
+    {
+      "id": "kurt-cobain",
+      "numero": 1,
+      "nome": "Kurt Cobain",
+      "categoria": "burgers",
+      "preco_burger": 22,
+      "preco_combo": 34,
+      "descricao": "Pão brioche, carne defumada 160g, fatias de cheddar e molho especial da casa."
+    },
+    {
+      "id": "janis-joplin",
+      "numero": 2,
+      "nome": "Janis Joplin",
+      "categoria": "burgers",
+      "preco_burger": 24,
+      "preco_combo": 36,
+      "descricao": "Pão brioche, burger defumado de 160g, queijo coalho, alface americana, tomate, cebola refogada e maionese Gabba."
+    },
+    {
+      "id": "mick-jagger",
+      "numero": 3,
+      "nome": "Mick Jagger",
+      "categoria": "burgers",
+      "preco_burger": 27,
+      "preco_combo": 39,
+      "descricao": "Pão brioche, carne defumada 160g, fatias de cheddar, bacon crocante, cebola caramelizada e molho especial da casa."
+    },
+    {
+      "id": "erick-clapton",
+      "numero": 4,
+      "nome": "Erick Clapton",
+      "categoria": "burgers",
+      "preco_burger": 30,
+      "preco_combo": 42,
+      "descricao": "Pão brioche, burger defumado de 160g, mussarela, alface americana, tomate, cebola, fatias de bacon, ovo e maionese de coentro."
+    },
+    {
+      "id": "bono-vox",
+      "numero": 5,
+      "nome": "Bono Vox",
+      "categoria": "burgers",
+      "preco_burger": 26,
+      "preco_combo": 38,
+      "descricao": "Pão brioche, carne defumada 160g, fatias de cheddar, alface americana, tomate, anéis de cebola frito e molho BBQ."
+    },
+    {
+      "id": "chuck-berry",
+      "numero": 6,
+      "nome": "Chuck Berry",
+      "categoria": "burgers",
+      "preco_burger": 29,
+      "preco_combo": 41,
+      "descricao": "Pão brioche, carne defumada 160g, creme de gorgonzola, fatias de bacon, cebola caramelizada e molho BBQ."
+    },
+    {
+      "id": "ozzy",
+      "numero": 7,
+      "nome": "Ozzy",
+      "categoria": "burgers",
+      "preco_burger": 29,
+      "preco_combo": 41,
+      "descricao": "Pão brioche, carne defumada de 160g, nossa cebola crispy artesanal, cream cheese e nossa geleia de pimenta levemente picante."
+    },
+    {
+      "id": "gabba-hey",
+      "numero": 8,
+      "nome": "Gabba Hey",
+      "categoria": "burgers",
+      "preco_burger": 32,
+      "preco_combo": 44,
+      "descricao": "Pão brioche, carne defumada de 160g, fatias de cheddar, cream cheese, bacon e cebola caramelizada."
+    },
+    {
+      "id": "madonna",
+      "numero": 9,
+      "nome": "Madonna",
+      "categoria": "burgers",
+      "preco_burger": 31,
+      "preco_combo": 43,
+      "descricao": "Pão brioche, carne defumada 160g, fatias de cheddar, 100g de dadinho de tapioca crocante, carne do sol desfiada e geleia de pimenta levemente picante."
+    },
+    {
+      "id": "bb-king",
+      "numero": 10,
+      "nome": "B.B. King",
+      "categoria": "burgers",
+      "preco_burger": 35,
+      "preco_combo": 47,
+      "descricao": "Pão brioche, 2 burgers defumados de 160g cada, fatias de cheddar, alface americana, cebola refogada, picles e molho especial da casa."
+    },
+    {
+      "id": "rita-lee",
+      "numero": 11,
+      "nome": "Rita Lee",
+      "categoria": "burgers",
+      "preco_burger": 20,
+      "preco_combo": 32,
+      "descricao": "Pão brioche, disco de falafel, queijo mussarela, alface americana, tomate e maionese de coentro.",
+      "observacao": "vegetariano (o cardápio diz vegetariano, não vegano)"
+    },
+    {
+      "id": "bon-jovi",
+      "numero": 12,
+      "nome": "Bon Jovi",
+      "categoria": "burgers",
+      "preco_burger": 25,
+      "preco_combo": 37,
+      "descricao": "Pão de parmesão, frango empanado, alface americana, tomate, picles e molho especial da casa."
+    },
+    {
+      "id": "billie-joe",
+      "numero": 13,
+      "nome": "Billie Joe",
+      "categoria": "smash",
+      "preco_burger": 15,
+      "preco_combo": 27,
+      "descricao": "Pão brioche, smash burger de 75g, fatias de cheddar e ketchup."
+    },
+    {
+      "id": "bob-dylan",
+      "numero": 14,
+      "nome": "Bob Dylan",
+      "categoria": "smash",
+      "preco_burger": 17,
+      "preco_combo": 29,
+      "descricao": "Pão brioche, smash burger de 75g, fatias de cheddar, nossa cebola crispy artesanal, picles, ketchup e maionese de coentro."
+    },
+    {
+      "id": "chris-martin",
+      "numero": 15,
+      "nome": "Chris Martin",
+      "categoria": "smash",
+      "preco_burger": 20,
+      "preco_combo": 32,
+      "descricao": "Pão brioche, smash burger de 75g, fatias de cheddar, cebola caramelizada, bacon em cubos e molho BBQ."
+    },
+    {
+      "id": "axl-rose",
+      "numero": 16,
+      "nome": "Axl Rose",
+      "categoria": "smash",
+      "preco_burger": 25,
+      "preco_combo": 37,
+      "descricao": "Pão brioche, 2 smash burger de 75g cada, fatias de cheddar, alface americana, tomate e nossa deliciosa mayo Gabba."
+    },
+    {
+      "id": "john-lennon",
+      "numero": 17,
+      "nome": "John Lennon",
+      "categoria": "smash",
+      "preco_burger": 18,
+      "preco_combo": 30,
+      "descricao": "Pão brioche, smash burger de 75g, fatias de cheddar, cebola em cubos, picles, ketchup e mostarda."
+    },
+    {
+      "id": "batata-sorriso",
+      "nome": "Batata Sorriso",
+      "categoria": "entradas",
+      "preco": 10,
+      "descricao": "5 unidades crocantes por fora e macias por dentro. Acompanha molho."
+    },
+    {
+      "id": "gabba-fries",
+      "nome": "Gabba Fries",
+      "categoria": "entradas",
+      "preco": 16,
+      "descricao": "300g de batata frita com tempero especial da casa. Acompanha molho."
+    },
+    {
+      "id": "cheddar-bacon",
+      "nome": "Cheddar & Bacon",
+      "categoria": "entradas",
+      "preco": 25,
+      "descricao": "Batata frita com molho cheddar cremoso e cubos de bacon crocante."
+    },
+    {
+      "id": "fritas-cordel",
+      "nome": "Fritas Cordel",
+      "categoria": "entradas",
+      "preco": 28,
+      "descricao": "Batata frita com requeijão, carne de sol e cebolinha."
+    },
+    {
+      "id": "coxinha-sem-massa",
+      "nome": "Coxinha sem massa",
+      "categoria": "entradas",
+      "preco": 24,
+      "descricao": "5 unidades de frango temperado com cream cheese, empanadas na panko. Acompanha molho."
+    },
+    {
+      "id": "onion-rockers",
+      "nome": "Onion Rockers",
+      "categoria": "entradas",
+      "preco": 18,
+      "descricao": "Porção de 160g de cebolas empanadas e douradas, cheias de crocância. Acompanham molho BBQ."
+    },
+    {
+      "id": "rock-shrimps",
+      "nome": "Rock Shrimps (camarão empanado)",
+      "categoria": "entradas",
+      "preco": 40,
+      "descricao": "Camarões empanados na crocância da farinha panko, servidos com cream cheese cremoso e finalizados com crispy de cebola. Acompanham nossa maionese de camarão."
+    },
+    {
+      "id": "croquetas-do-mar",
+      "nome": "Croquetas do Mar",
+      "categoria": "entradas",
+      "preco": 25,
+      "descricao": "Croquetas douradas e crocantes, recheadas com camarão suculento e temperos que destacam o sabor do mar. Servidas com nossa maionese de camarão."
+    },
+    {
+      "id": "croquetas-do-fogo",
+      "nome": "Croquetas do Fogo",
+      "categoria": "entradas",
+      "preco": 30,
+      "descricao": "Croquetas recheadas com peito bovino defumado e creme de cheddar."
+    },
+    {
+      "id": "doce-brasa",
+      "nome": "Doce Brasa",
+      "categoria": "entradas",
+      "preco": 16,
+      "descricao": "200g de queijo coalho assado na brasa, finalizado com melaço de cana que equilibra intensidade e doçura."
+    },
+    {
+      "id": "luar-do-sertao",
+      "nome": "Luar do Sertão",
+      "categoria": "entradas",
+      "preco": 25,
+      "descricao": "Crocantes por fora e macios por dentro, nossos dadinhos de tapioca ganham potência com lascas de carne de sol artesanal. Acompanhados de uma geleia de pimenta levemente adocicada."
+    },
+    {
+      "id": "pastelzim-brisket",
+      "nome": "Pastelzim de Brisket (6 unidades)",
+      "categoria": "entradas",
+      "preco": 18,
+      "descricao": "Versão mini do clássico de boteco, acompanha molho de gorgonzola cremoso. Recheado com peito bovino defumado, suculento e envolto na cebola caramelizada no ponto certo."
+    },
+    {
+      "id": "pastelzim-queijos",
+      "nome": "Pastelzim de Mix de Queijos (6 unidades)",
+      "categoria": "entradas",
+      "preco": 15,
+      "descricao": "Versão mini do clássico de boteco, acompanha molho de gorgonzola cremoso. Explosão cremosa e irresistível de queijos selecionados que derretem na boca."
+    },
+    {
+      "id": "no-bread",
+      "nome": "NO BREAD",
+      "categoria": "entradas",
+      "preco": 25,
+      "descricao": "Nosso burguer grelhado 160g, servido sem pão, no prato. Suculento e no ponto certo, acompanhado de salada e uma porção de fritas crocantes."
+    },
+    {
+      "id": "combo-kids",
+      "nome": "Combo Kids",
+      "categoria": "combo kids",
+      "preco": 25,
+      "descricao": "Smash Billie Joe + batata smile + suco."
+    },
+    {
+      "id": "croc-balls",
+      "nome": "Croc Balls",
+      "categoria": "defumados",
+      "preco": 25,
+      "descricao": "Bolinhas de carne suína defumada, envoltas em cream cheese e empanadas na farinha panko. Servidas com nosso molho BBQ defumado."
+    },
+    {
+      "id": "smoked-ribs",
+      "nome": "Smoked Ribs",
+      "categoria": "defumados",
+      "preco": 60,
+      "descricao": "Costela suína defumada no ponto certo, macia e cheia de sabor. Servida com salada de maionese com repolho e cenoura. Acompanha 300g de fritas crocantes."
+    },
+    {
+      "id": "brisket",
+      "nome": "Brisket",
+      "categoria": "defumados",
+      "preco": 35,
+      "descricao": "200g de peito bovino defumado lentamente em lenha frutífera, no método low & slow. Macio, suculento e cheio de sabor, servido fatiado. Acompanha farofa."
+    },
+    {
+      "id": "fraldinha-trinchada",
+      "nome": "Fraldinha Trinchada",
+      "categoria": "carnes",
+      "preco": 65,
+      "descricao": "Fraldinha macia, fatiada no ponto certo, servida com fritas crocantes, farofa e molho de gorgonzola cremoso."
+    },
+    {
+      "id": "brownie",
+      "nome": "Brownie",
+      "categoria": "sobremesas",
+      "preco": 17,
+      "descricao": "Brownie de chocolate quente, servido com sorvete cremoso e finalizado com crumble de castanha."
+    },
+    {
+      "id": "pudim",
+      "nome": "Pudim",
+      "categoria": "sobremesas",
+      "preco": 10,
+      "descricao": "Pudim de leite condensado."
+    },
+    {
+      "id": "milkshake-maracuja",
+      "nome": "Milkshake Maracujá (500ml)",
+      "categoria": "milkshakes",
+      "preco": 18,
+      "descricao": ""
+    },
+    {
+      "id": "milkshake-nutella",
+      "nome": "Milkshake Nutella (500ml)",
+      "categoria": "milkshakes",
+      "preco": 18,
+      "descricao": ""
+    },
+    {
+      "id": "milkshake-ovomaltine",
+      "nome": "Milkshake Ovomaltine (500ml)",
+      "categoria": "milkshakes",
+      "preco": 18,
+      "descricao": ""
+    },
+    {
+      "id": "milkshake-frutas-vermelhas",
+      "nome": "Milkshake Frutas vermelhas (500ml)",
+      "categoria": "milkshakes",
+      "preco": 18,
+      "descricao": ""
+    },
+    {
+      "id": "suco-caja",
+      "nome": "Suco de Cajá (copo 300ml)",
+      "categoria": "sucos",
+      "preco": 6,
+      "descricao": ""
+    },
+    {
+      "id": "suco-abacaxi",
+      "nome": "Suco de Abacaxi (copo 300ml)",
+      "categoria": "sucos",
+      "preco": 6,
+      "descricao": ""
+    },
+    {
+      "id": "suco-morango",
+      "nome": "Suco de Morango (copo 300ml)",
+      "categoria": "sucos",
+      "preco": 6,
+      "descricao": ""
+    },
+    {
+      "id": "suco-abacaxi-com-morango",
+      "nome": "Suco de Abacaxi com morango (copo 300ml)",
+      "categoria": "sucos",
+      "preco": 6,
+      "descricao": ""
+    },
+    {
+      "id": "suco-maracuja",
+      "nome": "Suco de Maracujá (copo 300ml)",
+      "categoria": "sucos",
+      "preco": 8,
+      "descricao": ""
+    },
+    {
+      "id": "refri-lata",
+      "nome": "Refrigerante lata 350ml",
+      "categoria": "refrigerantes",
+      "preco": 5,
+      "descricao": ""
+    },
+    {
+      "id": "coca-1l",
+      "nome": "Coca-Cola 1L",
+      "categoria": "refrigerantes",
+      "preco": 10,
+      "descricao": ""
+    },
+    {
+      "id": "agua",
+      "nome": "Água",
+      "categoria": "refrigerantes",
+      "preco": 3.5,
+      "descricao": ""
+    },
+    {
+      "id": "agua-gas",
+      "nome": "Água com gás",
+      "categoria": "refrigerantes",
+      "preco": 4,
+      "descricao": ""
+    },
+    {
+      "id": "soda-italiana",
+      "nome": "Soda italiana (maçã verde e blueberry)",
+      "categoria": "refrigerantes",
+      "preco": 15,
+      "descricao": ""
+    },
+    {
+      "id": "turatti-lager",
+      "nome": "Chopp Turatti Premium Lager (caneca 350ml)",
+      "categoria": "chopp e cerveja",
+      "preco": 9.9,
+      "descricao": ""
+    },
+    {
+      "id": "turatti-ipa",
+      "nome": "Turatti Session IPA (garrafa 355ml)",
+      "categoria": "chopp e cerveja",
+      "preco": 14,
+      "descricao": ""
+    },
+    {
+      "id": "spaten",
+      "nome": "Long neck Spaten",
+      "categoria": "bebidas alcoólicas",
+      "preco": 10,
+      "descricao": ""
+    },
+    {
+      "id": "stella",
+      "nome": "Long neck Stella Artois",
+      "categoria": "bebidas alcoólicas",
+      "preco": 10,
+      "descricao": ""
+    },
+    {
+      "id": "caipirinha-morango",
+      "nome": "Caipirinha de morango",
+      "categoria": "bebidas alcoólicas",
+      "preco": 15,
+      "descricao": ""
+    },
+    {
+      "id": "caipirinha-limao",
+      "nome": "Caipirinha de limão",
+      "categoria": "bebidas alcoólicas",
+      "preco": 12,
+      "descricao": ""
+    }
+  ],
+  "adicionais": [
+    {
+      "nome": "Blend de 160g",
+      "preco": 9
+    },
+    {
+      "nome": "Queijo cheddar",
+      "preco": 4
+    },
+    {
+      "nome": "Queijo mussarela",
+      "preco": 4
+    },
+    {
+      "nome": "Queijo coalho",
+      "preco": 4
+    },
+    {
+      "nome": "Fatias de bacon",
+      "preco": 4
+    },
+    {
+      "nome": "Cebola caramelizada",
+      "preco": 4
+    },
+    {
+      "nome": "Cebola crispy",
+      "preco": 4.5
+    },
+    {
+      "nome": "Creme cheese",
+      "preco": 5
+    },
+    {
+      "nome": "Ovo",
+      "preco": 2
+    },
+    {
+      "nome": "Onion rings",
+      "preco": 4.5
+    },
+    {
+      "nome": "Salada",
+      "preco": 4
+    },
+    {
+      "nome": "Picles",
+      "preco": 3
+    },
+    {
+      "nome": "Geleia de pimenta",
+      "preco": 3
+    },
+    {
+      "nome": "Creme de gorgonzola",
+      "preco": 5
+    },
+    {
+      "nome": "Dadinho de tapioca",
+      "preco": 5
+    },
+    {
+      "nome": "Carne do sol",
+      "preco": 5
+    }
+  ]
+}

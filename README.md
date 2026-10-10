@@ -119,3 +119,14 @@ Página `/bio/` para colocar no link da bio do Instagram, no lugar do bio.site. 
 ### Vitrine da bio3 (área do dono)
 
 `bio3/adm/` edita `bio3/vitrine.json`: os **Especiais do mês** (o primeiro vira o card grande), os carrosséis de **Comida** e **Drinks** (nome, descrição, preço, foto, foto alternada, esconder, ordem, apagar, adicionar) , a **Agenda de eventos** (data, horário, nome, detalhes e cartaz; some sozinho depois que passa e aparece na capa no dia) , os **títulos** das seções em cada horário e a **ordem** das partes da página (arrastando pelo ☰; os cards também podem ser arrastados). Fotos novas vêm da galeria do celular, são reduzidas para no máximo 900 px e enviadas para `bio3/fotos/`. Mesma chave do GitHub das outras áreas do dono. Vídeos continuam sendo preparados à parte (em `bio2/vid/`) e escolhidos numa lista.
+
+## Assistente de escolha (bio3)
+
+Botão "Não sabe o que pedir? Eu te ajudo 🍔" na capa da bio3. Abre uma janela com campo de texto, atalhos (Pouca fome, Muita fome, Sem carne, Sem pão) e "Encontrar minha pedida".
+
+- `assistente/cardapio.json`: o cardápio oficial transcrito (fonte única do assistente). Para mudar preço ou produto, edite aqui; não precisa mexer no serviço.
+- `assistente/worker.js`: o serviço separado (Cloudflare Worker) que chama a OpenAI. A chave fica só na Cloudflare, na variável secreta `OPENAI_API_KEY`. Tem limite por pessoa (6 por minuto, 40 por dia), limite diário total (`LIMITE_DIA_TOTAL`, padrão 800), mensagem de até 300 letras, tempo máximo de 15 s e só aceita pedidos vindos do site. Nome e preço mostrados sempre saem do cardápio, nunca da IA.
+- `assistente/config.json`: endereço do serviço (`url`). **Vazio = modo demonstração sem IA**, com regras simples, identificado na tela por uma etiqueta amarela.
+- `assistente/assistente.js`: a janela na página.
+- `assistente/copiar.html`: página de apoio com botão para copiar o código do serviço.
+- Eventos no GoatCounter: `bio3-assistente-abriu`, `bio3-assistente-pediu`, `bio3-assistente-cardapio`, `bio3-assistente-whatsapp`.

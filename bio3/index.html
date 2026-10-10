@@ -130,6 +130,45 @@ h2 { font: 400 1.9rem/1 var(--display); letter-spacing: .03em; margin: 0; }
 .luz .acoes > * { flex: 1; min-height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; text-decoration: none; font: 400 1.3rem var(--display); letter-spacing: .04em; cursor: pointer; }
 .luz .ir { background: var(--red); color: #fff; border: none; }
 .luz .fechar { background: transparent; color: var(--cream); border: 1px solid rgba(243,234,217,.35); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+/* Assistente de escolha */
+.ass-abrir { display: block; width: 100%; margin-top: 10px; min-height: 48px; border-radius: 14px; border: 1px dashed rgba(243,234,217,.55); background: rgba(11,9,8,.55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); color: var(--cream); font: 600 1.05rem var(--label); letter-spacing: .03em; cursor: pointer; }
+.ass-abrir:active { border-color: var(--cream); }
+.ass { position: fixed; inset: 0; z-index: 70; background: rgba(0,0,0,.72); display: flex; align-items: flex-end; justify-content: center; }
+.ass-folha { width: 100%; max-width: 520px; max-height: 92svh; overflow-y: auto; background: var(--bg); border: 1px solid var(--line); border-bottom: none; border-radius: 22px 22px 0 0; padding: 18px 16px calc(20px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 12px; animation: sobe .25s ease-out; }
+@keyframes sobe { from { transform: translateY(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+.ass-cab { display: flex; align-items: flex-start; gap: 10px; }
+.ass-cab h2 { flex: 1; font: 400 2rem/1 var(--display); letter-spacing: .02em; margin: 0; }
+.ass-x { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); color: var(--cream); font-size: 1.5rem; cursor: pointer; flex-shrink: 0; }
+.ass textarea { width: 100%; resize: none; font: 500 1.05rem var(--body); color: var(--cream); background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px; }
+.ass textarea:focus-visible { outline: 2px solid var(--cream); }
+.ass-linha { display: flex; justify-content: space-between; color: var(--muted); font: 600 .85rem var(--label); margin-top: -6px; }
+.ass-atalhos { display: flex; flex-wrap: wrap; gap: 8px; }
+.atalho { border: 1px solid var(--line); background: var(--surface); color: var(--cream); border-radius: 999px; padding: 9px 14px; font: 600 1rem var(--label); cursor: pointer; }
+.atalho[aria-pressed="true"] { background: var(--red); border-color: var(--red); color: #fff; }
+.ass-ir { min-height: 54px; border: none; border-radius: 14px; background: var(--red); color: #fff; font: 400 1.35rem var(--display); white-space: nowrap; letter-spacing: .04em; cursor: pointer; box-shadow: 0 8px 22px rgba(216,18,43,.3); }
+.ass-ir:disabled { opacity: .6; }
+.ass-tag-demo { align-self: flex-start; margin: 0; background: #ffd77a; color: #000; font: 700 .78rem var(--label); letter-spacing: .06em; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; }
+#ass-res { display: flex; flex-direction: column; gap: 10px; }
+.ass-carregando { margin: 4px 0; color: var(--muted); font: 600 1rem var(--label); }
+.ass-balao { margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 16px 16px 16px 4px; padding: 12px 14px; font-size: 1rem; }
+.ass-aviso { margin: 0; color: #ff8a96; font-weight: 600; }
+.ass-card { background: linear-gradient(135deg, #2a1214, var(--surface) 70%); border: 1px solid var(--red); border-radius: 18px; padding: 14px; display: flex; flex-direction: column; gap: 6px; }
+.ass-selo { align-self: flex-start; background: var(--red); color: #fff; font: 700 .72rem var(--label); letter-spacing: .14em; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; }
+.ass-nome { font: 400 2.3rem/.95 var(--display); letter-spacing: .02em; }
+.ass-precos { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 4px 0; }
+.ass-precos span { background: rgba(11,9,8,.55); border: 1px solid var(--line); border-radius: 12px; padding: 8px 10px; }
+.ass-precos small { display: block; color: var(--muted); font: 600 .78rem var(--label); letter-spacing: .04em; }
+.ass-precos strong { font: 700 1.25rem var(--label); }
+.ass-preco1 { font: 700 1.35rem var(--label); }
+.ass-msg { margin: 2px 0 0; font-size: 1rem; }
+.ass-desc { margin: 0; color: var(--muted); font-size: .88rem; }
+.ass-alt { margin: 0; color: #ddd3c3; font-size: .95rem; }
+.ass-nota { margin: 0; color: var(--muted); font-size: .82rem; }
+.ass-botoes { display: grid; grid-template-columns: 1.4fr 1fr; gap: 10px; margin-top: 2px; }
+.ass-b1, .ass-b2 { min-height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; text-decoration: none; font: 400 1.1rem var(--display); letter-spacing: .03em; cursor: pointer; white-space: nowrap; padding: 0 8px; }
+.ass-b1 { background: var(--red); color: #fff; border: none; }
+.ass-b2 { background: transparent; color: var(--cream); border: 1px solid rgba(243,234,217,.35); }
 .lista { margin: 0 16px; display: grid; gap: 10px; }
 .card { display: flex; align-items: center; gap: 14px; padding: 13px 14px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); text-decoration: none; }
 .card .ic { width: 42px; height: 42px; border-radius: 12px; background: #221c19; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1.2rem; }
@@ -169,6 +208,7 @@ video::-webkit-media-controls, video::-webkit-media-controls-panel, video::-webk
       <a class="b1" id="b1" href="https://gabbaburger.saipos.com">PEDIR DELIVERY</a>
       <a class="b2" id="b2" href="https://wa.me/message/QXY4DJK6HWG6N1" aria-label="WhatsApp"></a>
     </div>
+    <button class="ass-abrir" id="ass-abrir" type="button">Não sabe o que pedir? Eu te ajudo 🍔</button>
     <a class="desce" href="#mais">Ver mais<i>⌄</i></a>
   </div>
 </header>
@@ -213,6 +253,23 @@ video::-webkit-media-controls, video::-webkit-media-controls-panel, video::-webk
   <img id="luz-img" alt="">
   <p class="txt" id="luz-txt"></p>
   <div class="acoes"><a class="ir" id="luz-ir" data-ev="bio3-evento-mapa" data-link="mapa" href="https://maps.app.goo.gl/ck9mdvzTTk1EoMLC9">COMO CHEGAR</a><button class="fechar" id="luz-x" type="button">FECHAR</button></div>
+</div>
+<div class="ass" id="ass" hidden role="dialog" aria-modal="true" aria-labelledby="ass-titulo">
+  <div class="ass-folha">
+    <div class="ass-cab"><h2 id="ass-titulo">Qual é a tua fome hoje?</h2><button class="ass-x" id="ass-x" type="button" aria-label="Fechar">×</button></div>
+    <p class="ass-tag-demo" id="ass-demo" hidden>Demonstração sem IA</p>
+    <label class="sr" for="ass-texto">Escreva sua vontade</label>
+    <textarea id="ass-texto" maxlength="300" rows="3" placeholder="Ex.: quero algo com bacon, até R$ 30"></textarea>
+    <div class="ass-linha"><span id="ass-dica"></span><span id="ass-cont">0/300</span></div>
+    <div class="ass-atalhos">
+      <button type="button" class="atalho" data-t="Pouca fome" aria-pressed="false">Pouca fome</button>
+      <button type="button" class="atalho" data-t="Muita fome" aria-pressed="false">Muita fome</button>
+      <button type="button" class="atalho" data-t="Sem carne" aria-pressed="false">Sem carne</button>
+      <button type="button" class="atalho" data-t="Sem pão" aria-pressed="false">Sem pão</button>
+    </div>
+    <button class="ass-ir" id="ass-ir" type="button">ENCONTRAR MINHA PEDIDA</button>
+    <div id="ass-res" aria-live="polite"></div>
+  </div>
 </div>
 <footer>Gabba Burger · Hamburgueria artesanal · Paracuru-CE</footer>
 
@@ -266,6 +323,7 @@ var MOMENTOS = {
   var faixa = function (d) { var h = C.horarios[d]; return (h && h[0] && h[1]) ? h : null; };
   var fim = function (h) { var a = toMin(h[0]), b = toMin(h[1]); return b <= a ? b + 1440 : b; };
   var link = function (k) { var u = (C.links || {})[k]; return (u && /^https?:\/\//.test(u)) ? u : LINKS[k]; };
+  window.gabbaLink = link;
   var previa = (location.search.match(/momento=(antes|happy|noite|fechado)/) || [])[1];
   var atualMomento = null;
 
@@ -505,6 +563,7 @@ document.addEventListener('click', function (e) {
 });
 </script>
 
+<script src="../assistente/assistente.js"></script>
 <script>
 // Faz os vídeos tocarem mesmo quando o iPhone segura o autoplay: tenta ao abrir, ao tocar na tela e ao rolar
 (function () {

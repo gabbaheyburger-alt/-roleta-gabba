@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Copiar código do assistente</title>
+<style>
+/* Página de apoio da configuração: um botão que copia o código do serviço (worker.js) para colar na Cloudflare */
+:root { color-scheme: dark; }
+body { margin: 0; background: #120d0c; color: #f6ece2; font: 16px/1.45 system-ui, -apple-system, sans-serif; }
+.wrap { max-width: 560px; margin: 0 auto; padding: 22px 16px 40px; display: flex; flex-direction: column; gap: 14px; }
+h1 { margin: 0; font-size: 1.5rem; }
+p { margin: 0; color: #b5a397; }
+button { min-height: 56px; border: none; border-radius: 14px; background: #e8102e; color: #fff; font: 800 1.1rem system-ui; cursor: pointer; }
+button.ok { background: #6fbf73; color: #0f2a10; }
+pre { margin: 0; max-height: 50vh; overflow: auto; background: #1f1816; border: 1px solid #3b2e29; border-radius: 12px; padding: 12px; font-size: .72rem; white-space: pre-wrap; word-break: break-word; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Código do assistente</h1>
+  <p>Toque no botão para copiar o código inteiro. Depois cole no editor da Cloudflare, no lugar do que estiver lá.</p>
+  <button id="b" type="button">COPIAR CÓDIGO</button>
+  <pre id="c">Carregando…</pre>
+</div>
+<script>
+var codigo = '';
+fetch('worker.js?v=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) { codigo = t; document.getElementById('c').textContent = t; });
+document.getElementById('b').addEventListener('click', function () {
+  var b = this, ok = function () { b.textContent = 'COPIADO ✓ AGORA COLE NA CLOUDFLARE'; b.className = 'ok'; };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(codigo).then(ok, sel); else sel();
+  function sel() { var r = document.createRange(); r.selectNodeContents(document.getElementById('c')); var s = getSelection(); s.removeAllRanges(); s.addRange(r); try { document.execCommand('copy'); ok(); } catch (e) { b.textContent = 'Texto selecionado: toque em Copiar'; } }
+});
+</script>
+</body>
+</html>
