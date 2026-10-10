@@ -120,6 +120,8 @@ input::placeholder, textarea::placeholder { color: #a39f95; font-weight: 400; }
 .hist .h-item { font-weight: 600; font-size: .98rem; color: var(--ink); line-height: 1.3; }
 .hist .h-meta { margin-top: 2px; font-size: .8rem; color: var(--muted); font-variant-numeric: tabular-nums; }
 .hist .h-dir { justify-self: end; }
+.hist .h-dias { margin-top: 4px; font-size: .78rem; font-weight: 600; color: #8a6400; }
+.hist .h-dias.atraso { color: #a3122a; }
 .hist .h-dir .selo { display: inline-block; min-width: 96px; text-align: center; padding: 4px 10px; }
 .hist li.hrow .entrega { grid-column: 1 / -1; }
 .entrega { flex-basis: 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: .82rem; color: var(--muted); }
@@ -595,13 +597,15 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
     const adm = !lojaDoLink();
     const loja = adm ? histFiltro : estado.loja;
     const daLoja = l => loja === 'Todas' || l === loja;
-    const local = LS.get(K.hist, []).filter(h => daLoja(h.loja) && new Date(h.quando).getTime() >= lim);
+    // Nas telas do Gabba e da Uau!, material/equipamento não aparece no histórico (só na planilha e no painel)
+    const semMat = (lj, tp) => !!lojaDoLink() && (lj === 'Gabba' || lj === 'Uau') && tp === 'Material';
+    const local = LS.get(K.hist, []).filter(h => daLoja(h.loja) && !semMat(h.loja, h.tipo) && new Date(h.quando).getTime() >= lim);
     const lista = [];
     if (LINHAS) {
       // Pendentes ficam até serem resolvidos; resolvidos só aparecem no dia em que foram pedidos (somem no dia seguinte)
       const hoje0 = new Date(); hoje0.setHours(0, 0, 0, 0);
       const canc = LS.get(CANC, {});
-      LINHAS.filter(l => daLoja(l.loja) && !l.cancelado && !canc[window.gabbaChave(l)]).forEach(l => {
+      LINHAS.filter(l => daLoja(l.loja) && !l.cancelado && !canc[window.gabbaChave(l)] && !semMat(l.loja, l.tipo)).forEach(l => {
         const selo = (l.confirmacao || ((LS.get(CONF, {})[window.gabbaChave(l)] || {}).evento)) === 'Recebi' ? 'resolvido' : l.status;
         if (selo === 'resolvido' ? l.ms < hoje0.getTime() : l.ms < Date.now() - 60 * 864e5) return;
         lista.push({ ms: l.ms, item: l.item, tipo: l.tipo, loja: l.loja, txt: descr(l.tipo, l.quantidade, l.urgencia), selo, linha: l });
@@ -624,7 +628,16 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
       const quando = (diaDe(dq) === diaDe(new Date()) ? 'hoje ' : pad(dq.getDate()) + '/' + pad(dq.getMonth() + 1) + ' ') + hora(dq);
       const meta = document.createElement('div'); meta.className = 'h-meta';
       [h.txt, loja === 'Todas' ? (h.loja === 'Estoque central' ? 'Estoque' : nomeLoja(h.loja)) : '', tipoTxt(h.tipo), quando].filter(Boolean).forEach((t, i) => { if (i) meta.append(' · '); const sp = document.createElement('span'); sp.style.whiteSpace = 'nowrap'; sp.textContent = t; meta.append(sp); });
-      esq.append(nm, meta);
+      // Contador de dias: insumo pendente há mais de 1 dia vira alerta
+      if (h.selo === 'pendente' && h.tipo === 'Insumo') {
+        const dias = Math.floor((new Date(diaDe(new Date()) + 'T00:00:00') - new Date(diaDe(dq) + 'T00:00:00')) / 864e5);
+        const atrasado = Date.now() - h.ms > 864e5;
+        if (dias >= 1 || atrasado) {
+          const al = document.createElement('div'); al.className = 'h-dias' + (atrasado ? ' atraso' : '');
+          al.textContent = (atrasado ? '⚠ ' : '') + 'Pendente há ' + (dias <= 1 ? (atrasado ? 'mais de 1 dia' : '1 dia') : dias + ' dias');
+          esq.append(nm, meta, al);
+        } else esq.append(nm, meta);
+      } else esq.append(nm, meta);
       const dir = document.createElement('div'); dir.className = 'h-dir';
       if (h.selo) { const sel = document.createElement('span'); const SEL = { resolvido: ['resolvido', '✓ Resolvido'], 'sem estoque': ['semest', 'Sem estoque'], 'comprar fora': ['pendente', 'Comprando'] }; const v = SEL[h.selo] || ['pendente', 'Pendente']; sel.className = 'selo ' + v[0]; sel.textContent = v[1]; dir.append(sel); }
       else if (h.aviso) { const sel = document.createElement('span'); sel.className = 'selo enviado'; sel.textContent = h.aviso; dir.append(sel); }
