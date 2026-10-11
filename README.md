@@ -130,3 +130,13 @@ Página `/bio/` para colocar no link da bio do Instagram, no lugar do bio.site. 
 - `assistente/assistente.js`: a janela na página.
 - `assistente/copiar.html`: página de apoio com botão para copiar o código do serviço.
 - Eventos no GoatCounter: `bio3-assistente-abriu`, `bio3-assistente-pediu`, `bio3-assistente-cardapio`, `bio3-assistente-whatsapp`.
+
+## Ponto interno (Gabba)
+
+Controle interno de horário da equipe, **não é ponto eletrônico legal**.
+
+- `ponto/?loja=gabba`: página da equipe. A pessoa toca no nome e em Entrada, Saída para intervalo, Volta do intervalo ou Saída. Só registra se o celular estiver na **internet da loja** (o serviço compara o IP: IPv4 inteiro, IPv6 pela rede /64). Dá para desfazer até 3 minutos depois.
+- `ponto/adm/`: painel do dono, com PIN (5 erros = 15 min bloqueado). Abas Hoje (status, atraso, intervalo, horas), Semana (horas por dia, alertas, CSV), Registros (remover/restaurar, lançar esquecido) e Internet (liberar a internet da loja, recusas, trocar PIN).
+- `ponto/config.json`: equipe, setores, dias (ex.: Jandira só seg e ter no Gabba), horários e tolerância de atraso.
+- Serviço: `assistente/ponto.js`, dentro do mesmo Worker da Cloudflare (`gabba-assistente`), com os dados num Durable Object (SQLite). Publicado automaticamente quando há mudança na pasta `assistente/` do GitHub.
+- Registros até 05:00 contam para o dia anterior (turno que passa da meia-noite).

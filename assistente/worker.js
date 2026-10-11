@@ -14,6 +14,9 @@
  *  - LIMITE_DIA_TOTAL (texto, opcional)  máximo de perguntas por dia somando todo mundo. Padrão: 800
  */
 
+import { PontoDB, rotaPonto } from './ponto.js';
+export { PontoDB };
+
 const CARDAPIO_URL = 'https://gabbaheyburger-alt.github.io/-roleta-gabba/assistente/cardapio.json';
 const ORIGENS = ['https://gabbaheyburger-alt.github.io', 'http://localhost:8765'];
 const MAX_TEXTO = 300;          // letras por mensagem
@@ -30,7 +33,7 @@ export default {
     const origem = req.headers.get('Origin') || '';
     const cors = {
       'Access-Control-Allow-Origin': ORIGENS.includes(origem) ? origem : ORIGENS[0],
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type',
       'Access-Control-Max-Age': '86400',
       'Vary': 'Origin'
@@ -39,7 +42,12 @@ export default {
 
     if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
     const url = new URL(req.url);
-    if (req.method === 'GET' && url.pathname === '/') return responde({ ok: true, servico: 'assistente-gabba', chave_configurada: !!env.OPENAI_API_KEY, contador: env.LIMITES ? 'kv' : 'memoria' });
+    if (req.method === 'GET' && url.pathname === '/') return responde({ ok: true, servico: 'assistente-gabba', chave_configurada: !!env.OPENAI_API_KEY, contador: env.LIMITES ? 'kv' : 'memoria', ponto: !!env.PONTO });
+    // ---------- ponto interno ----------
+    if (url.pathname.startsWith('/ponto/')) {
+      if (!ORIGENS.includes(origem)) return responde({ erro: 'origem_nao_permitida' }, 403);
+      return rotaPonto(req, env, cors);
+    }
     if (req.method !== 'POST' || url.pathname !== '/recomendar') return responde({ erro: 'nao_encontrado' }, 404);
     if (!ORIGENS.includes(origem)) return responde({ erro: 'origem_nao_permitida' }, 403);
     if (!env.OPENAI_API_KEY) return responde({ erro: 'servico_sem_chave' }, 503);

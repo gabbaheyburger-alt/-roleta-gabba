@@ -1,8 +1,13 @@
-// Configuração do serviço do assistente para a Cloudflare (usada se o Worker for ligado ao GitHub).
-// A chave da OpenAI NÃO fica aqui: ela é um "Secret" no painel da Cloudflare.
+// Configuração do serviço na Cloudflare (publicado automaticamente pelo GitHub).
+// Atende o assistente da bio (/recomendar, hoje desligado) e o ponto interno (/ponto/...).
+// A chave da OpenAI NÃO fica aqui: ela seria um "Secret" no painel da Cloudflare.
 {
   "name": "gabba-assistente",
   "main": "worker.js",
   "compatibility_date": "2026-10-01",
-  "keep_vars": true
+  "keep_vars": true,
+  "durable_objects": {
+    "bindings": [{ "name": "PONTO", "class_name": "PontoDB" }]
+  },
+  "migrations": [{ "tag": "ponto-v1", "new_sqlite_classes": ["PontoDB"] }]
 }

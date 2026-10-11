@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Adm · Ponto · Grupo Gabba</title>
+<meta name="theme-color" content="#111111">
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+/* Painel do ponto (só o dono): PIN; abas Hoje / Semana / Registros / Internet; cartões por pessoa; tabela de horas da semana; baixar CSV */
+:root {
+  --ink: #111111; --ink-2: #2b2b2b; --cream: #f5f2dc; --page: #f3f2ee; --panel: #ffffff;
+  --line: #e4e2db; --line-2: #d3d0c6; --muted: #6e6b63; --soft: #f7f6f2;
+  --red: #c8102e; --red-soft: #fcecee; --amber: #b87700; --amber-soft: #fdf3dc; --green: #2f7d45; --green-soft: #e7f3ea;
+  --font: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; background: var(--page); color: var(--ink); }
+body { font-family: var(--font); font-size: 15px; line-height: 1.45; -webkit-font-smoothing: antialiased; }
+[hidden] { display: none !important; }
+.topbar { background: var(--ink); color: var(--cream); padding: calc(env(safe-area-inset-top, 0px) + 14px) 16px 14px; }
+.topbar .in { max-width: 760px; margin: 0 auto; display: flex; align-items: center; gap: 12px; }
+.topbar img { height: 44px; }
+.topbar .eyebrow { font-size: .66rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: rgba(245,242,220,.62); }
+.topbar h1 { margin: 2px 0 0; font-size: 1.12rem; font-weight: 700; }
+.main { max-width: 760px; margin: 0 auto; padding: 14px 16px 60px; display: flex; flex-direction: column; gap: 12px; }
+.abas { display: flex; gap: 6px; overflow-x: auto; position: sticky; top: 0; z-index: 3; background: var(--page); padding: 6px 0; }
+.abas button { flex: 1 0 auto; font: 700 .9rem var(--font); border: 1px solid var(--line-2); background: #fff; color: var(--ink); border-radius: 999px; padding: 9px 14px; cursor: pointer; }
+.abas button[aria-selected="true"] { background: var(--ink); border-color: var(--ink); color: var(--cream); }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.label { font-size: .76rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); }
+.hint { margin: 0; font-size: .84rem; color: var(--muted); }
+.notice { border-radius: 10px; padding: 10px 12px; font-size: .9rem; border: 1px solid #ead9a6; background: #fbf5e2; color: #5b4810; }
+.notice.err { border-color: #efc3c9; background: #fcf0f1; color: #7a1222; }
+.notice.okn { border-color: #bfe0c8; background: var(--green-soft); color: #1d5130; }
+input, select { font: 500 1rem var(--font); color: var(--ink); background: var(--soft); border: 1px solid var(--line-2); border-radius: 10px; padding: 10px 12px; width: 100%; min-width: 0; }
+.btn { font: 700 .95rem var(--font); min-height: 46px; border-radius: 10px; border: none; background: var(--ink); color: var(--cream); cursor: pointer; padding: 0 14px; }
+.btn.sec { background: #fff; color: var(--ink); border: 1px solid var(--line-2); }
+.btn.mini { min-height: 34px; font-size: .8rem; padding: 0 10px; }
+.btn.perigo { color: var(--red); }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.row > * { flex: 1; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+.pc { border: 1px solid var(--line); border-radius: 12px; padding: 12px; background: #fff; display: flex; flex-direction: column; gap: 6px; }
+.pc h3 { margin: 0; font-size: 1.05rem; display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+.pc .st { font-size: .72rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; background: var(--soft); color: var(--muted); white-space: nowrap; }
+.pc .st.dentro { background: var(--green-soft); color: var(--green); }
+.pc .st.pausa { background: var(--amber-soft); color: var(--amber); }
+.pc .linhas { font-size: .86rem; font-variant-numeric: tabular-nums; display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; }
+.pc .linhas span:nth-child(odd) { color: var(--muted); }
+.flag { font-size: .8rem; font-weight: 600; color: var(--red); }
+.flag.am { color: var(--amber); }
+table { width: 100%; border-collapse: collapse; font-size: .85rem; font-variant-numeric: tabular-nums; }
+th, td { border-bottom: 1px solid var(--line); padding: 7px 6px; text-align: center; white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; position: sticky; left: 0; background: #fff; }
+th { font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+td.tot { font-weight: 800; }
+.tabela { overflow-x: auto; }
+.reg { display: flex; justify-content: space-between; align-items: center; gap: 8px; border-bottom: 1px solid var(--line); padding: 8px 0; font-size: .9rem; }
+.reg.rem { opacity: .45; text-decoration: line-through; }
+.reg small { display: block; color: var(--muted); font-size: .76rem; }
+.rede { font-family: ui-monospace, Menlo, monospace; font-size: .8rem; overflow-wrap: anywhere; }
+</style>
+</head>
+<body>
+<header class="topbar"><div class="in">
+  <img src="../../pedidos/logo-grupo-gabba.svg" alt="Grupo Gabba">
+  <div><div class="eyebrow">Área do dono</div><h1>Ponto · <span id="loja-nome">Gabba Burger</span></h1></div>
+</div></header>
+
+<main class="main">
+  <section class="panel" id="login">
+    <div class="label" id="login-tit">Entrar</div>
+    <p class="hint" id="login-txt">Digite o PIN do ponto.</p>
+    <input id="pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8" placeholder="PIN (4 a 8 números)" autocomplete="off">
+    <label class="hint" style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="lembrar" style="width:auto"> Lembrar neste celular</label>
+    <button class="btn" id="entrar" type="button">Entrar</button>
+    <div class="notice err" id="login-err" hidden></div>
+  </section>
+
+  <div id="app" hidden>
+    <nav class="abas" role="tablist">
+      <button type="button" data-aba="hoje" aria-selected="true">Hoje</button>
+      <button type="button" data-aba="semana" aria-selected="false">Semana</button>
+      <button type="button" data-aba="registros" aria-selected="false">Registros</button>
+      <button type="button" data-aba="internet" aria-selected="false">Internet</button>
+    </nav>
+
+    <section id="aba-hoje" style="display:flex;flex-direction:column;gap:12px">
+      <div class="row"><input type="date" id="hoje-dia"><button class="btn sec" id="hoje-atual" type="button" style="flex:0 0 auto">Atualizar</button></div>
+      <div class="cards" id="hoje-cards"></div>
+      <p class="hint">Atraso: entrada depois de <span id="tol"></span> min do horário. Atualiza sozinho a cada minuto.</p>
+    </section>
+
+    <section id="aba-semana" hidden style="display:flex;flex-direction:column;gap:12px">
+      <div class="row"><button class="btn sec" id="sem-ant" type="button" style="flex:0 0 auto">‹</button><div id="sem-txt" style="text-align:center;font-weight:700"></div><button class="btn sec" id="sem-prox" type="button" style="flex:0 0 auto">›</button></div>
+      <div class="panel"><div class="tabela"><table id="sem-tab"></table></div><p class="hint">Horas trabalhadas por dia (sem o intervalo). <b>!</b> = dia com algo a conferir (falta saída, atraso ou aparelho repetido).</p></div>
+      <button class="btn sec" id="csv" type="button">Baixar a semana (planilha CSV)</button>
+    </section>
+
+    <section id="aba-registros" hidden style="display:flex;flex-direction:column;gap:12px">
+      <div class="row"><input type="date" id="reg-dia"></div>
+      <div class="panel" id="reg-lista"></div>
+      <div class="panel">
+        <div class="label">Lançar registro esquecido</div>
+        <div class="row"><select id="aj-nome"></select><select id="aj-acao"><option value="entrada">Entrada</option><option value="saida_intervalo">Saída p/ intervalo</option><option value="volta_intervalo">Volta do intervalo</option><option value="saida">Saída</option></select></div>
+        <div class="row"><input type="date" id="aj-dia"><input type="time" id="aj-hora"></div>
+        <input id="aj-nota" placeholder="Motivo (ex.: esqueceu de bater)">
+        <button class="btn" id="aj-ok" type="button">Lançar</button>
+        <p class="hint">Para saída depois da meia-noite, use a data do dia seguinte: ela entra no turno anterior sozinha.</p>
+      </div>
+    </section>
+
+    <section id="aba-internet" hidden style="display:flex;flex-direction:column;gap:12px">
+      <div class="panel">
+        <div class="label">Este celular agora</div>
+        <div id="net-agora"></div>
+        <button class="btn" id="net-add" type="button">Usar a internet de agora como a da loja</button>
+        <p class="hint">Faça isso <b>conectado no Wi-Fi da loja</b> (dados móveis desligados). Se a loja tiver dois roteadores ou trocar de provedor, repita em cada um.</p>
+      </div>
+      <div class="panel"><div class="label">Internets liberadas</div><div id="net-lista"></div></div>
+      <div class="panel"><div class="label">Tentativas recusadas (7 dias)</div><p class="hint">Se aparecer aqui alguém que estava mesmo na loja, a operadora trocou o endereço da internet. Toque em Liberar.</p><div id="net-recusas"></div></div>
+      <div class="panel"><div class="label">Trocar PIN</div><div class="row"><input id="novo-pin" type="password" inputmode="numeric" maxlength="8" placeholder="Novo PIN"><button class="btn sec" id="troca-pin" type="button" style="flex:0 0 auto">Trocar</button></div></div>
+    </section>
+    <div class="notice" id="msg" hidden></div>
+  </div>
+</main>
+
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const LOJA = (new URLSearchParams(location.search).get('loja') || 'gabba').toLowerCase();
+  const NOME_ACAO = { entrada: 'Entrada', saida_intervalo: 'Saída p/ intervalo', volta_intervalo: 'Volta do intervalo', saida: 'Saída' };
+  const SEM = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+  const pad = n => String(n).padStart(2, '0');
+  const hm = ts => { const d = new Date(ts); return pad(d.getHours()) + ':' + pad(d.getMinutes()); };
+  const durTxt = ms => { const m = Math.round(ms / 60000); return Math.floor(m / 60) + 'h' + pad(m % 60); };
+  const toMin = t => { const p = String(t).split(':'); return +p[0] * 60 + (+p[1] || 0); };
+  // "dia do ponto": até 05:00 conta para o dia anterior
+  const diaDe = ts => new Date(ts - 3 * 3600e3 - 5 * 3600e3).toISOString().slice(0, 10);
+  const hoje = () => diaDe(Date.now());
+  const somaDia = (d, n) => { const x = new Date(d + 'T12:00:00Z'); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); };
+  const semanaDe = d => { const x = new Date(d + 'T12:00:00Z'), w = (x.getUTCDay() + 6) % 7; return somaDia(d, -w); };
+  let CFG, L, SRV, PIN = '', aba = 'hoje', semIni = semanaDe(hoje()), timer;
+
+  function msg(t, k) { const m = $('msg'); m.hidden = !t; m.className = 'notice' + (k ? ' ' + k : ''); m.textContent = t || ''; if (t) setTimeout(() => { m.hidden = true; }, 4000); }
+  async function adm(op, extra) {
+    const r = await fetch(SRV + '/ponto/adm', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({ pin: PIN, op, loja: LOJA }, extra || {})) });
+    const j = await r.json().catch(() => ({}));
+    if (r.status === 401 && j.erro === 'pin_errado') { sair(); throw new Error('pin'); }
+    if (!r.ok) throw Object.assign(new Error(j.detalhe || j.erro || 'erro'), { j });
+    return j;
+  }
+  function sair() { try { localStorage.removeItem('ponto-pin'); sessionStorage.removeItem('ponto-pin'); } catch (e) {} $('app').hidden = true; $('login').hidden = false; }
+
+  // ---------- cálculo por pessoa e dia ----------
+  function resumo(regs, nome, dia) {
+    const r = regs.filter(x => x.nome === nome && x.dia === dia && !x.removido).sort((a, b) => a.ts - b.ts);
+    let trab = 0, pausa = 0, ini = null, pz = null; const flags = [];
+    r.forEach(x => {
+      if (x.acao === 'entrada' || x.acao === 'volta_intervalo') { if (x.acao === 'volta_intervalo' && pz) { pausa += x.ts - pz; pz = null; } ini = x.ts; }
+      else if (ini) { trab += x.ts - ini; ini = null; if (x.acao === 'saida_intervalo') pz = x.ts; }
+    });
+    const ultimo = r[r.length - 1];
+    const aberto = ultimo && ultimo.acao !== 'saida';
+    if (aberto && dia < hoje()) flags.push('sem saída');
+    if (aberto && dia === hoje() && ini) trab += Date.now() - ini;
+    const ent = r.find(x => x.acao === 'entrada');
+    const p = L.equipe.find(e => e.nome === nome) || {};
+    const wd = new Date(dia + 'T12:00:00Z').getUTCDay();
+    const esperado = (!p.dias || p.dias.includes(wd)) && L.horarios[wd];
+    let atraso = 0;
+    if (ent && esperado) { const d = new Date(ent.ts); const m = d.getHours() * 60 + d.getMinutes(); atraso = m - toMin(esperado[0]); if (atraso > CFG.tolerancia_min) flags.push('atraso ' + atraso + ' min'); else atraso = 0; }
+    const aps = new Set(regs.filter(x => x.dia === dia && !x.removido && x.aparelho && r.some(y => y.aparelho === x.aparelho) && x.nome !== nome).map(x => x.nome));
+    if (aps.size) flags.push('mesmo celular que ' + [...aps].join(', '));
+    if (r.some(x => x.origem === 'ajuste')) flags.push('tem lançamento manual');
+    return { r, trab, pausa, ent, ultimo, aberto, flags, esperado, atraso };
+  }
+
+  // ---------- Hoje ----------
+  async function abaHoje() {
+    const dia = $('hoje-dia').value || hoje();
+    const { registros } = await adm('registros', { de: dia, ate: dia });
+    const box = $('hoje-cards'); box.innerHTML = '';
+    L.equipe.filter(p => p.ativo !== false || registros.some(x => x.nome === p.nome)).forEach(p => {
+      const s = resumo(registros, p.nome, dia);
+      const wd = new Date(dia + 'T12:00:00Z').getUTCDay();
+      const folga = p.dias && !p.dias.includes(wd);
+      const c = document.createElement('div'); c.className = 'pc';
+      let st = 'Não bateu', cls = '';
+      if (s.ultimo) { if (s.ultimo.acao === 'saida') st = 'Saiu'; else if (s.ultimo.acao === 'saida_intervalo') { st = 'Intervalo'; cls = 'pausa'; } else { st = 'Na loja'; cls = 'dentro'; } }
+      else if (folga) st = 'Não escalada';
+      const h3 = document.createElement('h3'); h3.textContent = p.nome; const sp = document.createElement('span'); sp.className = 'st ' + cls; sp.textContent = st; h3.append(sp); c.append(h3);
+      const ln = document.createElement('div'); ln.className = 'linhas';
+      const add = (a, b) => { const x = document.createElement('span'); x.textContent = a; const y = document.createElement('span'); y.textContent = b; ln.append(x, y); };
+      s.r.forEach(x => add(NOME_ACAO[x.acao], hm(x.ts) + (x.origem === 'ajuste' ? ' (manual)' : '')));
+      if (s.pausa) add('Intervalo', durTxt(s.pausa));
+      if (s.trab) add('Trabalhado', durTxt(s.trab) + (s.aberto && dia === hoje() ? ' até agora' : ''));
+      if (!s.r.length && s.esperado && !folga) add('Escala', s.esperado[0] + ' às ' + s.esperado[1]);
+      c.append(ln);
+      s.flags.forEach(f => { const x = document.createElement('div'); x.className = 'flag' + (/manual/.test(f) ? ' am' : ''); x.textContent = '⚠ ' + f; c.append(x); });
+      if (p.obs) { const o = document.createElement('div'); o.className = 'hint'; o.textContent = p.obs; c.append(o); }
+      box.append(c);
+    });
+  }
+
+  // ---------- Semana ----------
+  let SEMREGS = [];
+  async function abaSemana() {
+    const fim = somaDia(semIni, 6);
+    $('sem-txt').textContent = semIni.slice(8) + '/' + semIni.slice(5, 7) + ' a ' + fim.slice(8) + '/' + fim.slice(5, 7);
+    const { registros } = await adm('registros', { de: semIni, ate: fim }); SEMREGS = registros;
+    const dias = [...Array(7)].map((_, i) => somaDia(semIni, i));
+    const t = $('sem-tab'); t.innerHTML = '';
+    const th = document.createElement('tr'); th.innerHTML = '<th>Pessoa</th>' + dias.map(d => '<th>' + SEM[new Date(d + 'T12:00:00Z').getUTCDay()] + '<br>' + d.slice(8) + '</th>').join('') + '<th>Total</th>'; t.append(th);
+    L.equipe.filter(p => p.ativo !== false || registros.some(x => x.nome === p.nome)).forEach(p => {
+      const tr = document.createElement('tr'); let tot = 0;
+      const td0 = document.createElement('td'); td0.textContent = p.nome; tr.append(td0);
+      dias.forEach(d => { const s = resumo(registros, p.nome, d); tot += s.trab; const td = document.createElement('td'); td.textContent = s.r.length ? durTxt(s.trab) + (s.flags.length ? ' !' : '') : '–'; if (s.flags.length) td.style.color = 'var(--red)'; td.title = s.flags.join('; '); tr.append(td); });
+      const tt = document.createElement('td'); tt.className = 'tot'; tt.textContent = durTxt(tot); tr.append(tt);
+      t.append(tr);
+    });
+  }
+  $('sem-ant').onclick = () => { semIni = somaDia(semIni, -7); abaSemana(); };
+  $('sem-prox').onclick = () => { semIni = somaDia(semIni, 7); abaSemana(); };
+  $('csv').onclick = () => {
+    const linhas = [['Dia', 'Pessoa', 'Registro', 'Hora', 'Origem', 'Observação', 'Removido']];
+    SEMREGS.forEach(x => linhas.push([x.dia, x.nome, NOME_ACAO[x.acao], new Date(x.ts).toLocaleString('pt-BR'), x.origem, x.nota || '', x.removido ? 'sim' : '']));
+    linhas.push([]); linhas.push(['Resumo', 'Pessoa', 'Horas trabalhadas', 'Alertas']);
+    const dias = [...Array(7)].map((_, i) => somaDia(semIni, i));
+    L.equipe.forEach(p => dias.forEach(d => { const s = resumo(SEMREGS, p.nome, d); if (s.r.length) linhas.push([d, p.nome, durTxt(s.trab), s.flags.join('; ')]); }));
+    const csv = '﻿' + linhas.map(l => l.map(v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"').join(';')).join('\n');
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' })); a.download = 'ponto-' + LOJA + '-' + semIni + '.csv'; a.click();
+  };
+
+  // ---------- Registros ----------
+  async function abaRegistros() {
+    const dia = $('reg-dia').value || hoje();
+    const { registros } = await adm('registros', { de: dia, ate: dia });
+    const box = $('reg-lista'); box.innerHTML = '';
+    if (!registros.length) { box.innerHTML = '<p class="hint">Nenhum registro neste dia.</p>'; return; }
+    registros.forEach(x => {
+      const d = document.createElement('div'); d.className = 'reg' + (x.removido ? ' rem' : '');
+      const t = document.createElement('div'); t.innerHTML = '<b></b> · <span></span><small></small>';
+      t.querySelector('b').textContent = hm(x.ts); t.querySelector('span').textContent = x.nome + ' · ' + NOME_ACAO[x.acao];
+      t.querySelector('small').textContent = (x.origem === 'ajuste' ? 'Lançado pelo gerente' : 'Celular ' + (x.aparelho || '').slice(0, 6)) + (x.nota ? ' · ' + x.nota : '');
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'btn sec mini' + (x.removido ? '' : ' perigo'); b.textContent = x.removido ? 'Restaurar' : 'Remover';
+      b.onclick = async () => { await adm(x.removido ? 'restaurar' : 'remover', { id: x.id }); abaRegistros(); };
+      d.append(t, b); box.append(d);
+    });
+  }
+  $('aj-ok').onclick = async () => {
+    const nome = $('aj-nome').value, acao = $('aj-acao').value, dia = $('aj-dia').value, hora = $('aj-hora').value;
+    if (!nome || !dia || !hora) { msg('Preencha pessoa, data e hora.', 'err'); return; }
+    const ts = new Date(dia + 'T' + hora + ':00-03:00').getTime();
+    try { await adm('ajuste', { nome, acao, ts, nota: $('aj-nota').value }); msg('Lançado.', 'okn'); $('aj-nota').value = ''; $('reg-dia').value = diaDe(ts); abaRegistros(); } catch (e) { msg('Não deu certo: ' + e.message, 'err'); }
+  };
+
+  // ---------- Internet ----------
+  async function abaInternet() {
+    const j = await adm('redes');
+    $('net-agora').innerHTML = '';
+    const a = document.createElement('div'); a.className = 'notice ' + (j.redeAgoraOk ? 'okn' : 'err');
+    a.innerHTML = j.redeAgoraOk ? '<b>✓ Este celular está numa internet liberada.</b>' : '<b>Este celular está numa internet que NÃO está liberada.</b>';
+    const r = document.createElement('div'); r.className = 'rede'; r.textContent = j.redeAgora; a.append(r); $('net-agora').append(a);
+    $('net-add').hidden = j.redeAgoraOk;
+    const lst = $('net-lista'); lst.innerHTML = j.redes.length ? '' : '<p class="hint">Nenhuma ainda. O ponto não funciona até liberar a internet da loja.</p>';
+    j.redes.forEach(x => {
+      const d = document.createElement('div'); d.className = 'reg';
+      const t = document.createElement('div'); t.innerHTML = '<span></span><small class="rede"></small>'; t.firstChild.textContent = x.rotulo + ' · desde ' + new Date(x.criado).toLocaleDateString('pt-BR'); t.lastChild.textContent = x.rede;
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'btn sec mini perigo'; b.textContent = 'Remover';
+      b.onclick = async () => { if (!confirmar(b)) return; await adm('del_rede', { rede: x.rede }); abaInternet(); };
+      d.append(t, b); lst.append(d);
+    });
+    const rc = $('net-recusas'); rc.innerHTML = j.recusas.length ? '' : '<p class="hint">Nenhuma.</p>';
+    j.recusas.forEach(x => {
+      const d = document.createElement('div'); d.className = 'reg';
+      const t = document.createElement('div'); t.innerHTML = '<span></span><small class="rede"></small>'; t.firstChild.textContent = (x.nomes || '') + ' · ' + x.n + 'x · última ' + new Date(x.ult).toLocaleString('pt-BR'); t.lastChild.textContent = x.rede;
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'btn sec mini'; b.textContent = 'Liberar';
+      b.onclick = async () => { if (!confirmar(b)) return; await adm('add_rede', { rede: x.rede, rotulo: 'Liberada pelas recusas' }); abaInternet(); };
+      d.append(t, b); rc.append(d);
+    });
+  }
+  function confirmar(b) { if (b.dataset.c) return true; b.dataset.c = 1; const t = b.textContent; b.textContent = 'Toque de novo'; setTimeout(() => { delete b.dataset.c; b.textContent = t; }, 3500); return false; }
+  $('net-add').onclick = async () => { try { await adm('add_rede', { rotulo: 'Wi-Fi ' + L.nome }); msg('Internet liberada. Teste batendo um ponto.', 'okn'); abaInternet(); } catch (e) { msg('Não deu: ' + e.message, 'err'); } };
+  $('troca-pin').onclick = async () => { const n = $('novo-pin').value; if (!/^\d{4,8}$/.test(n)) { msg('O PIN precisa ter de 4 a 8 números.', 'err'); return; } await adm('trocar_pin', { novo: n }); PIN = n; guardaPin(); $('novo-pin').value = ''; msg('PIN trocado.', 'okn'); };
+
+  // ---------- navegação ----------
+  function mostra() {
+    document.querySelectorAll('.abas button').forEach(b => b.setAttribute('aria-selected', b.dataset.aba === aba));
+    ['hoje', 'semana', 'registros', 'internet'].forEach(a => $('aba-' + a).hidden = a !== aba);
+    const f = { hoje: abaHoje, semana: abaSemana, registros: abaRegistros, internet: abaInternet }[aba];
+    f().catch(e => { if (e.message !== 'pin') msg('Erro ao carregar: ' + e.message, 'err'); });
+  }
+  document.querySelectorAll('.abas button').forEach(b => b.onclick = () => { aba = b.dataset.aba; mostra(); });
+  $('hoje-dia').onchange = abaHoje; $('hoje-atual').onclick = abaHoje; $('reg-dia').onchange = abaRegistros;
+
+  function guardaPin() { try { ($('lembrar').checked ? localStorage : sessionStorage).setItem('ponto-pin', PIN); } catch (e) {} }
+  async function entrar(semPin) {
+    $('login-err').hidden = true;
+    const op = $('login').dataset.criar ? 'criar_pin' : 'entrar';
+    if (!semPin) PIN = $('pin').value.trim();
+    try {
+      if (op === 'criar_pin') { await adm('criar_pin'); delete $('login').dataset.criar; }
+      await adm('entrar');
+      guardaPin(); $('login').hidden = true; $('app').hidden = false; mostra();
+      clearInterval(timer); timer = setInterval(() => { if (aba === 'hoje' && !document.hidden) abaHoje().catch(() => {}); }, 60000);
+    } catch (e) {
+      if (e.j && e.j.erro === 'sem_pin') { $('login').dataset.criar = 1; $('login-tit').textContent = 'Criar PIN do ponto'; $('login-txt').textContent = 'Primeira vez: escolha um PIN de 4 a 8 números. Só você deve saber.'; $('entrar').textContent = 'Criar PIN'; return; }
+      $('login-err').hidden = false; $('login-err').textContent = e.message === 'pin' ? 'PIN errado.' : (e.message || 'Não deu certo.');
+    }
+  }
+  $('entrar').onclick = () => entrar(false);
+  $('pin').addEventListener('keydown', e => { if (e.key === 'Enter') entrar(false); });
+
+  fetch('../config.json?v=' + Date.now(), { cache: 'no-store' }).then(r => r.json()).then(c => {
+    CFG = c; L = c.lojas[LOJA]; SRV = c.servico.replace(/\/+$/, '');
+    $('loja-nome').textContent = L.nome; $('tol').textContent = c.tolerancia_min;
+    $('hoje-dia').value = hoje(); $('reg-dia').value = hoje(); $('aj-dia').value = hoje();
+    L.equipe.forEach(p => { const o = document.createElement('option'); o.value = o.textContent = p.nome; $('aj-nome').append(o); });
+    let salvo = ''; try { salvo = localStorage.getItem('ponto-pin') || sessionStorage.getItem('ponto-pin') || ''; if (localStorage.getItem('ponto-pin')) $('lembrar').checked = true; } catch (e) {}
+    if (salvo) { PIN = salvo; entrar(true); } else adm('entrar').catch(e => { if (e.j && e.j.erro === 'sem_pin') entrar(true); });
+  });
+})();
+</script>
+</body>
+</html>
