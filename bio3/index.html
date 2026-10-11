@@ -223,7 +223,7 @@ video::-webkit-media-controls, video::-webkit-media-controls-panel, video::-webk
       <a class="b1" id="b1" href="https://gabbaburger.saipos.com">PEDIR DELIVERY</a>
       <a class="b2" id="b2" href="https://wa.me/message/QXY4DJK6HWG6N1" aria-label="WhatsApp"></a>
     </div>
-    <div class="ass-home">
+    <div class="ass-home" hidden>
       <div class="ass-home-cab"><span class="ass-faisca" aria-hidden="true">✦</span><span>Assistente Gabba</span></div>
       <p class="ass-home-tit">Não sabe o que pedir?</p>
       <button class="ass-busca" id="ass-abrir" type="button" aria-label="Abrir o assistente: escreva sua vontade">
@@ -591,7 +591,8 @@ document.addEventListener('click', function (e) {
 });
 </script>
 
-<script src="../assistente/assistente.js"></script>
+<!-- Assistente desligado: para ligar, tire o "hidden" do .ass-home e descomente a linha abaixo -->
+<!-- <script src="../assistente/assistente.js"></script> -->
 <script>
 // Faz os vídeos tocarem mesmo quando o iPhone segura o autoplay: tenta ao abrir, ao tocar na tela e ao rolar
 (function () {

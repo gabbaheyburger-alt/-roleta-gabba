@@ -122,7 +122,7 @@ Página `/bio/` para colocar no link da bio do Instagram, no lugar do bio.site. 
 
 ## Assistente de escolha (bio3)
 
-Botão "Não sabe o que pedir? Eu te ajudo 🍔" na capa da bio3. Abre uma janela com campo de texto, atalhos (Pouca fome, Muita fome, Sem carne, Sem pão) e "Encontrar minha pedida".
+**Desligado (out/2026).** Para religar: em `bio3/index.html`, tirar o `hidden` do bloco `.ass-home` e voltar a carregar `../assistente/assistente.js`. Era um card "Não sabe o que pedir?" na capa da bio3. Abre uma janela com campo de texto, atalhos (Pouca fome, Muita fome, Sem carne, Sem pão) e "Encontrar minha pedida".
 
 - `assistente/cardapio.json`: o cardápio oficial transcrito (fonte única do assistente). Para mudar preço ou produto, edite aqui; não precisa mexer no serviço.
 - `assistente/worker.js`: o serviço separado (Cloudflare Worker) que chama a OpenAI. A chave fica só na Cloudflare, na variável secreta `OPENAI_API_KEY`. Tem limite por pessoa (6 por minuto, 40 por dia), limite diário total (`LIMITE_DIA_TOTAL`, padrão 800), mensagem de até 300 letras, tempo máximo de 15 s e só aceita pedidos vindos do site. Nome e preço mostrados sempre saem do cardápio, nunca da IA.
