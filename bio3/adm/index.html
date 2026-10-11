@@ -316,7 +316,20 @@ input:focus-visible, button:focus-visible, select:focus-visible, a:focus-visible
         const linha = el('div', { className: 'linha' }, [el('span', { className: 'alca', textContent: '☰', ariaLabel: 'Arrastar' }), el('span', { className: 'nome' }, [NOMES_SEC[k][0], el('small', { textContent: NOMES_SEC[k][1] })]), up, dn]);
         linha.dataset.i = i; cont.append(linha);
       });
-      box.append(el('div', { className: 'card', style: 'padding:10px 12px' }, [el('b', { textContent: '📱 Capa (sempre no topo)' })]), cont);
+      // Capa do dia
+      const hoje = new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 10);
+      V.capaHoje = V.capaHoje || { data: '', foto: '' };
+      const cap = V.capaHoje, ativa = cap.foto && cap.data === hoje;
+      const dt = el('input', { type: 'date', value: cap.data || hoje }); dt.addEventListener('change', () => { cap.data = dt.value; marca(); desenha(); });
+      const tira = el('button', { type: 'button', className: 'mini perigo', textContent: 'Tirar capa do dia' }); tira.addEventListener('click', () => { cap.foto = ''; cap.data = ''; marca(); desenha(); });
+      const fb = fotoBox(cap, 'foto', 'Foto da capa do dia');
+      const origEscolhe = fb.onclick;
+      if (!cap.data) cap.data = hoje;
+      box.append(el('div', { className: 'card' }, [
+        el('b', { textContent: '📱 Capa do dia ' + (ativa ? '· valendo hoje ✅' : cap.foto ? '· agendada' : '· desligada') }),
+        el('p', { className: 'note', textContent: 'Troca o vídeo do topo por uma foto, só na data escolhida (em todos os horários). Depois volta sozinho ao normal.' }),
+        el('div', { className: 'item-top' }, [fb, el('div', { className: 'campos' }, [el('label', {}, ['Data', dt]), cap.foto ? tira : el('span')])])
+      ]), cont);
       arrastavel(cont, ord, desenha);
       return;
     }
