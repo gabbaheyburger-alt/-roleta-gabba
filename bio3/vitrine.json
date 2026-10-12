@@ -125,6 +125,13 @@
       "preco": "",
       "foto": "../bio2/img/pqp-maca-verde.jpg",
       "oculto": false
+    },
+    {
+      "nome": "Caipirinha de limao",
+      "desc": "Tradicional caipirinha de limão ",
+      "preco": "12,00",
+      "foto": "fotos/1791833008638.jpg",
+      "oculto": false
     }
   ],
   "eventos": [
