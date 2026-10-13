@@ -386,16 +386,26 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
     }
   }
   const pausa = ms => new Promise(r => setTimeout(r, ms));
-  async function enviarLista(lista) {
-    const resto = [];
-    for (let k = 0; k < lista.length; k++) {
-      try { await postar(lista[k]); await pausa(150); }
-      catch (e) { resto.push(...lista.slice(k)); break; }
-    }
-    return resto;
+  // Tudo vai primeiro para a fila do celular; cada linha só sai da fila depois de enviada.
+  // Se a página fechar no meio, o resto é enviado na próxima vez que ela abrir.
+  let enviando = null;
+  function enviarFila() {
+    if (enviando) return enviando;
+    enviando = (async () => {
+      try {
+        let f = LS.get('ck-fila', []);
+        while (f.length) {
+          try { await postar(f[0]); } catch (e) { break; }
+          f = LS.get('ck-fila', []); f.shift(); LS.set('ck-fila', f);
+          await pausa(150);
+        }
+        return f;
+      } finally { enviando = null; }
+    })();
+    return enviando;
   }
   async function enviar(c, pedir) {
-    const btn = $('#confirm'); btn.disabled = true; btn.textContent = 'Enviando…';
+    const btn = $('#confirm'); btn.disabled = true; btn.textContent = 'Enviando… não feche a página';
     const agora = new Date();
     const cod = 'CHK-' + String(agora.getFullYear()).slice(2) + String(agora.getMonth() + 1).padStart(2, '0') + String(agora.getDate()).padStart(2, '0') + '-' + String(agora.getHours()).padStart(2, '0') + String(agora.getMinutes()).padStart(2, '0') + '-' + Math.random().toString(36).slice(2, 4).toUpperCase();
     const lista = [];
@@ -406,8 +416,8 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
     const pedidoOk = pedir.length && $('#sendped') && $('#sendped').checked && PED;
     if (pedidoOk) pedir.forEach(i => lista.push({ tipo: 'ped', dados: { loja: LOJA, item: i.n, quantidade: '0', urgencia: 'Acabou', motivo: 'Checklist ' + SETOR.toLowerCase() + (obs[i.id] ? ' — ' + obs[i.id] : '') + ' · ' + cod, nome: nomeSel } }));
 
-    const resto = await enviarLista(lista);
-    if (resto.length) { const f = LS.get('ck-fila', []); f.push(...resto); LS.set('ck-fila', f); }
+    LS.set('ck-fila', LS.get('ck-fila', []).concat(lista));
+    const resto = await enviarFila();
     const hist = LS.get('ck-hist', []); hist.unshift({ data: hojeStr(), hora: hora(agora), loja: LOJA, setor: SETOR, nome: nomeSel, cod, pendente: resto.length > 0 }); LS.set('ck-hist', hist.slice(0, 30));
     LS.del(KD);
 
@@ -428,7 +438,7 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
 
   async function esvaziarFila() {
     const f = LS.get('ck-fila', []); if (!f.length || !CONFIG) return;
-    const resto = await enviarLista(f); LS.set('ck-fila', resto);
+    const resto = await enviarFila();
     if (!resto.length) { const h = LS.get('ck-hist', []); h.forEach(x => x.pendente = false); LS.set('ck-hist', h); }
     mostrarFila();
   }
