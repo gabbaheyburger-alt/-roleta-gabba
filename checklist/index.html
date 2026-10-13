@@ -108,6 +108,16 @@ input:focus, textarea:focus { border-color: var(--ink); background: #fff; box-sh
 .offer label { display: flex; gap: 10px; align-items: center; font-weight: 600; }
 .offer input { width: 22px; height: 22px; accent-color: var(--ink); }
 
+.tarefas { display: flex; flex-direction: column; gap: 12px; }
+.tgrp { border-radius: 12px; border: 1.5px solid var(--line-2); padding: 12px; display: flex; flex-direction: column; gap: 8px; background: #fff; }
+.tgrp.estoque { border-color: #6b5bd6; } .tgrp.preparo { border-color: var(--amber); } .tgrp.perda { border-color: #d46a00; } .tgrp.manut { border-color: var(--red); background: var(--red-soft); }
+.tgrp h3 { margin: 0; font-size: 1rem; display: flex; align-items: center; gap: 8px; }
+.tgrp .msg { margin: 0; font-size: .9rem; font-weight: 600; }
+.tgrp .prazo { margin: 0; font-size: .82rem; font-weight: 700; }
+.tgrp .prazo.late { color: var(--red); } .tgrp .prazo.ok { color: var(--amber); }
+.trow { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); }
+.trow .nm { font-weight: 600; } .trow .ob { display: block; font-size: .8rem; color: var(--muted); }
+.trow button { flex: none; font: 700 .85rem var(--font); min-height: 42px; padding: 0 14px; border-radius: 10px; border: 0; background: var(--green); color: #fff; cursor: pointer; }
 .done { text-align: center; align-items: center; }
 .check { width: 52px; height: 52px; border-radius: 50%; background: var(--green); color: #fff; display: flex; align-items: center; justify-content: center; }
 .done h2 { margin: 2px 0 0; font-size: 1.2rem; }
@@ -136,6 +146,12 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
   <div class="notice err" id="aviso-config" hidden>Não consegui carregar a lista do checklist. Confira a internet e abra a página de novo.</div>
   <div class="notice" id="aviso-fila" hidden></div>
   <div class="notice okn" id="aviso-hoje" hidden></div>
+
+  <section class="panel" id="sec-tarefas" hidden>
+    <div class="label"><span class="n">!</span>Tarefas pendentes</div>
+    <p class="hint">Do último checklist. Ao concluir, toque em <b>Resolvido</b> e a tarefa some.</p>
+    <div class="tarefas" id="tarefas"></div>
+  </section>
 
   <section class="panel" id="s1">
     <div class="label"><span class="n">01</span>Quem está conferindo</div>
@@ -404,19 +420,73 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
     })();
     return enviando;
   }
+  // ---------- Tarefas (o que fazer depois do checklist) ----------
+  const CAT = {
+    manut: { ic: '🔧', t: 'Manutenção', msg: 'Comunique imediatamente os responsáveis para resolver.' },
+    estoque: { ic: '📦', t: 'Pedir ao estoque', msg: 'Peça ao estoque central até as 17h e cobre a entrega.', prazo: true },
+    preparo: { ic: '🔪', t: 'Preparar / porcionar', msg: 'Você tem até as 17h para concluir.', prazo: true },
+    perda: { ic: '⚠️', t: 'Risco de perda', msg: 'Fique atento até o fim do dia. Se descartar, lance na planilha de perdas.' },
+    obs: { ic: '📝', t: 'Outras observações', msg: 'Resolva e toque em Resolvido.' }
+  };
+  const ORDEM = ['manut', 'estoque', 'preparo', 'perda', 'obs'];
+  function categoria(item, status, motivo, tipo) {
+    if (item.startsWith('[Funcionamento]')) return 'manut';
+    if (['Qualidade ruim, não dá para amanhã', 'Perto de vencer', 'Estragou / descartado'].includes(motivo)) return 'perda';
+    if (['Ainda não foi pedido', 'Pedido, aguardando estoque central'].includes(motivo)) return 'estoque';
+    if (['Precisa preparar', 'Não porcionado'].includes(motivo)) return 'preparo';
+    if (status === 'FALTA' || status === 'POUCO') return tipo === 'R' ? 'estoque' : 'preparo';
+    return 'obs';
+  }
+  const KT = () => 'ck-tarefas-' + LOJA + '-' + SETOR;
+  function prazoTexto() {
+    const [ph, pm] = (CONFIG.prazo || '17:00').split(':').map(Number);
+    const falta = ph * 60 + pm - (new Date().getHours() * 60 + new Date().getMinutes());
+    if (falta < 0) return ['late', '⛔ Passou das ' + (CONFIG.prazo || '17:00').replace(':', 'h') + '. Resolva agora e avise o responsável.'];
+    return ['ok', '⏰ Faltam ' + (falta >= 60 ? Math.floor(falta / 60) + 'h ' : '') + (falta % 60) + 'min até as ' + (CONFIG.prazo || '17:00').replace(':', 'h') + '.'];
+  }
+  function renderTarefas(box) {
+    const ts = LS.get(KT(), []);
+    if (!ts.length) { box.innerHTML = '<p class="hint">Nenhuma tarefa pendente. Tudo resolvido.</p>'; return 0; }
+    box.innerHTML = ORDEM.filter(k => ts.some(t => t.cat === k)).map(k => {
+      const c = CAT[k], pz = c.prazo ? prazoTexto() : null;
+      return '<div class="tgrp ' + k + '"><h3>' + c.ic + ' ' + c.t + '</h3><p class="msg">' + c.msg + '</p>' + (pz ? '<p class="prazo ' + pz[0] + '">' + pz[1] + '</p>' : '') +
+        ts.filter(t => t.cat === k).map(t => '<div class="trow"><span><span class="nm">' + esc(t.item.replace('[Funcionamento] ', '')) + '</span><span class="ob">' + esc([t.status, t.motivo && t.motivo !== 'Outro' ? t.motivo : '', t.obs].filter(Boolean).join(' · ')) + (t.dia !== hojeStr() ? ' · desde ' + t.dia.slice(8, 10) + '/' + t.dia.slice(5, 7) : '') + '</span></span><button type="button" data-res="' + esc(t.id) + '">Resolvido</button></div>').join('') + '</div>';
+    }).join('');
+    return ts.length;
+  }
+  function atualizaTarefas() {
+    const n = renderTarefas($('#tarefas')); $('#sec-tarefas').hidden = !n;
+    const r = $('#tarefas-recibo'); if (r) renderTarefas(r);
+  }
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-res]'); if (!b) return;
+    const ts = LS.get(KT(), []), t = ts.find(x => x.id === b.dataset.res); if (!t) return;
+    b.disabled = true; b.textContent = 'Enviando…';
+    const quem = nomeSel || 'Equipe';
+    LS.set('ck-fila', LS.get('ck-fila', []).concat([{ tipo: 'ck', dados: { loja: LOJA, setor: SETOR, responsavel: quem, comprovante: t.comp, item: t.item, status: 'RESOLVIDO', motivo: 'Resolvido pela equipe', observacao: '', tempo: '' } }]));
+    LS.set(KT(), ts.filter(x => x.id !== t.id));
+    atualizaTarefas(); enviarFila().then(mostrarFila);
+  });
+
   async function enviar(c, pedir) {
     const btn = $('#confirm'); btn.disabled = true; btn.textContent = 'Enviando… não feche a página';
     const agora = new Date();
     const cod = 'CHK-' + String(agora.getFullYear()).slice(2) + String(agora.getMonth() + 1).padStart(2, '0') + String(agora.getDate()).padStart(2, '0') + '-' + String(agora.getHours()).padStart(2, '0') + String(agora.getMinutes()).padStart(2, '0') + '-' + Math.random().toString(36).slice(2, 4).toUpperCase();
     const lista = [];
-    SAF.forEach(i => { if (ans[i.id] === 'NÃO' || obs[i.id]) lista.push(linha({ comprovante: cod, item: '[Funcionamento] ' + i.n, status: ans[i.id], motivo: '', observacao: obs[i.id] || '', tempo: '' })); });
-    ITEMS.forEach(i => { if (ans[i.id] !== 'OK' || mot[i.id] || obs[i.id]) lista.push(linha({ comprovante: cod, item: i.n, status: ans[i.id], motivo: mot[i.id] || '', observacao: obs[i.id] || '', tempo: '' })); });
+    // Nas linhas de item, a coluna Tempo leva a categoria da tarefa (manut, estoque, preparo, perda, obs) para o painel agrupar
+    SAF.forEach(i => { if (ans[i.id] === 'NÃO' || obs[i.id]) lista.push(linha({ comprovante: cod, item: '[Funcionamento] ' + i.n, status: ans[i.id], motivo: '', observacao: obs[i.id] || '', tempo: 'manut' })); });
+    ITEMS.forEach(i => { if (ans[i.id] !== 'OK' || mot[i.id] || obs[i.id]) lista.push(linha({ comprovante: cod, item: i.n, status: ans[i.id], motivo: mot[i.id] || '', observacao: obs[i.id] || '', tempo: categoria(i.n, ans[i.id], mot[i.id] || '', i.t) })); });
     // Resumo por último: quando ele chega na planilha, o checklist chegou inteiro
     lista.push(linha({ comprovante: cod, item: 'RESUMO', status: c.ok + ' OK · ' + c.low + ' POUCO · ' + c.miss + ' FALTA', motivo: 'Abertura', observacao: ALL.length + ' itens conferidos', tempo: fmtTempo(segs) }));
     const pedidoOk = pedir.length && $('#sendped') && $('#sendped').checked && PED;
     if (pedidoOk) pedir.forEach(i => lista.push({ tipo: 'ped', dados: { loja: LOJA, item: i.n, quantidade: '0', urgencia: 'Acabou', motivo: 'Checklist ' + SETOR.toLowerCase() + (obs[i.id] ? ' — ' + obs[i.id] : '') + ' · ' + cod, nome: nomeSel } }));
 
     LS.set('ck-fila', LS.get('ck-fila', []).concat(lista));
+    const novas = [];
+    SAF.forEach(i => { if (ans[i.id] === 'NÃO' || obs[i.id]) novas.push({ item: '[Funcionamento] ' + i.n, status: ans[i.id], motivo: '', obs: obs[i.id] || '', tipo: '' }); });
+    ITEMS.forEach(i => { if (ans[i.id] !== 'OK' || mot[i.id] || obs[i.id]) novas.push({ item: i.n, status: ans[i.id], motivo: mot[i.id] || '', obs: obs[i.id] || '', tipo: i.t }); });
+    const antigas = LS.get(KT(), []).filter(t => !novas.some(n => n.item === t.item));
+    LS.set(KT(), antigas.concat(novas.map(n => ({ id: cod + '|' + n.item, comp: cod, dia: hojeStr(), cat: categoria(n.item, n.status, n.motivo, n.tipo), ...n }))));
     const resto = await enviarFila();
     const hist = LS.get('ck-hist', []); hist.unshift({ data: hojeStr(), hora: hora(agora), loja: LOJA, setor: SETOR, nome: nomeSel, cod, pendente: resto.length > 0 }); LS.set('ck-hist', hist.slice(0, 30));
     LS.del(KD);
@@ -430,9 +500,12 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
       (resto.length ? '<p class="hint" style="color:var(--amber)">Sem internet agora. Ele será enviado sozinho quando a conexão voltar. Não feche esta página de vez.</p>' : '') +
       '<dl><div><dt>Comprovante</dt><dd>' + cod + '</dd></div><div><dt>Setor</dt><dd>' + esc(SETOR) + ' · ' + esc(LOJA_NOME) + '</dd></div><div><dt>Responsável</dt><dd>' + esc(nomeSel) + '</dd></div><div><dt>Horário</dt><dd>' + dt + (noPrazo ? '' : ' (após o prazo)') + '</dd></div><div><dt>Resultado</dt><dd>' + c.ok + ' OK · ' + c.low + ' POUCO · ' + c.miss + ' FALTA</dd></div><div><dt>Tempo</dt><dd>' + fmtTempo(segs) + '</dd></div>' +
       (pedidoOk ? '<div><dt>Pedidos de insumo</dt><dd>' + pedir.length + '</dd></div>' : '') + '</dl>' +
+      '</section>' +
+      '<section class="panel"><div class="label"><span class="n">!</span>O que fazer agora</div><p class="hint">Ao concluir cada tarefa, toque em <b>Resolvido</b>. As tarefas ficam guardadas neste celular e aparecem no topo da página quando ela abrir de novo.</p><div class="tarefas" id="tarefas-recibo"></div>' +
       '<button class="ghost" type="button" id="novo">Fechar</button></section>';
     window.scrollTo(0, 0);
     $('#novo').onclick = () => location.reload();
+    atualizaTarefas();
     window.gabbaConta && gabbaConta('checklist-' + LOJA.toLowerCase() + '-' + SETOR.toLowerCase(), 'Checklist ' + SETOR);
   }
 
@@ -455,7 +528,7 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
     fetch('../pedidos/config.json?v=' + Date.now(), { cache: 'no-store' }).then(r => r.json()).catch(() => null)
   ]).then(([c, p]) => {
     CONFIG = c; PED = p && p.form ? { form: p.form, campos: p.campos } : null;
-    montar(); mostrarFila(); esvaziarFila();
+    montar(); mostrarFila(); esvaziarFila(); atualizaTarefas(); setInterval(atualizaTarefas, 60000);
   }).catch(() => { $('#aviso-config').hidden = false; $('#titulo').textContent = 'Checklist'; $('#dock').hidden = true; });
 })();
 </script>
