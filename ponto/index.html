@@ -135,7 +135,7 @@ body { font-family: var(--font); font-size: 16px; line-height: 1.45; -webkit-fon
   function statusTxt(ult) {
     if (!ult) return { t: 'Ainda não bateu hoje', c: '' };
     if (ult.acao === 'saida') return { t: 'Saiu às ' + hm(ult.ts), c: '' };
-    if (ult.acao === 'saida_intervalo') return { t: 'Em intervalo desde ' + hm(ult.ts), c: 'pausa' };
+    if (ult.acao === 'saida_intervalo') return { t: 'Intervalo · volta às ' + hm(ult.ts + ((CFG && CFG.lojas[LOJA].intervalo_min) || 30) * 60000), c: 'pausa' };
     return { t: 'Na loja desde ' + hm(ult.ts), c: 'dentro' };
   }
 
@@ -170,7 +170,14 @@ body { font-family: var(--font); font-size: 16px; line-height: 1.45; -webkit-fon
       box.append(b);
     });
     const L = CFG.lojas[LOJA];
-    $('p-dica').textContent = proximas(ult).includes('saida_intervalo') ? 'Intervalo a partir das ' + (L.intervalo_a_partir || '17:00') + ', alternando com a equipe.' : '';
+    const im = L.intervalo_min || 30;
+    if (ult && ult.acao === 'saida_intervalo') {
+      const volta = ult.ts + im * 60000, falta = Math.round((volta - Date.now()) / 60000);
+      $('p-dica').innerHTML = '';
+      const d = document.createElement('div'); d.className = 'notice ' + (falta < 0 ? 'err' : 'okn');
+      d.textContent = falta >= 0 ? 'Intervalo de ' + im + ' min · volta às ' + hm(volta) + ' (faltam ' + falta + ' min)' : 'Intervalo de ' + im + ' min · era para voltar às ' + hm(volta) + ' (passou ' + (-falta) + ' min)';
+      $('p-dica').append(d);
+    } else $('p-dica').textContent = proximas(ult).includes('saida_intervalo') ? 'Intervalo de ' + im + ' min, a partir das ' + (L.intervalo_a_partir || '17:00') + ', alternando com a equipe.' : '';
     window.scrollTo(0, 0);
   }
 
@@ -187,7 +194,7 @@ body { font-family: var(--font); font-size: 16px; line-height: 1.45; -webkit-fon
       $('tela-pessoa').hidden = true; $('tela-ok').hidden = false;
       $('ok-txt').textContent = NOME_ACAO[acao] + ' registrada';
       $('ok-hora').textContent = hm(r.j.ts);
-      $('ok-nome').textContent = atual.nome;
+      $('ok-nome').textContent = acao === 'saida_intervalo' ? atual.nome + ' · volte às ' + hm(r.j.ts + (CFG.lojas[LOJA].intervalo_min || 30) * 60000) : atual.nome;
       $('ok-desfazer').disabled = false; $('ok-desfazer').textContent = 'Errei · desfazer';
       if (navigator.vibrate) navigator.vibrate(60);
     } catch (e) { alert('Sem internet. Confira o Wi-Fi e tente de novo.'); abrePessoa(atual); }

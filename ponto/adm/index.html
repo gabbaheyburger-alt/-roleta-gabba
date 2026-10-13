@@ -166,6 +166,9 @@ td.tot { font-weight: 800; }
       else if (ini) { trab += x.ts - ini; ini = null; if (x.acao === 'saida_intervalo') pz = x.ts; }
     });
     const ultimo = r[r.length - 1];
+    const im = L.intervalo_min || 30;
+    if (pz && dia === hoje()) { const corre = Date.now() - pz; if (corre > im * 60000) flags.push('no intervalo há ' + Math.round(corre / 60000) + ' min (passou ' + Math.round(corre / 60000 - im) + ')'); }
+    if (pausa > (im + 2) * 60000) flags.push('intervalo de ' + Math.round(pausa / 60000) + ' min (passou ' + Math.round(pausa / 60000 - im) + ')');
     const aberto = ultimo && ultimo.acao !== 'saida';
     if (aberto && dia < hoje()) flags.push('sem saída');
     if (aberto && dia === hoje() && ini) trab += Date.now() - ini;

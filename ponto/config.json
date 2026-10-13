@@ -4,17 +4,75 @@
   "lojas": {
     "gabba": {
       "nome": "Gabba Burger",
-      "horarios": { "1": ["15:30", "23:00"], "2": ["15:30", "23:00"], "3": ["15:30", "23:00"], "4": ["15:30", "23:00"], "5": ["15:30", "24:00"], "6": ["15:30", "24:00"], "0": ["15:30", "24:00"] },
+      "horarios": {
+        "1": [
+          "15:30",
+          "23:00"
+        ],
+        "2": [
+          "15:30",
+          "23:00"
+        ],
+        "3": [
+          "15:30",
+          "23:00"
+        ],
+        "4": [
+          "15:30",
+          "23:00"
+        ],
+        "5": [
+          "15:30",
+          "24:00"
+        ],
+        "6": [
+          "15:30",
+          "24:00"
+        ],
+        "0": [
+          "15:30",
+          "24:00"
+        ]
+      },
       "intervalo_a_partir": "17:00",
       "equipe": [
-        { "nome": "Natália", "setor": "Cozinha" },
-        { "nome": "Paulo", "setor": "Cozinha" },
-        { "nome": "Marta", "setor": "Cozinha" },
-        { "nome": "Inara", "setor": "Cozinha", "ativo": false, "obs": "começa em alguns dias" },
-        { "nome": "Dalva", "setor": "Recepção" },
-        { "nome": "Mayara", "setor": "Recepção" },
-        { "nome": "Jandira", "setor": "Recepção", "dias": [1, 2], "obs": "horista · no Gabba seg e ter" }
-      ]
+        {
+          "nome": "Natália",
+          "setor": "Cozinha"
+        },
+        {
+          "nome": "Paulo",
+          "setor": "Cozinha"
+        },
+        {
+          "nome": "Marta",
+          "setor": "Cozinha"
+        },
+        {
+          "nome": "Inara",
+          "setor": "Cozinha",
+          "ativo": false,
+          "obs": "começa em alguns dias"
+        },
+        {
+          "nome": "Dalva",
+          "setor": "Recepção"
+        },
+        {
+          "nome": "Mayara",
+          "setor": "Recepção"
+        },
+        {
+          "nome": "Jandira",
+          "setor": "Recepção",
+          "dias": [
+            1,
+            2
+          ],
+          "obs": "horista · no Gabba seg e ter"
+        }
+      ],
+      "intervalo_min": 30
     }
   }
 }
