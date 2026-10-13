@@ -157,7 +157,6 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
       <span><i style="background:var(--amber)"></i>POUCO: abaixo do ideal</span>
       <span><i style="background:var(--red)"></i>FALTA: não tem</span>
     </div>
-    <p class="hint"><b style="color:var(--red)">PREPARO</b> = feito aqui na loja. <b>REPOSIÇÃO</b> = vem do estoque ou da compra.</p>
     <div id="groups" style="display:flex;flex-direction:column;gap:10px"></div>
   </section>
 
@@ -247,7 +246,7 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
     return '<div class="seg" role="group"><button type="button" class="ok" data-id="' + id + '" data-v="OK" aria-pressed="false">OK</button><button type="button" class="low" data-id="' + id + '" data-v="POUCO" aria-pressed="false">POUCO</button><button type="button" class="miss" data-id="' + id + '" data-v="FALTA" aria-pressed="false">FALTA</button></div>';
   }
   function itemHTML(it) {
-    const tag = it.yn ? '' : '<span class="tag ' + (it.t === 'P' ? 'prep' : '') + '">' + (it.t === 'P' ? 'Preparo' : 'Reposição') + '</span>';
+    const tag = '';
     return '<div class="item" id="row-' + it.id + '"><div class="irow"><span class="iname">' + esc(it.n) + '</span>' + tag + '</div>' + segHTML(it.id, it.yn) +
       (it.yn ? '' : '<div class="mots" id="mots-' + it.id + '" hidden></div>') +
       '<button type="button" class="addobs" data-id="' + it.id + '" id="add-' + it.id + '" hidden>+ Observação</button>' +
