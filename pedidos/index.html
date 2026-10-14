@@ -340,7 +340,7 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
   const ehProd = () => estado.tipo === 'Producao';
   const modo = () => ehMat() ? 'material' : ehProd() ? 'producao' : 'insumo';
   // Produção só existe no Gabba
-  const EQUIPE = { Gabba: ['Natália', 'Paulo'], Uau: ['Tuany', 'Uly'], Feijuca: ['Inara'] };
+  const EQUIPE = { Gabba: ['Natália', 'Paulo', 'Mayara', 'Dalva'], Uau: ['Tuany', 'Uly'], Feijuca: ['Inara'] };
   function mostraNomes() {
     const atual = $('nome').value.trim();
     $('nomes').replaceChildren(...(EQUIPE[estado.loja] || []).map(n => {
