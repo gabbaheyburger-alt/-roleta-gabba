@@ -64,18 +64,47 @@ td.tot { font-weight: 800; }
 .reg.rem { opacity: .45; text-decoration: line-through; }
 .reg small { display: block; color: var(--muted); font-size: .76rem; }
 .rede { font-family: ui-monospace, Menlo, monospace; font-size: .8rem; overflow-wrap: anywhere; }
+
+/* Interface Grupo Gabba 2026 */
+:root { --page:#f4f1e8; --cream:#f6edd6; --ink:#20231f; --green:#38634b; --line:#e4e0d5; }
+.topbar { border-bottom:4px solid #d7c697; padding-bottom:24px; }
+.panel { border-radius:20px; padding:22px; box-shadow:0 5px 20px #24251d05; }
+button { transition:background .15s,transform .15s; }
+button:active:not(:disabled) { transform:scale(.98); }
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible { outline:3px solid #b58d38; outline-offset:3px; }
+.intro { padding:12px 2px 4px; }
+.intro h2 { font-size:clamp(1.8rem,5vw,2.4rem);letter-spacing:-.055em;line-height:1.15;margin:0 0 10px; }
+.intro p { margin:0;color:var(--muted); }
+.toplink { color:var(--cream);font-size:.8rem;margin-left:auto;text-decoration:none;border:1px solid #ffffff40;padding:10px 12px;border-radius:10px; }
+@media(max-width:420px) { .topbar img {height:36px} .topbar .in {gap:9px} .topbar h1 {font-size:1rem} .panel {padding:16px} }
+
+.main,.topbar .in {max-width:1040px}
+.main {padding-top:22px}
+#login {max-width:440px;width:100%;align-self:center;margin-top:22px}
+.abas {padding:12px 0;margin-bottom:16px;gap:8px}
+.abas button {border-radius:12px;min-height:48px}
+.pc {padding:20px;border-radius:18px;gap:12px}
+.pc h3 {font-size:1.15rem}
+.cards {grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.resumo-dia {display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:6px 0}
+.metrica {padding:18px;background:white;border:1px solid var(--line);border-radius:16px}
+.metrica b {display:block;font-size:2rem;letter-spacing:-.06em}
+.metrica span {font-size:.8rem;color:var(--muted)}
+@media(max-width:600px) {.resumo-dia {grid-template-columns:repeat(2,1fr)} .cards {grid-template-columns:1fr} .toplink {font-size:.7rem;padding:8px}}
 </style>
 </head>
 <body>
 <header class="topbar"><div class="in">
   <img src="../../pedidos/logo-grupo-gabba.svg" alt="Grupo Gabba">
   <div><div class="eyebrow">Área do dono</div><h1>Ponto · <span id="loja-nome">Gabba Burger</span></h1></div>
+  <a class="toplink" href="../">Ponto da equipe ↗</a>
 </div></header>
 
 <main class="main">
+<div class="intro"><h2>Acompanhe sua equipe.</h2><p>Presença, intervalos e horas em um só lugar.</p></div>
   <section class="panel" id="login">
     <div class="label" id="login-tit">Entrar</div>
-    <p class="hint" id="login-txt">Digite o PIN do ponto.</p>
+    <p class="hint" id="login-txt">Use seu PIN para acessar os registros da equipe.</p>
     <input id="pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8" placeholder="PIN (4 a 8 números)" autocomplete="off">
     <label class="hint" style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="lembrar" style="width:auto"> Lembrar neste celular</label>
     <button class="btn" id="entrar" type="button">Entrar</button>
@@ -92,6 +121,7 @@ td.tot { font-weight: 800; }
 
     <section id="aba-hoje" style="display:flex;flex-direction:column;gap:12px">
       <div class="row"><input type="date" id="hoje-dia"><button class="btn sec" id="hoje-atual" type="button" style="flex:0 0 auto">Atualizar</button></div>
+      <div class="resumo-dia" id="resumo-dia" aria-live="polite"></div>
       <div class="cards" id="hoje-cards"></div>
       <p class="hint">Atraso: entrada depois de <span id="tol"></span> min do horário. Atualiza sozinho a cada minuto.</p>
     </section>
@@ -137,7 +167,7 @@ td.tot { font-weight: 800; }
   const NOME_ACAO = { entrada: 'Entrada', saida_intervalo: 'Saída p/ intervalo', volta_intervalo: 'Volta do intervalo', saida: 'Saída' };
   const SEM = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
   const pad = n => String(n).padStart(2, '0');
-  const hm = ts => { const d = new Date(ts); return pad(d.getHours()) + ':' + pad(d.getMinutes()); };
+  const hm = ts => new Date(ts).toLocaleTimeString('pt-BR', { timeZone: 'America/Fortaleza', hour: '2-digit', minute: '2-digit', hour12: false });
   const durTxt = ms => { const m = Math.round(ms / 60000); return Math.floor(m / 60) + 'h' + pad(m % 60); };
   const toMin = t => { const p = String(t).split(':'); return +p[0] * 60 + (+p[1] || 0); };
   // "dia do ponto": até 05:00 conta para o dia anterior
@@ -189,6 +219,7 @@ td.tot { font-weight: 800; }
     const dia = $('hoje-dia').value || hoje();
     const { registros } = await adm('registros', { de: dia, ate: dia });
     const box = $('hoje-cards'); box.innerHTML = '';
+    const contagem = { 'Na loja': 0, 'Intervalo': 0, 'Não bateu': 0, 'Com alertas': 0 };
     L.equipe.filter(p => p.ativo !== false || registros.some(x => x.nome === p.nome)).forEach(p => {
       const s = resumo(registros, p.nome, dia);
       const wd = new Date(dia + 'T12:00:00Z').getUTCDay();
@@ -197,6 +228,8 @@ td.tot { font-weight: 800; }
       let st = 'Não bateu', cls = '';
       if (s.ultimo) { if (s.ultimo.acao === 'saida') st = 'Saiu'; else if (s.ultimo.acao === 'saida_intervalo') { st = 'Intervalo'; cls = 'pausa'; } else { st = 'Na loja'; cls = 'dentro'; } }
       else if (folga) st = 'Não escalada';
+      if (st in contagem) contagem[st]++;
+      if (s.flags.length) contagem['Com alertas']++;
       const h3 = document.createElement('h3'); h3.textContent = p.nome; const sp = document.createElement('span'); sp.className = 'st ' + cls; sp.textContent = st; h3.append(sp); c.append(h3);
       const ln = document.createElement('div'); ln.className = 'linhas';
       const add = (a, b) => { const x = document.createElement('span'); x.textContent = a; const y = document.createElement('span'); y.textContent = b; ln.append(x, y); };
@@ -208,6 +241,13 @@ td.tot { font-weight: 800; }
       s.flags.forEach(f => { const x = document.createElement('div'); x.className = 'flag' + (/manual/.test(f) ? ' am' : ''); x.textContent = '⚠ ' + f; c.append(x); });
       if (p.obs) { const o = document.createElement('div'); o.className = 'hint'; o.textContent = p.obs; c.append(o); }
       box.append(c);
+    });
+    const resumoBox = $('resumo-dia'); resumoBox.replaceChildren();
+    Object.entries(contagem).forEach(([rotulo, n]) => {
+      const card = document.createElement('div'); card.className = 'metrica';
+      const valor = document.createElement('b'); valor.textContent = n;
+      const label = document.createElement('span'); label.textContent = rotulo;
+      card.append(valor, label); resumoBox.append(card);
     });
   }
 
