@@ -64,6 +64,28 @@ body { font-family: var(--font); font-size: 16px; line-height: 1.45; -webkit-fon
 .ok-card .hora { font-size: 2.6rem; font-weight: 800; letter-spacing: -.03em; font-variant-numeric: tabular-nums; margin: 4px 0; }
 .ok-card p { margin: 0 0 14px; color: var(--muted); }
 .rodape { text-align: center; font-size: .8rem; color: var(--muted); }
+
+/* Interface Grupo Gabba 2026 */
+:root { --page:#f4f1e8; --cream:#f6edd6; --ink:#20231f; --green:#38634b; --line:#e4e0d5; }
+.topbar { border-bottom:4px solid #d7c697; padding-bottom:24px; }
+.panel { border-radius:20px; padding:22px; box-shadow:0 5px 20px #24251d05; }
+button { transition:background .15s,transform .15s; }
+button:active:not(:disabled) { transform:scale(.98); }
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible { outline:3px solid #b58d38; outline-offset:3px; }
+.intro { padding:12px 2px 4px; }
+.intro h2 { font-size:clamp(1.8rem,5vw,2.4rem);letter-spacing:-.055em;line-height:1.15;margin:0 0 10px; }
+.intro p { margin:0;color:var(--muted); }
+.toplink { color:var(--cream);font-size:.8rem;margin-left:auto;text-decoration:none;border:1px solid #ffffff40;padding:10px 12px;border-radius:10px; }
+@media(max-width:420px) { .topbar img {height:36px} .topbar .in {gap:9px} .topbar h1 {font-size:1rem} .panel {padding:16px} }
+
+.main {padding-top:22px;gap:18px}
+.nome {min-height:92px;border-radius:15px;padding:16px;gap:7px}
+.nome.dentro {background:#f0f6f1;border-color:#c6d7cb}
+.nome.pausa {background:#fff7e7;border-color:#edddba}
+.nome span {font-size:1.2rem;letter-spacing:-.03em}
+.label {color:var(--muted)}
+.acao {min-height:88px}
+.notice {border-radius:14px}
 </style>
 </head>
 <body>
@@ -75,7 +97,8 @@ body { font-family: var(--font); font-size: 16px; line-height: 1.45; -webkit-fon
 </div></header>
 
 <main class="main">
-  <div class="notice" id="aviso">Conferindo a internet…</div>
+  <div class="intro"><h2>Seu turno começa aqui.</h2><p>Escolha seu nome e registre o próximo passo.</p></div>
+  <div class="notice" id="aviso" role="status" aria-live="polite">Conferindo a internet…</div>
 
   <section class="panel" id="tela-nomes">
     <div class="label">Quem é você?</div>
@@ -90,7 +113,7 @@ body { font-family: var(--font); font-size: 16px; line-height: 1.45; -webkit-fon
     <p class="hint" id="p-dica"></p>
   </section>
 
-  <section class="panel ok-card" id="tela-ok" hidden>
+  <section class="panel ok-card" id="tela-ok" aria-live="polite" hidden>
     <div class="check">✓</div>
     <h2 id="ok-txt"></h2>
     <div class="hora" id="ok-hora"></div>
@@ -108,14 +131,14 @@ body { font-family: var(--font); font-size: 16px; line-height: 1.45; -webkit-fon
   const NOME_ACAO = { entrada: 'Entrada', saida_intervalo: 'Saída para intervalo', volta_intervalo: 'Volta do intervalo', saida: 'Saída' };
   const ICONE = { entrada: '→', saida_intervalo: '☕', volta_intervalo: '↩', saida: '⏏' };
   const pad = n => String(n).padStart(2, '0');
-  const hm = ts => { const d = new Date(ts); return pad(d.getHours()) + ':' + pad(d.getMinutes()); };
+  const hm = ts => new Date(ts).toLocaleTimeString('pt-BR', { timeZone: 'America/Fortaleza', hour: '2-digit', minute: '2-digit', hour12: false });
   let CFG = null, SRV = '', ultimos = {}, redeOk = false, atual = null;
 
   // aparelho: identifica este celular (sem dados pessoais), para o gerente ver se alguém bateu por outra pessoa
   let aparelho = '';
   try { aparelho = localStorage.getItem('ponto-aparelho') || ''; if (!aparelho) { aparelho = (crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2)).slice(0, 18); localStorage.setItem('ponto-aparelho', aparelho); } } catch (e) { aparelho = 'sem-memoria-' + String(Math.random()).slice(2, 10); }
 
-  function relogio() { const d = new Date(); $('hora').textContent = pad(d.getHours()) + ':' + pad(d.getMinutes()); $('data').textContent = d.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' }); }
+  function relogio() { const d = new Date(); $('hora').textContent = hm(d.getTime()); $('data').textContent = d.toLocaleDateString('pt-BR', { timeZone: 'America/Fortaleza', weekday: 'short', day: '2-digit', month: '2-digit' }); }
   relogio(); setInterval(relogio, 10000);
 
   function aviso(tipo, html) { const a = $('aviso'); a.className = 'notice' + (tipo ? ' ' + tipo : ''); a.innerHTML = html; const b = a.querySelector('button'); if (b) b.onclick = carregaEstado; }
@@ -182,6 +205,7 @@ body { font-family: var(--font); font-size: 16px; line-height: 1.45; -webkit-fon
   }
 
   async function bater(acao, btn) {
+    if (!confirm(atual.nome + ': confirmar ' + NOME_ACAO[acao].toLowerCase() + '?')) return;
     document.querySelectorAll('#p-acoes button').forEach(b => b.disabled = true);
     btn.textContent = 'Registrando…';
     try {
@@ -221,6 +245,10 @@ body { font-family: var(--font); font-size: 16px; line-height: 1.45; -webkit-fon
       else aviso('err', '<div><b>Você não está no Wi-Fi da loja.</b>Desligue os dados móveis, conecte no Wi-Fi do ' + CFG.lojas[LOJA].nome + ' e toque em Tentar de novo.<br><button type="button">Tentar de novo</button></div>');
     } catch (e) { redeOk = false; aviso('err', '<div><b>Sem conexão com o ponto.</b>Confira a internet.<br><button type="button">Tentar de novo</button></div>'); }
     if (!$('tela-nomes').hidden) desenhaNomes();
+    if (!$('tela-pessoa').hidden && atual) {
+      if (redeOk) abrePessoa(atual);
+      else volta();
+    }
   }
 
   fetch('config.json?v=' + Date.now(), { cache: 'no-store' }).then(r => r.json()).then(c => {
