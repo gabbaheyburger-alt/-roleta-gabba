@@ -19,9 +19,10 @@
       "setores": {
         "Chapa": {
           "equipe": [
-            "Paulo",
             "Natália",
-            "Marta"
+            "Paulo",
+            "Marta",
+            "Inara"
           ],
           "seguranca": [
             "Chapa ligada e aquecendo normal",
@@ -313,9 +314,10 @@
         "Chapa-nova": {
           "nome": "Chapa",
           "equipe": [
-            "Paulo",
             "Natália",
-            "Marta"
+            "Paulo",
+            "Marta",
+            "Inara"
           ],
           "seguranca": [
             "Chapa ligada e aquecendo normal",
@@ -524,7 +526,12 @@
         },
         "Aux-cozinha": {
           "nome": "Aux de cozinha",
-          "equipe": [],
+          "equipe": [
+            "Natália",
+            "Paulo",
+            "Marta",
+            "Inara"
+          ],
           "seguranca": [
             "Liquidificador funcionando (OK)",
             "Batedor de milkshake funcionando (OK)"
