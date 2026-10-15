@@ -702,12 +702,7 @@
         },
         "Lideranca": {
           "nome": "Liderança",
-          "equipe": [
-            "Natália",
-            "Paulo",
-            "Marta",
-            "Inara"
-          ],
+          "equipe": ["Natália"],
           "titulo_seguranca": "Conferência operacional",
           "seguranca": [
             "O freezer horizontal externo está funcionando e mantendo os produtos congelados?",
