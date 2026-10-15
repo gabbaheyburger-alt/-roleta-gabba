@@ -699,6 +699,140 @@
             ]
           ],
           "titulo_seguranca": "Equipamentos da bancada"
+        },
+        "Lideranca": {
+          "nome": "Liderança",
+          "equipe": [
+            "Natália",
+            "Paulo",
+            "Marta",
+            "Inara"
+          ],
+          "titulo_seguranca": "Conferência operacional",
+          "seguranca": [
+            "O freezer horizontal externo está funcionando e mantendo os produtos congelados?",
+            "A geladeira da bancada está funcionando, com os produtos bem conservados e organizados?",
+            "Os insumos e preparações estão identificados e dentro da validade?",
+            "A bancada da chapa está pronta para o serviço?",
+            "A bancada de bebidas está pronta para o atendimento?",
+            "Os insumos são suficientes para o movimento previsto de hoje?",
+            "O plano de produção foi conferido, com responsáveis e prioridades?",
+            "A recepção foi informada dos itens indisponíveis?",
+            "As faltas foram registradas e enviadas ao estoque?",
+            "A equipe está com fardamento completo, limpo e pronta para começar?",
+            "As áreas de trabalho, circulação e atendimento estão limpas e organizadas?"
+          ],
+          "orientacoes": [
+            "Equipamento ligado; produtos firmes, sem gelo derretido nem embalagens moles.",
+            "Ligada e gelando; produtos tampados ou embalados; cada coisa no seu lugar.",
+            "Todo item aberto ou preparado com etiqueta legível no padrão da loja; nenhum produto vencido.",
+            "Limpa, organizada, abastecida e com os utensílios do serviço.",
+            "Limpa, organizada, abastecida e com os utensílios do atendimento.",
+            "Comparar o disponível com o movimento esperado e anotar o que será necessário amanhã.",
+            "Conferir previsto, concluído e pendente; quem faz e em que ordem.",
+            "Confirmar o que pode ser vendido e atualizar a recepção durante o turno.",
+            "Conferir cada falta na página de pedidos existente.",
+            "Conferir apresentação e prontidão de cada pessoa.",
+            "Conferir bancadas, circulação e área de atendimento."
+          ],
+          "grupos": [
+            [
+              "Produções e entradas",
+              [
+                [
+                  "Coxinha sem massa",
+                  "P"
+                ],
+                [
+                  "Pastelzim de queijo",
+                  "P"
+                ],
+                [
+                  "Croqueta do Mar",
+                  "P"
+                ],
+                [
+                  "Croc Ball",
+                  "P"
+                ],
+                [
+                  "Dadinho de tapioca — Luar do Sertão",
+                  "P"
+                ],
+                [
+                  "Pudim",
+                  "P"
+                ],
+                [
+                  "Brownie",
+                  "P"
+                ],
+                [
+                  "Crumble",
+                  "P"
+                ]
+              ]
+            ],
+            [
+              "Embalagens e descartáveis",
+              [
+                [
+                  "Embalagem kraft",
+                  "R"
+                ],
+                [
+                  "Embalagem H3",
+                  "R"
+                ],
+                [
+                  "Embalagem H2",
+                  "R"
+                ],
+                [
+                  "Embalagem H1",
+                  "R"
+                ],
+                [
+                  "Papel antigordura",
+                  "R"
+                ],
+                [
+                  "Ketchup em sachê",
+                  "R"
+                ],
+                [
+                  "Potinho de 30 ml",
+                  "R"
+                ]
+              ]
+            ],
+            [
+              "Materiais de apoio",
+              [
+                [
+                  "Etiquetas",
+                  "R"
+                ],
+                [
+                  "Caneta de identificação",
+                  "R"
+                ],
+                [
+                  "Grampeador",
+                  "R"
+                ],
+                [
+                  "Grampos",
+                  "R"
+                ]
+              ]
+            ]
+          ],
+          "lideranca": true,
+          "quantidade_opcional": true,
+          "leitura_pendencias": {
+            "url": "https://gabba-lideranca.gabbaheyburger.workers.dev/api/leadership"
+          }
         }
       }
     }
