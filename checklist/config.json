@@ -1,5 +1,5 @@
 {
-  "_comentario": "Checklist de abertura. 'form'/'campos' = formulário Checklist Abertura (planilha CHECKLISTS). 'prazo' = horário limite (HH:MM). Em 'setores', cada loja tem seus setores: equipe (nomes para tocar), seguranca (perguntas Sim/Não) e grupos de itens. Tipo do item: P = preparo (feito na loja), R = reposição (vem do estoque/compra). 'Chapa-nova' = lista nova da chapa (link ?setor=chapa-nova); grava como setor Chapa.",
+  "_comentario": "Checklist de abertura. 'form'/'campos' = formulário Checklist Abertura (planilha CHECKLISTS). 'prazo' = horário limite (HH:MM). Em 'setores', cada loja tem seus setores: equipe (nomes para tocar), seguranca (perguntas Sim/Não) e grupos de itens. Tipo do item: P = preparo (feito na loja), R = reposição (vem do estoque/compra). 'Chapa-nova' = lista nova da chapa (link ?setor=chapa-nova); grava como setor Chapa. 'Aux-cozinha' = checklist do auxiliar de cozinha (link ?setor=aux-cozinha).",
   "form": "https://docs.google.com/forms/d/e/1FAIpQLSeVj6hc4LlMvrNpL8PysUcYjPjywqPMfgssy1Yh--_aqwsTFA/formResponse",
   "campos": {
     "loja": "entry.1627150514",
@@ -521,6 +521,177 @@
               ]
             ]
           ]
+        },
+        "Aux-cozinha": {
+          "nome": "Aux de cozinha",
+          "equipe": [],
+          "seguranca": [
+            "Liquidificador funcionando (OK)",
+            "Batedor de milkshake funcionando (OK)"
+          ],
+          "grupos": [
+            [
+              "Porcionados",
+              [
+                [
+                  "Porção de batatas 150 g",
+                  "P"
+                ],
+                [
+                  "Carne do sol",
+                  "P"
+                ],
+                [
+                  "Fraldinha",
+                  "P"
+                ],
+                [
+                  "Manteiga na bisnaga",
+                  "P"
+                ]
+              ]
+            ],
+            [
+              "Produção",
+              [
+                [
+                  "Rita Lee",
+                  "P"
+                ],
+                [
+                  "Madonna",
+                  "P"
+                ],
+                [
+                  "Chuck Berry",
+                  "P"
+                ],
+                [
+                  "Cebola caramelizada",
+                  "P"
+                ],
+                [
+                  "Cebola Crispy",
+                  "P"
+                ],
+                [
+                  "Queijo coalho corte",
+                  "P"
+                ],
+                [
+                  "Bacon cubos",
+                  "P"
+                ],
+                [
+                  "Pulled",
+                  "P"
+                ],
+                [
+                  "Pork Ribs",
+                  "P"
+                ],
+                [
+                  "Coleslaw",
+                  "P"
+                ]
+              ]
+            ],
+            [
+              "Bebidas",
+              [
+                [
+                  "Milkshake de frutas vermelhas",
+                  "P"
+                ],
+                [
+                  "Milkshake de maracujá",
+                  "P"
+                ],
+                [
+                  "Ovomaltine",
+                  "R"
+                ],
+                [
+                  "Nutella",
+                  "R"
+                ],
+                [
+                  "Base de milkshake",
+                  "P"
+                ],
+                [
+                  "Limão",
+                  "R"
+                ],
+                [
+                  "Cachaça",
+                  "R"
+                ],
+                [
+                  "Gelo",
+                  "R"
+                ],
+                [
+                  "Água para sucos",
+                  "P"
+                ],
+                [
+                  "Cobertura de chocolate",
+                  "R"
+                ],
+                [
+                  "Pink lemonade",
+                  "P"
+                ],
+                [
+                  "Soda maçã verde",
+                  "R"
+                ],
+                [
+                  "Açúcar",
+                  "R"
+                ]
+              ]
+            ],
+            [
+              "Utensílios da bancada de bebidas",
+              [
+                [
+                  "Tábua de corte",
+                  "R"
+                ],
+                [
+                  "Coqueteleira",
+                  "R"
+                ],
+                [
+                  "Medidor de cachaça",
+                  "R"
+                ],
+                [
+                  "Esmagador de limão",
+                  "R"
+                ],
+                [
+                  "Colher de apoio",
+                  "R"
+                ],
+                [
+                  "Faca de corte",
+                  "R"
+                ],
+                [
+                  "Colher de tirar sorvete",
+                  "R"
+                ],
+                [
+                  "Garrafas de suco 300 ml",
+                  "R"
+                ]
+              ]
+            ]
+          ],
+          "titulo_seguranca": "Equipamentos da bancada"
         }
       }
     }

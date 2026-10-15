@@ -237,7 +237,8 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
     CFG.grupos.forEach(([g, list]) => list.forEach(([n, t]) => ITEMS.push({ id: 'i' + ITEMS.length, g, n, t })));
     ALL = SAF.concat(ITEMS);
 
-    $('#safety').innerHTML = grpHTML('Funcionamento e higiene', SAF, 'saf');
+    $('#safety').innerHTML = grpHTML(CFG.titulo_seguranca || 'Funcionamento e higiene', SAF, 'saf');
+    if (!CFG.equipe.length) $('#nome').hidden = false;
     $('#groups').innerHTML = CFG.grupos.map(([g], gi) => '<div class="grp" id="g' + gi + '">' + grpHTML(g, ITEMS.filter(i => i.g === g), 'g' + gi) + '</div>').join('');
 
     // Nome lembrado
