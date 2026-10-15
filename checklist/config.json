@@ -1,5 +1,5 @@
 {
-  "_comentario": "Checklist de abertura. 'form'/'campos' = formulário Checklist Abertura (planilha CHECKLISTS). 'prazo' = horário limite (HH:MM). Em 'setores', cada loja tem seus setores: equipe (nomes para tocar), seguranca (perguntas Sim/Não) e grupos de itens. Tipo do item: P = preparo (feito na loja), R = reposição (vem do estoque/compra).",
+  "_comentario": "Checklist de abertura. 'form'/'campos' = formulário Checklist Abertura (planilha CHECKLISTS). 'prazo' = horário limite (HH:MM). Em 'setores', cada loja tem seus setores: equipe (nomes para tocar), seguranca (perguntas Sim/Não) e grupos de itens. Tipo do item: P = preparo (feito na loja), R = reposição (vem do estoque/compra). 'Chapa-nova' = lista nova da chapa (link ?setor=chapa-nova); grava como setor Chapa.",
   "form": "https://docs.google.com/forms/d/e/1FAIpQLSeVj6hc4LlMvrNpL8PysUcYjPjywqPMfgssy1Yh--_aqwsTFA/formResponse",
   "campos": {
     "loja": "entry.1627150514",
@@ -18,7 +18,11 @@
       "nome": "Gabba Hey Burger",
       "setores": {
         "Chapa": {
-          "equipe": ["Paulo", "Natália", "Marta"],
+          "equipe": [
+            "Paulo",
+            "Natália",
+            "Marta"
+          ],
           "seguranca": [
             "Chapa ligada e aquecendo normal",
             "Gás conectado, sem cheiro de vazamento",
@@ -28,14 +32,506 @@
             "Itens abertos com etiqueta de validade"
           ],
           "grupos": [
-            ["Verduras",[["Tomate", "P"],["Cebola","P"],["Cebola roxa","P"],["Alface","P"],["Repolho","P"],["Cenoura","P"],["Cebolinha","P"]]],
-            ["Carnes e proteínas",[["Carnes (blend)", "P"],["Smashs","P"],["Fraldinha","R"],["Carne do sol","P"],["Bacon em fatias","R"],["Frango Bon Jovi","P"],["Pulled","P"],["Smoked Ribs","P"],["Ovos","R"]]],
-            ["Porções e fritura",[["Batata frita", "R"],["Batata Smile","R"],["Onion Ring (cebola frita)","P"],["Coxinha sem massa","P"],["Pastelzim de carne","P"],["Pastelzim de queijo","P"],["Croqueta do mar","P"],["Croc Ball","P"],["Dadinho de tapioca (Luar do Sertão)","P"]]],
-            ["Empanamento e temperos",[["Empanamento do frango (líquido e seco)", "P"],["Farinha de trigo","R"],["Farinha Panko","R"],["Dry rub","P"],["Tempero da batata","P"],["Tempero da carne","P"]]],
-            ["Pães e acompanhamentos",[["Pães (11 cm / 9 cm)", "R"],["Manteiga","R"],["Manteiga da terra","R"],["Picles","P"],["Geleia","P"],["Melaço de cana","R"],["Creme de leite","R"]]],
-            ["Molhos",[["Salsa", "P"],["Defumada","P"],["Ketchup","R"],["BBQ","P"]]],
-            ["Queijos",[["Cheddar", "P"],["Cheddar bisnaga","P"],["Coalho","R"],["Mussarela","R"],["Cream Cheese","R"]]],
-            ["Produção",[["Chuck Berry", "P"],["Madonna","P"],["Rita Lee","P"],["Mayo Gabba","P"],["Molho da casa","P"],["Cebola caramelizada","P"],["Cebola Crispy","P"],["Porção de batatas","P"],["Porção de carne do sol","P"],["Corte queijo coalho","P"],["Bacon fatias frito","P"],["Bacon em cubos","P"]]]
+            [
+              "Verduras",
+              [
+                [
+                  "Tomate",
+                  "P"
+                ],
+                [
+                  "Cebola",
+                  "P"
+                ],
+                [
+                  "Cebola roxa",
+                  "P"
+                ],
+                [
+                  "Alface",
+                  "P"
+                ],
+                [
+                  "Repolho",
+                  "P"
+                ],
+                [
+                  "Cenoura",
+                  "P"
+                ],
+                [
+                  "Cebolinha",
+                  "P"
+                ]
+              ]
+            ],
+            [
+              "Carnes e proteínas",
+              [
+                [
+                  "Carnes (blend)",
+                  "P"
+                ],
+                [
+                  "Smashs",
+                  "P"
+                ],
+                [
+                  "Fraldinha",
+                  "R"
+                ],
+                [
+                  "Carne do sol",
+                  "P"
+                ],
+                [
+                  "Bacon em fatias",
+                  "R"
+                ],
+                [
+                  "Frango Bon Jovi",
+                  "P"
+                ],
+                [
+                  "Pulled",
+                  "P"
+                ],
+                [
+                  "Smoked Ribs",
+                  "P"
+                ],
+                [
+                  "Ovos",
+                  "R"
+                ]
+              ]
+            ],
+            [
+              "Porções e fritura",
+              [
+                [
+                  "Batata frita",
+                  "R"
+                ],
+                [
+                  "Batata Smile",
+                  "R"
+                ],
+                [
+                  "Onion Ring (cebola frita)",
+                  "P"
+                ],
+                [
+                  "Coxinha sem massa",
+                  "P"
+                ],
+                [
+                  "Pastelzim de carne",
+                  "P"
+                ],
+                [
+                  "Pastelzim de queijo",
+                  "P"
+                ],
+                [
+                  "Croqueta do mar",
+                  "P"
+                ],
+                [
+                  "Croc Ball",
+                  "P"
+                ],
+                [
+                  "Dadinho de tapioca (Luar do Sertão)",
+                  "P"
+                ]
+              ]
+            ],
+            [
+              "Empanamento e temperos",
+              [
+                [
+                  "Empanamento do frango (líquido e seco)",
+                  "P"
+                ],
+                [
+                  "Farinha de trigo",
+                  "R"
+                ],
+                [
+                  "Farinha Panko",
+                  "R"
+                ],
+                [
+                  "Dry rub",
+                  "P"
+                ],
+                [
+                  "Tempero da batata",
+                  "P"
+                ],
+                [
+                  "Tempero da carne",
+                  "P"
+                ]
+              ]
+            ],
+            [
+              "Pães e acompanhamentos",
+              [
+                [
+                  "Pães (11 cm / 9 cm)",
+                  "R"
+                ],
+                [
+                  "Manteiga",
+                  "R"
+                ],
+                [
+                  "Manteiga da terra",
+                  "R"
+                ],
+                [
+                  "Picles",
+                  "P"
+                ],
+                [
+                  "Geleia",
+                  "P"
+                ],
+                [
+                  "Melaço de cana",
+                  "R"
+                ],
+                [
+                  "Creme de leite",
+                  "R"
+                ]
+              ]
+            ],
+            [
+              "Molhos",
+              [
+                [
+                  "Salsa",
+                  "P"
+                ],
+                [
+                  "Defumada",
+                  "P"
+                ],
+                [
+                  "Ketchup",
+                  "R"
+                ],
+                [
+                  "BBQ",
+                  "P"
+                ]
+              ]
+            ],
+            [
+              "Queijos",
+              [
+                [
+                  "Cheddar",
+                  "P"
+                ],
+                [
+                  "Cheddar bisnaga",
+                  "P"
+                ],
+                [
+                  "Coalho",
+                  "R"
+                ],
+                [
+                  "Mussarela",
+                  "R"
+                ],
+                [
+                  "Cream Cheese",
+                  "R"
+                ]
+              ]
+            ],
+            [
+              "Produção",
+              [
+                [
+                  "Chuck Berry",
+                  "P"
+                ],
+                [
+                  "Madonna",
+                  "P"
+                ],
+                [
+                  "Rita Lee",
+                  "P"
+                ],
+                [
+                  "Mayo Gabba",
+                  "P"
+                ],
+                [
+                  "Molho da casa",
+                  "P"
+                ],
+                [
+                  "Cebola caramelizada",
+                  "P"
+                ],
+                [
+                  "Cebola Crispy",
+                  "P"
+                ],
+                [
+                  "Porção de batatas",
+                  "P"
+                ],
+                [
+                  "Porção de carne do sol",
+                  "P"
+                ],
+                [
+                  "Corte queijo coalho",
+                  "P"
+                ],
+                [
+                  "Bacon fatias frito",
+                  "P"
+                ],
+                [
+                  "Bacon em cubos",
+                  "P"
+                ]
+              ]
+            ]
+          ]
+        },
+        "Chapa-nova": {
+          "nome": "Chapa",
+          "equipe": [
+            "Paulo",
+            "Natália",
+            "Marta"
+          ],
+          "seguranca": [
+            "Chapa ligada e aquecendo normal",
+            "Gás conectado, sem cheiro de vazamento",
+            "Freezer externo horizontal gelando",
+            "Bancada e utensílios limpos"
+          ],
+          "grupos": [
+            [
+              "Verduras",
+              [
+                [
+                  "Tomate",
+                  "P"
+                ],
+                [
+                  "Cebola",
+                  "P"
+                ],
+                [
+                  "Cebola roxa",
+                  "P"
+                ],
+                [
+                  "Alface",
+                  "P"
+                ],
+                [
+                  "Repolho",
+                  "P"
+                ],
+                [
+                  "Cenoura",
+                  "P"
+                ],
+                [
+                  "Cebolinha",
+                  "P"
+                ]
+              ]
+            ],
+            [
+              "Carnes e proteínas",
+              [
+                [
+                  "Carnes (blend)",
+                  "P"
+                ],
+                [
+                  "Smashs",
+                  "P"
+                ],
+                [
+                  "Bacon em fatias",
+                  "R"
+                ],
+                [
+                  "Frango Bon Jovi",
+                  "P"
+                ],
+                [
+                  "Ovos",
+                  "R"
+                ]
+              ]
+            ],
+            [
+              "Porções e fritura",
+              [
+                [
+                  "Onion Ring (cebola frita)",
+                  "P"
+                ],
+                [
+                  "Coxinha sem massa",
+                  "P"
+                ],
+                [
+                  "Pastelzim de queijo",
+                  "P"
+                ],
+                [
+                  "Croqueta do mar",
+                  "P"
+                ],
+                [
+                  "Croc Ball",
+                  "P"
+                ],
+                [
+                  "Dadinho de tapioca (Luar do Sertão)",
+                  "P"
+                ]
+              ]
+            ],
+            [
+              "Empanamento e temperos",
+              [
+                [
+                  "Empanamento do frango (líquido e seco)",
+                  "P"
+                ],
+                [
+                  "Farinha de trigo",
+                  "R"
+                ],
+                [
+                  "Farinha Panko",
+                  "R"
+                ],
+                [
+                  "Dry rub",
+                  "P"
+                ],
+                [
+                  "Tempero da batata",
+                  "P"
+                ],
+                [
+                  "Tempero da carne",
+                  "P"
+                ]
+              ]
+            ],
+            [
+              "Pães e acompanhamentos",
+              [
+                [
+                  "Pães (11 cm / 9 cm)",
+                  "R"
+                ],
+                [
+                  "Manteiga da terra",
+                  "R"
+                ],
+                [
+                  "Picles",
+                  "P"
+                ],
+                [
+                  "Geleia",
+                  "P"
+                ],
+                [
+                  "Melaço de cana",
+                  "R"
+                ],
+                [
+                  "Creme de leite",
+                  "R"
+                ]
+              ]
+            ],
+            [
+              "Molhos",
+              [
+                [
+                  "Salsa",
+                  "P"
+                ],
+                [
+                  "Defumada",
+                  "P"
+                ],
+                [
+                  "Ketchup",
+                  "R"
+                ],
+                [
+                  "BBQ",
+                  "P"
+                ],
+                [
+                  "Mayo Gabba",
+                  "P"
+                ],
+                [
+                  "Molho da casa",
+                  "P"
+                ]
+              ]
+            ],
+            [
+              "Queijos",
+              [
+                [
+                  "Cheddar",
+                  "P"
+                ],
+                [
+                  "Cheddar bisnaga",
+                  "P"
+                ],
+                [
+                  "Coalho",
+                  "R"
+                ],
+                [
+                  "Mussarela",
+                  "R"
+                ],
+                [
+                  "Cream Cheese",
+                  "R"
+                ]
+              ]
+            ],
+            [
+              "Produção",
+              [
+                [
+                  "Bacon fatias frito",
+                  "P"
+                ]
+              ]
+            ]
           ]
         }
       }

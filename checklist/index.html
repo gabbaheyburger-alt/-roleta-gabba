@@ -213,7 +213,7 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
   const hora = d => d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   const fmtTempo = s => Math.floor(s / 60) + ' min ' + String(s % 60).padStart(2, '0') + ' s';
 
-  let CONFIG = null, PED = null, LOJA, SETOR, LOJA_NOME, CFG, SAF = [], ITEMS = [], ALL = [];
+  let CONFIG = null, PED = null, LOJA, SETOR, SNOME, LOJA_NOME, CFG, SAF = [], ITEMS = [], ALL = [];
   let ans = {}, obs = {}, mot = {}, started = null, nomeSel = '';
   let KD;
 
@@ -226,9 +226,10 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
     SETOR = setores.find(s => s.toLowerCase() === (qs.get('setor') || '').toLowerCase()) || setores[0];
     LOJA_NOME = CONFIG.lojas[LOJA].nome || LOJA;
     CFG = CONFIG.lojas[LOJA].setores[SETOR];
+    SNOME = CFG.nome || SETOR; // nome gravado na planilha (uma lista nova pode usar o mesmo setor)
     KD = 'ck-rascunho-' + LOJA + '-' + SETOR;
-    document.title = 'Checklist ' + SETOR + ' · ' + LOJA_NOME;
-    $('#titulo').textContent = SETOR + ' · ' + LOJA_NOME;
+    document.title = 'Checklist ' + SNOME + ' · ' + LOJA_NOME;
+    $('#titulo').textContent = SNOME + ' · ' + LOJA_NOME;
     $('#prazo').textContent = 'Fazer até as ' + (CONFIG.prazo || '17:00').replace(':', 'h');
 
     SAF = CFG.seguranca.map((n, i) => ({ id: 's' + i, n, yn: true }));
@@ -252,7 +253,7 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
     } else LS.del(KD);
 
     // Já enviado hoje neste aparelho?
-    const h = LS.get('ck-hist', []).find(x => x.data === hojeStr() && x.loja === LOJA && x.setor === SETOR);
+    const h = LS.get('ck-hist', []).find(x => x.data === hojeStr() && x.loja === LOJA && x.setor === SNOME);
     if (h) { $('#aviso-hoje').hidden = false; $('#aviso-hoje').textContent = 'O checklist de hoje já foi enviado deste celular por ' + h.nome + ' às ' + h.hora + '. Só envie outro se precisar corrigir algo.'; }
     update();
   }
@@ -368,7 +369,7 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
     const S = $('#summary');
     S.innerHTML =
       '<section class="panel"><div class="label"><span class="n">04</span>Resumo antes de enviar</div>' +
-      '<p class="hint">' + esc(nomeSel) + ' · ' + esc(SETOR) + ' · ' + hora(new Date()) + ' · levou ' + fmtTempo(segs) + '</p>' +
+      '<p class="hint">' + esc(nomeSel) + ' · ' + esc(SNOME) + ' · ' + hora(new Date()) + ' · levou ' + fmtTempo(segs) + '</p>' +
       '<div class="sum"><div class="s-ok"><b>' + c.ok + '</b><small>OK</small></div><div class="s-low"><b>' + c.low + '</b><small>POUCO</small></div><div class="s-miss"><b>' + c.miss + '</b><small>FALTA / NÃO</small></div></div>' +
       '<div class="list">' +
       (safRuim.length ? '<h3>Funcionamento: precisa de atenção</h3>' + safRuim.map(li).join('') : '') +
@@ -388,7 +389,7 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
 
   // ---------- Envio ----------
   function linha(p) { // p: {item,status,motivo,observacao,tempo}
-    return { tipo: 'ck', dados: Object.assign({ loja: LOJA, setor: SETOR, responsavel: nomeSel }, p) };
+    return { tipo: 'ck', dados: Object.assign({ loja: LOJA, setor: SNOME, responsavel: nomeSel }, p) };
   }
   async function postar(env) {
     if (env.tipo === 'ped') {
@@ -463,7 +464,7 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
     const ts = LS.get(KT(), []), t = ts.find(x => x.id === b.dataset.res); if (!t) return;
     b.disabled = true; b.textContent = 'Enviando…';
     const quem = nomeSel || 'Equipe';
-    LS.set('ck-fila', LS.get('ck-fila', []).concat([{ tipo: 'ck', dados: { loja: LOJA, setor: SETOR, responsavel: quem, comprovante: t.comp, item: t.item, status: 'RESOLVIDO', motivo: 'Resolvido pela equipe', observacao: '', tempo: '' } }]));
+    LS.set('ck-fila', LS.get('ck-fila', []).concat([{ tipo: 'ck', dados: { loja: LOJA, setor: SNOME, responsavel: quem, comprovante: t.comp, item: t.item, status: 'RESOLVIDO', motivo: 'Resolvido pela equipe', observacao: '', tempo: '' } }]));
     LS.set(KT(), ts.filter(x => x.id !== t.id));
     atualizaTarefas(); enviarFila().then(mostrarFila);
   });
@@ -479,7 +480,7 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
     // Resumo por último: quando ele chega na planilha, o checklist chegou inteiro
     lista.push(linha({ comprovante: cod, item: 'RESUMO', status: c.ok + ' OK · ' + c.low + ' POUCO · ' + c.miss + ' FALTA', motivo: 'Abertura', observacao: ALL.length + ' itens conferidos', tempo: fmtTempo(segs) }));
     const pedidoOk = pedir.length && $('#sendped') && $('#sendped').checked && PED;
-    if (pedidoOk) pedir.forEach(i => lista.push({ tipo: 'ped', dados: { loja: LOJA, item: i.n, quantidade: '0', urgencia: 'Acabou', motivo: 'Checklist ' + SETOR.toLowerCase() + (obs[i.id] ? ' — ' + obs[i.id] : '') + ' · ' + cod, nome: nomeSel } }));
+    if (pedidoOk) pedir.forEach(i => lista.push({ tipo: 'ped', dados: { loja: LOJA, item: i.n, quantidade: '0', urgencia: 'Acabou', motivo: 'Checklist ' + SNOME.toLowerCase() + (obs[i.id] ? ' — ' + obs[i.id] : '') + ' · ' + cod, nome: nomeSel } }));
 
     LS.set('ck-fila', LS.get('ck-fila', []).concat(lista));
     const novas = [];
@@ -488,7 +489,7 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
     const antigas = LS.get(KT(), []).filter(t => !novas.some(n => n.item === t.item));
     LS.set(KT(), antigas.concat(novas.map(n => ({ id: cod + '|' + n.item, comp: cod, dia: hojeStr(), cat: categoria(n.item, n.status, n.motivo, n.tipo), ...n }))));
     const resto = await enviarFila();
-    const hist = LS.get('ck-hist', []); hist.unshift({ data: hojeStr(), hora: hora(agora), loja: LOJA, setor: SETOR, nome: nomeSel, cod, pendente: resto.length > 0 }); LS.set('ck-hist', hist.slice(0, 30));
+    const hist = LS.get('ck-hist', []); hist.unshift({ data: hojeStr(), hora: hora(agora), loja: LOJA, setor: SNOME, nome: nomeSel, cod, pendente: resto.length > 0 }); LS.set('ck-hist', hist.slice(0, 30));
     LS.del(KD);
 
     const dt = agora.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -498,7 +499,7 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
       '<section class="panel done"><div class="check"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg></div>' +
       '<h2>' + (resto.length ? 'Checklist salvo no celular' : 'Checklist enviado') + '</h2>' +
       (resto.length ? '<p class="hint" style="color:var(--amber)">Sem internet agora. Ele será enviado sozinho quando a conexão voltar. Não feche esta página de vez.</p>' : '') +
-      '<dl><div><dt>Comprovante</dt><dd>' + cod + '</dd></div><div><dt>Setor</dt><dd>' + esc(SETOR) + ' · ' + esc(LOJA_NOME) + '</dd></div><div><dt>Responsável</dt><dd>' + esc(nomeSel) + '</dd></div><div><dt>Horário</dt><dd>' + dt + (noPrazo ? '' : ' (após o prazo)') + '</dd></div><div><dt>Resultado</dt><dd>' + c.ok + ' OK · ' + c.low + ' POUCO · ' + c.miss + ' FALTA</dd></div><div><dt>Tempo</dt><dd>' + fmtTempo(segs) + '</dd></div>' +
+      '<dl><div><dt>Comprovante</dt><dd>' + cod + '</dd></div><div><dt>Setor</dt><dd>' + esc(SNOME) + ' · ' + esc(LOJA_NOME) + '</dd></div><div><dt>Responsável</dt><dd>' + esc(nomeSel) + '</dd></div><div><dt>Horário</dt><dd>' + dt + (noPrazo ? '' : ' (após o prazo)') + '</dd></div><div><dt>Resultado</dt><dd>' + c.ok + ' OK · ' + c.low + ' POUCO · ' + c.miss + ' FALTA</dd></div><div><dt>Tempo</dt><dd>' + fmtTempo(segs) + '</dd></div>' +
       (pedidoOk ? '<div><dt>Pedidos de insumo</dt><dd>' + pedir.length + '</dd></div>' : '') + '</dl>' +
       '</section>' +
       '<section class="panel"><div class="label"><span class="n">!</span>O que fazer agora</div><p class="hint">Ao concluir cada tarefa, toque em <b>Resolvido</b>. As tarefas ficam guardadas neste celular e aparecem no topo da página quando ela abrir de novo.</p><div class="tarefas" id="tarefas-recibo"></div>' +
@@ -506,7 +507,7 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; letter-spac
     window.scrollTo(0, 0);
     $('#novo').onclick = () => location.reload();
     atualizaTarefas();
-    window.gabbaConta && gabbaConta('checklist-' + LOJA.toLowerCase() + '-' + SETOR.toLowerCase(), 'Checklist ' + SETOR);
+    window.gabbaConta && gabbaConta('checklist-' + LOJA.toLowerCase() + '-' + SNOME.toLowerCase(), 'Checklist ' + SNOME);
   }
 
   async function esvaziarFila() {
