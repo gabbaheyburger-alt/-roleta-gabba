@@ -288,6 +288,7 @@ E('otherLabel').hidden=person!=='Outro nome';E('team').querySelectorAll('button'
 
 (function () {
   if((new URLSearchParams(location.search).get('setor')||'').toLowerCase()==='lideranca'){iniciarLideranca();return;}
+  if((new URLSearchParams(location.search).get('setor')||'').toLowerCase()==='fechamento'){const sc=document.createElement('script');sc.src='fechamento.js?v='+Date.now();document.body.append(sc);return;}
   const $ = s => document.querySelector(s);
   const LS = {
     get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
