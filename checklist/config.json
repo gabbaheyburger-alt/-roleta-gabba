@@ -1,5 +1,5 @@
 {
-  "_comentario": "Checklist de abertura. 'form'/'campos' = formulário Checklist Abertura (planilha CHECKLISTS). 'prazo' = horário limite (HH:MM). Em 'setores', cada loja tem seus setores: equipe (nomes para tocar), seguranca (perguntas Sim/Não) e grupos de itens. Tipo do item: P = preparo (feito na loja), R = reposição (vem do estoque/compra). 'Chapa-nova' = lista nova da chapa (link ?setor=chapa-nova); grava como setor Chapa. 'Aux-cozinha' = checklist do auxiliar de cozinha (link ?setor=aux-cozinha).",
+  "_comentario": "Checklist de abertura. 'form'/'campos' = formulário Checklist Abertura (planilha CHECKLISTS). 'prazo' = horário limite (HH:MM). Em 'setores', cada loja tem seus setores: equipe (nomes para tocar), seguranca (perguntas Sim/Não) e grupos de itens. Tipo do item: P = preparo (feito na loja), R = reposição (vem do estoque/compra). 'Chapa-nova' = lista nova da chapa (link ?setor=chapa-nova); grava como setor Chapa. 'Aux-cozinha' = checklist do auxiliar de cozinha (link ?setor=aux-cozinha). 'trocar_em' = a partir da data, o link deste setor abre a lista indicada em 'para'.",
   "form": "https://docs.google.com/forms/d/e/1FAIpQLSeVj6hc4LlMvrNpL8PysUcYjPjywqPMfgssy1Yh--_aqwsTFA/formResponse",
   "campos": {
     "loja": "entry.1627150514",
@@ -301,7 +301,11 @@
                 ]
               ]
             ]
-          ]
+          ],
+          "trocar_em": {
+            "data": "2026-10-21",
+            "para": "Chapa-nova"
+          }
         },
         "Chapa-nova": {
           "nome": "Chapa",

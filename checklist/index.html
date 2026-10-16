@@ -317,6 +317,12 @@ E('otherLabel').hidden=person!=='Outro nome';E('team').querySelectorAll('button'
     LOJA = lojas.find(l => l.toLowerCase() === (qs.get('loja') || '').toLowerCase()) || lojas[0];
     const setores = Object.keys(CONFIG.lojas[LOJA].setores);
     SETOR = setores.find(s => s.toLowerCase() === (qs.get('setor') || '').toLowerCase()) || setores[0];
+    // Troca programada: a partir da data, o link antigo abre a lista nova (ex.: Chapa -> Chapa-nova em 21/10)
+    const troca = CONFIG.lojas[LOJA].setores[SETOR].trocar_em;
+    if (troca && troca.data && troca.para && CONFIG.lojas[LOJA].setores[troca.para]) {
+      const h = new Date(), hoje = h.getFullYear() + '-' + String(h.getMonth() + 1).padStart(2, '0') + '-' + String(h.getDate()).padStart(2, '0');
+      if (hoje >= troca.data) SETOR = troca.para;
+    }
     LOJA_NOME = CONFIG.lojas[LOJA].nome || LOJA;
     CFG = CONFIG.lojas[LOJA].setores[SETOR];
     SNOME = CFG.nome || SETOR; // nome gravado na planilha (uma lista nova pode usar o mesmo setor)
