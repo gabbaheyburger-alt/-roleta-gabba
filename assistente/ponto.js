@@ -48,6 +48,13 @@ export class PontoDB {
     this.sql.exec(`CREATE TABLE IF NOT EXISTS redes (loja TEXT, rede TEXT, rotulo TEXT, criado INTEGER, PRIMARY KEY (loja, rede))`);
     this.sql.exec(`CREATE TABLE IF NOT EXISTS recusas (ts INTEGER, loja TEXT, nome TEXT, rede TEXT)`);
     this.sql.exec(`CREATE TABLE IF NOT EXISTS meta (k TEXT PRIMARY KEY, v TEXT)`);
+    // Cópia inicial do cadastro existente. Depois da primeira execução, o banco é a fonte da equipe.
+    if (!this.meta('equipe_v1_gabba')) this.meta('equipe_v1_gabba', JSON.stringify([
+      { nome: 'Natália', setor: 'Cozinha' }, { nome: 'Paulo', setor: 'Cozinha' },
+      { nome: 'Marta', setor: 'Cozinha' }, { nome: 'Inara', setor: 'Cozinha', ativo: false, obs: 'começa em alguns dias' },
+      { nome: 'Dalva', setor: 'Recepção' }, { nome: 'Mayara', setor: 'Recepção' },
+      { nome: 'Jandira', setor: 'Recepção', dias: [1, 2], obs: 'horista · no Gabba seg e ter' }
+    ]));
   }
   meta(k, v) {
     if (v === undefined) { const r = [...this.sql.exec('SELECT v FROM meta WHERE k = ?', k)]; return r.length ? r[0].v : null; }
@@ -55,6 +62,7 @@ export class PontoDB {
   }
   redeOk(loja, rede) { return !!rede && [...this.sql.exec('SELECT 1 FROM redes WHERE loja = ? AND rede = ?', loja, rede)].length > 0; }
   temRede(loja) { return [...this.sql.exec('SELECT 1 FROM redes WHERE loja = ?', loja)].length > 0; }
+  equipe(loja) { return JSON.parse(this.meta('equipe_v1_' + loja) || '[]'); }
   ultimosHoje(loja) {
     const dia = diaDo(Date.now()), out = {};
     for (const r of this.sql.exec('SELECT nome, acao, ts FROM registros WHERE loja = ? AND dia = ? AND removido = 0 ORDER BY ts', loja, dia)) out[r.nome] = { acao: r.acao, ts: r.ts };
@@ -72,7 +80,7 @@ export class PontoDB {
     if (rota === 'estado') {
       if (!LOJAS.includes(loja)) return json({ erro: 'loja' }, 400);
       const ok = this.redeOk(loja, rede);
-      return json({ redeOk: ok, lojaTemRede: this.temRede(loja), agora: Date.now(), dia: diaDo(Date.now()), ultimos: ok ? this.ultimosHoje(loja) : {} });
+      return json({ redeOk: ok, lojaTemRede: this.temRede(loja), agora: Date.now(), dia: diaDo(Date.now()), equipe: ok ? this.equipe(loja).filter(p => p.ativo !== false) : [], ultimos: ok ? this.ultimosHoje(loja) : {} });
     }
 
     if (rota === 'bater') {
@@ -85,6 +93,7 @@ export class PontoDB {
         return json({ erro: 'rede', detalhe: 'Conecte no Wi-Fi da loja para bater o ponto.' }, 403);
       }
       const ult = this.ultimosHoje(loja)[nome];
+      if (!this.equipe(loja).some(p => p.nome === nome && p.ativo !== false)) return json({ erro: 'funcionario_inativo', detalhe: 'Funcionário não está ativo. Atualize a página ou fale com o gestor.' }, 403);
       if (ult && ult.acao === acao && Date.now() - ult.ts < 10 * 60 * 1000) return json({ erro: 'repetido', detalhe: 'Esse registro já foi feito agora há pouco.' }, 409);
       const ts = Date.now();
       this.sql.exec('INSERT INTO registros (ts, dia, loja, nome, acao, rede, aparelho, origem) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', ts, diaDo(ts), loja, nome, acao, rede, aparelho, 'celular');
@@ -126,6 +135,23 @@ export class PontoDB {
     const L = loja || 'gabba';
 
     switch (c.op) {
+      case 'equipe': return json({ ok: true, equipe: this.equipe(L) });
+      case 'equipe_adicionar': {
+        const equipe = this.equipe(L), nome = limpa(c.nome, 40), setor = limpa(c.setor, 40);
+        if (!nome || !setor) return json({ erro: 'dados', detalhe: 'Preencha nome e setor.' }, 400);
+        if (equipe.some(p => p.nome.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase() === nome.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase())) return json({ erro: 'duplicado', detalhe: 'Já existe esse nome, inclusive nos inativos. Reative o cadastro ou diferencie o nome com sobrenome.' }, 409);
+        if (equipe.length >= 300) return json({ erro: 'limite', detalhe: 'Limite de cadastros atingido.' }, 400);
+        equipe.push({ nome, setor, ativo: true, criado: Date.now() });
+        this.meta('equipe_v1_' + L, JSON.stringify(equipe));
+        return json({ ok: true, equipe });
+      }
+      case 'equipe_status': {
+        const equipe = this.equipe(L), p = equipe.find(p => p.nome === String(c.nome || ''));
+        if (!p || typeof c.ativo !== 'boolean') return json({ erro: 'dados' }, 400);
+        p.ativo = c.ativo; p.atualizado = Date.now();
+        this.meta('equipe_v1_' + L, JSON.stringify(equipe));
+        return json({ ok: true, equipe });
+      }
       case 'entrar': return json({ ok: true, redeAgora: rede, redeAgoraOk: this.redeOk(L, rede) });
       case 'trocar_pin': {
         if (!/^\d{4,8}$/.test(String(c.novo || ''))) return json({ erro: 'pin_invalido' }, 400);
