@@ -86,6 +86,12 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible { 
 .label {color:var(--muted)}
 .acao {min-height:88px}
 .notice {border-radius:14px}
+dialog { width:calc(100% - 32px);max-width:420px;border:1px solid var(--line);border-radius:24px;padding:28px;background:var(--page);color:var(--ink);box-shadow:0 24px 80px #0004; }
+dialog::backdrop {background:#111b;backdrop-filter:blur(4px)}
+dialog h2 {font-size:1.6rem;letter-spacing:-.04em;margin:16px 0 8px}
+dialog .identidade {font-size:2rem;font-weight:800;margin:20px 0 4px}
+dialog .acoes {margin-top:24px}
+dialog .acao {min-height:58px;font-size:1rem}
 </style>
 </head>
 <body>
@@ -124,6 +130,13 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible { 
   <p class="rodape">Controle interno do Grupo Gabba. Dúvida ou erro no registro: fale com o gerente.</p>
 </main>
 
+<dialog id="confirmacao" aria-labelledby="conf-titulo" aria-describedby="conf-descricao">
+  <div class="label">Grupo Gabba · Ponto da equipe</div>
+  <h2 id="conf-titulo">Confirmar registro</h2>
+  <p id="conf-nome" class="identidade"></p>
+  <p id="conf-descricao" class="hint">Confira seu nome antes de registrar.</p>
+  <div class="acoes"><button type="button" id="conf-sim" class="acao entrada">Confirmar</button><button type="button" id="conf-nao" class="acao sec" autofocus>Cancelar</button></div>
+</dialog>
 <script>
 (function () {
   const $ = id => document.getElementById(id);
@@ -205,7 +218,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible { 
   }
 
   async function bater(acao, btn) {
-    if (!confirm(atual.nome + ': confirmar ' + NOME_ACAO[acao].toLowerCase() + '?')) return;
+    if (!await confirmaRegistro(acao)) return;
     document.querySelectorAll('#p-acoes button').forEach(b => b.disabled = true);
     btn.textContent = 'Registrando…';
     try {
@@ -240,6 +253,11 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible { 
       const r = await api('estado?loja=' + LOJA);
       if (!r.ok) throw new Error();
       redeOk = r.j.redeOk; ultimos = r.j.ultimos || {};
+      if (redeOk && Array.isArray(r.j.equipe)) {
+        CFG.lojas[LOJA].equipe = r.j.equipe;
+        if (atual) atual = r.j.equipe.find(p => p.nome === atual.nome) || null;
+        if (!atual && !$('tela-pessoa').hidden) volta();
+      }
       if (redeOk) aviso('okn', '<div><b>✓ Conectado na internet do ' + CFG.lojas[LOJA].nome + '</b>Toque no seu nome.</div>');
       else if (!r.j.lojaTemRede) aviso('err', '<div><b>Ponto ainda não liberado.</b>O gerente precisa liberar a internet desta loja primeiro.<br><button type="button">Tentar de novo</button></div>');
       else aviso('err', '<div><b>Você não está no Wi-Fi da loja.</b>Desligue os dados móveis, conecte no Wi-Fi do ' + CFG.lojas[LOJA].nome + ' e toque em Tentar de novo.<br><button type="button">Tentar de novo</button></div>');
@@ -251,6 +269,27 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible { 
     }
   }
 
+  let confirmando = false;
+  function confirmaRegistro(acao) {
+    if (confirmando) return Promise.resolve(false);
+    confirmando = true;
+    const modal = $('confirmacao');
+    $('conf-nome').textContent = atual.nome;
+    $('conf-titulo').textContent = NOME_ACAO[acao];
+    $('conf-sim').textContent = 'Confirmar ' + NOME_ACAO[acao].toLowerCase();
+    return new Promise(resolve => {
+      let concluido = false;
+      const fim = valor => {
+        if (concluido) return; concluido = true; confirmando = false;
+        modal.removeEventListener('cancel', cancela); modal.removeEventListener('close', fecha);
+        modal.close(); resolve(valor);
+      };
+      const cancela = e => { e.preventDefault(); fim(false); }, fecha = () => fim(false);
+      $('conf-sim').onclick = () => fim(true); $('conf-nao').onclick = () => fim(false);
+      modal.addEventListener('cancel', cancela); modal.addEventListener('close', fecha);
+      modal.showModal();
+    });
+  }
   fetch('config.json?v=' + Date.now(), { cache: 'no-store' }).then(r => r.json()).then(c => {
     CFG = c; SRV = c.servico.replace(/\/+$/, '');
     if (!CFG.lojas[LOJA]) { aviso('err', 'Loja não encontrada no link.'); return; }
