@@ -33,6 +33,22 @@ export function redeDe(ip) {
   return ip;
 }
 const limpa = (s, n) => String(s == null ? '' : s).replace(/\s+/g, ' ').trim().slice(0, n);
+function validaEscala(c) {
+  const vigencia = String(c.vigencia || diaDo(Date.now()));
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(vigencia) || !Number.isFinite(Date.parse(vigencia + 'T12:00:00Z')) || new Date(vigencia + 'T12:00:00Z').toISOString().slice(0, 10) !== vigencia || vigencia < diaDo(Date.now())) return null;
+  if (!c.horarios || typeof c.horarios !== 'object' || Array.isArray(c.horarios)) return null;
+  const horarios = {};
+  const hora = t => typeof t === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(t);
+  for (let d = 0; d < 7; d++) {
+    const h = c.horarios[d];
+    if (h === null) horarios[d] = null;
+    else {
+      if (!Array.isArray(h) || h.length !== 2 || !hora(h[0]) || !(hora(h[1]) || h[1] === '24:00') || h[0] === h[1]) return null;
+      horarios[d] = h;
+    }
+  }
+  return { vigencia, horarios };
+}
 
 async function hashPin(pin, sal) {
   const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(sal + ':' + pin));
@@ -139,9 +155,11 @@ export class PontoDB {
       case 'equipe_adicionar': {
         const equipe = this.equipe(L), nome = limpa(c.nome, 40), setor = limpa(c.setor, 40);
         if (!nome || !setor) return json({ erro: 'dados', detalhe: 'Preencha nome e setor.' }, 400);
+        const escala = c.horarios ? validaEscala(c) : null;
+        if (c.horarios && !escala) return json({ erro: 'escala', detalhe: 'Confira os sete dias, os horários e a data de início da escala.' }, 400);
         if (equipe.some(p => p.nome.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase() === nome.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase())) return json({ erro: 'duplicado', detalhe: 'Já existe esse nome, inclusive nos inativos. Reative o cadastro ou diferencie o nome com sobrenome.' }, 409);
         if (equipe.length >= 300) return json({ erro: 'limite', detalhe: 'Limite de cadastros atingido.' }, 400);
-        equipe.push({ nome, setor, ativo: true, criado: Date.now() });
+        equipe.push({ nome, setor, ativo: true, criado: Date.now(), ...(escala ? { escalas: [escala] } : {}) });
         this.meta('equipe_v1_' + L, JSON.stringify(equipe));
         return json({ ok: true, equipe });
       }
@@ -149,6 +167,17 @@ export class PontoDB {
         const equipe = this.equipe(L), p = equipe.find(p => p.nome === String(c.nome || ''));
         if (!p || typeof c.ativo !== 'boolean') return json({ erro: 'dados' }, 400);
         p.ativo = c.ativo; p.atualizado = Date.now();
+        this.meta('equipe_v1_' + L, JSON.stringify(equipe));
+        return json({ ok: true, equipe });
+      }
+      case 'equipe_escala': {
+        const equipe = this.equipe(L), p = equipe.find(p => p.nome === String(c.nome || ''));
+        const escala = validaEscala(c), setor = limpa(c.setor, 40);
+        if (!p || !escala || !setor) return json({ erro: 'escala', detalhe: 'Informe setor, horários por dia e início da escala a partir de hoje.' }, 400);
+        const anteriores = (p.escalas || []).filter(e => e.vigencia !== escala.vigencia);
+        if (anteriores.length >= 100) return json({ erro: 'limite', detalhe: 'Limite de versões de escala atingido. Fale com o suporte.' }, 400);
+        p.escalas = [...anteriores, escala].sort((a, b) => a.vigencia.localeCompare(b.vigencia));
+        p.setor = setor; p.atualizado = Date.now();
         this.meta('equipe_v1_' + L, JSON.stringify(equipe));
         return json({ ok: true, equipe });
       }
