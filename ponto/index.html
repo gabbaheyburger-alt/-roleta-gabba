@@ -115,6 +115,7 @@ dialog .acao {min-height:58px;font-size:1rem}
   <section class="panel" id="tela-pessoa" hidden>
     <div class="pessoa"><h2 id="p-nome"></h2><button class="voltar" id="p-voltar" type="button">‹ Trocar</button></div>
     <div class="hoje" id="p-hoje"></div>
+    <p class="hint" id="p-escala"></p>
     <div class="acoes" id="p-acoes"></div>
     <p class="hint" id="p-dica"></p>
   </section>
@@ -197,6 +198,10 @@ dialog .acao {min-height:58px;font-size:1rem}
     try { localStorage.setItem('ponto-ultimo-nome', p.nome); } catch (e) {}
     $('tela-nomes').hidden = true; $('tela-ok').hidden = true; $('tela-pessoa').hidden = false;
     $('p-nome').textContent = p.nome;
+    const dia = new Date(Date.now() - 8 * 3600e3).toISOString().slice(0, 10), wd = new Date(dia + 'T12:00:00Z').getUTCDay();
+    const versao = (p.escalas || []).filter(e => e.vigencia <= dia).sort((a,b) => b.vigencia.localeCompare(a.vigencia))[0];
+    const escala = versao ? versao.horarios[wd] : ((!p.dias || p.dias.includes(wd)) ? CFG.lojas[LOJA].horarios[wd] : null);
+    $('p-escala').textContent = escala ? 'Sua escala: ' + escala[0] + ' às ' + escala[1] + (escala[1] <= escala[0] ? ' (dia seguinte)' : '') : 'Sem turno previsto para hoje. Se for trabalhar, confirme com o gestor.';
     const ult = ultimos[p.nome], st = statusTxt(ult);
     $('p-hoje').innerHTML = ''; const s = document.createElement('span'); s.textContent = st.t; $('p-hoje').append(s);
     const box = $('p-acoes'); box.innerHTML = '';
