@@ -117,6 +117,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible { 
       <button type="button" data-aba="semana" aria-selected="false">Semana</button>
       <button type="button" data-aba="registros" aria-selected="false">Registros</button>
       <button type="button" data-aba="internet" aria-selected="false">Internet</button>
+      <button type="button" data-aba="equipe" aria-selected="false">Equipe</button>
     </nav>
 
     <section id="aba-hoje" style="display:flex;flex-direction:column;gap:12px">
@@ -155,6 +156,19 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible { 
       <div class="panel"><div class="label">Internets liberadas</div><div id="net-lista"></div></div>
       <div class="panel"><div class="label">Tentativas recusadas (7 dias)</div><p class="hint">Se aparecer aqui alguém que estava mesmo na loja, a operadora trocou o endereço da internet. Toque em Liberar.</p><div id="net-recusas"></div></div>
       <div class="panel"><div class="label">Trocar PIN</div><div class="row"><input id="novo-pin" type="password" inputmode="numeric" maxlength="8" placeholder="Novo PIN"><button class="btn sec" id="troca-pin" type="button" style="flex:0 0 auto">Trocar</button></div></div>
+    </section>
+    <section id="aba-equipe" hidden style="display:flex;flex-direction:column;gap:16px">
+      <div class="panel">
+        <div class="label">Adicionar funcionário</div>
+        <p class="hint">Cadastre quem entra na equipe. Quem saiu deve ser inativado para preservar o histórico.</p>
+        <label>Nome completo ou nome de identificação<input id="eq-nome" maxlength="40" autocomplete="off" placeholder="Ex.: Ana Silva"></label>
+        <label>Setor<input id="eq-setor" maxlength="40" list="eq-setores" placeholder="Ex.: Cozinha"></label>
+        <datalist id="eq-setores"><option value="Cozinha"><option value="Recepção"></datalist>
+        <button class="btn" id="eq-adicionar" type="button">Adicionar à equipe</button>
+        <p class="hint" id="eq-feedback" role="status" aria-live="polite"></p>
+      </div>
+      <div class="panel"><div class="label">Funcionários ativos</div><div id="eq-ativos"></div></div>
+      <div class="panel"><div class="label">Inativos / desligados</div><p class="hint">Não aparecem para bater ponto. Registros antigos permanecem disponíveis nos relatórios.</p><div id="eq-inativos"></div></div>
     </section>
     <div class="notice" id="msg" hidden></div>
   </div>
@@ -333,10 +347,44 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible { 
   $('troca-pin').onclick = async () => { const n = $('novo-pin').value; if (!/^\d{4,8}$/.test(n)) { msg('O PIN precisa ter de 4 a 8 números.', 'err'); return; } await adm('trocar_pin', { novo: n }); PIN = n; guardaPin(); $('novo-pin').value = ''; msg('PIN trocado.', 'okn'); };
 
   // ---------- navegação ----------
+  function atualizaEquipe(equipe) {
+    L.equipe = equipe;
+    $('aj-nome').replaceChildren();
+    equipe.forEach(p => { const o = document.createElement('option'); o.value = p.nome; o.textContent = p.nome + (p.ativo === false ? ' (inativo)' : ''); $('aj-nome').append(o); });
+  }
+  async function abaEquipe() {
+    const j = await adm('equipe'); atualizaEquipe(j.equipe);
+    for (const ativo of [true, false]) {
+      const box = $(ativo ? 'eq-ativos' : 'eq-inativos'); box.replaceChildren();
+      const pessoas = L.equipe.filter(p => (p.ativo !== false) === ativo);
+      if (!pessoas.length) { const vazio = document.createElement('p'); vazio.className = 'hint'; vazio.textContent = 'Nenhum funcionário nesta lista.'; box.append(vazio); }
+      pessoas.forEach(p => {
+        const row = document.createElement('div'); row.className = 'reg';
+        const texto = document.createElement('div'), nome = document.createElement('b'), setor = document.createElement('small');
+        nome.textContent = p.nome; setor.textContent = p.setor; texto.append(nome, setor);
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'btn sec mini' + (ativo ? ' perigo' : ''); b.textContent = ativo ? 'Inativar' : 'Reativar';
+        b.onclick = async () => {
+          if (!confirmar(b)) return;
+          b.disabled = true;
+          try { const res = await adm('equipe_status', { nome: p.nome, ativo: !ativo }); atualizaEquipe(res.equipe); await abaEquipe(); $('eq-feedback').textContent = p.nome + (ativo ? ' foi inativado. Histórico preservado.' : ' foi reativado.'); }
+          catch (e) { $('eq-feedback').textContent = 'Não foi possível salvar: ' + e.message; b.disabled = false; }
+        };
+        row.append(texto, b); box.append(row);
+      });
+    }
+  }
+  $('eq-adicionar').onclick = async () => {
+    const b = $('eq-adicionar'), nome = $('eq-nome').value.trim(), setor = $('eq-setor').value.trim();
+    if (!nome || !setor) { $('eq-feedback').textContent = 'Preencha nome e setor.'; return; }
+    b.disabled = true;
+    try { const res = await adm('equipe_adicionar', { nome, setor }); atualizaEquipe(res.equipe); $('eq-nome').value = ''; $('eq-setor').value = ''; await abaEquipe(); $('eq-feedback').textContent = nome + ' adicionado. Já pode abrir o ponto no Wi-Fi da loja.'; }
+    catch (e) { $('eq-feedback').textContent = 'Não foi possível salvar: ' + e.message; }
+    finally { b.disabled = false; }
+  };
   function mostra() {
     document.querySelectorAll('.abas button').forEach(b => b.setAttribute('aria-selected', b.dataset.aba === aba));
-    ['hoje', 'semana', 'registros', 'internet'].forEach(a => $('aba-' + a).hidden = a !== aba);
-    const f = { hoje: abaHoje, semana: abaSemana, registros: abaRegistros, internet: abaInternet }[aba];
+    ['hoje', 'semana', 'registros', 'internet', 'equipe'].forEach(a => $('aba-' + a).hidden = a !== aba);
+    const f = { hoje: abaHoje, semana: abaSemana, registros: abaRegistros, internet: abaInternet, equipe: abaEquipe }[aba];
     f().catch(e => { if (e.message !== 'pin') msg('Erro ao carregar: ' + e.message, 'err'); });
   }
   document.querySelectorAll('.abas button').forEach(b => b.onclick = () => { aba = b.dataset.aba; mostra(); });
@@ -350,6 +398,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible { 
     try {
       if (op === 'criar_pin') { await adm('criar_pin'); delete $('login').dataset.criar; }
       await adm('entrar');
+      const cadastro = await adm('equipe'); atualizaEquipe(cadastro.equipe);
       guardaPin(); $('login').hidden = true; $('app').hidden = false; mostra();
       clearInterval(timer); timer = setInterval(() => { if (aba === 'hoje' && !document.hidden) abaHoje().catch(() => {}); }, 60000);
     } catch (e) {
