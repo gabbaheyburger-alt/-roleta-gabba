@@ -22,7 +22,9 @@
     document.body.innerHTML = '<main style="font:18px system-ui;padding:24px"><h1>Não foi possível abrir o fechamento</h1><p>Recarregue a página. Se continuar, avise o Gabba.</p></main>';
     return;
   }
-  const SETOR = CFG.nome || 'Fechamento', PRAZO = CFG.prazo || '22:30';
+  // Prazo pode mudar por dia da semana: prazo_semana = [dom, seg, ter, qua, qui, sex, sáb]
+  const dsem = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Fortaleza' })).getDay();
+  const SETOR = CFG.nome || 'Fechamento', PRAZO = (CFG.prazo_semana && CFG.prazo_semana[dsem]) || CFG.prazo || '23:00';
   const ST = 'gabba-fechamento-v1';
   const PERGS = CFG.perguntas; // [{id, q, hint, botao?:{texto,url}, campo?:{rotulo}}]
   const OCOR = CFG.tipos_ocorrencia || ['Quebra', 'Reclamação de cliente', 'Falta de funcionário', 'Outra'];

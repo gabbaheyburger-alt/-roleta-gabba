@@ -825,7 +825,6 @@
         },
         "Fechamento": {
           "nome": "Fechamento",
-          "prazo": "22:30",
           "equipe": [
             "Natália"
           ],
@@ -875,7 +874,17 @@
             "Reclamação de cliente",
             "Falta de funcionário",
             "Outra"
-          ]
+          ],
+          "prazo_semana": [
+            "23:59",
+            "23:00",
+            "23:00",
+            "23:00",
+            "23:00",
+            "23:59",
+            "23:59"
+          ],
+          "_prazo": "dom, seg, ter, qua, qui, sex, sáb: seg a qui até 23h00; sex a dom até 23h59"
         }
       }
     }
