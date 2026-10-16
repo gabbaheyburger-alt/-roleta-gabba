@@ -207,7 +207,7 @@ async function iniciarLideranca(){
  document.body.innerHTML="<header><img src=\"../pedidos/logo-grupo-gabba.svg\" alt=\"Grupo Gabba\" style=\"max-width:160px;max-height:48px\"><span>CHECKLISTS</span></header><main><div class=\"test\" id=\"queueStatus\" role=\"status\" hidden></div><section class=\"box\" id=\"pendingSection\" hidden><h2>Pendências anteriores</h2><p>Enviar outra conferência não resolve estas tarefas.</p><div id=\"pendingTasks\"></div></section><h1>Abertura · Liderança</h1><p class=\"muted\">Gabba Hey Burger · Concluir até 17h</p><section class=\"box\"><b>Quem está conferindo?</b><div class=\"options\" id=\"team\"></div><label id=\"otherLabel\" hidden>Seu nome<input id=\"other\" maxlength=\"80\" placeholder=\"Digite seu nome\"></label><p class=\"meta\" id=\"who\">Selecione seu nome para começar.</p><button type=\"button\" id=\"reset\" style=\"min-height:40px;font-size:14px;color:#a33e2d\">Apagar respostas e começar de novo</button></section><nav aria-label=\"Etapas\" id=\"nav\"></nav><p id=\"message\" role=\"status\" aria-live=\"polite\"></p><section id=\"content\"></section><section id=\"result\" hidden></section><details class=\"box\"><summary>O que ainda precisa ser definido</summary><ul><li>Padrão de etiqueta da loja.</li><li>Temperaturas de referência do freezer e da geladeira.</li><li>Confirmar prazo da liderança: por enquanto, 17h.</li></ul><p class=\"meta\">Nenhuma quantidade mínima, unidade fixa ou validade foi acrescentada.</p></details></main><footer><div><div class=\"progress\"><b id=\"count\">0 de 30 respondidos</b><progress id=\"progress\" max=\"30\" value=\"0\"></progress><button type=\"button\" id=\"fix\" hidden style=\"margin-top:8px;min-height:40px;width:100%;background:#a33e2d;color:#fff;border-color:#a33e2d;font-size:14px\"></button></div><button class=\"primary\" id=\"next\">Próximo</button></div></footer>";document.title='Liderança · '+CONFIG.lojas[LOJA].nome;
  
 const D={op:CFG.seguranca.map((q,i)=>[q,CFG.orientacoes[i]]),prod:CFG.grupos[0][1].map(x=>x[0]),pack:CFG.grupos.slice(1).flatMap(g=>g[1].map(x=>x[0]))},E=id=>document.getElementById(id),esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const titles=['Operação','Produções','Materiais','Bancadas'];let tab=0,person='',sent=false,started=null;const answers={};
+const titles=['Operação','Produções','Materiais','Bancadas'];let tab=0,person='',sent=false,started=null,ultimo=null;const PAUSA=300000;function marcar(){const ag=Date.now();if(!started)started=ag;else if(ultimo&&ag-ultimo>PAUSA)started+=ag-ultimo;ultimo=ag}const answers={};
 const defs=[...D.op.map((a,i)=>({id:'op'+i,name:a[0],hint:a[1],kind:'op'})),...D.prod.map((a,i)=>({id:'prod'+i,name:a,kind:'prod'})),...D.pack.map((a,i)=>({id:'pack'+i,name:a,kind:'pack',support:i>=7}))];
 const STORAGE='gabba-lideranca-v1';
 function read(key,fallback){try{return JSON.parse(localStorage.getItem(key))??fallback}catch{return fallback}}
@@ -215,7 +215,7 @@ function write(key,value){localStorage.setItem(key,JSON.stringify(value))}
 const day=()=>new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Fortaleza'}).format(new Date());
 const dt=()=>Object.fromEntries(new Intl.DateTimeFormat('pt-BR',{timeZone:'America/Fortaleza',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date()).map(x=>[x.type,x.value]));
 let tasks=read(STORAGE+'-tasks',[]),queue=read(STORAGE+'-queue',[]),flushing=false;
-function saveDraft(){try{if(checkedName())write(STORAGE+'-name',checkedName());write(STORAGE+'-draft',{day:day(),person,other:E('other').value,answers,started})}catch{E('message').textContent='Não foi possível guardar o rascunho. Mantenha a página aberta.'}}
+function saveDraft(){try{if(checkedName())write(STORAGE+'-name',checkedName());write(STORAGE+'-draft',{day:day(),person,other:E('other').value,answers,started,ultimo})}catch{E('message').textContent='Não foi possível guardar o rascunho. Mantenha a página aberta.'}}
 function checkedName(){return person==='Outro nome'?E('other').value.trim():person}
 function queueMessage(){E('queueStatus').hidden=!queue.length;E('queueStatus').textContent=queue.length+' linha(s) aguardando envio neste aparelho. Mantenha a página aberta e conectada.'}
 async function flush(){if(flushing||!queue.length)return;flushing=true;try{while(queue.length){const body=new URLSearchParams();for(const k of Object.keys(CONFIG.campos))body.append(CONFIG.campos[k],queue[0][k]||'');await fetch(CONFIG.form,{method:'POST',mode:'no-cors',body,signal:AbortSignal.timeout(20000)});queue=queue.slice(1);write(STORAGE+'-queue',queue);queueMessage();await new Promise(r=>setTimeout(r,150))}}catch{queueMessage()}finally{flushing=false}}
@@ -228,7 +228,7 @@ E('team').innerHTML=[...CFG.equipe,'Outro nome'].map(n=>'<button type="button" d
 function render(){E('nav').innerHTML=titles.map((t,i)=>`<button type="button" data-tab="${i}" class="${i===tab?'active':''}">${i+1}. ${t}</button>`).join('');E('content').hidden=false;E('result').hidden=true;if(tab===3){renderTasks();sync();return}
  const kind=['op','prod','pack'][tab];E('content').innerHTML=`<div class="section-title"><span class="num">0${tab+1}</span><h2>${['Conferência operacional','Produções e entradas','Embalagens e apoio'][tab]}</h2></div><p class="muted">${['Se algo não estiver certo, descreva o problema e a providência.','Informe a disponibilidade. Quantidade é opcional e não movimenta estoque.','Confira embalagens, descartáveis e materiais de apoio.'][tab]}</p>`+defs.filter(d=>d.kind===kind).map(d=>{const v=a(d.id),opts=kind==='op'?['Sim','Não']:['OK','POUCO','FALTA'];return `<article class="card" data-id="${d.id}"><b>${esc(d.name)}</b>${warnHTML(d)}${d.hint?`<p class="meta">O que conferir: ${esc(d.hint)}</p>`:''}<div class="options">${opts.map(o=>`<button type="button" data-v="${o}" class="${v.status===o?'selected':''}" aria-pressed="${v.status===o}">${o}</button>`).join('')}</div>${kind==='op'&&v.status==='Não'?`<label>Qual é o problema? *<textarea data-field="problem">${esc(v.problem)}</textarea></label><label>Qual providência será tomada? *<textarea data-field="action">${esc(v.action)}</textarea></label><p class="hint">Gera tarefa: corrigir antes de abrir, até 17h.</p>`:''}${kind==='prod'?`<label>Quantidade disponível <small>opcional</small><input type="number" min="0" step="any" inputmode="decimal" data-field="qty" value="${esc(v.qty)}" placeholder="Digite a quantidade"></label>`:''}${kind!=='op'&&['POUCO','FALTA'].includes(v.status)?`<label>Motivo *<select data-field="reason"><option value="">Selecione</option>${['Pedido, aguardando estoque central','Ainda não foi pedido','Precisa preparar','Estragou/descartado',...(d.support?['Com defeito / não funciona']:[]),'Outro'].map(r=>`<option ${v.reason===r?'selected':''}>${esc(r)}</option>`).join('')}</select></label><p class="hint">${kind==='prod'?'Preparar até 17h.':'Pedir ao estoque.'}</p>`:''}<details ${v.note?'open':''}><summary>Adicionar observação</summary>${kind!=='op'&&v.status==='OK'?`<label>Motivo da observação<select data-field="okReason"><option value="">Selecione, se precisar</option>${['Não porcionado','Qualidade ruim, não dá para amanhã','Perto de vencer','Outro'].map(r=>`<option ${v.okReason===r?'selected':''}>${esc(r)}</option>`).join('')}</select></label>`:''}<label>Observação<textarea data-field="note" placeholder="Escreva se precisar">${esc(v.note)}</textarea></label></details></article>`}).join('');sync()}
 E('nav').onclick=e=>{const b=e.target.closest('button');if(b){tab=Number(b.dataset.tab);E('message').textContent='';render()}};
-E('content').onclick=e=>{const b=e.target.closest('button[data-v]');if(!b)return;const id=b.closest('[data-id]').dataset.id;a(id).status=b.dataset.v;if(!started)started=Date.now();saveDraft();render()};
+E('content').onclick=e=>{const b=e.target.closest('button[data-v]');if(!b)return;const id=b.closest('[data-id]').dataset.id;a(id).status=b.dataset.v;marcar();saveDraft();render()};
 E('content').oninput=E('content').onchange=e=>{const f=e.target.dataset.field;if(f){const card=e.target.closest('[data-id]'),id=card.dataset.id;a(id)[f]=e.target.value;saveDraft();refreshWarn(card);sync()}};
 const catLabels={corrigir:'Corrigir antes de abrir · até 17h',preparo:'Preparar · até 17h',estoque:'Pedir ao estoque',manut:'Comunicar os responsáveis',obs:'Conferir observação',perda:'Conferir descarte e registrar perdas'};
 let leadershipKey='',remoteTasks=[],remoteLoaded=false,remoteBusy=false;
@@ -272,7 +272,7 @@ function needsTask(d,v){return (d.kind==='op'&&v.status==='Não')||['POUCO','FAL
 function code(){const t=dt();return 'CHK-'+t.year.slice(2)+t.month+t.day+'-'+t.hour+t.minute+'-'+crypto.getRandomValues(new Uint32Array(1))[0].toString(36).slice(-2).toUpperCase()}
 function buildSubmission(comp){const rows=[],newTasks=[];let ok=0,low=0,missing=0;for(const d of defs){const v=a(d.id);if(['OK','Sim'].includes(v.status))ok++;else if(v.status==='POUCO')low++;else missing++;const status=v.status==='Sim'?'SIM':v.status==='Não'?'NÃO':v.status;const issue=needsTask(d,v),reason=v.status==='OK'?v.okReason||'':v.reason||'';
 if(issue||v.qty!==''){const row={loja:LOJA,setor:'Liderança',responsavel:checkedName(),comprovante:comp,item:itemName(d),status,motivo:reason,observacao:note(v),tempo:issue?taskCategory(d,v):''};rows.push(row);if(issue)newTasks.push({id:comp+'|'+d.id,comp,item:row.item,name:d.name,sector:'Liderança',cat:row.tempo,detail:[status,reason,row.observacao].filter(Boolean).join(' · '),day:day()})}}
-const seconds=Math.max(0,Math.round((Date.now()-(started||Date.now()))/1000));rows.push({loja:LOJA,setor:'Liderança',responsavel:checkedName(),comprovante:comp,item:'RESUMO',status:ok+' OK · '+low+' POUCO · '+missing+' FALTA',motivo:'Abertura',observacao:defs.length+' itens conferidos',tempo:Math.floor(seconds/60)+' min '+String(seconds%60).padStart(2,'0')+' s'});return {rows,newTasks}}
+const _ag=Date.now(),_fim=ultimo&&_ag-ultimo>PAUSA?ultimo:_ag,seconds=Math.max(0,Math.round((_fim-(started||_fim))/1000));rows.push({loja:LOJA,setor:'Liderança',responsavel:checkedName(),comprovante:comp,item:'RESUMO',status:ok+' OK · '+low+' POUCO · '+missing+' FALTA',motivo:'Abertura',observacao:defs.length+' itens conferidos',tempo:Math.floor(seconds/60)+' min '+String(seconds%60).padStart(2,'0')+' s'});return {rows,newTasks}}
 function sendChecklist(){const button=E('simulate');button.disabled=true;try{const comp=code(),{rows,newTasks}=buildSubmission(comp);const old=tasks.filter(t=>!newTasks.some(n=>n.item===t.item));const merged=old.concat(newTasks.map(t=>{const earlier=tasks.find(x=>x.item===t.item);return earlier?{...t,day:earlier.day||day()}:t}));
 // Both the submission and its pending tasks are durable before starting the send.
 write(STORAGE+'-tasks',merged);enqueue(rows);tasks=merged;write(STORAGE+'-last',{comp,day:day(),name:checkedName()});sent=true;localStorage.removeItem(STORAGE+'-draft');showResult(comp)}catch{button.disabled=false;E('message').textContent='Não foi possível guardar o checklist neste aparelho. Nenhum sucesso foi confirmado. Mantenha a página aberta.'}}
@@ -280,7 +280,7 @@ function showResult(comp){const last=read(STORAGE+'-last',{});E('content').hidde
 E('next').onclick=()=>{E('message').textContent='';if(tab<2){tab++;render();E('nav').scrollIntoView({block:'start',behavior:'smooth'})}else if(sent)showResult();else review()};
 E('fix').onclick=goFix;
 E('reset').onclick=()=>{if(window.confirm('Apagar todas as respostas e começar de novo?')){try{localStorage.removeItem(STORAGE+'-draft')}catch{}location.reload()}};
-const draft=read(STORAGE+'-draft',null);if(draft&&draft.day===day()){Object.assign(answers,draft.answers||{});person=draft.person||'';started=draft.started||null;E('other').value=draft.other||''}else{const remembered=read(STORAGE+'-name','');if(remembered){person=CFG.equipe.includes(remembered)?remembered:'Outro nome';E('other').value=remembered}}
+const draft=read(STORAGE+'-draft',null);if(draft&&draft.day===day()){Object.assign(answers,draft.answers||{});person=draft.person||'';started=draft.started||null;ultimo=draft.ultimo||draft.started||null;E('other').value=draft.other||''}else{const remembered=read(STORAGE+'-name','');if(remembered){person=CFG.equipe.includes(remembered)?remembered:'Outro nome';E('other').value=remembered}}
 E('otherLabel').hidden=person!=='Outro nome';E('team').querySelectorAll('button').forEach(b=>b.classList.toggle('selected',b.dataset.name===person));render();renderPending();queueMessage();flush();
 
  }catch(e){document.body.innerHTML='<main style="font:18px system-ui;padding:24px"><h1>Não foi possível abrir a liderança</h1><p>Confira se index.html e config.json foram atualizados juntos. Depois recarregue a página.</p></main>'}
@@ -303,7 +303,11 @@ E('otherLabel').hidden=person!=='Outro nome';E('team').querySelectorAll('button'
   const fmtTempo = s => Math.floor(s / 60) + ' min ' + String(s % 60).padStart(2, '0') + ' s';
 
   let CONFIG = null, PED = null, LOJA, SETOR, SNOME, LOJA_NOME, CFG, SAF = [], ITEMS = [], ALL = [];
-  let ans = {}, obs = {}, mot = {}, started = null, nomeSel = '';
+  let ans = {}, obs = {}, mot = {}, started = null, ultimo = null, nomeSel = '';
+  // Tempo de conferência: conta só o tempo ativo. Pausa de mais de 5 min sem tocar em nada não entra na conta.
+  const PAUSA = 5 * 60 * 1000;
+  const marcarAtividade = () => { const ag = Date.now(); if (!started) started = ag; else if (ultimo && ag - ultimo > PAUSA) started += ag - ultimo; ultimo = ag; };
+  const ativoSeg = () => { if (!started) return 0; const ag = Date.now(); const fim = ultimo && ag - ultimo > PAUSA ? ultimo : ag; return Math.max(0, Math.round((fim - started) / 1000)); };
   let KD;
 
   // ---------- Montagem ----------
@@ -338,7 +342,7 @@ E('otherLabel').hidden=person!=='Outro nome';E('team').querySelectorAll('button'
     // Rascunho do dia (se o celular bloqueou no meio da conferência)
     const r = LS.get(KD, null);
     if (r && r.data === hojeStr()) {
-      ans = r.ans || {}; obs = r.obs || {}; mot = r.mot || {}; started = r.started || null;
+      ans = r.ans || {}; obs = r.obs || {}; mot = r.mot || {}; started = r.started || null; ultimo = r.ultimo || r.started || null;
       ALL.forEach(i => { if (ans[i.id]) aplicarResposta(i.id, ans[i.id], true); if (obs[i.id]) { $('#obs-' + i.id).value = obs[i.id]; $('#obs-' + i.id).hidden = false; const a = $('#add-' + i.id); if (a) a.hidden = true; const m = $('#mots-' + i.id); if (m && mot[i.id]) { m.hidden = false; renderMots(i.id); } } });
     } else LS.del(KD);
 
@@ -388,11 +392,11 @@ E('otherLabel').hidden=person!=='Outro nome';E('team').querySelectorAll('button'
     else if (good) { m.hidden = !aberto; t.hidden = !aberto; a.hidden = aberto; renderMots(id); }
     else { m.hidden = false; t.hidden = false; a.hidden = true; renderMots(id); }
   }
-  function salvarRascunho() { LS.set(KD, { data: hojeStr(), ans, obs, mot, started }); }
+  function salvarRascunho() { LS.set(KD, { data: hojeStr(), ans, obs, mot, started, ultimo }); }
 
   document.addEventListener('click', e => {
     const b = e.target.closest('.seg button');
-    if (b) { if (!started) started = Date.now(); aplicarResposta(b.dataset.id, b.dataset.v); salvarRascunho(); update(); return; }
+    if (b) { marcarAtividade(); aplicarResposta(b.dataset.id, b.dataset.v); salvarRascunho(); update(); return; }
     const ao = e.target.closest('.addobs');
     if (ao) { const id = ao.dataset.id; $('#row-' + id).dataset.open = '1'; ao.hidden = true; $('#obs-' + id).hidden = false; const mb = $('#mots-' + id); if (mb) { mb.hidden = false; renderMots(id); } $('#obs-' + id).focus(); return; }
     const mo = e.target.closest('.mot');
@@ -425,7 +429,7 @@ E('otherLabel').hidden=person!=='Outro nome';E('team').querySelectorAll('button'
     $('#s4hint').textContent = falta ? 'Faltam ' + falta + ' respostas para liberar o envio.' : 'Tudo respondido. Revise antes de enviar.';
   }
   function contar() { const c = { ok: 0, low: 0, miss: 0 }; ALL.forEach(i => { const v = ans[i.id]; if (v === 'OK' || v === 'SIM') c.ok++; else if (v === 'POUCO') c.low++; else if (v) c.miss++; }); return c; }
-  setInterval(() => { if (started) $('#ptime').textContent = fmtTempo(Math.round((Date.now() - started) / 1000)); }, 1000);
+  setInterval(() => { if (started) $('#ptime').textContent = fmtTempo(ativoSeg()) + (ultimo && Date.now() - ultimo > PAUSA ? ' · pausado' : ''); }, 1000);
 
   function irParaPendente() {
     const m = ALL.find(pendente); if (!m) return false;
@@ -449,7 +453,7 @@ E('otherLabel').hidden=person!=='Outro nome';E('team').querySelectorAll('button'
   }
   let segs = 0;
   function mostrarResumo() {
-    segs = Math.round((Date.now() - (started || Date.now())) / 1000);
+    segs = ativoSeg();
     const c = contar(), ruim = i => ans[i.id] !== 'OK', esp = i => mot[i.id] === AGUARD;
     const safRuim = SAF.filter(i => ans[i.id] === 'NÃO' || obs[i.id]);
     const ress = ITEMS.filter(i => ans[i.id] === 'OK' && (mot[i.id] || obs[i.id]));
