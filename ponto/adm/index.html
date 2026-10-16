@@ -159,12 +159,17 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible { 
     </section>
     <section id="aba-equipe" hidden style="display:flex;flex-direction:column;gap:16px">
       <div class="panel">
-        <div class="label">Adicionar funcionário</div>
+        <div class="label" id="eq-titulo">Adicionar funcionário e escala</div>
         <p class="hint">Cadastre quem entra na equipe. Quem saiu deve ser inativado para preservar o histórico.</p>
         <label>Nome completo ou nome de identificação<input id="eq-nome" maxlength="40" autocomplete="off" placeholder="Ex.: Ana Silva"></label>
         <label>Setor<input id="eq-setor" maxlength="40" list="eq-setores" placeholder="Ex.: Cozinha"></label>
         <datalist id="eq-setores"><option value="Cozinha"><option value="Recepção"></datalist>
+        <label>Escala válida a partir de<input id="eq-vigencia" type="date" required></label>
+        <p class="hint">Marque os dias de trabalho e informe entrada e saída em cada um. Dia desmarcado = folga. Saída menor que a entrada indica o dia seguinte; 00:00 é meia-noite.</p>
+        <div id="eq-horarios"></div>
+        <button class="btn sec" id="eq-padrao" type="button">Preencher com os horários da loja</button>
         <button class="btn" id="eq-adicionar" type="button">Adicionar à equipe</button>
+        <button class="btn sec" id="eq-cancelar" type="button" hidden>Cancelar edição</button>
         <p class="hint" id="eq-feedback" role="status" aria-live="polite"></p>
       </div>
       <div class="panel"><div class="label">Funcionários ativos</div><div id="eq-ativos"></div></div>
@@ -219,9 +224,9 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible { 
     const ent = r.find(x => x.acao === 'entrada');
     const p = L.equipe.find(e => e.nome === nome) || {};
     const wd = new Date(dia + 'T12:00:00Z').getUTCDay();
-    const esperado = (!p.dias || p.dias.includes(wd)) && L.horarios[wd];
+    const esperado = escalaNoDia(p, dia);
     let atraso = 0;
-    if (ent && esperado) { const d = new Date(ent.ts); const m = d.getHours() * 60 + d.getMinutes(); atraso = m - toMin(esperado[0]); if (atraso > CFG.tolerancia_min) flags.push('atraso ' + atraso + ' min'); else atraso = 0; }
+    if (ent && esperado) { const previstoTs = Date.parse(dia + 'T' + esperado[0] + ':00-03:00'); atraso = Math.floor((ent.ts - previstoTs) / 60000); if (atraso > CFG.tolerancia_min) flags.push('atraso ' + atraso + ' min'); else atraso = 0; }
     const aps = new Set(regs.filter(x => x.dia === dia && !x.removido && x.aparelho && r.some(y => y.aparelho === x.aparelho) && x.nome !== nome).map(x => x.nome));
     if (aps.size) flags.push('mesmo celular que ' + [...aps].join(', '));
     if (r.some(x => x.origem === 'ajuste')) flags.push('tem lançamento manual');
@@ -237,7 +242,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible { 
     L.equipe.filter(p => p.ativo !== false || registros.some(x => x.nome === p.nome)).forEach(p => {
       const s = resumo(registros, p.nome, dia);
       const wd = new Date(dia + 'T12:00:00Z').getUTCDay();
-      const folga = p.dias && !p.dias.includes(wd);
+      const folga = !s.esperado;
       const c = document.createElement('div'); c.className = 'pc';
       let st = 'Não bateu', cls = '';
       if (s.ultimo) { if (s.ultimo.acao === 'saida') st = 'Saiu'; else if (s.ultimo.acao === 'saida_intervalo') { st = 'Intervalo'; cls = 'pausa'; } else { st = 'Na loja'; cls = 'dentro'; } }
@@ -250,7 +255,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible { 
       s.r.forEach(x => add(NOME_ACAO[x.acao], hm(x.ts) + (x.origem === 'ajuste' ? ' (manual)' : '')));
       if (s.pausa) add('Intervalo', durTxt(s.pausa));
       if (s.trab) add('Trabalhado', durTxt(s.trab) + (s.aberto && dia === hoje() ? ' até agora' : ''));
-      if (!s.r.length && s.esperado && !folga) add('Escala', s.esperado[0] + ' às ' + s.esperado[1]);
+      if (s.esperado) add('Escala', s.esperado[0] + ' às ' + s.esperado[1] + (toMin(s.esperado[1]) <= toMin(s.esperado[0]) ? ' (+1 dia)' : ''));
       c.append(ln);
       s.flags.forEach(f => { const x = document.createElement('div'); x.className = 'flag' + (/manual/.test(f) ? ' am' : ''); x.textContent = '⚠ ' + f; c.append(x); });
       if (p.obs) { const o = document.createElement('div'); o.className = 'hint'; o.textContent = p.obs; c.append(o); }
@@ -347,6 +352,45 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible { 
   $('troca-pin').onclick = async () => { const n = $('novo-pin').value; if (!/^\d{4,8}$/.test(n)) { msg('O PIN precisa ter de 4 a 8 números.', 'err'); return; } await adm('trocar_pin', { novo: n }); PIN = n; guardaPin(); $('novo-pin').value = ''; msg('PIN trocado.', 'okn'); };
 
   // ---------- navegação ----------
+  let editandoEquipe = null;
+  function escalaNoDia(p, dia) {
+    const wd = new Date(dia + 'T12:00:00Z').getUTCDay();
+    const versao = (p.escalas || []).filter(e => e.vigencia <= dia).sort((a,b) => b.vigencia.localeCompare(a.vigencia))[0];
+    return versao ? versao.horarios[wd] : ((!p.dias || p.dias.includes(wd)) ? L.horarios[wd] : null);
+  }
+  function desenhaEscala(p = {}) {
+    const dia = $('eq-vigencia').value || hoje();
+    const box = $('eq-horarios'); box.replaceChildren();
+    [1,2,3,4,5,6,0].forEach(d => {
+      const h = escalaNoDia(p, somaDia(dia, (d - new Date(dia + 'T12:00:00Z').getUTCDay() + 7) % 7));
+      const row = document.createElement('div'); row.className = 'panel'; row.style.cssText = 'padding:12px;margin-bottom:8px;gap:8px;box-shadow:none';
+      const label = document.createElement('label'); label.style.cssText = 'display:flex;align-items:center;gap:10px;font-weight:700';
+      const check = document.createElement('input'); check.type = 'checkbox'; check.id = 'eq-dia-' + d; check.checked = !!h; check.style.width = 'auto';
+      label.append(check, document.createTextNode(['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'][d]));
+      const linha = document.createElement('div'); linha.className = 'row';
+      const inputs = ['entrada', 'saida'].map((tipo,i) => {
+        const wrap = document.createElement('label'); wrap.textContent = i ? 'Saída' : 'Entrada'; wrap.className = 'hint';
+        const input = document.createElement('input'); input.type = 'time'; input.id = 'eq-' + tipo + '-' + d; input.setAttribute('aria-label', tipo + ' de ' + SEM[d]);
+        input.value = h ? (h[i] === '24:00' ? '00:00' : h[i]) : (i ? '23:00' : '15:30'); input.disabled = !check.checked;
+        wrap.append(input); linha.append(wrap); return input;
+      });
+      check.onchange = () => inputs.forEach(input => input.disabled = !check.checked);
+      row.append(label, linha); box.append(row);
+    });
+  }
+  function iniciaFormEquipe(p = null) {
+    editandoEquipe = p;
+    $('eq-nome').value = p ? p.nome : ''; $('eq-nome').readOnly = !!p;
+    $('eq-setor').value = p ? p.setor : '';
+    $('eq-vigencia').min = hoje(); $('eq-vigencia').value = hoje();
+    $('eq-titulo').textContent = p ? 'Editar escala · ' + p.nome : 'Adicionar funcionário e escala';
+    $('eq-adicionar').textContent = p ? 'Salvar escala' : 'Adicionar à equipe';
+    $('eq-cancelar').hidden = !p;
+    desenhaEscala(p || {});
+  }
+  $('eq-cancelar').onclick = () => iniciaFormEquipe();
+  $('eq-padrao').onclick = () => desenhaEscala({});
+
   function atualizaEquipe(equipe) {
     L.equipe = equipe;
     $('aj-nome').replaceChildren();
@@ -354,6 +398,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible { 
   }
   async function abaEquipe() {
     const j = await adm('equipe'); atualizaEquipe(j.equipe);
+    if (!$('eq-horarios').children.length) iniciaFormEquipe();
     for (const ativo of [true, false]) {
       const box = $(ativo ? 'eq-ativos' : 'eq-inativos'); box.replaceChildren();
       const pessoas = L.equipe.filter(p => (p.ativo !== false) === ativo);
@@ -362,6 +407,12 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible { 
         const row = document.createElement('div'); row.className = 'reg';
         const texto = document.createElement('div'), nome = document.createElement('b'), setor = document.createElement('small');
         nome.textContent = p.nome; setor.textContent = p.setor; texto.append(nome, setor);
+        const escala = document.createElement('small');
+        escala.textContent = [1,2,3,4,5,6,0].map(d => { const dia = somaDia(hoje(), (d - new Date(hoje() + 'T12:00:00Z').getUTCDay() + 7) % 7); const h = escalaNoDia(p, dia); return SEM[d] + ': ' + (h ? h.join('–') : 'folga'); }).join(' · ');
+        texto.append(escala);
+        const editar = document.createElement('button'); editar.type = 'button'; editar.className = 'btn sec mini'; editar.textContent = 'Editar escala';
+        editar.onclick = () => { iniciaFormEquipe(p); $('eq-titulo').scrollIntoView({behavior:'smooth',block:'start'}); };
+        const controles = document.createElement('div'); controles.style.cssText = 'display:flex;flex-direction:column;gap:8px;flex-shrink:0';
         const b = document.createElement('button'); b.type = 'button'; b.className = 'btn sec mini' + (ativo ? ' perigo' : ''); b.textContent = ativo ? 'Inativar' : 'Reativar';
         b.onclick = async () => {
           if (!confirmar(b)) return;
@@ -369,15 +420,21 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible { 
           try { const res = await adm('equipe_status', { nome: p.nome, ativo: !ativo }); atualizaEquipe(res.equipe); await abaEquipe(); $('eq-feedback').textContent = p.nome + (ativo ? ' foi inativado. Histórico preservado.' : ' foi reativado.'); }
           catch (e) { $('eq-feedback').textContent = 'Não foi possível salvar: ' + e.message; b.disabled = false; }
         };
-        row.append(texto, b); box.append(row);
+        controles.append(editar, b); row.append(texto, controles); box.append(row);
       });
     }
   }
   $('eq-adicionar').onclick = async () => {
     const b = $('eq-adicionar'), nome = $('eq-nome').value.trim(), setor = $('eq-setor').value.trim();
     if (!nome || !setor) { $('eq-feedback').textContent = 'Preencha nome e setor.'; return; }
+    const horarios = {}, vigencia = $('eq-vigencia').value;
+    for (let d = 0; d < 7; d++) {
+      horarios[d] = $('eq-dia-' + d).checked ? [$('eq-entrada-' + d).value, $('eq-saida-' + d).value] : null;
+      if (horarios[d] && (!horarios[d][0] || !horarios[d][1] || horarios[d][0] === horarios[d][1])) { $('eq-feedback').textContent = 'Confira entrada e saída de ' + SEM[d] + '.'; return; }
+    }
+    if (!vigencia || vigencia < hoje()) { $('eq-feedback').textContent = 'Escolha a data de início a partir de hoje.'; return; }
     b.disabled = true;
-    try { const res = await adm('equipe_adicionar', { nome, setor }); atualizaEquipe(res.equipe); $('eq-nome').value = ''; $('eq-setor').value = ''; await abaEquipe(); $('eq-feedback').textContent = nome + ' adicionado. Já pode abrir o ponto no Wi-Fi da loja.'; }
+    try { const res = await adm(editandoEquipe ? 'equipe_escala' : 'equipe_adicionar', { nome, setor, horarios, vigencia }); atualizaEquipe(res.equipe); iniciaFormEquipe(); await abaEquipe(); $('eq-feedback').textContent = nome + ': cadastro e escala salvos, válidos a partir de ' + vigencia.split('-').reverse().join('/') + '.'; }
     catch (e) { $('eq-feedback').textContent = 'Não foi possível salvar: ' + e.message; }
     finally { b.disabled = false; }
   };
