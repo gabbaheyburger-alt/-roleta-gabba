@@ -127,10 +127,6 @@
                   "P"
                 ],
                 [
-                  "Pastelzim de carne",
-                  "P"
-                ],
-                [
                   "Pastelzim de queijo",
                   "P"
                 ],
@@ -215,10 +211,6 @@
               [
                 [
                   "Salsa",
-                  "P"
-                ],
-                [
-                  "Defumada",
                   "P"
                 ],
                 [
@@ -463,10 +455,6 @@
                   "P"
                 ],
                 [
-                  "Defumada",
-                  "P"
-                ],
-                [
                   "Ketchup",
                   "R"
                 ],
@@ -702,7 +690,9 @@
         },
         "Lideranca": {
           "nome": "Liderança",
-          "equipe": ["Natália"],
+          "equipe": [
+            "Natália"
+          ],
           "titulo_seguranca": "Conferência operacional",
           "seguranca": [
             "O freezer horizontal externo está funcionando e mantendo os produtos congelados?",
