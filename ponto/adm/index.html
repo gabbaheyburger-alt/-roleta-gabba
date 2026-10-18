@@ -91,6 +91,26 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible { 
 .metrica b {display:block;font-size:2rem;letter-spacing:-.06em}
 .metrica span {font-size:.8rem;color:var(--muted)}
 @media(max-width:600px) {.resumo-dia {grid-template-columns:repeat(2,1fr)} .cards {grid-template-columns:1fr} .toplink {font-size:.7rem;padding:8px}}
+.rel-metricas {display:grid;grid-template-columns:repeat(3,1fr);gap:14px;padding:12px 0}
+.rel-metricas strong {display:block;font-size:1.4rem}
+.rel-metricas span {display:block;color:var(--muted);font-size:.8rem}
+.rel-pessoa h3 {margin:0;font-size:1.3rem}
+.rel-dia {padding:12px 0;border-top:1px solid var(--line)}
+.rel-dia p {margin:6px 0}
+#sem-relatorio {display:grid;gap:16px}
+summary {cursor:pointer;padding:12px 0;font-weight:700}
+@media(max-width:550px) {.rel-metricas {grid-template-columns:repeat(2,1fr)}}
+@media print {
+  @page {size:A4 portrait;margin:14mm}
+  body {background:white;font-size:10pt}
+  .topbar,.main > :not(#app),#app > :not(#aba-semana),#aba-semana > :not(#sem-relatorio) {display:none!important}
+  .main {max-width:none;padding:0;margin:0}
+  #sem-relatorio {display:block}
+  #sem-relatorio .panel {box-shadow:none;margin-bottom:12px;border-radius:8px;padding:14px}
+  .rel-pessoa {break-inside:avoid}
+  #sem-relatorio h2 {font-size:20pt}
+  #sem-relatorio .hint {font-size:9pt}
+}
 </style>
 </head>
 <body>
@@ -129,8 +149,10 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible { 
 
     <section id="aba-semana" hidden style="display:flex;flex-direction:column;gap:12px">
       <div class="row"><button class="btn sec" id="sem-ant" type="button" style="flex:0 0 auto">‹</button><div id="sem-txt" style="text-align:center;font-weight:700"></div><button class="btn sec" id="sem-prox" type="button" style="flex:0 0 auto">›</button></div>
-      <div class="panel"><div class="tabela"><table id="sem-tab"></table></div><p class="hint">Horas trabalhadas por dia (sem o intervalo). <b>!</b> = dia com algo a conferir (falta saída, atraso ou aparelho repetido).</p></div>
-      <button class="btn sec" id="csv" type="button">Baixar a semana (planilha CSV)</button>
+      <div class="row"><button class="btn" id="rel-resumo" type="button" disabled>Baixar resumo por funcionário</button><button class="btn sec" id="rel-detalhe" type="button" disabled>Baixar detalhe por dia</button></div>
+      <button class="btn sec" id="rel-imprimir" type="button" disabled>Imprimir / salvar PDF</button>
+      <div id="sem-relatorio" aria-live="polite"></div>
+      <details><summary>Conferência técnica</summary><div class="panel"><div class="tabela"><table id="sem-tab"></table></div><p class="hint">Visão técnica das marcações. Para o relatório consolidado, use os cartões acima. Registros removidos ficam apenas no arquivo de auditoria.</p></div><button class="btn sec" id="csv" type="button">Baixar registros brutos (auditoria)</button></details>
     </section>
 
     <section id="aba-registros" hidden style="display:flex;flex-direction:column;gap:12px">
@@ -179,6 +201,97 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible { 
   </div>
 </main>
 
+<script>
+/* Relatório operacional. Não calcula verbas de folha nem compensa atrasos automaticamente. */
+(function () {
+  const fmt = ms => ms == null ? '—' : Math.floor(Math.round(ms / 60000) / 60) + 'h' + String(Math.round(ms / 60000) % 60).padStart(2, '0');
+  const hm = ts => ts == null ? '—' : new Date(ts).toLocaleTimeString('pt-BR', { timeZone: 'America/Fortaleza', hour: '2-digit', minute: '2-digit', hour12: false });
+  const date = d => d.split('-').reverse().join('/');
+  const shift = (d, n) => new Date(Date.parse(d + 'T12:00:00Z') + n * 864e5).toISOString().slice(0, 10);
+  const stamp = (d, t) => t === '24:00' ? Date.parse(shift(d, 1) + 'T00:00:00-03:00') : Date.parse(d + 'T' + t + ':00-03:00');
+  function escala(p, dia, loja) {
+    const wd = new Date(dia + 'T12:00:00Z').getUTCDay();
+    const v = (p.escalas || []).filter(v => v.vigencia <= dia).sort((a,b) => b.vigencia.localeCompare(a.vigencia))[0];
+    return v ? v.horarios[wd] : ((!p.dias || p.dias.includes(wd)) ? loja.horarios[wd] : null);
+  }
+  function diaPessoa(p, dia, regs, loja, agora) {
+    const r = regs.filter(x => !x.removido && x.nome === p.nome && x.dia === dia).sort((a,b) => a.ts-b.ts || (a.id || 0)-(b.id || 0));
+    const h = escala(p, dia, loja), ini = h ? stamp(dia,h[0]) : null;
+    let fim = h ? stamp(dia,h[1]) : null;
+    if (h && fim <= ini) fim += 864e5;
+    const previsto = h ? Math.max(0, fim-ini-(loja.intervalo_min || 30)*60000) : null;
+    const out = { nome:p.nome, setor:p.setor || 'Não informado', dia, escala:h ? h.join(' às ') : 'Folga / sem escala', previsto, entrada:null, saida:null, atraso:null, antecipada:null, saidaAntes:null, saidaDepois:null, intervalo:null, trabalhado:null, saldo:null, excedente:null, status:'Sem registros válidos', notas:[], r };
+    if (!r.length) { if (h && agora < ini) out.status='Turno não iniciado'; else if (!h) out.status='Folga / sem escala'; return out; }
+    let estado='fora', inicio=null, pausaInicio=null, trab=0, pausa=0, valido=true, nPausas=0;
+    for (const x of r) {
+      if (!Number.isFinite(x.ts)) {valido=false;continue;}
+      if (x.acao==='entrada' && estado==='fora') { estado='trabalho';inicio=x.ts; if(out.entrada===null)out.entrada=x.ts; }
+      else if (x.acao==='saida_intervalo' && estado==='trabalho') { trab+=x.ts-inicio;estado='intervalo';pausaInicio=x.ts; }
+      else if (x.acao==='volta_intervalo' && estado==='intervalo') { pausa+=x.ts-pausaInicio;nPausas++;estado='trabalho';inicio=x.ts; }
+      else if (x.acao==='saida' && estado==='trabalho') {trab+=x.ts-inicio;estado='fora';out.saida=x.ts;}
+      else {valido=false;out.notas.push('Sequência de marcações a conferir');}
+    }
+    if(out.entrada!==null && h) {out.atraso=Math.max(0,out.entrada-ini);out.antecipada=Math.max(0,ini-out.entrada);}
+    if(out.saida!==null && estado==='fora' && h) {out.saidaAntes=Math.max(0,fim-out.saida);out.saidaDepois=Math.max(0,out.saida-fim);}
+    if(estado!=='fora') out.notas.push(estado==='intervalo'?'Falta retorno do intervalo e saída':'Falta saída');
+    if(!h) out.notas.push('Registro em dia sem escala');
+    if(!nPausas && previsto>0) out.notas.push('Intervalo sem marcação completa');
+    if(r.some(x=>x.origem==='ajuste')) out.notas.push('Contém ajuste manual');
+    const completo=valido && estado==='fora' && out.entrada!==null && out.saida!==null && (nPausas>0 || !h);
+    if(completo) {
+      out.intervalo=pausa;out.trabalhado=trab;
+      if(h) {out.saldo=trab-previsto;out.excedente=Math.max(0,out.saldo);}
+      out.status=h?'Completo':'Conferir escala';
+    } else out.status='Pendente de conferência';
+    return out;
+  }
+  function model(equipe, regs, de, ate, loja, agora=Date.now()) {
+    const dias=[];for(let d=de;d<=ate;d=shift(d,1)) dias.push(d);
+    const nomes=new Set(equipe.map(p=>p.nome));
+    const pessoas=[...equipe,...[...new Set(regs.filter(r=>!r.removido && !nomes.has(r.nome)).map(r=>r.nome))].map(nome=>({nome,setor:'Não cadastrado',dias:[]}))].filter(p=>p.ativo!==false || regs.some(x=>!x.removido && x.nome===p.nome));
+    const detalhes=pessoas.flatMap(p=>dias.map(d=>diaPessoa(p,d,regs,loja,agora)));
+    const resumo=pessoas.map(p=>{
+      const ds=detalhes.filter(d=>d.nome===p.nome), completos=ds.filter(d=>d.status==='Completo'), com=ds.filter(d=>d.r.length);
+      const soma=(arr,k)=>arr.reduce((t,d)=>t+(d[k] || 0),0);
+      return {nome:p.nome,setor:p.setor || 'Não informado',dias:com.length,fechados:completos.length,pendentes:com.filter(d=>d.status!=='Completo').length,trabalhado:completos.length?soma(completos,'trabalhado'):null,atraso:com.some(d=>d.atraso!==null)?soma(com,'atraso'):null,antecipada:com.some(d=>d.antecipada!==null)?soma(com,'antecipada'):null,saidaAntes:com.some(d=>d.saidaAntes!==null)?soma(com,'saidaAntes'):null,saidaDepois:com.some(d=>d.saidaDepois!==null)?soma(com,'saidaDepois'):null,excedente:completos.length?soma(completos,'excedente'):null,status:!com.length?'Sem registros válidos':com.some(d=>d.status!=='Completo')?'Conferência pendente':'Registros completos'};
+    });
+    return {de,ate,resumo,detalhes,removidos:regs.filter(x=>x.removido).length,validos:regs.filter(x=>!x.removido).length};
+  }
+  function el(tag,txt,cls) {const e=document.createElement(tag);if(txt!==undefined)e.textContent=txt;if(cls)e.className=cls;return e;}
+  function render(box,m,loja,tolerancia) {
+    box.replaceChildren();
+    const header=el('div',undefined,'panel');header.append(el('div','Grupo Gabba · Controle interno','label'),el('h2','Relatório de frequência'),el('p',loja.nome+' · '+date(m.de)+' a '+date(m.ate),'hint'));box.append(header);
+    const note=el('div',undefined,'notice');note.append(el('b',m.validos?m.validos+' marcações válidas no período.':'Sem registros válidos no período.'),el('p',m.removidos+' marcações removidas ficam fora dos cálculos. Sem registro não significa falta.'));
+    box.append(note);
+    for(const p of m.resumo) {
+      const card=el('section',undefined,'panel rel-pessoa');card.append(el('h3',p.nome),el('p',p.setor+' · '+p.status,'hint'));
+      const grid=el('div',undefined,'rel-metricas');
+      for(const [label,key] of [['Horas em dias completos','trabalhado'],['Atraso na entrada','atraso'],['Entrada antecipada','antecipada'],['Saída antecipada','saidaAntes'],['Após fim da escala','saidaDepois'],['Excedente a conferir','excedente']]) {const item=el('div');item.append(el('strong',fmt(p[key])),el('span',label));grid.append(item);}
+      card.append(grid,el('p',p.dias+' dias com marcações · '+p.fechados+' completos · '+p.pendentes+' a conferir','hint'));
+      const details=el('details');details.append(el('summary','Ver detalhe por dia'));
+      for(const d of m.detalhes.filter(d=>d.nome===p.nome)) {
+        const row=el('div',undefined,'rel-dia');row.append(el('b',date(d.dia)+' · '+d.status),el('p','Escala: '+d.escala,'hint'));
+        if(d.r.length) {row.append(el('p','Entrada: '+hm(d.entrada)+' · Saída: '+hm(d.saida),'hint'),el('p','Trabalhado: '+fmt(d.trabalhado)+' · Intervalo: '+fmt(d.intervalo),'hint'),el('p','Atraso: '+fmt(d.atraso)+' · Entrada antecipada: '+fmt(d.antecipada),'hint'),el('p','Saída antecipada: '+fmt(d.saidaAntes)+' · Após escala: '+fmt(d.saidaDepois),'hint'),el('p','Excedente a conferir: '+fmt(d.excedente),'hint'));if(d.notas.length)row.append(el('p',d.notas.join('. '),'flag'));}
+        details.append(row);
+      }
+      card.append(details);box.append(card);
+    }
+    const rodape=el('div',undefined,'panel');rodape.append(el('div','Critérios de leitura','label'),el('p','Atrasos e antecipações mostram a diferença integral em relação à escala, sem descontos de tolerância. Tolerância de alerta configurada: '+tolerancia+' min. Horas e excedentes somam somente dias completos, com escala e intervalo marcado.','hint'),el('p','Excedente é a diferença positiva entre horas registradas e horas previstas líquidas do intervalo de '+(loja.intervalo_min || 30)+' min. Não equivale automaticamente a hora extra para pagamento. Entrada antecipada e saída após o horário ficam separadas e não são somadas novamente ao excedente.','hint'),el('p','Dias sem marcação, turnos abertos e sequências incompletas não recebem horas estimadas. Escalas consideradas conforme a vigência cadastrada. Horários em America/Fortaleza.','hint'));box.append(rodape);
+  }
+  const colsResumo=['Funcionário','Setor','Dias com marcações','Dias completos','Dias a conferir','Horas em dias completos','Atraso entrada','Entrada antecipada','Saída antecipada','Após fim escala','Excedente a conferir','Situação'];
+  const colsDetalhe=['Dia','Funcionário','Setor','Escala prevista','Horas previstas líquidas','Entrada','Saída','Intervalo marcado','Horas registradas completas','Atraso entrada','Entrada antecipada','Saída antecipada','Após fim escala','Excedente a conferir','Saldo em minutos','Situação','Observações'];
+  function rows(m,tipo) {
+    return tipo==='resumo'?[colsResumo,...m.resumo.map(p=>[p.nome,p.setor,p.dias,p.fechados,p.pendentes,...['trabalhado','atraso','antecipada','saidaAntes','saidaDepois','excedente'].map(k=>fmt(p[k])),p.status])]:[colsDetalhe,...m.detalhes.map(d=>[d.dia,d.nome,d.setor,d.escala,fmt(d.previsto),hm(d.entrada),hm(d.saida),...['intervalo','trabalhado','atraso','antecipada','saidaAntes','saidaDepois','excedente'].map(k=>fmt(d[k])),d.saldo===null?'':Math.round(d.saldo/60000),d.status,d.notas.join('. ')])];
+  }
+  function download(m,tipo,loja) {
+    const safe=v=>{let s=String(v??'');if(/^[=+@-]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"';};
+    const content='\ufeff'+rows(m,tipo).map(r=>r.map(safe).join(';')).join('\r\n');
+    const url=URL.createObjectURL(new Blob([content],{type:'text/csv;charset=utf-8'})),a=el('a');a.href=url;a.download='ponto-'+tipo+'-'+loja+'-'+m.de+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  }
+  window.GabbaRelatorio={model,render,download,rows};
+})();
+
+</script>
 <script>
 (function () {
   const $ = id => document.getElementById(id);
@@ -271,11 +384,21 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible { 
   }
 
   // ---------- Semana ----------
-  let SEMREGS = [];
+  let SEMREGS = [], RELATORIO = null, relPedido = 0;
   async function abaSemana() {
+    const pedido = ++relPedido;
+    RELATORIO = null;
+    ['rel-resumo','rel-detalhe','rel-imprimir','csv'].forEach(id => $(id).disabled = true);
+    $('sem-relatorio').textContent = 'Carregando os registros reais…';
+    const inicio = semIni;
     const fim = somaDia(semIni, 6);
     $('sem-txt').textContent = semIni.slice(8) + '/' + semIni.slice(5, 7) + ' a ' + fim.slice(8) + '/' + fim.slice(5, 7);
-    const { registros } = await adm('registros', { de: semIni, ate: fim }); SEMREGS = registros;
+    const { registros } = await adm('registros', { de: inicio, ate: fim });
+    if (pedido !== relPedido) return;
+    SEMREGS = registros;
+    RELATORIO = GabbaRelatorio.model(L.equipe, registros, inicio, fim, L);
+    GabbaRelatorio.render($('sem-relatorio'), RELATORIO, L, CFG.tolerancia_min);
+    ['rel-resumo','rel-detalhe','rel-imprimir','csv'].forEach(id => $(id).disabled = false);
     const dias = [...Array(7)].map((_, i) => somaDia(semIni, i));
     const t = $('sem-tab'); t.innerHTML = '';
     const th = document.createElement('tr'); th.innerHTML = '<th>Pessoa</th>' + dias.map(d => '<th>' + SEM[new Date(d + 'T12:00:00Z').getUTCDay()] + '<br>' + d.slice(8) + '</th>').join('') + '<th>Total</th>'; t.append(th);
@@ -289,12 +412,15 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible { 
   }
   $('sem-ant').onclick = () => { semIni = somaDia(semIni, -7); abaSemana(); };
   $('sem-prox').onclick = () => { semIni = somaDia(semIni, 7); abaSemana(); };
+  $('rel-resumo').onclick = () => { if (RELATORIO) GabbaRelatorio.download(RELATORIO, 'resumo', LOJA); };
+  $('rel-detalhe').onclick = () => { if (RELATORIO) GabbaRelatorio.download(RELATORIO, 'detalhe', LOJA); };
+  let detalhesFechados = [];
+  window.addEventListener('beforeprint', () => { detalhesFechados = [...document.querySelectorAll('#sem-relatorio details:not([open])')]; detalhesFechados.forEach(d => d.open=true); });
+  window.addEventListener('afterprint', () => detalhesFechados.forEach(d => d.open=false));
+  $('rel-imprimir').onclick = () => { if (RELATORIO) window.print(); };
   $('csv').onclick = () => {
     const linhas = [['Dia', 'Pessoa', 'Registro', 'Hora', 'Origem', 'Observação', 'Removido']];
     SEMREGS.forEach(x => linhas.push([x.dia, x.nome, NOME_ACAO[x.acao], new Date(x.ts).toLocaleString('pt-BR'), x.origem, x.nota || '', x.removido ? 'sim' : '']));
-    linhas.push([]); linhas.push(['Resumo', 'Pessoa', 'Horas trabalhadas', 'Alertas']);
-    const dias = [...Array(7)].map((_, i) => somaDia(semIni, i));
-    L.equipe.forEach(p => dias.forEach(d => { const s = resumo(SEMREGS, p.nome, d); if (s.r.length) linhas.push([d, p.nome, durTxt(s.trab), s.flags.join('; ')]); }));
     const csv = '﻿' + linhas.map(l => l.map(v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"').join(';')).join('\n');
     const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' })); a.download = 'ponto-' + LOJA + '-' + semIni + '.csv'; a.click();
   };
