@@ -12,7 +12,7 @@
  * Os dados ficam num Durable Object (banco SQLite da própria Cloudflare), sem planilha e sem chave externa.
  */
 
-export const LOJAS = ['gabba', 'uau', 'feijuca'];
+export const LOJAS = ['gabba', 'uau', 'feijuca', 'escritorio'];
 const ACOES = ['entrada', 'saida_intervalo', 'volta_intervalo', 'saida'];
 const DESFAZER_MS = 3 * 60 * 1000;
 const FUSO = -3 * 3600 * 1000;           // Fortaleza, sem horário de verão
@@ -33,6 +33,24 @@ export function redeDe(ip) {
   return ip;
 }
 const limpa = (s, n) => String(s == null ? '' : s).replace(/\s+/g, ' ').trim().slice(0, n);
+const horaValida = t => typeof t === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(t);
+const minHora = t => Number(t.slice(0,2)) * 60 + Number(t.slice(3));
+function horarioValido(h) {
+  return h === null || (Array.isArray(h) && h.length === 2 && horaValida(h[0]) && (horaValida(h[1]) || h[1] === '24:00') && h[0] !== h[1]);
+}
+function intervaloValido(i, h) {
+  if (i === null) return true;
+  if (!h || !Array.isArray(i) || i.length !== 2 || !i.every(horaValida)) return false;
+  const ini = minHora(h[0]);
+  let fim = minHora(h[1]), a = minHora(i[0]), b = minHora(i[1]);
+  if (fim <= ini) fim += 1440;
+  if (a < ini) a += 1440;
+  if (b <= a) b += 1440;
+  return a >= ini && b <= fim && b > a && b - a < fim - ini;
+}
+function dataAtualOuFutura(d) {
+  return typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d) && Number.isFinite(Date.parse(d + 'T12:00:00Z')) && new Date(d + 'T12:00:00Z').toISOString().slice(0,10) === d && d >= diaDo(Date.now());
+}
 function validaEscala(c) {
   const vigencia = String(c.vigencia || diaDo(Date.now()));
   if (!/^\d{4}-\d{2}-\d{2}$/.test(vigencia) || !Number.isFinite(Date.parse(vigencia + 'T12:00:00Z')) || new Date(vigencia + 'T12:00:00Z').toISOString().slice(0, 10) !== vigencia || vigencia < diaDo(Date.now())) return null;
@@ -47,7 +65,15 @@ function validaEscala(c) {
       horarios[d] = h;
     }
   }
-  return { vigencia, horarios };
+  const intervalos = {};
+  if (c.intervalos !== undefined) {
+    if (!c.intervalos || typeof c.intervalos !== 'object' || Array.isArray(c.intervalos)) return null;
+    for (let d = 0; d < 7; d++) {
+      if (!intervaloValido(c.intervalos[d], horarios[d])) return null;
+      intervalos[d] = c.intervalos[d];
+    }
+  }
+  return { vigencia, horarios, ...(c.intervalos !== undefined ? { intervalos } : {}) };
 }
 
 async function hashPin(pin, sal) {
@@ -70,6 +96,12 @@ export class PontoDB {
       { nome: 'Marta', setor: 'Cozinha' }, { nome: 'Inara', setor: 'Cozinha', ativo: false, obs: 'começa em alguns dias' },
       { nome: 'Dalva', setor: 'Recepção' }, { nome: 'Mayara', setor: 'Recepção' },
       { nome: 'Jandira', setor: 'Recepção', dias: [1, 2], obs: 'horista · no Gabba seg e ter' }
+    ]));
+    if (!this.meta('equipe_v1_escritorio')) this.meta('equipe_v1_escritorio', JSON.stringify([
+      { nome: 'Eliza', setor: 'Estoque', ativo: true, escalas: [{ vigencia: '2026-10-23',
+        horarios: { 0: null, 1: ['08:00','18:00'], 2: ['08:00','18:00'], 3: ['08:00','18:00'], 4: ['08:00','18:00'], 5: ['14:00','23:00'], 6: ['14:00','23:00'] },
+        intervalos: { 0: null, 1: ['12:00','14:00'], 2: ['12:00','14:00'], 3: ['12:00','14:00'], 4: ['12:00','14:00'], 5: ['17:00','18:00'], 6: ['17:00','18:00'] }
+      }] }
     ]));
   }
   meta(k, v) {
@@ -152,6 +184,20 @@ export class PontoDB {
 
     switch (c.op) {
       case 'equipe': return json({ ok: true, equipe: this.equipe(L) });
+      case 'equipe_excecao': {
+        const equipe = this.equipe(L), p = equipe.find(p => p.nome === String(c.nome || ''));
+        if (!p || !dataAtualOuFutura(c.dia)) return json({ erro: 'data', detalhe: 'Escolha um funcionário e uma data válida a partir de hoje.' }, 400);
+        if (c.remover !== undefined && typeof c.remover !== 'boolean') return json({ erro: 'dados' }, 400);
+        if (!c.remover && (!horarioValido(c.horario) || !intervaloValido(c.intervalo, c.horario))) return json({ erro: 'escala', detalhe: 'Confira entrada, saída e intervalo. O intervalo deve estar dentro do turno.' }, 400);
+        p.excecoes = p.excecoes || {};
+        if (c.remover) delete p.excecoes[c.dia];
+        else {
+          if (!p.excecoes[c.dia] && Object.keys(p.excecoes).length >= 1000) return json({ erro: 'limite', detalhe: 'Limite de exceções atingido.' }, 400);
+          p.excecoes[c.dia] = { horario: c.horario, intervalo: c.intervalo, nota: limpa(c.nota, 120), atualizado: Date.now() };
+        }
+        this.meta('equipe_v1_' + L, JSON.stringify(equipe));
+        return json({ ok: true, equipe });
+      }
       case 'equipe_adicionar': {
         const equipe = this.equipe(L), nome = limpa(c.nome, 40), setor = limpa(c.setor, 40);
         if (!nome || !setor) return json({ erro: 'dados', detalhe: 'Preencha nome e setor.' }, 400);
