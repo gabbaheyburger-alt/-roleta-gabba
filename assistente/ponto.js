@@ -90,6 +90,8 @@ export class PontoDB {
     this.sql.exec(`CREATE TABLE IF NOT EXISTS redes (loja TEXT, rede TEXT, rotulo TEXT, criado INTEGER, PRIMARY KEY (loja, rede))`);
     this.sql.exec(`CREATE TABLE IF NOT EXISTS recusas (ts INTEGER, loja TEXT, nome TEXT, rede TEXT)`);
     this.sql.exec(`CREATE TABLE IF NOT EXISTS meta (k TEXT PRIMARY KEY, v TEXT)`);
+    this.sql.exec(`CREATE TABLE IF NOT EXISTS registros_hub_teste (id INTEGER PRIMARY KEY AUTOINCREMENT, sessao TEXT NOT NULL, membro TEXT NOT NULL, ts INTEGER NOT NULL, dia TEXT NOT NULL, acao TEXT NOT NULL, aparelho TEXT NOT NULL)`);
+    this.sql.exec(`CREATE INDEX IF NOT EXISTS teste_sessao ON registros_hub_teste (sessao, dia)`);
     // Cópia inicial do cadastro existente. Depois da primeira execução, o banco é a fonte da equipe.
     if (!this.meta('equipe_v1_gabba')) this.meta('equipe_v1_gabba', JSON.stringify([
       { nome: 'Natália', setor: 'Cozinha' }, { nome: 'Paulo', setor: 'Cozinha' },
@@ -125,6 +127,8 @@ export class PontoDB {
     if (req.method === 'POST') { try { corpo = await req.json(); } catch (e) { return json({ erro: 'formato_invalido' }, 400); } }
     const loja = String((req.method === 'GET' ? url.searchParams.get('loja') : corpo.loja) || '').toLowerCase();
 
+    if (rota.startsWith('hub-teste/')) return this.hubTeste(req, corpo, rede, rota, json);
+
     if (rota === 'estado') {
       if (!LOJAS.includes(loja)) return json({ erro: 'loja' }, 400);
       const ok = this.redeOk(loja, rede);
@@ -132,6 +136,7 @@ export class PontoDB {
     }
 
     if (rota === 'bater') {
+      if (corpo.ticket) return json({erro:'teste',detalhe:'Acesso de teste só pode registrar na tela de teste.'},403);
       if (!LOJAS.includes(loja)) return json({ erro: 'loja' }, 400);
       const nome = limpa(corpo.nome, 40), acao = String(corpo.acao || ''), aparelho = limpa(corpo.aparelho, 40);
       if (!nome || !ACOES.includes(acao) || !aparelho) return json({ erro: 'dados' }, 400);
@@ -158,6 +163,39 @@ export class PontoDB {
 
     if (rota === 'adm') return this.adm(corpo, rede, loja, json);
     return json({ erro: 'nao_encontrado' }, 404);
+  }
+
+  async hubTeste(req, c, rede, rota, json) {
+    if (req.method !== 'POST' || !['hub-teste/estado','hub-teste/bater'].includes(rota)) return json({erro:'rota'},405);
+    if (!/^hpt_[\w-]{43}$/.test(c.ticket || '')) return json({erro:'login',detalhe:'Abra o teste pela conta do Paulo no HUB.'},401);
+    let identidade;
+    try {
+      const r = await fetch('https://gabba-estoque-gpt.gabbaheyburger.workers.dev/api/hub/ponto-teste/validar', {
+        method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ticket:c.ticket}),signal:AbortSignal.timeout(5000)
+      });
+      if (!r.ok) return json({erro:'login',detalhe:'Teste expirado ou acesso desativado. Abra novamente pelo HUB.'},r.status === 403 ? 403 : 401);
+      identidade = await r.json();
+    } catch { return json({erro:'hub_indisponivel',detalhe:'Não foi possível conferir seu login. Tente novamente.'},503); }
+    const u = identidade.user;
+    if (!identidade.ok || identidade.teste !== true || !u?.id || u.username !== 'paulo' || u.nome !== 'Paulo' || u.loja !== 'gabba' || !(identidade.expiresAt > Date.now())) return json({erro:'identidade'},403);
+    if ((c.nome !== undefined && c.nome !== u.nome) || (c.loja !== undefined && c.loja !== u.loja)) return json({erro:'outra_pessoa',detalhe:'Este login só pode registrar o ponto do Paulo no Gabba.'},403);
+    const p = this.equipe('gabba').find(p => p.nome === u.nome && p.ativo !== false);
+    if (!p) return json({erro:'inativo',detalhe:'Cadastro do ponto inativo. Fale com o gestor.'},403);
+    const ok = this.redeOk('gabba',rede), dia = diaDo(Date.now());
+    if (!ok) return json({erro:'rede',detalhe:'Conecte ao Wi-Fi autorizado do Gabba para testar.'},403);
+    const hash = [...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(c.ticket)))].map(b=>b.toString(16).padStart(2,'0')).join('');
+    const ultimos = [...this.sql.exec('SELECT acao,ts FROM registros_hub_teste WHERE sessao=? AND membro=? AND dia=? ORDER BY id DESC LIMIT 1',hash,u.id,dia)];
+    const ult = ultimos[0] || null;
+    if (rota === 'hub-teste/estado') return json({ok:true,teste:true,nome:u.nome,loja:u.loja,pessoa:p,redeOk:true,ultimo:ult,dia,expiresAt:identidade.expiresAt});
+    const aparelho = limpa(c.aparelho,40), acao = c.acao;
+    if (!aparelho || !ACOES.includes(acao)) return json({erro:'dados'},400);
+    const proximas = !ult || ult.acao === 'saida' ? ['entrada'] : ult.acao === 'saida_intervalo' ? ['volta_intervalo'] : ['saida_intervalo','saida'];
+    if (!proximas.includes(acao)) return json({erro:'sequencia',detalhe:'Ação já registrada ou fora de sequência. Atualize a tela.'},409);
+    if ([...this.sql.exec('SELECT COUNT(*) n FROM registros_hub_teste WHERE sessao=?',hash)][0].n >= 24) return json({erro:'limite',detalhe:'Teste concluído. Abra novamente pelo HUB para recomeçar.'},409);
+    const ts = Date.now();
+    this.sql.exec('DELETE FROM registros_hub_teste WHERE ts < ?',ts-864e5);
+    this.sql.exec('INSERT INTO registros_hub_teste(sessao,membro,ts,dia,acao,aparelho) VALUES(?,?,?,?,?,?)',hash,u.id,ts,dia,acao,aparelho);
+    return json({ok:true,teste:true,nome:u.nome,acao,ts});
   }
 
   async adm(c, rede, loja, json) {
