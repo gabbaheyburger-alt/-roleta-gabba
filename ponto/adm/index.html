@@ -185,14 +185,30 @@ summary {cursor:pointer;padding:12px 0;font-weight:700}
         <p class="hint">Cadastre quem entra na equipe. Quem saiu deve ser inativado para preservar o histórico.</p>
         <label>Nome completo ou nome de identificação<input id="eq-nome" maxlength="40" autocomplete="off" placeholder="Ex.: Ana Silva"></label>
         <label>Setor<input id="eq-setor" maxlength="40" list="eq-setores" placeholder="Ex.: Cozinha"></label>
-        <datalist id="eq-setores"><option value="Cozinha"><option value="Recepção"></datalist>
+        <datalist id="eq-setores"><option value="Cozinha"><option value="Recepção"><option value="Estoque"><option value="Administrativo"></datalist>
         <label>Escala válida a partir de<input id="eq-vigencia" type="date" required></label>
         <p class="hint">Marque os dias de trabalho e informe entrada e saída em cada um. Dia desmarcado = folga. Saída menor que a entrada indica o dia seguinte; 00:00 é meia-noite.</p>
+        <p class="hint">Intervalo fixo: preencha início e fim. Se deixar ambos em branco, mantém a duração padrão da unidade, sem horário fixo.</p>
         <div id="eq-horarios"></div>
         <button class="btn sec" id="eq-padrao" type="button">Preencher com os horários da loja</button>
         <button class="btn" id="eq-adicionar" type="button">Adicionar à equipe</button>
         <button class="btn sec" id="eq-cancelar" type="button" hidden>Cancelar edição</button>
         <p class="hint" id="eq-feedback" role="status" aria-live="polite"></p>
+      </div>
+      <div class="panel" id="ex-painel">
+        <div class="label">Alterar um dia específico</div>
+        <p class="hint">A mudança vale somente na data escolhida. Nos demais dias, continua a escala semanal. Datas passadas ficam preservadas.</p>
+        <label>Funcionário<select id="ex-nome"></select></label>
+        <label>Data<input id="ex-dia" type="date"></label>
+        <label style="display:flex;align-items:center;gap:10px"><input id="ex-trabalha" type="checkbox" style="width:auto">Trabalha neste dia</label>
+        <div class="row"><label>Entrada<input id="ex-entrada" type="time"></label><label>Saída<input id="ex-saida" type="time"></label></div>
+        <p class="hint">Saída menor que a entrada indica o dia seguinte. 00:00 é meia-noite. O intervalo fixo é opcional; em branco, mantém a duração padrão da unidade.</p>
+        <div class="row"><label>Início intervalo<input id="ex-pausa-inicio" type="time"></label><label>Fim intervalo<input id="ex-pausa-fim" type="time"></label></div>
+        <label>Motivo / observação<input id="ex-nota" maxlength="120" placeholder="Ex.: troca de horário combinada"></label>
+        <button class="btn" id="ex-salvar" type="button">Salvar somente nesta data</button>
+        <button class="btn sec" id="ex-remover" type="button">Usar escala semanal nesta data</button>
+        <p class="hint" id="ex-feedback" role="status" aria-live="polite"></p>
+        <div id="ex-lista"></div>
       </div>
       <div class="panel"><div class="label">Funcionários ativos</div><div id="eq-ativos"></div></div>
       <div class="panel"><div class="label">Inativos / desligados</div><p class="hint">Não aparecem para bater ponto. Registros antigos permanecem disponíveis nos relatórios.</p><div id="eq-inativos"></div></div>
@@ -201,6 +217,7 @@ summary {cursor:pointer;padding:12px 0;font-weight:700}
   </div>
 </main>
 
+<script src="../escala.js?v=20261023"></script>
 <script>
 /* Relatório operacional. Não calcula verbas de folha nem compensa atrasos automaticamente. */
 (function () {
@@ -210,17 +227,18 @@ summary {cursor:pointer;padding:12px 0;font-weight:700}
   const shift = (d, n) => new Date(Date.parse(d + 'T12:00:00Z') + n * 864e5).toISOString().slice(0, 10);
   const stamp = (d, t) => t === '24:00' ? Date.parse(shift(d, 1) + 'T00:00:00-03:00') : Date.parse(d + 'T' + t + ':00-03:00');
   function escala(p, dia, loja) {
-    const wd = new Date(dia + 'T12:00:00Z').getUTCDay();
-    const v = (p.escalas || []).filter(v => v.vigencia <= dia).sort((a,b) => b.vigencia.localeCompare(a.vigencia))[0];
-    return v ? v.horarios[wd] : ((!p.dias || p.dias.includes(wd)) ? loja.horarios[wd] : null);
+    return PontoEscala.detalhe(p, dia, loja).horario;
   }
   function diaPessoa(p, dia, regs, loja, agora) {
     const r = regs.filter(x => !x.removido && x.nome === p.nome && x.dia === dia).sort((a,b) => a.ts-b.ts || (a.id || 0)-(b.id || 0));
     const h = escala(p, dia, loja), ini = h ? stamp(dia,h[0]) : null;
     let fim = h ? stamp(dia,h[1]) : null;
     if (h && fim <= ini) fim += 864e5;
-    const previsto = h ? Math.max(0, fim-ini-(loja.intervalo_min || 30)*60000) : null;
+    const plano = PontoEscala.detalhe(p, dia, loja);
+    const previsto = h ? Math.max(0, fim-ini-plano.intervaloMin*60000) : null;
     const out = { nome:p.nome, setor:p.setor || 'Não informado', dia, escala:h ? h.join(' às ') : 'Folga / sem escala', previsto, entrada:null, saida:null, atraso:null, antecipada:null, saidaAntes:null, saidaDepois:null, intervalo:null, trabalhado:null, saldo:null, excedente:null, status:'Sem registros válidos', notas:[], r };
+    out.intervaloPrevisto = plano.intervalo ? plano.intervalo.join(' às ') : (h ? plano.intervaloMin + ' min (horário livre)' : '—');
+    if (plano.excecao) { out.escala += ' · alteração só nesta data'; out.notas.push('Escala específica' + (plano.nota ? ': ' + plano.nota : '')); }
     if (!r.length) { if (h && agora < ini) out.status='Turno não iniciado'; else if (!h) out.status='Folga / sem escala'; return out; }
     let estado='fora', inicio=null, pausaInicio=null, trab=0, pausa=0, valido=true, nPausas=0;
     for (const x of r) {
@@ -270,18 +288,18 @@ summary {cursor:pointer;padding:12px 0;font-weight:700}
       card.append(grid,el('p',p.dias+' dias com marcações · '+p.fechados+' completos · '+p.pendentes+' a conferir','hint'));
       const details=el('details');details.append(el('summary','Ver detalhe por dia'));
       for(const d of m.detalhes.filter(d=>d.nome===p.nome)) {
-        const row=el('div',undefined,'rel-dia');row.append(el('b',date(d.dia)+' · '+d.status),el('p','Escala: '+d.escala,'hint'));
+        const row=el('div',undefined,'rel-dia');row.append(el('b',date(d.dia)+' · '+d.status),el('p','Escala: '+d.escala,'hint'),el('p','Intervalo previsto: '+d.intervaloPrevisto,'hint'));
         if(d.r.length) {row.append(el('p','Entrada: '+hm(d.entrada)+' · Saída: '+hm(d.saida),'hint'),el('p','Trabalhado: '+fmt(d.trabalhado)+' · Intervalo: '+fmt(d.intervalo),'hint'),el('p','Atraso: '+fmt(d.atraso)+' · Entrada antecipada: '+fmt(d.antecipada),'hint'),el('p','Saída antecipada: '+fmt(d.saidaAntes)+' · Após escala: '+fmt(d.saidaDepois),'hint'),el('p','Excedente a conferir: '+fmt(d.excedente),'hint'));if(d.notas.length)row.append(el('p',d.notas.join('. '),'flag'));}
         details.append(row);
       }
       card.append(details);box.append(card);
     }
-    const rodape=el('div',undefined,'panel');rodape.append(el('div','Critérios de leitura','label'),el('p','Atrasos e antecipações mostram a diferença integral em relação à escala, sem descontos de tolerância. Tolerância de alerta configurada: '+tolerancia+' min. Horas e excedentes somam somente dias completos, com escala e intervalo marcado.','hint'),el('p','Excedente é a diferença positiva entre horas registradas e horas previstas líquidas do intervalo de '+(loja.intervalo_min || 30)+' min. Não equivale automaticamente a hora extra para pagamento. Entrada antecipada e saída após o horário ficam separadas e não são somadas novamente ao excedente.','hint'),el('p','Dias sem marcação, turnos abertos e sequências incompletas não recebem horas estimadas. Escalas consideradas conforme a vigência cadastrada. Horários em America/Fortaleza.','hint'));box.append(rodape);
+    const rodape=el('div',undefined,'panel');rodape.append(el('div','Critérios de leitura','label'),el('p','Atrasos e antecipações mostram a diferença integral em relação à escala, sem descontos de tolerância. Tolerância de alerta configurada: '+tolerancia+' min. Horas e excedentes somam somente dias completos, com escala e intervalo marcado.','hint'),el('p','Excedente é a diferença positiva entre horas registradas e horas previstas líquidas do intervalo previsto para cada funcionário e dia. Não equivale automaticamente a hora extra para pagamento. Entrada antecipada e saída após o horário ficam separadas e não são somadas novamente ao excedente.','hint'),el('p','Dias sem marcação, turnos abertos e sequências incompletas não recebem horas estimadas. Escalas consideradas conforme a vigência cadastrada e alterações específicas por data. Horários em America/Fortaleza.','hint'));box.append(rodape);
   }
   const colsResumo=['Funcionário','Setor','Dias com marcações','Dias completos','Dias a conferir','Horas em dias completos','Atraso entrada','Entrada antecipada','Saída antecipada','Após fim escala','Excedente a conferir','Situação'];
-  const colsDetalhe=['Dia','Funcionário','Setor','Escala prevista','Horas previstas líquidas','Entrada','Saída','Intervalo marcado','Horas registradas completas','Atraso entrada','Entrada antecipada','Saída antecipada','Após fim escala','Excedente a conferir','Saldo em minutos','Situação','Observações'];
+  const colsDetalhe=['Dia','Funcionário','Setor','Escala prevista','Intervalo previsto','Horas previstas líquidas','Entrada','Saída','Intervalo marcado','Horas registradas completas','Atraso entrada','Entrada antecipada','Saída antecipada','Após fim escala','Excedente a conferir','Saldo em minutos','Situação','Observações'];
   function rows(m,tipo) {
-    return tipo==='resumo'?[colsResumo,...m.resumo.map(p=>[p.nome,p.setor,p.dias,p.fechados,p.pendentes,...['trabalhado','atraso','antecipada','saidaAntes','saidaDepois','excedente'].map(k=>fmt(p[k])),p.status])]:[colsDetalhe,...m.detalhes.map(d=>[d.dia,d.nome,d.setor,d.escala,fmt(d.previsto),hm(d.entrada),hm(d.saida),...['intervalo','trabalhado','atraso','antecipada','saidaAntes','saidaDepois','excedente'].map(k=>fmt(d[k])),d.saldo===null?'':Math.round(d.saldo/60000),d.status,d.notas.join('. ')])];
+    return tipo==='resumo'?[colsResumo,...m.resumo.map(p=>[p.nome,p.setor,p.dias,p.fechados,p.pendentes,...['trabalhado','atraso','antecipada','saidaAntes','saidaDepois','excedente'].map(k=>fmt(p[k])),p.status])]:[colsDetalhe,...m.detalhes.map(d=>[d.dia,d.nome,d.setor,d.escala,d.intervaloPrevisto,fmt(d.previsto),hm(d.entrada),hm(d.saida),...['intervalo','trabalhado','atraso','antecipada','saidaAntes','saidaDepois','excedente'].map(k=>fmt(d[k])),d.saldo===null?'':Math.round(d.saldo/60000),d.status,d.notas.join('. ')])];
   }
   function download(m,tipo,loja) {
     const safe=v=>{let s=String(v??'');if(/^[=+@-]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"';};
@@ -328,7 +346,7 @@ summary {cursor:pointer;padding:12px 0;font-weight:700}
       else if (ini) { trab += x.ts - ini; ini = null; if (x.acao === 'saida_intervalo') pz = x.ts; }
     });
     const ultimo = r[r.length - 1];
-    const im = L.intervalo_min || 30;
+    const im = PontoEscala.detalhe(L.equipe.find(e => e.nome === nome) || {}, dia, L).intervaloMin;
     if (pz && dia === hoje()) { const corre = Date.now() - pz; if (corre > im * 60000) flags.push('no intervalo há ' + Math.round(corre / 60000) + ' min (passou ' + Math.round(corre / 60000 - im) + ')'); }
     if (pausa > (im + 2) * 60000) flags.push('intervalo de ' + Math.round(pausa / 60000) + ' min (passou ' + Math.round(pausa / 60000 - im) + ')');
     const aberto = ultimo && ultimo.acao !== 'saida';
@@ -480,15 +498,15 @@ summary {cursor:pointer;padding:12px 0;font-weight:700}
   // ---------- navegação ----------
   let editandoEquipe = null;
   function escalaNoDia(p, dia) {
-    const wd = new Date(dia + 'T12:00:00Z').getUTCDay();
-    const versao = (p.escalas || []).filter(e => e.vigencia <= dia).sort((a,b) => b.vigencia.localeCompare(a.vigencia))[0];
-    return versao ? versao.horarios[wd] : ((!p.dias || p.dias.includes(wd)) ? L.horarios[wd] : null);
+    return PontoEscala.detalhe(p, dia, L).horario;
   }
   function desenhaEscala(p = {}) {
     const dia = $('eq-vigencia').value || hoje();
     const box = $('eq-horarios'); box.replaceChildren();
     [1,2,3,4,5,6,0].forEach(d => {
-      const h = escalaNoDia(p, somaDia(dia, (d - new Date(dia + 'T12:00:00Z').getUTCDay() + 7) % 7));
+      const versao = (p.escalas || []).filter(e => e.vigencia <= dia).sort((a,b) => b.vigencia.localeCompare(a.vigencia))[0];
+      const h = versao ? versao.horarios[d] : ((!p.dias || p.dias.includes(d)) ? L.horarios[d] : null);
+      const intervalo = h && ((versao && versao.intervalos !== undefined ? versao.intervalos : L.intervalos || {})[d]);
       const row = document.createElement('div'); row.className = 'panel'; row.style.cssText = 'padding:12px;margin-bottom:8px;gap:8px;box-shadow:none';
       const label = document.createElement('label'); label.style.cssText = 'display:flex;align-items:center;gap:10px;font-weight:700';
       const check = document.createElement('input'); check.type = 'checkbox'; check.id = 'eq-dia-' + d; check.checked = !!h; check.style.width = 'auto';
@@ -500,8 +518,14 @@ summary {cursor:pointer;padding:12px 0;font-weight:700}
         input.value = h ? (h[i] === '24:00' ? '00:00' : h[i]) : (i ? '23:00' : '15:30'); input.disabled = !check.checked;
         wrap.append(input); linha.append(wrap); return input;
       });
+      const pausa = document.createElement('div'); pausa.className = 'row';
+      ['inicio','fim'].forEach((tipo,i) => {
+        const wrap = document.createElement('label'); wrap.textContent = i ? 'Fim intervalo' : 'Início intervalo'; wrap.className = 'hint';
+        const input = document.createElement('input'); input.type = 'time'; input.id = 'eq-pausa-' + tipo + '-' + d; input.value = intervalo ? intervalo[i] : ''; input.disabled = !check.checked;
+        wrap.append(input); pausa.append(wrap); inputs.push(input);
+      });
       check.onchange = () => inputs.forEach(input => input.disabled = !check.checked);
-      row.append(label, linha); box.append(row);
+      row.append(label, linha, pausa); box.append(row);
     });
   }
   function iniciaFormEquipe(p = null) {
@@ -516,9 +540,52 @@ summary {cursor:pointer;padding:12px 0;font-weight:700}
   }
   $('eq-cancelar').onclick = () => iniciaFormEquipe();
   $('eq-padrao').onclick = () => desenhaEscala({});
+  $('eq-vigencia').onchange = () => desenhaEscala(editandoEquipe || {});
+
+  function carregaExcecao() {
+    const p = L.equipe.find(p => p.nome === $('ex-nome').value), dia = $('ex-dia').value;
+    if (!p || !dia) return;
+    const plano = PontoEscala.detalhe(p, dia, L), h = plano.horario;
+    $('ex-trabalha').checked = !!h;
+    $('ex-entrada').value = h ? h[0] : '08:00'; $('ex-saida').value = h ? (h[1] === '24:00' ? '00:00' : h[1]) : '18:00';
+    $('ex-pausa-inicio').value = plano.intervalo ? plano.intervalo[0] : ''; $('ex-pausa-fim').value = plano.intervalo ? plano.intervalo[1] : '';
+    $('ex-nota').value = plano.nota;
+    $('ex-feedback').textContent = plano.excecao ? 'Existe uma alteração só para esta data.' : 'Mostrando a escala semanal para esta data.';
+    ['ex-entrada','ex-saida','ex-pausa-inicio','ex-pausa-fim'].forEach(id => $(id).disabled = !h);
+    const box = $('ex-lista'); box.replaceChildren();
+    Object.entries(p.excecoes || {}).sort(([a],[b]) => b.localeCompare(a)).forEach(([data, ex]) => {
+      const item = document.createElement('p'); item.className = 'hint';
+      item.textContent = data.split('-').reverse().join('/') + ' · ' + (ex.horario ? ex.horario.join(' às ') : 'Folga') + (ex.intervalo ? ' · intervalo ' + ex.intervalo.join(' às ') : '') + (ex.nota ? ' · ' + ex.nota : '');
+      box.append(item);
+    });
+  }
+  $('ex-nome').onchange = carregaExcecao; $('ex-dia').onchange = carregaExcecao;
+  $('ex-trabalha').onchange = () => ['ex-entrada','ex-saida','ex-pausa-inicio','ex-pausa-fim'].forEach(id => $(id).disabled = !$('ex-trabalha').checked);
+  async function salvaExcecao(remover) {
+    const nome = $('ex-nome').value, dia = $('ex-dia').value, trabalha = $('ex-trabalha').checked;
+    if (!nome || !dia || dia < hoje()) { $('ex-feedback').textContent = 'Escolha funcionário e data a partir de hoje.'; return; }
+    const horario = trabalha ? [$('ex-entrada').value, $('ex-saida').value] : null;
+    const a = $('ex-pausa-inicio').value, b = $('ex-pausa-fim').value;
+    if (!remover && trabalha && ((!horario[0] || !horario[1]) || (!!a !== !!b))) { $('ex-feedback').textContent = 'Preencha entrada e saída. Para intervalo fixo, preencha os dois horários.'; return; }
+    $('ex-salvar').disabled = true; $('ex-remover').disabled = true;
+    try {
+      const res = await adm('equipe_excecao', { nome, dia, horario, intervalo: trabalha && a && b ? [a,b] : null, nota: $('ex-nota').value, remover });
+      atualizaEquipe(res.equipe); await abaEquipe();
+      $('ex-feedback').textContent = remover ? 'Escala semanal restaurada somente nesta data.' : 'Alteração salva para ' + dia.split('-').reverse().join('/') + '. Demais dias mantêm a escala semanal.';
+    } catch (e) { $('ex-feedback').textContent = 'Não foi possível salvar: ' + e.message; }
+    finally { $('ex-salvar').disabled = false; $('ex-remover').disabled = false; }
+  }
+  $('ex-salvar').onclick = () => salvaExcecao(false);
+  $('ex-remover').onclick = () => { if (confirmar($('ex-remover'))) salvaExcecao(true); };
 
   function atualizaEquipe(equipe) {
     L.equipe = equipe;
+    const nomeEx = $('ex-nome').value;
+    $('ex-nome').replaceChildren();
+    equipe.filter(p => p.ativo !== false).forEach(p => { const o = document.createElement('option'); o.value = o.textContent = p.nome; $('ex-nome').append(o); });
+    if (equipe.some(p => p.nome === nomeEx && p.ativo !== false)) $('ex-nome').value = nomeEx;
+    $('ex-dia').min = hoje(); if (!$('ex-dia').value) $('ex-dia').value = hoje();
+    carregaExcecao();
     $('aj-nome').replaceChildren();
     equipe.forEach(p => { const o = document.createElement('option'); o.value = p.nome; o.textContent = p.nome + (p.ativo === false ? ' (inativo)' : ''); $('aj-nome').append(o); });
   }
@@ -546,21 +613,26 @@ summary {cursor:pointer;padding:12px 0;font-weight:700}
           try { const res = await adm('equipe_status', { nome: p.nome, ativo: !ativo }); atualizaEquipe(res.equipe); await abaEquipe(); $('eq-feedback').textContent = p.nome + (ativo ? ' foi inativado. Histórico preservado.' : ' foi reativado.'); }
           catch (e) { $('eq-feedback').textContent = 'Não foi possível salvar: ' + e.message; b.disabled = false; }
         };
-        controles.append(editar, b); row.append(texto, controles); box.append(row);
+        const umDia = document.createElement('button'); umDia.type = 'button'; umDia.className = 'btn sec mini'; umDia.textContent = 'Alterar um dia';
+        umDia.onclick = () => { $('ex-nome').value = p.nome; carregaExcecao(); $('ex-painel').scrollIntoView({behavior:'smooth',block:'start'}); };
+        controles.append(editar); if (ativo) controles.append(umDia); controles.append(b); row.append(texto, controles); box.append(row);
       });
     }
   }
   $('eq-adicionar').onclick = async () => {
     const b = $('eq-adicionar'), nome = $('eq-nome').value.trim(), setor = $('eq-setor').value.trim();
     if (!nome || !setor) { $('eq-feedback').textContent = 'Preencha nome e setor.'; return; }
-    const horarios = {}, vigencia = $('eq-vigencia').value;
+    const horarios = {}, intervalos = {}, vigencia = $('eq-vigencia').value;
     for (let d = 0; d < 7; d++) {
       horarios[d] = $('eq-dia-' + d).checked ? [$('eq-entrada-' + d).value, $('eq-saida-' + d).value] : null;
+      const a = $('eq-pausa-inicio-' + d).value, z = $('eq-pausa-fim-' + d).value;
+      if (horarios[d] && (!!a !== !!z)) { $('eq-feedback').textContent = 'Preencha os dois horários do intervalo de ' + SEM[d] + ' ou deixe ambos em branco.'; return; }
+      intervalos[d] = horarios[d] && a && z ? [a,z] : null;
       if (horarios[d] && (!horarios[d][0] || !horarios[d][1] || horarios[d][0] === horarios[d][1])) { $('eq-feedback').textContent = 'Confira entrada e saída de ' + SEM[d] + '.'; return; }
     }
     if (!vigencia || vigencia < hoje()) { $('eq-feedback').textContent = 'Escolha a data de início a partir de hoje.'; return; }
     b.disabled = true;
-    try { const res = await adm(editandoEquipe ? 'equipe_escala' : 'equipe_adicionar', { nome, setor, horarios, vigencia }); atualizaEquipe(res.equipe); iniciaFormEquipe(); await abaEquipe(); $('eq-feedback').textContent = nome + ': cadastro e escala salvos, válidos a partir de ' + vigencia.split('-').reverse().join('/') + '.'; }
+    try { const res = await adm(editandoEquipe ? 'equipe_escala' : 'equipe_adicionar', { nome, setor, horarios, intervalos, vigencia }); atualizaEquipe(res.equipe); iniciaFormEquipe(); await abaEquipe(); $('eq-feedback').textContent = nome + ': cadastro e escala salvos, válidos a partir de ' + vigencia.split('-').reverse().join('/') + '.'; }
     catch (e) { $('eq-feedback').textContent = 'Não foi possível salvar: ' + e.message; }
     finally { b.disabled = false; }
   };
@@ -594,7 +666,17 @@ summary {cursor:pointer;padding:12px 0;font-weight:700}
 
   fetch('../config.json?v=' + Date.now(), { cache: 'no-store' }).then(r => r.json()).then(c => {
     CFG = c; L = c.lojas[LOJA]; SRV = c.servico.replace(/\/+$/, '');
+    if (!L) throw new Error('Unidade não encontrada no link.');
     $('loja-nome').textContent = L.nome; $('tol').textContent = c.tolerancia_min;
+    document.querySelector('.toplink').href = '../?loja=' + encodeURIComponent(LOJA);
+    const seletor = document.createElement('select'); seletor.setAttribute('aria-label', 'Unidade do ponto'); seletor.style.marginBottom = '16px';
+    Object.entries(c.lojas).forEach(([id, unidade]) => { const o = document.createElement('option'); o.value = id; o.textContent = unidade.nome; seletor.append(o); });
+    seletor.value = LOJA; seletor.onchange = () => location.href = '?loja=' + encodeURIComponent(seletor.value);
+    document.querySelector('main').prepend(seletor);
+    if (L.rede_nome) {
+      $('net-add').textContent = 'Liberar o Wi-Fi da ' + L.rede_nome + ' para o Escritório';
+      $('net-add').nextElementSibling.textContent = 'Conecte este celular ao Wi-Fi da ' + L.rede_nome + ', desligue os dados móveis e toque no botão acima. Os registros continuam separados na unidade Escritório.';
+    }
     $('hoje-dia').value = hoje(); $('reg-dia').value = hoje(); $('aj-dia').value = hoje();
     L.equipe.forEach(p => { const o = document.createElement('option'); o.value = o.textContent = p.nome; $('aj-nome').append(o); });
     let salvo = ''; try { salvo = localStorage.getItem('ponto-pin') || sessionStorage.getItem('ponto-pin') || ''; if (localStorage.getItem('ponto-pin')) $('lembrar').checked = true; } catch (e) {}
