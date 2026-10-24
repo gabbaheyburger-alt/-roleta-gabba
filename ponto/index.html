@@ -138,6 +138,7 @@ dialog .acao {min-height:58px;font-size:1rem}
   <p id="conf-descricao" class="hint">Confira seu nome antes de registrar.</p>
   <div class="acoes"><button type="button" id="conf-sim" class="acao entrada">Confirmar</button><button type="button" id="conf-nao" class="acao sec" autofocus>Cancelar</button></div>
 </dialog>
+<script src="escala.js?v=20261023"></script>
 <script>
 (function () {
   const $ = id => document.getElementById(id);
@@ -169,10 +170,12 @@ dialog .acao {min-height:58px;font-size:1rem}
     if (ult.acao === 'saida_intervalo') return ['volta_intervalo'];
     return ['saida_intervalo', 'saida'];
   }
-  function statusTxt(ult) {
+  const diaAtual = () => new Date(Date.now() - 8 * 3600e3).toISOString().slice(0, 10);
+  const planoAtual = p => PontoEscala.detalhe(p || {}, diaAtual(), CFG.lojas[LOJA]);
+  function statusTxt(ult, p) {
     if (!ult) return { t: 'Ainda não bateu hoje', c: '' };
     if (ult.acao === 'saida') return { t: 'Saiu às ' + hm(ult.ts), c: '' };
-    if (ult.acao === 'saida_intervalo') return { t: 'Intervalo · volta às ' + hm(ult.ts + ((CFG && CFG.lojas[LOJA].intervalo_min) || 30) * 60000), c: 'pausa' };
+    if (ult.acao === 'saida_intervalo') return { t: 'Intervalo · volta às ' + hm(ult.ts + planoAtual(p).intervaloMin * 60000), c: 'pausa' };
     return { t: 'Na loja desde ' + hm(ult.ts), c: 'dentro' };
   }
 
@@ -183,7 +186,7 @@ dialog .acao {min-height:58px;font-size:1rem}
       const t = document.createElement('div'); t.className = 'hint'; t.style.cssText = 'font-weight:700;color:var(--ink-2);margin:8px 0 6px'; t.textContent = s; box.append(t);
       const g = document.createElement('div'); g.className = 'nomes';
       L.equipe.filter(p => p.setor === s && p.ativo !== false).forEach(p => {
-        const st = statusTxt(ultimos[p.nome]);
+        const st = statusTxt(ultimos[p.nome], p);
         const b = document.createElement('button'); b.type = 'button'; b.className = 'nome ' + st.c; b.disabled = !redeOk;
         b.innerHTML = '<span></span><small></small>'; b.firstChild.textContent = p.nome; b.lastChild.textContent = redeOk ? st.t : '—';
         b.onclick = () => abrePessoa(p);
@@ -198,11 +201,9 @@ dialog .acao {min-height:58px;font-size:1rem}
     try { localStorage.setItem('ponto-ultimo-nome', p.nome); } catch (e) {}
     $('tela-nomes').hidden = true; $('tela-ok').hidden = true; $('tela-pessoa').hidden = false;
     $('p-nome').textContent = p.nome;
-    const dia = new Date(Date.now() - 8 * 3600e3).toISOString().slice(0, 10), wd = new Date(dia + 'T12:00:00Z').getUTCDay();
-    const versao = (p.escalas || []).filter(e => e.vigencia <= dia).sort((a,b) => b.vigencia.localeCompare(a.vigencia))[0];
-    const escala = versao ? versao.horarios[wd] : ((!p.dias || p.dias.includes(wd)) ? CFG.lojas[LOJA].horarios[wd] : null);
-    $('p-escala').textContent = escala ? 'Sua escala: ' + escala[0] + ' às ' + escala[1] + (escala[1] <= escala[0] ? ' (dia seguinte)' : '') : 'Sem turno previsto para hoje. Se for trabalhar, confirme com o gestor.';
-    const ult = ultimos[p.nome], st = statusTxt(ult);
+    const plano = planoAtual(p), escala = plano.horario;
+    $('p-escala').textContent = escala ? 'Sua escala: ' + escala[0] + ' às ' + escala[1] + (escala[1] <= escala[0] ? ' (dia seguinte)' : '') + (plano.intervalo ? ' · intervalo: ' + plano.intervalo.join(' às ') : '') + (plano.excecao ? ' · escala ajustada para hoje' : '') : 'Sem turno previsto para hoje. Se for trabalhar, confirme com o gestor.';
+    const ult = ultimos[p.nome], st = statusTxt(ult, p);
     $('p-hoje').innerHTML = ''; const s = document.createElement('span'); s.textContent = st.t; $('p-hoje').append(s);
     const box = $('p-acoes'); box.innerHTML = '';
     proximas(ult).forEach(a => {
@@ -211,14 +212,14 @@ dialog .acao {min-height:58px;font-size:1rem}
       box.append(b);
     });
     const L = CFG.lojas[LOJA];
-    const im = L.intervalo_min || 30;
+    const im = plano.intervaloMin;
     if (ult && ult.acao === 'saida_intervalo') {
       const volta = ult.ts + im * 60000, falta = Math.round((volta - Date.now()) / 60000);
       $('p-dica').innerHTML = '';
       const d = document.createElement('div'); d.className = 'notice ' + (falta < 0 ? 'err' : 'okn');
       d.textContent = falta >= 0 ? 'Intervalo de ' + im + ' min · volta às ' + hm(volta) + ' (faltam ' + falta + ' min)' : 'Intervalo de ' + im + ' min · era para voltar às ' + hm(volta) + ' (passou ' + (-falta) + ' min)';
       $('p-dica').append(d);
-    } else $('p-dica').textContent = proximas(ult).includes('saida_intervalo') ? 'Intervalo de ' + im + ' min, a partir das ' + (L.intervalo_a_partir || '17:00') + ', alternando com a equipe.' : '';
+    } else $('p-dica').textContent = proximas(ult).includes('saida_intervalo') ? (plano.intervalo ? 'Intervalo previsto: ' + plano.intervalo.join(' às ') + ' (' + im + ' min).' : 'Intervalo de ' + im + ' min, a partir das ' + (L.intervalo_a_partir || '17:00') + ', alternando com a equipe.') : '';
     window.scrollTo(0, 0);
   }
 
@@ -229,14 +230,14 @@ dialog .acao {min-height:58px;font-size:1rem}
     try {
       const r = await api('bater', { loja: LOJA, nome: atual.nome, acao, aparelho });
       if (!r.ok) {
-        if (r.j.erro === 'rede') { redeOk = false; volta(); aviso('err', '<div><b>Você não está no Wi-Fi da loja.</b>Conecte no Wi-Fi do ' + CFG.lojas[LOJA].nome + ' e tente de novo.<br><button type="button">Tentar de novo</button></div>'); return; }
+        if (r.j.erro === 'rede') { redeOk = false; volta(); aviso('err', '<div><b>Você não está no Wi-Fi autorizado.</b>Conecte no Wi-Fi do ' + (CFG.lojas[LOJA].rede_nome || CFG.lojas[LOJA].nome) + ' e tente de novo.<br><button type="button">Tentar de novo</button></div>'); return; }
         alert(r.j.detalhe || 'Não deu certo. Tente de novo.'); abrePessoa(atual); return;
       }
       ultimos[atual.nome] = { acao, ts: r.j.ts };
       $('tela-pessoa').hidden = true; $('tela-ok').hidden = false;
       $('ok-txt').textContent = NOME_ACAO[acao] + ' registrada';
       $('ok-hora').textContent = hm(r.j.ts);
-      $('ok-nome').textContent = acao === 'saida_intervalo' ? atual.nome + ' · volte às ' + hm(r.j.ts + (CFG.lojas[LOJA].intervalo_min || 30) * 60000) : atual.nome;
+      $('ok-nome').textContent = acao === 'saida_intervalo' ? atual.nome + ' · volte às ' + hm(r.j.ts + planoAtual(atual).intervaloMin * 60000) : atual.nome;
       $('ok-desfazer').disabled = false; $('ok-desfazer').textContent = 'Errei · desfazer';
       if (navigator.vibrate) navigator.vibrate(60);
     } catch (e) { alert('Sem internet. Confira o Wi-Fi e tente de novo.'); abrePessoa(atual); }
@@ -263,9 +264,9 @@ dialog .acao {min-height:58px;font-size:1rem}
         if (atual) atual = r.j.equipe.find(p => p.nome === atual.nome) || null;
         if (!atual && !$('tela-pessoa').hidden) volta();
       }
-      if (redeOk) aviso('okn', '<div><b>✓ Conectado na internet do ' + CFG.lojas[LOJA].nome + '</b>Toque no seu nome.</div>');
+      if (redeOk) aviso('okn', '<div><b>✓ Conectado na internet do ' + (CFG.lojas[LOJA].rede_nome || CFG.lojas[LOJA].nome) + '</b>Toque no seu nome.</div>');
       else if (!r.j.lojaTemRede) aviso('err', '<div><b>Ponto ainda não liberado.</b>O gerente precisa liberar a internet desta loja primeiro.<br><button type="button">Tentar de novo</button></div>');
-      else aviso('err', '<div><b>Você não está no Wi-Fi da loja.</b>Desligue os dados móveis, conecte no Wi-Fi do ' + CFG.lojas[LOJA].nome + ' e toque em Tentar de novo.<br><button type="button">Tentar de novo</button></div>');
+      else aviso('err', '<div><b>Você não está no Wi-Fi autorizado.</b>Desligue os dados móveis, conecte no Wi-Fi do ' + (CFG.lojas[LOJA].rede_nome || CFG.lojas[LOJA].nome) + ' e toque em Tentar de novo.<br><button type="button">Tentar de novo</button></div>');
     } catch (e) { redeOk = false; aviso('err', '<div><b>Sem conexão com o ponto.</b>Confira a internet.<br><button type="button">Tentar de novo</button></div>'); }
     if (!$('tela-nomes').hidden) desenhaNomes();
     if (!$('tela-pessoa').hidden && atual) {
