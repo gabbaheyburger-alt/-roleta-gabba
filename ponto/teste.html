@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="referrer" content="no-referrer"><title>Teste do ponto individual · Grupo Gabba</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f3f0e6;color:#20241e;font:16px system-ui;line-height:1.5}header{background:#20241e;color:#f3f0e6;padding:22px;border-bottom:4px solid #cec39b}header small{letter-spacing:.12em}header h1{font-size:1.3rem;margin:4px 0}main{max-width:520px;margin:auto;padding:22px 16px 40px}.notice{padding:16px;border:1px solid #ddd0a5;background:#faf4de;border-radius:14px;margin-bottom:16px}.card{background:#fff;border:1px solid #dedbd2;border-radius:20px;padding:22px;margin:16px 0}h2{font-size:2rem;margin:0 0 8px}.muted{color:#6b6d65;font-size:.95rem}.actions{display:grid;gap:12px;margin-top:20px}button,.link{font:inherit;font-weight:700;border-radius:12px;padding:15px 18px;min-height:52px}button{border:0;background:#395d48;color:white;width:100%;cursor:pointer}button:disabled{opacity:.5;cursor:wait}.secondary{background:#f3f0e6;color:#20241e;border:1px solid #ddd}.link{display:block;text-align:center;color:#20241e;border:1px solid #c9c5b9;text-decoration:none}.error{background:#fff0f0;border-color:#e3b2b2;color:#872b2b}.success{background:#e9f3e9;border-color:#bcd6bd;color:#2c5436}#feedback{white-space:pre-line}dialog{border:1px solid #ddd;border-radius:20px;padding:24px;max-width:calc(100vw - 32px);width:420px}dialog::backdrop{background:#0009}[hidden]{display:none!important}button:focus-visible,a:focus-visible{outline:3px solid #a88036;outline-offset:3px}
+</style></head><body>
+<header><small>GRUPO GABBA · TESTE</small><h1>Ponto individual</h1></header>
+<main>
+ <div class="notice"><strong>Teste separado do ponto real.</strong><br>As marcações desta tela não entram no relatório de frequência.</div>
+ <p id="feedback" class="notice" role="status" aria-live="polite">Conferindo seu acesso pelo HUB…</p>
+ <section id="pessoa" class="card" hidden><p class="muted">Conta identificada pelo HUB · Gabba Burger</p><h2 id="nome"></h2><p id="escala" class="muted"></p><p id="estado"></p><div id="acoes" class="actions"></div></section>
+ <button type="button" id="atualizar" class="secondary" style="margin:0 0 16px" disabled>Atualizar</button>
+ <a class="link" href="https://gabba-estoque-gpt.gabbaheyburger.workers.dev/hub/return" target="_top" rel="noreferrer">← Voltar ao HUB</a>
+ <p class="muted">O teste fica disponível por até 10 minutos. Para recomeçar, abra novamente o link de teste após entrar no HUB.</p>
+</main>
+<dialog id="confirmacao" aria-labelledby="conf-titulo"><h2 id="conf-titulo">Confirmar teste</h2><p id="conf-texto"></p><div class="actions"><button id="conf-sim" type="button">Confirmar teste</button><button id="conf-nao" type="button" class="secondary">Cancelar</button></div></dialog>
+<script src="escala.js?v=20261023"></script>
+<script>
+(function(){
+ const $=id=>document.getElementById(id), labels={entrada:'Entrada',saida_intervalo:'Saída para intervalo',volta_intervalo:'Volta do intervalo',saida:'Saída'};
+ let ticket=new URLSearchParams(location.hash.slice(1)).get('ticket')||'',srv='',cfg=null,state=null,busy=false;
+ history.replaceState(null,'',location.pathname+location.search);
+ const aparelho=crypto.randomUUID();
+ const hm=ts=>new Date(ts).toLocaleTimeString('pt-BR',{timeZone:'America/Fortaleza',hour:'2-digit',minute:'2-digit'});
+ function aviso(texto,tipo=''){ $('feedback').textContent=texto;$('feedback').className='notice '+tipo; }
+ function bloqueia(){ state=null;$('pessoa').hidden=true;$('acoes').replaceChildren();$('atualizar').disabled=false; }
+ async function api(rota,extra={}){
+  const r=await fetch(srv+'/ponto/hub-teste/'+rota,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ticket,aparelho,...extra}),cache:'no-store',signal:AbortSignal.timeout(10000)});
+  const j=await r.json();if(!r.ok)throw Object.assign(new Error(j.detalhe||'Não foi possível conferir este teste.'),{status:r.status});
+  if(j.teste!==true||j.nome!=='Paulo')throw new Error('Identificação de teste inválida. Volte ao HUB.');return j;
+ }
+ function desenha(){
+  $('pessoa').hidden=false;$('nome').textContent=state.nome;
+  const plano=PontoEscala.detalhe(state.pessoa,state.dia,cfg.lojas.gabba),h=plano.horario;
+  $('escala').textContent=h?'Escala: '+h.join(' às ')+(plano.intervalo?' · intervalo '+plano.intervalo.join(' às '):''):'Sem escala prevista para hoje.';
+  const u=state.ultimo;
+  $('estado').textContent=u?'Último teste: '+labels[u.acao]+' às '+hm(u.ts):'Nenhuma marcação de teste nesta abertura.';
+  const proximas=!u||u.acao==='saida'?['entrada']:u.acao==='saida_intervalo'?['volta_intervalo']:['saida_intervalo','saida'];
+  $('acoes').replaceChildren();
+  for(const acao of proximas){const b=document.createElement('button');b.type='button';b.textContent='Testar '+labels[acao].toLowerCase();b.disabled=busy;b.onclick=()=>confirma(acao);$('acoes').append(b);}
+  $('atualizar').disabled=busy;
+ }
+ async function carrega(){
+  try{state=await api('estado');desenha();aviso('✓ Login do Paulo reconhecido. Wi-Fi do Gabba autorizado.','success');}
+  catch(e){bloqueia();aviso(e.message,'error');}
+ }
+ function confirma(acao){
+  if(busy)return;const dialog=$('confirmacao');
+  $('conf-texto').textContent='Paulo · '+labels[acao]+'. Será apenas um teste, sem alterar o relatório real.';
+  $('conf-sim').onclick=()=>{dialog.close();grava(acao);};$('conf-nao').onclick=()=>dialog.close();dialog.showModal();
+ }
+ async function grava(acao){
+  if(busy)return;busy=true;desenha();
+  try{const r=await api('bater',{acao});state.ultimo={acao:r.acao,ts:r.ts};aviso('✓ '+labels[acao]+' de teste registrada às '+hm(r.ts)+'.\nPaulo · relatório real preservado.','success');}
+  catch(e){if(e.status===401||e.status===403){bloqueia();state=null;}aviso(e.message,'error');}
+  finally{busy=false;if(state)desenha();}
+ }
+ $('atualizar').onclick=carrega;
+ if(!/^hpt_[\w-]{43}$/.test(ticket)){aviso('Entre no HUB com a conta do Paulo e abra o link de teste individual.','error');return;}
+ fetch('config.json?v=20261024',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('Configuração indisponível.');return r.json();}).then(c=>{cfg=c;srv=c.servico.replace(/\/+$/,'');return carrega();}).catch(()=>aviso('Não foi possível abrir o teste. Confira sua conexão e volte ao HUB.','error'));
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden&&cfg&&!busy)carrega();});
+})();
+</script></body></html>
