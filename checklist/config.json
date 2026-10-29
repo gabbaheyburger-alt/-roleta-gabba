@@ -1,5 +1,5 @@
 {
-  "_comentario": "Checklist de abertura. 'form'/'campos' = formulário Checklist Abertura (planilha CHECKLISTS). 'prazo' = horário limite (HH:MM). Em 'setores', cada loja tem seus setores: equipe (nomes para tocar), seguranca (perguntas Sim/Não) e grupos de itens. Tipo do item: P = preparo (feito na loja), R = reposição (vem do estoque/compra). 'Chapa-nova' = lista nova da chapa (link ?setor=chapa-nova); grava como setor Chapa. 'Aux-cozinha' = checklist do auxiliar de cozinha (link ?setor=aux-cozinha). 'trocar_em' = a partir da data, o link deste setor abre a lista indicada em 'para'. 'Fechamento' = checklist de fechamento da liderança (link ?setor=fechamento, página fechamento.js), prazo próprio.",
+  "_comentario": "Checklist de abertura. 'form'/'campos' = formulário Checklist Abertura (planilha CHECKLISTS). 'prazo' = horário limite (HH:MM). Em 'setores', cada loja tem seus setores: equipe (nomes para tocar), seguranca (perguntas Sim/Não) e grupos de itens. Tipo do item: P = preparo (feito na loja), R = reposição (vem do estoque/compra). 'Chapa-nova' = lista nova da chapa (link ?setor=chapa-nova); grava como setor Chapa. 'Aux-cozinha' = checklist do auxiliar de cozinha (link ?setor=aux-cozinha). 'trocar_em' = a partir da data, o link deste setor abre a lista indicada em 'para'. 'Fechamento' = checklist de fechamento da liderança (link ?setor=fechamento, página fechamento.js), prazo próprio. Recepcao-*/Garcom-* = checklists do salão (página salao.js). Nomes da equipe ficam em equipe.json.",
   "form": "https://docs.google.com/forms/d/e/1FAIpQLSeVj6hc4LlMvrNpL8PysUcYjPjywqPMfgssy1Yh--_aqwsTFA/formResponse",
   "campos": {
     "loja": "entry.1627150514",
@@ -885,6 +885,471 @@
             "23:59"
           ],
           "_prazo": "dom, seg, ter, qua, qui, sex, sáb: seg a qui até 23h00; sex a dom até 23h59"
+        },
+        "Recepcao-abertura": {
+          "nome": "Recepção · abertura",
+          "titulo": "Recepção · Abertura",
+          "funcao": "Recepção",
+          "prazo": "17:00",
+          "equipe": [
+            "Val"
+          ],
+          "secoes": [
+            {
+              "titulo": "Equipamentos e sistemas",
+              "itens": [
+                {
+                  "id": "pc",
+                  "q": "Computador ligado"
+                },
+                {
+                  "id": "sist",
+                  "q": "Sistemas abertos",
+                  "hint": "Saipos, iFood, Mais Delivery, WhatsApp e YouTube."
+                },
+                {
+                  "id": "maq",
+                  "q": "Maquininhas de cartão carregando"
+                },
+                {
+                  "id": "cel",
+                  "q": "Celular da loja carregando"
+                },
+                {
+                  "id": "karaoke",
+                  "q": "Karaokê montado e testado",
+                  "dias": [
+                    5
+                  ]
+                }
+              ]
+            },
+            {
+              "titulo": "Chope e bebidas",
+              "itens": [
+                {
+                  "id": "chopeira",
+                  "q": "Chopeira limpa"
+                },
+                {
+                  "id": "barril",
+                  "q": "Barril de chope ligado até as 17h00"
+                },
+                {
+                  "id": "bebidas",
+                  "q": "Bebidas no freezer são suficientes para o turno?",
+                  "categoria": "estoque",
+                  "campo": {
+                    "quando": "Não",
+                    "obrigatorio": true,
+                    "rotulo": "O que precisa pedir?",
+                    "exemplo": "Ex.: refrigerante lata, água com gás",
+                    "erro": "Escreva o que precisa pedir."
+                  }
+                },
+                {
+                  "id": "canecas",
+                  "q": "Canecas no freezer são suficientes para o turno?",
+                  "campo": {
+                    "quando": "Não",
+                    "obrigatorio": true,
+                    "rotulo": "Quantas faltam e o que foi feito?",
+                    "exemplo": "Ex.: faltam 10, pedi à cozinha",
+                    "erro": "Diga quantas faltam e o que foi feito."
+                  }
+                }
+              ]
+            },
+            {
+              "titulo": "Balcão e salão interno",
+              "itens": [
+                {
+                  "id": "mesas",
+                  "q": "Mesas do salão interno organizadas"
+                },
+                {
+                  "id": "balcao",
+                  "q": "Balcão da recepção limpo e organizado"
+                },
+                {
+                  "id": "janela",
+                  "q": "Janela da despensa limpa"
+                },
+                {
+                  "id": "geral",
+                  "q": "Limpeza geral da loja realizada (parte interna)",
+                  "dias": [
+                    2
+                  ]
+                }
+              ]
+            },
+            {
+              "titulo": "Cardápio alinhado com a cozinha",
+              "itens": [
+                {
+                  "id": "pausados",
+                  "q": "Produtos pausados nos sistemas de venda conferidos com a cozinha",
+                  "hint": "Reabrir os que estiverem disponíveis."
+                }
+              ]
+            },
+            {
+              "titulo": "Materiais da recepção",
+              "tipo": "material",
+              "dica": "Marque POUCO ou FALTA e escolha o motivo.",
+              "itens": [
+                {
+                  "id": "bobina",
+                  "q": "Bobina das impressoras"
+                },
+                {
+                  "id": "canudos",
+                  "q": "Canudos"
+                },
+                {
+                  "id": "copos",
+                  "q": "Copos"
+                },
+                {
+                  "id": "talheres",
+                  "q": "Talheres montados"
+                }
+              ]
+            }
+          ]
+        },
+        "Garcom-abertura": {
+          "nome": "Garçom · abertura",
+          "titulo": "Garçom · Abertura",
+          "funcao": "Garçom",
+          "prazo": "17:00",
+          "equipe": [
+            "Arthur"
+          ],
+          "secoes": [
+            {
+              "titulo": "Área externa",
+              "itens": [
+                {
+                  "id": "calcada",
+                  "q": "Calçada e área abaixo dela varridas"
+                },
+                {
+                  "id": "mesas6",
+                  "q": "Mesas externas montadas até a mesa 6",
+                  "dias": [
+                    1,
+                    2,
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "id": "janela",
+                  "q": "Janela externa da despensa limpa"
+                },
+                {
+                  "id": "geral",
+                  "q": "Limpeza geral da loja realizada (parte externa)",
+                  "dias": [
+                    2
+                  ]
+                }
+              ]
+            },
+            {
+              "titulo": "Mesas e atendimento",
+              "itens": [
+                {
+                  "id": "abast",
+                  "q": "Mesas abastecidas",
+                  "hint": "Luvas, guardanapos, ketchup, palitos e sal."
+                },
+                {
+                  "id": "portaguard",
+                  "q": "Porta-guardanapos limpos"
+                },
+                {
+                  "id": "cardapios",
+                  "q": "Cardápios limpos e à vista nas mesas"
+                },
+                {
+                  "id": "happy",
+                  "q": "Cardápio de happy hour à vista",
+                  "hint": "Vale das 17h às 20h.",
+                  "dias": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5
+                  ]
+                },
+                {
+                  "id": "banheiro",
+                  "q": "Escala de limpeza do banheiro conferida"
+                },
+                {
+                  "id": "falta",
+                  "q": "Produtos em falta do dia confirmados com a cozinha",
+                  "campo": {
+                    "quando": "Sim",
+                    "obrigatorio": false,
+                    "rotulo": "Quais produtos estão em falta hoje?",
+                    "item": "Produtos em falta hoje",
+                    "exemplo": "Ex.: Croqueta do Mar, Pudim"
+                  }
+                }
+              ]
+            },
+            {
+              "titulo": "Som e imagem",
+              "itens": [
+                {
+                  "id": "projetor",
+                  "q": "Projetor e som ligados"
+                },
+                {
+                  "id": "telao",
+                  "q": "Telão testado e pronto para ligar às 18h00"
+                }
+              ]
+            },
+            {
+              "titulo": "Materiais",
+              "tipo": "material",
+              "dica": "Marque POUCO ou FALTA e escolha o motivo.",
+              "itens": [
+                {
+                  "id": "talheres",
+                  "q": "Talheres"
+                },
+                {
+                  "id": "copos",
+                  "q": "Copos"
+                },
+                {
+                  "id": "copmolho",
+                  "q": "Copinhos de molho"
+                },
+                {
+                  "id": "palhetas",
+                  "q": "Palhetas de molho"
+                },
+                {
+                  "id": "canudos",
+                  "q": "Canudos"
+                }
+              ]
+            }
+          ]
+        },
+        "Recepcao-fechamento": {
+          "nome": "Recepção · fechamento",
+          "titulo": "Recepção · Fechamento",
+          "funcao": "Recepção",
+          "fechamento": true,
+          "prazo_semana": [
+            "23:59",
+            "23:00",
+            "23:00",
+            "23:00",
+            "23:00",
+            "23:59",
+            "23:59"
+          ],
+          "equipe": [
+            "Val"
+          ],
+          "secoes": [
+            {
+              "titulo": "30 minutos antes de encerrar",
+              "dica": "Fazer 30 min antes de encerrar: até 22h30 (seg a qui) · até 23h30 (sex a dom).",
+              "itens": [
+                {
+                  "id": "salao",
+                  "q": "Salão interno limpo e mesas organizadas"
+                },
+                {
+                  "id": "ar",
+                  "q": "Ar-condicionado desligado"
+                },
+                {
+                  "id": "cortina",
+                  "q": "Cortina de ar desligada"
+                }
+              ]
+            },
+            {
+              "titulo": "Caixa e pendências",
+              "itens": [
+                {
+                  "id": "caixa",
+                  "q": "Caixa fechado"
+                },
+                {
+                  "id": "pedido",
+                  "q": "Há pendência com algum pedido?",
+                  "tipo": "pendencia"
+                },
+                {
+                  "id": "entregador",
+                  "q": "Há pendência com algum entregador?",
+                  "tipo": "pendencia"
+                },
+                {
+                  "id": "livro",
+                  "q": "Livro de registro preenchido"
+                },
+                {
+                  "id": "ocor",
+                  "q": "Houve alguma ocorrência hoje?",
+                  "tipo": "ocorrencia",
+                  "hint": "Quebra, reclamação de cliente, falta de funcionário ou outro fato importante."
+                }
+              ]
+            },
+            {
+              "titulo": "Desligar e guardar",
+              "itens": [
+                {
+                  "id": "chope",
+                  "q": "Chopeira desligada e barril guardado"
+                },
+                {
+                  "id": "freezer",
+                  "q": "Freezer de bebidas ajustado para não alcoólicos"
+                },
+                {
+                  "id": "som",
+                  "q": "Mesa de som desligada"
+                },
+                {
+                  "id": "karaoke",
+                  "q": "Som do karaokê desligado",
+                  "dias": [
+                    5
+                  ]
+                },
+                {
+                  "id": "maq",
+                  "q": "Maquininhas e celular desligados"
+                },
+                {
+                  "id": "pc",
+                  "q": "Sistemas fechados e computador desligado"
+                }
+              ]
+            },
+            {
+              "titulo": "Reposição para amanhã",
+              "itens": [
+                {
+                  "id": "canecas",
+                  "q": "Canecas para o freezer conferidas ou pedidas à cozinha"
+                },
+                {
+                  "id": "estoque",
+                  "q": "Utensílios e necessidades de amanhã pedidos ao estoque",
+                  "botao": {
+                    "texto": "Abrir sistema de pedidos",
+                    "url": "https://gabba-estoque-gpt.gabbaheyburger.workers.dev/login"
+                  }
+                },
+                {
+                  "id": "planilha",
+                  "q": "Planilha de solicitação preenchida",
+                  "dias": [
+                    0,
+                    5
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "Garcom-fechamento": {
+          "nome": "Garçom · fechamento",
+          "titulo": "Garçom · Fechamento",
+          "funcao": "Garçom",
+          "fechamento": true,
+          "prazo_semana": [
+            "23:59",
+            "23:00",
+            "23:00",
+            "23:00",
+            "23:00",
+            "23:59",
+            "23:59"
+          ],
+          "equipe": [
+            "Arthur"
+          ],
+          "secoes": [
+            {
+              "titulo": "Área externa",
+              "itens": [
+                {
+                  "id": "mesas",
+                  "q": "Mesas externas organizadas e guardadas"
+                },
+                {
+                  "id": "calcada",
+                  "q": "Calçada e área externa varridas e limpas"
+                },
+                {
+                  "id": "bancada",
+                  "q": "Bancada de madeira e mesa da parede fechadas"
+                },
+                {
+                  "id": "luzes",
+                  "q": "Luzes externas desligadas"
+                },
+                {
+                  "id": "placas",
+                  "q": "Placas luminosas recolhidas"
+                },
+                {
+                  "id": "projetor",
+                  "q": "Projetor e som recolhidos"
+                },
+                {
+                  "id": "chope",
+                  "q": "Chope externo recolhido e guardado"
+                },
+                {
+                  "id": "lixo",
+                  "q": "Lixo retirado"
+                },
+                {
+                  "id": "banheiro",
+                  "q": "Banheiro trancado"
+                }
+              ]
+            },
+            {
+              "titulo": "Apoio à reposição",
+              "itens": [
+                {
+                  "id": "estoque",
+                  "q": "Ajudou na solicitação ao estoque",
+                  "botao": {
+                    "texto": "Abrir sistema de pedidos",
+                    "url": "https://gabba-estoque-gpt.gabbaheyburger.workers.dev/login"
+                  }
+                },
+                {
+                  "id": "planilha",
+                  "q": "Ajudou no preenchimento da planilha de solicitação",
+                  "dias": [
+                    0,
+                    5
+                  ]
+                }
+              ]
+            }
+          ]
         }
       }
     }
