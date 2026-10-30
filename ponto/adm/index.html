@@ -137,7 +137,7 @@ summary {cursor:pointer;padding:12px 0;font-weight:700}
       <button type="button" data-aba="semana" aria-selected="false">Semana</button>
       <button type="button" data-aba="registros" aria-selected="false">Registros</button>
       <button type="button" data-aba="internet" aria-selected="false">Internet</button>
-      <button type="button" data-aba="equipe" aria-selected="false">Equipe</button>
+      <button type="button" data-aba="intervalos" aria-selected="false">Intervalos</button><button type="button" data-aba="equipe" aria-selected="false">Equipe</button>
     </nav>
 
     <section id="aba-hoje" style="display:flex;flex-direction:column;gap:12px">
@@ -179,7 +179,8 @@ summary {cursor:pointer;padding:12px 0;font-weight:700}
       <div class="panel"><div class="label">Tentativas recusadas (7 dias)</div><p class="hint">Se aparecer aqui alguém que estava mesmo na loja, a operadora trocou o endereço da internet. Toque em Liberar.</p><div id="net-recusas"></div></div>
       <div class="panel"><div class="label">Trocar PIN</div><div class="row"><input id="novo-pin" type="password" inputmode="numeric" maxlength="8" placeholder="Novo PIN"><button class="btn sec" id="troca-pin" type="button" style="flex:0 0 auto">Trocar</button></div></div>
     </section>
-    <section id="aba-equipe" hidden style="display:flex;flex-direction:column;gap:16px">
+    <section id="aba-intervalos" hidden style="display:flex;flex-direction:column;gap:16px"><div class="panel"><div class="label">Horários obrigatórios de início do intervalo</div><p class="hint">Escolha a vigência e o horário de cada dia da semana. Marque Folga quando não houver intervalo naquele dia. Campo vazio = sem horário obrigatório. Este quadro não altera a escala de entrada/saída nem a duração do intervalo; mantenha as folgas também na aba Equipe. Para outra pessoa, cadastre primeiro na aba Equipe.</p><label>Válido a partir de<input type="date" id="int-vigencia"></label><label>Tolerância em minutos<input id="int-tolerancia" type="number" min="0" max="30" value="3"></label><div id="int-campos"></div><button type="button" class="btn" id="int-salvar">Salvar horários de intervalo</button><p id="int-feedback" role="status" class="hint"></p></div><div class="panel"><div class="label">Consultar intervalos registrados</div><label>Data<input type="date" id="int-dia"></label><button class="btn sec" type="button" id="int-consultar">Consultar</button><div id="int-registros"></div></div></section>
+<section id="aba-equipe" hidden style="display:flex;flex-direction:column;gap:16px">
       <div class="panel">
         <div class="label" id="eq-titulo">Adicionar funcionário e escala</div>
         <p class="hint">Cadastre quem entra na equipe. Quem saiu deve ser inativado para preservar o histórico.</p>
@@ -281,6 +282,11 @@ summary {cursor:pointer;padding:12px 0;font-weight:700}
     const header=el('div',undefined,'panel');header.append(el('div','Grupo Gabba · Controle interno','label'),el('h2','Relatório de frequência'),el('p',loja.nome+' · '+date(m.de)+' a '+date(m.ate),'hint'));box.append(header);
     const note=el('div',undefined,'notice');note.append(el('b',m.validos?m.validos+' marcações válidas no período.':'Sem registros válidos no período.'),el('p',m.removidos+' marcações removidas ficam fora dos cálculos. Sem registro não significa falta.'));
     box.append(note);
+    const intervalos=m.detalhes.flatMap(d=>d.r.filter(r=>r.acao==='saida_intervalo').map(r=>({...r,data:d.dia})));
+    const quadro=el('section',undefined,'panel');quadro.append(el('h3','Pontualidade dos intervalos'));
+    const tardios=intervalos.filter(r=>r.intervalo?.fora==='atrasado');quadro.append(el('p',tardios.length+' intervalos atrasados · '+tardios.reduce((n,r)=>n+r.intervalo.atraso,0)+' minutos de atraso no total','hint'));
+    for(const r of intervalos){const a=r.intervalo;quadro.append(el('p',date(r.data)+' · '+r.nome+' · registrado '+hm(r.ts)+(a?' · previsto '+a.inicio+' · '+(a.fora==='atrasado'?'ATRASO '+a.atraso+' min':a.fora==='antecipado'?'Antecipado '+a.antecipado+' min':'Dentro da tolerância'):' · sem regra registrada nesta marcação'),a?.fora==='atrasado'?'flag':'hint'));}
+    if(!intervalos.length)quadro.append(el('p','Nenhuma saída para intervalo registrada neste período.','hint'));box.append(quadro);
     for(const p of m.resumo) {
       const card=el('section',undefined,'panel rel-pessoa');card.append(el('h3',p.nome),el('p',p.setor+' · '+p.status,'hint'));
       const grid=el('div',undefined,'rel-metricas');
@@ -299,7 +305,7 @@ summary {cursor:pointer;padding:12px 0;font-weight:700}
   const colsResumo=['Funcionário','Setor','Dias com marcações','Dias completos','Dias a conferir','Horas em dias completos','Atraso entrada','Entrada antecipada','Saída antecipada','Após fim escala','Excedente a conferir','Situação'];
   const colsDetalhe=['Dia','Funcionário','Setor','Escala prevista','Intervalo previsto','Horas previstas líquidas','Entrada','Saída','Intervalo marcado','Horas registradas completas','Atraso entrada','Entrada antecipada','Saída antecipada','Após fim escala','Excedente a conferir','Saldo em minutos','Situação','Observações'];
   function rows(m,tipo) {
-    return tipo==='resumo'?[colsResumo,...m.resumo.map(p=>[p.nome,p.setor,p.dias,p.fechados,p.pendentes,...['trabalhado','atraso','antecipada','saidaAntes','saidaDepois','excedente'].map(k=>fmt(p[k])),p.status])]:[colsDetalhe,...m.detalhes.map(d=>[d.dia,d.nome,d.setor,d.escala,d.intervaloPrevisto,fmt(d.previsto),hm(d.entrada),hm(d.saida),...['intervalo','trabalhado','atraso','antecipada','saidaAntes','saidaDepois','excedente'].map(k=>fmt(d[k])),d.saldo===null?'':Math.round(d.saldo/60000),d.status,d.notas.join('. ')])];
+    return tipo==='resumo'?[colsResumo,...m.resumo.map(p=>[p.nome,p.setor,p.dias,p.fechados,p.pendentes,...['trabalhado','atraso','antecipada','saidaAntes','saidaDepois','excedente'].map(k=>fmt(p[k])),p.status])]:[colsDetalhe,...m.detalhes.map(d=>[d.dia,d.nome,d.setor,d.escala,d.intervaloPrevisto,fmt(d.previsto),hm(d.entrada),hm(d.saida),...['intervalo','trabalhado','atraso','antecipada','saidaAntes','saidaDepois','excedente'].map(k=>fmt(d[k])),d.saldo===null?'':Math.round(d.saldo/60000),d.status,d.notas.concat(d.r.filter(r=>r.intervalo).map(r=>'Intervalo previsto '+r.intervalo.inicio+', registrado '+hm(r.ts)+', '+r.intervalo.fora+', atraso '+r.intervalo.atraso+' min, tolerância '+r.intervalo.tolerancia+' min')).join('. ')])];
   }
   function download(m,tipo,loja) {
     const safe=v=>{let s=String(v??'');if(/^[=+@-]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"';};
@@ -454,6 +460,7 @@ summary {cursor:pointer;padding:12px 0;font-weight:700}
       const t = document.createElement('div'); t.innerHTML = '<b></b> · <span></span><small></small>';
       t.querySelector('b').textContent = hm(x.ts); t.querySelector('span').textContent = x.nome + ' · ' + NOME_ACAO[x.acao];
       t.querySelector('small').textContent = (x.origem === 'ajuste' ? 'Lançado pelo gerente' : 'Celular ' + (x.aparelho || '').slice(0, 6)) + (x.nota ? ' · ' + x.nota : '');
+      if(x.intervalo){const a=document.createElement('p');a.className=x.intervalo.fora==='atrasado'?'flag':'hint';a.textContent='Intervalo previsto '+x.intervalo.inicio+' · registrado '+hm(x.ts)+' · '+(x.intervalo.fora==='atrasado'?'ATRASO '+x.intervalo.atraso+' min':x.intervalo.fora==='antecipado'?'Antecipado '+x.intervalo.antecipado+' min':'Dentro da tolerância')+' · tolerância '+x.intervalo.tolerancia+' min';t.append(a);}
       const b = document.createElement('button'); b.type = 'button'; b.className = 'btn sec mini' + (x.removido ? '' : ' perigo'); b.textContent = x.removido ? 'Restaurar' : 'Remover';
       b.onclick = async () => { await adm(x.removido ? 'restaurar' : 'remover', { id: x.id }); abaRegistros(); };
       d.append(t, b); box.append(d);
@@ -465,6 +472,29 @@ summary {cursor:pointer;padding:12px 0;font-weight:700}
     const ts = new Date(dia + 'T' + hora + ':00-03:00').getTime();
     try { await adm('ajuste', { nome, acao, ts, nota: $('aj-nota').value }); msg('Lançado.', 'okn'); $('aj-nota').value = ''; $('reg-dia').value = diaDe(ts); abaRegistros(); } catch (e) { msg('Não deu certo: ' + e.message, 'err'); }
   };
+
+
+  let INT_REGRAS={rev:0,versoes:[]},INT_NOMES=[];
+  async function consultaIntervalos(){
+    const dia=$('int-dia').value||hoje(),{registros}=await adm('registros',{de:dia,ate:dia});const box=$('int-registros');box.replaceChildren();
+    const rs=registros.filter(r=>!r.removido&&r.acao==='saida_intervalo');
+    if(!rs.length){box.textContent='Nenhuma saída para intervalo neste dia.';return;}
+    for(const r of rs){const row=document.createElement('div');row.className='panel';const title=document.createElement('b');title.textContent=r.nome+' · '+hm(r.ts);row.append(title);const t=document.createElement('p'),a=r.intervalo;t.className=a?.fora==='atrasado'?'flag':'hint';t.textContent=a?'Previsto '+a.inicio+' · '+(a.fora==='atrasado'?'ATRASADO: '+a.atraso+' min':a.fora==='antecipado'?'Antecipado: '+a.antecipado+' min':'Dentro da tolerância')+' · tolerância '+a.tolerancia+' min':'Sem regra de início registrada nesta marcação (histórico preservado).';row.append(t);box.append(row);}
+  }
+  function desenhaIntervalos(){
+    const dia=$('int-vigencia').value||hoje(),v=INT_REGRAS.versoes.filter(v=>v.vigencia<=dia).sort((a,b)=>b.vigencia.localeCompare(a.vigencia))[0];$('int-tolerancia').value=v?.tolerancia??3;
+    const box=$('int-campos');box.replaceChildren();
+    INT_NOMES=[...new Set([...L.equipe.filter(p=>p.ativo!==false).map(p=>p.nome),...Object.keys(v?.horarios||{}),...Object.keys(v?.semana||{})])];
+    const dias=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+    for(const nome of INT_NOMES){const group=document.createElement('fieldset');group.style.cssText='border:1px solid #ddd;border-radius:12px;padding:14px;margin:14px 0';const legend=document.createElement('legend');legend.textContent=nome;group.append(legend);
+      for(const d of [1,2,3,4,5,6,0]){const value=v?.semana?.[nome]?v.semana[nome][d]:(v?.horarios?.[nome]||'');const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:8px 0';const title=document.createElement('span');title.textContent=dias[d];title.style.minWidth='85px';const input=document.createElement('input');input.type='time';input.dataset.intervaloNome=nome;input.dataset.intervaloDia=d;input.value=value||'';input.disabled=value===null;input.style.cssText='width:120px;flex:0 0 120px';const label=document.createElement('label'),check=document.createElement('input');check.type='checkbox';check.checked=value===null;check.onchange=()=>{input.disabled=check.checked;if(check.checked)input.value='';};input.folgaCheck=check;label.append(check,document.createTextNode(' Folga'));row.append(title,input,label);group.append(row);}box.append(group);
+    }
+  }
+
+  async function abaIntervalos(){const r=await adm('intervalos');INT_REGRAS=r.regras;$('int-vigencia').min=hoje();$('int-vigencia').value=hoje();$('int-dia').value=$('int-dia').value||hoje();desenhaIntervalos();await consultaIntervalos();}
+  $('int-vigencia').onchange=desenhaIntervalos;
+  $('int-consultar').onclick=()=>consultaIntervalos().catch(e=>{$('int-registros').textContent='Não foi possível consultar: '+e.message;});
+  $('int-salvar').onclick=async()=>{const b=$('int-salvar');b.disabled=true;try{const horarios={},semana={};document.querySelectorAll('[data-intervalo-nome]').forEach(i=>{const n=i.dataset.intervaloNome;semana[n]??={};semana[n][i.dataset.intervaloDia]=i.folgaCheck.checked?null:i.value;});const r=await adm('intervalos_salvar',{revisao:INT_REGRAS.rev,vigencia:$('int-vigencia').value,tolerancia:Number($('int-tolerancia').value),horarios,semana});INT_REGRAS=r.regras;$('int-feedback').textContent='Horários salvos. Valem a partir de '+$('int-vigencia').value.split('-').reverse().join('/')+'. Marcações anteriores preservadas.';}catch(e){$('int-feedback').textContent='Não foi possível salvar: '+e.message;}finally{b.disabled=false;}};
 
   // ---------- Internet ----------
   async function abaInternet() {
@@ -638,8 +668,8 @@ summary {cursor:pointer;padding:12px 0;font-weight:700}
   };
   function mostra() {
     document.querySelectorAll('.abas button').forEach(b => b.setAttribute('aria-selected', b.dataset.aba === aba));
-    ['hoje', 'semana', 'registros', 'internet', 'equipe'].forEach(a => $('aba-' + a).hidden = a !== aba);
-    const f = { hoje: abaHoje, semana: abaSemana, registros: abaRegistros, internet: abaInternet, equipe: abaEquipe }[aba];
+    ['hoje', 'semana', 'registros', 'internet', 'equipe', 'intervalos'].forEach(a => $('aba-' + a).hidden = a !== aba);
+    const f = { hoje: abaHoje, semana: abaSemana, registros: abaRegistros, internet: abaInternet, equipe: abaEquipe, intervalos: abaIntervalos }[aba];
     f().catch(e => { if (e.message !== 'pin') msg('Erro ao carregar: ' + e.message, 'err'); });
   }
   document.querySelectorAll('.abas button').forEach(b => b.onclick = () => { aba = b.dataset.aba; mostra(); });
