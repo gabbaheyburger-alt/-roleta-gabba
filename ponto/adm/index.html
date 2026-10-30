@@ -236,9 +236,9 @@ summary {cursor:pointer;padding:12px 0;font-weight:700}
     let fim = h ? stamp(dia,h[1]) : null;
     if (h && fim <= ini) fim += 864e5;
     const plano = PontoEscala.detalhe(p, dia, loja);
-    const previsto = h ? Math.max(0, fim-ini-plano.intervaloMin*60000) : null;
+    const previsto = h && !(loja.intervalos_pendentes && !plano.intervalo) ? Math.max(0, fim-ini-plano.intervaloMin*60000) : null;
     const out = { nome:p.nome, setor:p.setor || 'Não informado', dia, escala:h ? h.join(' às ') : 'Folga / sem escala', previsto, entrada:null, saida:null, atraso:null, antecipada:null, saidaAntes:null, saidaDepois:null, intervalo:null, trabalhado:null, saldo:null, excedente:null, status:'Sem registros válidos', notas:[], r };
-    out.intervaloPrevisto = plano.intervalo ? plano.intervalo.join(' às ') : (h ? plano.intervaloMin + ' min (horário livre)' : '—');
+    out.intervaloPrevisto = plano.intervalo ? plano.intervalo.join(' às ') : (h ? loja.intervalos_pendentes && !plano.intervalo ? 'A definir pelo gestor' : plano.intervaloMin + ' min (horário livre)' : '—');
     if (plano.excecao) { out.escala += ' · alteração só nesta data'; out.notas.push('Escala específica' + (plano.nota ? ': ' + plano.nota : '')); }
     if (!r.length) { if (h && agora < ini) out.status='Turno não iniciado'; else if (!h) out.status='Folga / sem escala'; return out; }
     let estado='fora', inicio=null, pausaInicio=null, trab=0, pausa=0, valido=true, nPausas=0;
@@ -259,7 +259,7 @@ summary {cursor:pointer;padding:12px 0;font-weight:700}
     const completo=valido && estado==='fora' && out.entrada!==null && out.saida!==null && (nPausas>0 || !h);
     if(completo) {
       out.intervalo=pausa;out.trabalhado=trab;
-      if(h) {out.saldo=trab-previsto;out.excedente=Math.max(0,out.saldo);}
+      if(h && previsto!==null) {out.saldo=trab-previsto;out.excedente=Math.max(0,out.saldo);}
       out.status=h?'Completo':'Conferir escala';
     } else out.status='Pendente de conferência';
     return out;
@@ -272,7 +272,7 @@ summary {cursor:pointer;padding:12px 0;font-weight:700}
     const resumo=pessoas.map(p=>{
       const ds=detalhes.filter(d=>d.nome===p.nome), completos=ds.filter(d=>d.status==='Completo'), com=ds.filter(d=>d.r.length);
       const soma=(arr,k)=>arr.reduce((t,d)=>t+(d[k] || 0),0);
-      return {nome:p.nome,setor:p.setor || 'Não informado',dias:com.length,fechados:completos.length,pendentes:com.filter(d=>d.status!=='Completo').length,trabalhado:completos.length?soma(completos,'trabalhado'):null,atraso:com.some(d=>d.atraso!==null)?soma(com,'atraso'):null,antecipada:com.some(d=>d.antecipada!==null)?soma(com,'antecipada'):null,saidaAntes:com.some(d=>d.saidaAntes!==null)?soma(com,'saidaAntes'):null,saidaDepois:com.some(d=>d.saidaDepois!==null)?soma(com,'saidaDepois'):null,excedente:completos.length?soma(completos,'excedente'):null,status:!com.length?'Sem registros válidos':com.some(d=>d.status!=='Completo')?'Conferência pendente':'Registros completos'};
+      return {nome:p.nome,setor:p.setor || 'Não informado',dias:com.length,fechados:completos.length,pendentes:com.filter(d=>d.status!=='Completo').length,trabalhado:completos.length?soma(completos,'trabalhado'):null,atraso:com.some(d=>d.atraso!==null)?soma(com,'atraso'):null,antecipada:com.some(d=>d.antecipada!==null)?soma(com,'antecipada'):null,saidaAntes:com.some(d=>d.saidaAntes!==null)?soma(com,'saidaAntes'):null,saidaDepois:com.some(d=>d.saidaDepois!==null)?soma(com,'saidaDepois'):null,excedente:completos.some(d=>d.excedente!==null)?soma(completos,'excedente'):null,status:!com.length?'Sem registros válidos':com.some(d=>d.status!=='Completo')?'Conferência pendente':'Registros completos'};
     });
     return {de,ate,resumo,detalhes,removidos:regs.filter(x=>x.removido).length,validos:regs.filter(x=>!x.removido).length};
   }
@@ -716,3 +716,4 @@ summary {cursor:pointer;padding:12px 0;font-weight:700}
 </script>
 </body>
 </html>
+
