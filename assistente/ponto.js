@@ -90,6 +90,13 @@ export class PontoDB {
     this.sql.exec(`CREATE TABLE IF NOT EXISTS redes (loja TEXT, rede TEXT, rotulo TEXT, criado INTEGER, PRIMARY KEY (loja, rede))`);
     this.sql.exec(`CREATE TABLE IF NOT EXISTS recusas (ts INTEGER, loja TEXT, nome TEXT, rede TEXT)`);
     this.sql.exec(`CREATE TABLE IF NOT EXISTS meta (k TEXT PRIMARY KEY, v TEXT)`);
+    this.sql.exec('CREATE TABLE IF NOT EXISTS intervalo_auditoria (registro INTEGER PRIMARY KEY, dados TEXT NOT NULL)');
+    if(!this.meta('intervalos_regras_gabba'))this.meta('intervalos_regras_gabba',JSON.stringify({rev:1,versoes:[{vigencia:diaDo(Date.now()),horarios:{'Natália':'17:00',Marta:'17:30',Paulo:'18:00',Arthur:'17:00'},tolerancia:3}]}));
+    if(!this.meta('intervalos_semanal_v1_gabba')){
+      const anteriores=this.regrasIntervalo('gabba'),dia=diaDo(Date.now()),base=anteriores.versoes.filter(v=>v.vigencia<=dia).sort((a,b)=>b.vigencia.localeCompare(a.vigencia))[0]||{horarios:{},tolerancia:3};
+      const semana={...base.semana,'Natália':{0:'17:00',1:null,2:'17:00',3:'17:30',4:'17:30',5:'17:00',6:'17:00'},Marta:{0:'17:30',1:'18:00',2:'17:30',3:'18:30',4:null,5:'17:30',6:'17:30'},Paulo:{0:'18:00',1:'17:30',2:'18:00',3:null,4:'18:00',5:'18:00',6:'18:00'},Arthur:{0:'17:00',1:'17:00',2:'17:00',3:'17:00',4:'17:00',5:'17:00',6:'17:00'}};
+      this.meta('intervalos_regras_gabba',JSON.stringify({rev:anteriores.rev+1,versoes:[...anteriores.versoes.filter(v=>v.vigencia!==dia),{...base,vigencia:dia,semana}]}));this.meta('intervalos_semanal_v1_gabba','1');
+    }
     this.sql.exec(`CREATE TABLE IF NOT EXISTS registros_hub_teste (id INTEGER PRIMARY KEY AUTOINCREMENT, sessao TEXT NOT NULL, membro TEXT NOT NULL, ts INTEGER NOT NULL, dia TEXT NOT NULL, acao TEXT NOT NULL, aparelho TEXT NOT NULL)`);
     this.sql.exec(`CREATE INDEX IF NOT EXISTS teste_sessao ON registros_hub_teste (sessao, dia)`);
     // Cópia inicial do cadastro existente. Depois da primeira execução, o banco é a fonte da equipe.
@@ -113,6 +120,23 @@ export class PontoDB {
   redeOk(loja, rede) { return !!rede && [...this.sql.exec('SELECT 1 FROM redes WHERE loja = ? AND rede = ?', loja, rede)].length > 0; }
   temRede(loja) { return [...this.sql.exec('SELECT 1 FROM redes WHERE loja = ?', loja)].length > 0; }
   equipe(loja) { return JSON.parse(this.meta('equipe_v1_' + loja) || '[]'); }
+  regrasIntervalo(loja){return JSON.parse(this.meta('intervalos_regras_'+loja)||'{"rev":0,"versoes":[]}');}
+  regraDiaIntervalo(loja,dia){
+    const v=this.regrasIntervalo(loja).versoes.filter(v=>v.vigencia<=dia).sort((a,b)=>b.vigencia.localeCompare(a.vigencia))[0];if(!v)return null;
+    const wd=new Date(dia+'T12:00:00Z').getUTCDay(),horarios={...v.horarios},folgas=[];
+    for(const[nome,semana]of Object.entries(v.semana||{})){delete horarios[nome];if(semana[wd]===null)folgas.push(nome);else if(semana[wd])horarios[nome]=semana[wd];}
+    return{horarios,folgas,tolerancia:v.tolerancia};
+  }
+  auditaIntervalo(loja,nome,acao,ts){
+    if(acao!=='saida_intervalo')return null;
+    const dia=diaDo(ts),v=this.regraDiaIntervalo(loja,dia),inicio=v?.horarios[nome];
+    if(!inicio)return null;
+    let previsto=Date.parse(dia+'T'+inicio+':00-03:00');if(inicio<'05:00')previsto+=864e5;
+    const diferenca=Math.trunc((ts-previsto)/60000),atraso=Math.max(0,diferenca),antecipado=Math.max(0,-diferenca);
+    const dados={inicio,previsto,atraso,antecipado,tolerancia:v.tolerancia,fora:diferenca>v.tolerancia?'atrasado':diferenca < -v.tolerancia?'antecipado':'no_horario'};
+    const id=[...this.sql.exec('SELECT last_insert_rowid() id')][0].id;
+    this.sql.exec('INSERT INTO intervalo_auditoria(registro,dados) VALUES(?,?)',id,JSON.stringify(dados));return dados;
+  }
   ultimosHoje(loja) {
     const dia = diaDo(Date.now()), out = {};
     for (const r of this.sql.exec('SELECT nome, acao, ts FROM registros WHERE loja = ? AND dia = ? AND removido = 0 ORDER BY ts', loja, dia)) out[r.nome] = { acao: r.acao, ts: r.ts };
@@ -132,7 +156,8 @@ export class PontoDB {
     if (rota === 'estado') {
       if (!LOJAS.includes(loja)) return json({ erro: 'loja' }, 400);
       const ok = this.redeOk(loja, rede);
-      return json({ redeOk: ok, lojaTemRede: this.temRede(loja), agora: Date.now(), dia: diaDo(Date.now()), equipe: ok ? this.equipe(loja).filter(p => p.ativo !== false) : [], ultimos: ok ? this.ultimosHoje(loja) : {} });
+      const regraInicio=this.regraDiaIntervalo(loja,diaDo(Date.now()));
+      return json({ regraInicio:ok?regraInicio:null, redeOk: ok, lojaTemRede: this.temRede(loja), agora: Date.now(), dia: diaDo(Date.now()), equipe: ok ? this.equipe(loja).filter(p => p.ativo !== false) : [], ultimos: ok ? this.ultimosHoje(loja) : {} });
     }
 
     if (rota === 'bater') {
@@ -150,7 +175,8 @@ export class PontoDB {
       if (ult && ult.acao === acao && Date.now() - ult.ts < 10 * 60 * 1000) return json({ erro: 'repetido', detalhe: 'Esse registro já foi feito agora há pouco.' }, 409);
       const ts = Date.now();
       this.sql.exec('INSERT INTO registros (ts, dia, loja, nome, acao, rede, aparelho, origem) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', ts, diaDo(ts), loja, nome, acao, rede, aparelho, 'celular');
-      return json({ ok: true, ts, acao, nome });
+      const intervalo=this.auditaIntervalo(loja,nome,acao,ts);
+      return json({ ok: true, ts, acao, nome, intervalo });
     }
 
     if (rota === 'desfazer') {
@@ -221,6 +247,17 @@ export class PontoDB {
     const L = loja || 'gabba';
 
     switch (c.op) {
+      case 'intervalos': return json({ok:true,regras:this.regrasIntervalo(L),equipe:this.equipe(L)});
+      case 'intervalos_salvar': {
+        const anterior=this.regrasIntervalo(L);
+        if(c.revisao!==anterior.rev)return json({erro:'conflito',detalhe:'Os horários mudaram. Atualize esta aba antes de salvar.'},409);
+        if(!dataAtualOuFutura(c.vigencia)||!Number.isInteger(c.tolerancia)||c.tolerancia<0||c.tolerancia>30||!c.horarios||typeof c.horarios!=='object'||Array.isArray(c.horarios))return json({erro:'dados',detalhe:'Confira a vigência, horários e tolerância (0 a 30 min).'},400);
+        const nomes=new Set([...this.equipe(L).map(p=>p.nome),...anterior.versoes.flatMap(v=>[...Object.keys(v.horarios),...Object.keys(v.semana||{})])]),horarios={},semana={};
+        for(const[nome,hora]of Object.entries(c.horarios)){if(!nomes.has(nome)||!horaValida(hora))return json({erro:'dados',detalhe:'Funcionário ou horário inválido.'},400);horarios[nome]=hora;}
+        if(c.semana!==undefined){if(!c.semana||typeof c.semana!=='object'||Array.isArray(c.semana))return json({erro:'dados'},400);for(const[nome,dias]of Object.entries(c.semana)){if(!nomes.has(nome)||!dias||typeof dias!=='object'||Array.isArray(dias))return json({erro:'dados'},400);semana[nome]={};for(let d=0;d<7;d++){if(dias[d]!==null&&dias[d]!==''&&!horaValida(dias[d]))return json({erro:'dados',detalhe:'Confira os sete dias da semana.'},400);semana[nome][d]=dias[d];}}}
+        const regras={rev:anterior.rev+1,versoes:[...anterior.versoes.filter(v=>v.vigencia!==c.vigencia),{vigencia:c.vigencia,tolerancia:c.tolerancia,horarios,...(c.semana!==undefined?{semana}:{})}]};
+        this.meta('intervalos_regras_'+L,JSON.stringify(regras));return json({ok:true,regras});
+      }
       case 'equipe': return json({ ok: true, equipe: this.equipe(L) });
       case 'equipe_excecao': {
         const equipe = this.equipe(L), p = equipe.find(p => p.nome === String(c.nome || ''));
@@ -274,6 +311,7 @@ export class PontoDB {
       case 'registros': {
         const de = String(c.de || diaDo(Date.now())), ate = String(c.ate || de);
         const regs = [...this.sql.exec('SELECT id, ts, dia, nome, acao, aparelho, origem, nota, removido FROM registros WHERE loja = ? AND dia BETWEEN ? AND ? ORDER BY ts', L, de, ate)];
+        for(const r of regs){const a=[...this.sql.exec('SELECT dados FROM intervalo_auditoria WHERE registro=?',r.id)][0];if(a)r.intervalo=JSON.parse(a.dados);}
         return json({ ok: true, registros: regs });
       }
       case 'redes': {
@@ -293,6 +331,7 @@ export class PontoDB {
         const nome = limpa(c.nome, 40), acao = String(c.acao || ''), ts = +c.ts;
         if (!nome || !ACOES.includes(acao) || !ts) return json({ erro: 'dados' }, 400);
         this.sql.exec('INSERT INTO registros (ts, dia, loja, nome, acao, rede, aparelho, origem, nota) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', ts, diaDo(ts), L, nome, acao, '', '', 'ajuste', limpa(c.nota || 'lançado pelo gerente', 120));
+        this.auditaIntervalo(L,nome,acao,ts);
         return json({ ok: true });
       }
       case 'remover': this.sql.exec('UPDATE registros SET removido = 1, nota = ? WHERE id = ? AND loja = ?', limpa(c.nota || 'removido pelo gerente', 120), +c.id, L); return json({ ok: true });
