@@ -90,6 +90,7 @@ export class PontoDB {
     this.sql.exec(`CREATE TABLE IF NOT EXISTS redes (loja TEXT, rede TEXT, rotulo TEXT, criado INTEGER, PRIMARY KEY (loja, rede))`);
     this.sql.exec(`CREATE TABLE IF NOT EXISTS recusas (ts INTEGER, loja TEXT, nome TEXT, rede TEXT)`);
     this.sql.exec(`CREATE TABLE IF NOT EXISTS meta (k TEXT PRIMARY KEY, v TEXT)`);
+    this.sql.exec('CREATE TABLE IF NOT EXISTS registros_hub_identidade (registro INTEGER PRIMARY KEY, membro TEXT NOT NULL)');
     this.sql.exec('CREATE TABLE IF NOT EXISTS intervalo_auditoria (registro INTEGER PRIMARY KEY, dados TEXT NOT NULL)');
     if(!this.meta('intervalos_regras_gabba'))this.meta('intervalos_regras_gabba',JSON.stringify({rev:1,versoes:[{vigencia:diaDo(Date.now()),horarios:{'Natália':'17:00',Marta:'17:30',Paulo:'18:00',Arthur:'17:00'},tolerancia:3}]}));
     if(!this.meta('intervalos_semanal_v1_gabba')){
@@ -99,6 +100,7 @@ export class PontoDB {
     }
     this.sql.exec(`CREATE TABLE IF NOT EXISTS registros_hub_teste (id INTEGER PRIMARY KEY AUTOINCREMENT, sessao TEXT NOT NULL, membro TEXT NOT NULL, ts INTEGER NOT NULL, dia TEXT NOT NULL, acao TEXT NOT NULL, aparelho TEXT NOT NULL)`);
     this.sql.exec(`CREATE INDEX IF NOT EXISTS teste_sessao ON registros_hub_teste (sessao, dia)`);
+    if(!this.meta('equipe_v1_uau'))this.meta('equipe_v1_uau',JSON.stringify([{"nome": "Tuany", "setor": "Cozinha", "ativo": true, "escalas": [{"vigencia": "2026-10-30", "horarios": {"0": ["15:30", "24:00"], "1": ["15:30", "23:00"], "2": null, "3": ["15:30", "23:00"], "4": ["15:30", "23:00"], "5": ["15:30", "24:00"], "6": ["15:30", "24:00"]}, "intervalos": {"0": null, "1": null, "2": null, "3": null, "4": null, "5": null, "6": null}}]}]));
     // Cópia inicial do cadastro existente. Depois da primeira execução, o banco é a fonte da equipe.
     if (!this.meta('equipe_v1_gabba')) this.meta('equipe_v1_gabba', JSON.stringify([
       { nome: 'Natália', setor: 'Cozinha' }, { nome: 'Paulo', setor: 'Cozinha' },
@@ -151,6 +153,8 @@ export class PontoDB {
     if (req.method === 'POST') { try { corpo = await req.json(); } catch (e) { return json({ erro: 'formato_invalido' }, 400); } }
     const loja = String((req.method === 'GET' ? url.searchParams.get('loja') : corpo.loja) || '').toLowerCase();
 
+    if(rota.startsWith('individual/'))return this.individual(req,corpo,rede,rota,json);
+    if(loja==='uau'&&['estado','bater','desfazer'].includes(rota))return json({erro:'login',detalhe:'Na Uau, abra o ponto pela sua conta pessoal no HUB.'},401);
     if (rota.startsWith('hub-teste/')) return this.hubTeste(req, corpo, rede, rota, json);
 
     if (rota === 'estado') {
@@ -222,6 +226,43 @@ export class PontoDB {
     this.sql.exec('DELETE FROM registros_hub_teste WHERE ts < ?',ts-864e5);
     this.sql.exec('INSERT INTO registros_hub_teste(sessao,membro,ts,dia,acao,aparelho) VALUES(?,?,?,?,?,?)',hash,u.id,ts,dia,acao,aparelho);
     return json({ok:true,teste:true,nome:u.nome,acao,ts});
+  }
+
+  async individual(req,c,rede,rota,json){
+    if(req.method!=='POST'||!['individual/estado','individual/bater','individual/desfazer'].includes(rota))return json({erro:'rota'},405);
+    if(!/^hpr_[\w-]{43}$/.test(c.ticket||''))return json({erro:'login',detalhe:'Abra seu ponto pela sua conta no HUB.'},401);
+    let identidade;
+    try{
+      const r=await fetch('https://gabba-estoque-gpt.gabbaheyburger.workers.dev/api/hub/ponto/validar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ticket:c.ticket}),signal:AbortSignal.timeout(5000)});
+      if(!r.ok)return json({erro:'login',detalhe:'Acesso expirado ou desativado. Volte ao HUB e abra seu ponto novamente.'},r.status===403?403:401);
+      identidade=await r.json();
+    }catch{return json({erro:'hub_indisponivel',detalhe:'Não foi possível conferir seu login. Tente novamente.'},503)}
+    const u=identidade.user;
+    if(!identidade.ok||identidade.individual!==true||!u?.id||!u.nome||u.loja!=='uau'||!(identidade.expiresAt>Date.now()))return json({erro:'identidade'},403);
+    if((c.nome!==undefined&&c.nome!==u.nome)||(c.loja!==undefined&&c.loja!==u.loja))return json({erro:'identidade',detalhe:'Este acesso permite somente o seu próprio ponto.'},403);
+    const pessoa=this.equipe(u.loja).find(p=>p.nome===u.nome&&p.ativo!==false);
+    if(!pessoa)return json({erro:'inativo',detalhe:'Nome não encontrado ou inativo no ponto. Peça ao gestor para conferir o vínculo.'},403);
+    if(!this.redeOk(u.loja,rede)){
+      if(rota==='individual/bater')this.sql.exec('INSERT INTO recusas(ts,loja,nome,rede) VALUES(?,?,?,?)',Date.now(),u.loja,u.nome,rede);
+      return json({erro:'rede',detalhe:'Conecte ao Wi-Fi autorizado da sua unidade para registrar o ponto.'},403);
+    }
+    const dia=diaDo(Date.now()),rows=[...this.sql.exec('SELECT id,acao,ts,aparelho FROM registros WHERE loja=? AND nome=? AND dia=? AND removido=0 ORDER BY ts DESC,id DESC LIMIT 1',u.loja,u.nome,dia)],ult=rows[0]||null;
+    if(rota==='individual/estado')return json({ok:true,individual:true,nome:u.nome,loja:u.loja,pessoa,regraInicio:this.regraDiaIntervalo(u.loja,dia),ultimo:ult?{acao:ult.acao,ts:ult.ts}:null,dia,expiresAt:identidade.expiresAt});
+    const aparelho=limpa(c.aparelho,40);
+    if(!aparelho)return json({erro:'dados'},400);
+    if(rota==='individual/desfazer'){
+      if(!ult||ult.aparelho!==aparelho||Date.now()-ult.ts>DESFAZER_MS||![...this.sql.exec('SELECT 1 FROM registros_hub_identidade WHERE registro=? AND membro=?',ult.id,u.id)].length)return json({erro:'prazo',detalhe:'Só é possível desfazer sua última marcação neste celular em até 3 minutos. Fale com o gestor.'},409);
+      this.sql.exec('UPDATE registros SET removido=1,nota=? WHERE id=?','desfeito pelo funcionário identificado no HUB',ult.id);return json({ok:true,individual:true,nome:u.nome});
+    }
+    const acao=c.acao,proximas=!ult||ult.acao==='saida'?['entrada']:ult.acao==='saida_intervalo'?['volta_intervalo']:['saida_intervalo','saida'];
+    if(!ACOES.includes(acao))return json({erro:'dados'},400);
+    if(!proximas.includes(acao))return json({erro:'sequencia',detalhe:'Esta etapa já foi registrada ou está fora de sequência. Atualize a tela.'},409);
+    const ts=Date.now();
+    this.sql.exec('INSERT INTO registros(ts,dia,loja,nome,acao,rede,aparelho,origem) VALUES(?,?,?,?,?,?,?,?)',ts,diaDo(ts),u.loja,u.nome,acao,rede,aparelho,'celular');
+    const id=[...this.sql.exec('SELECT last_insert_rowid() id')][0].id;
+    const intervalo=this.auditaIntervalo(u.loja,u.nome,acao,ts);
+    this.sql.exec('INSERT INTO registros_hub_identidade(registro,membro) VALUES(?,?)',id,u.id);
+    return json({ok:true,individual:true,nome:u.nome,acao,ts,intervalo});
   }
 
   async adm(c, rede, loja, json) {
@@ -352,3 +393,4 @@ export async function rotaPonto(req, env, cors) {
   const r = await stub.fetch(new Request(req.url, { method: req.method, headers: h, body: b }));
   return new Response(r.body, { status: r.status, headers: { ...cors, 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' } });
 }
+
