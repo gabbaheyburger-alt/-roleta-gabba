@@ -147,6 +147,7 @@ dialog .acao {min-height:58px;font-size:1rem}
   const ICONE = { entrada: '→', saida_intervalo: '☕', volta_intervalo: '↩', saida: '⏏' };
   const pad = n => String(n).padStart(2, '0');
   const hm = ts => new Date(ts).toLocaleTimeString('pt-BR', { timeZone: 'America/Fortaleza', hour: '2-digit', minute: '2-digit', hour12: false });
+  let regraInicio=null;
   let CFG = null, SRV = '', ultimos = {}, redeOk = false, atual = null;
 
   // aparelho: identifica este celular (sem dados pessoais), para o gerente ver se alguém bateu por outra pessoa
@@ -203,6 +204,9 @@ dialog .acao {min-height:58px;font-size:1rem}
     $('p-nome').textContent = p.nome;
     const plano = planoAtual(p), escala = plano.horario;
     $('p-escala').textContent = escala ? 'Sua escala: ' + escala[0] + ' às ' + escala[1] + (escala[1] <= escala[0] ? ' (dia seguinte)' : '') + (plano.intervalo ? ' · intervalo: ' + plano.intervalo.join(' às ') : '') + (plano.excecao ? ' · escala ajustada para hoje' : '') : 'Sem turno previsto para hoje. Se for trabalhar, confirme com o gestor.';
+    let lembrete=$('p-intervalo-aviso');if(!lembrete){lembrete=document.createElement('p');lembrete.id='p-intervalo-aviso';lembrete.setAttribute('role','status');lembrete.style.cssText='padding:16px;border:1px solid #d4bd7a;border-radius:12px;background:#fff8df;font-weight:650';$('p-escala').insertAdjacentElement('afterend',lembrete);}
+    const horario=regraInicio?.horarios[p.nome],folga=regraInicio?.folgas?.includes(p.nome);lembrete.hidden=!horario&&!folga;lembrete.textContent=folga?'Hoje consta folga no quadro de intervalos. Se houve mudança, confirme com o gestor.':horario?'Atenção, '+p.nome+': seu intervalo de hoje começa às '+horario+'. Tolerância: '+regraInicio.tolerancia+' minutos. Registre a saída e o retorno.':'';
+
     const ult = ultimos[p.nome], st = statusTxt(ult, p);
     $('p-hoje').innerHTML = ''; const s = document.createElement('span'); s.textContent = st.t; $('p-hoje').append(s);
     const box = $('p-acoes'); box.innerHTML = '';
@@ -236,6 +240,7 @@ dialog .acao {min-height:58px;font-size:1rem}
       ultimos[atual.nome] = { acao, ts: r.j.ts };
       $('tela-pessoa').hidden = true; $('tela-ok').hidden = false;
       $('ok-txt').textContent = NOME_ACAO[acao] + ' registrada';
+      const regra=r.j.intervalo;let alerta=$('ok-alerta-intervalo');if(!alerta){alerta=document.createElement('p');alerta.id='ok-alerta-intervalo';alerta.setAttribute('role','status');$('ok-nome').insertAdjacentElement('afterend',alerta);}alerta.textContent=regra?(regra.fora==='atrasado'?'Atenção: seu intervalo estava previsto para '+regra.inicio+'. Você iniciou com '+regra.atraso+' minutos de atraso. Tolerância: '+regra.tolerancia+' min.':regra.fora==='antecipado'?'Atenção: intervalo iniciado '+regra.antecipado+' minutos antes do horário previsto ('+regra.inicio+').':'Intervalo iniciado dentro da tolerância de '+regra.tolerancia+' minutos.'):'';alerta.style.color=regra?.fora==='no_horario'?'#395d48':'#9e3131';
       $('ok-hora').textContent = hm(r.j.ts);
       $('ok-nome').textContent = acao === 'saida_intervalo' ? atual.nome + ' · volte às ' + hm(r.j.ts + planoAtual(atual).intervaloMin * 60000) : atual.nome;
       $('ok-desfazer').disabled = false; $('ok-desfazer').textContent = 'Errei · desfazer';
@@ -258,7 +263,7 @@ dialog .acao {min-height:58px;font-size:1rem}
     try {
       const r = await api('estado?loja=' + LOJA);
       if (!r.ok) throw new Error();
-      redeOk = r.j.redeOk; ultimos = r.j.ultimos || {};
+      regraInicio=r.j.regraInicio||null;redeOk = r.j.redeOk; ultimos = r.j.ultimos || {};
       if (redeOk && Array.isArray(r.j.equipe)) {
         CFG.lojas[LOJA].equipe = r.j.equipe;
         if (atual) atual = r.j.equipe.find(p => p.nome === atual.nome) || null;
