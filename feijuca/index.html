@@ -43,6 +43,8 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--cream); outline
 .capa .foto { position: absolute; inset: 0; z-index: 0; }
 .capa .foto img, .capa .foto video { width: 100%; height: 100%; object-fit: cover; display: block; }
 .capa .foto img { animation: zoom 22s ease-in-out infinite alternate; }
+.capa .foto video.camada { position: absolute; inset: 0; opacity: 0; transition: opacity .9s ease; }
+.capa .foto video.camada.on { opacity: 1; }
 @keyframes zoom { from { transform: scale(1); } to { transform: scale(1.08); } }
 .capa.comfoto::after { content: ''; position: absolute; inset: 0; z-index: 0;
   background: linear-gradient(180deg, rgba(12,22,16,.55) 0%, rgba(12,22,16,0) 24%, rgba(12,22,16,0) 40%, rgba(12,22,16,.82) 61%, rgba(12,22,16,.97) 82%, var(--bg) 100%); }
@@ -233,7 +235,7 @@ footer a.grupo { color: var(--muted); }
     return mesmos ? lista + ', das ' + fmt(C.horarios[abertos[0]][0]) + ' às ' + fmt(C.horarios[abertos[0]][1]) : lista;
   }
 
-  var MOM = 'fechado', CAPA_ATUAL = null;
+  var MOM = 'fechado', CAPA_ATUAL = null, PAINEL = null;
   function momento() {
     var n = agora(), forcado = (location.search.match(/momento=(antes|aberto|fechado)/) || [])[1];
     var h = C.horarios[n.dia], m;
@@ -317,21 +319,40 @@ footer a.grupo { color: var(--muted); }
     $('aviso').hidden = !aviso; $('aviso-txt').textContent = aviso;
     $('faixa-txt').textContent = C.slogan || '';
     var f = $('foto'), capa = $('capa');
-    // capa do momento: vídeo (com foto de espera) ou foto; sem nada, fundo com as cores da marca
+    // capa do momento: um ou mais vídeos (passam em sequência, como painel) ou foto; sem nada, fundo da marca
     var cp = (C.capas || {})[MOM] || {};
-    var vid = cp.video || '', fot = cp.foto || C.capa || '';
-    var chave = vid + '|' + fot;
+    var vids = (cp.videos && cp.videos.length ? cp.videos : (cp.video ? [cp.video] : [])).filter(Boolean);
+    var fot = cp.foto || C.capa || '';
+    var chave = vids.join(',') + '|' + fot;
     if (chave !== CAPA_ATUAL) {
-      CAPA_ATUAL = chave; f.textContent = '';
-      if (vid) {
-        var v = document.createElement('video');
-        v.muted = true; v.loop = true; v.autoplay = true; v.playsInline = true;
-        v.setAttribute('muted', ''); v.setAttribute('playsinline', ''); v.setAttribute('aria-hidden', 'true');
-        if (fot) v.poster = src(fot);
-        v.src = src(vid); f.append(v);
-        var tenta = v.play(); if (tenta && tenta.catch) tenta.catch(function () {});
+      CAPA_ATUAL = chave; f.textContent = ''; clearTimeout(PAINEL);
+      if (vids.length) {
+        var els = vids.map(function (u, k) {
+          var v = document.createElement('video');
+          v.muted = true; v.playsInline = true; v.loop = vids.length === 1; v.autoplay = k === 0;
+          v.setAttribute('muted', ''); v.setAttribute('playsinline', ''); v.setAttribute('aria-hidden', 'true');
+          v.preload = k === 0 ? 'auto' : 'metadata';
+          v.poster = src(u.replace(/\.mp4$/, '.jpg'));
+          v.className = 'camada' + (k === 0 ? ' on' : '');
+          v.src = src(u); f.append(v); return v;
+        });
+        var toca = function (v) { try { v.currentTime = 0; } catch (e) {} var t = v.play(); if (t && t.catch) t.catch(function () {}); };
+        if (els.length > 1) {
+          // cada vídeo fica no ar pelo menos 8 s (os curtos repetem) e passa para o próximo quando termina
+          var atual = 0, inicio = Date.now();
+          els.forEach(function (v, k) {
+            v.addEventListener('ended', function () {
+              if (k !== atual) return;
+              if (Date.now() - inicio < 8000) { toca(v); return; }
+              atual = (atual + 1) % els.length; inicio = Date.now();
+              var prox = els[atual]; prox.preload = 'auto'; toca(prox);
+              els.forEach(function (x, j) { x.classList.toggle('on', j === atual); });
+            });
+          });
+        }
+        toca(els[0]);
       } else if (fot) { var im = document.createElement('img'); im.src = src(fot); im.alt = ''; f.append(im); }
-      f.hidden = !(vid || fot); capa.classList.toggle('comfoto', !!(vid || fot));
+      f.hidden = !(vids.length || fot); capa.classList.toggle('comfoto', !!(vids.length || fot));
     }
     lista('lista-pratos', C.pratos, false, 'pratos');
     lista('lista-chopes', C.chopes, true, 'chopes');

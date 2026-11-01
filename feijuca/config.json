@@ -81,6 +81,10 @@
       "foto": "vid/pastel.jpg"
     },
     "aberto": {
+      "videos": [
+        "vid/moela.mp4",
+        "vid/feijoada.mp4"
+      ],
       "video": "vid/moela.mp4",
       "foto": "vid/moela.jpg"
     },

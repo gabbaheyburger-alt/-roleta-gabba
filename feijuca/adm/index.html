@@ -40,7 +40,7 @@ label { display: flex; flex-direction: column; gap: 5px; font-weight: 700; font-
 label small { color: var(--muted); font-weight: 600; font-size: .84rem; }
 input[type=text], input[type=url], input[type=time], input[type=password] { font: 600 1.05rem var(--body); color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 11px; width: 100%; min-width: 0; }
 input:focus-visible, button:focus-visible, a:focus-visible { outline: 3px solid var(--laranja); outline-offset: 2px; }
-.switch { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 12px; font-weight: 700; }
+label.switch, .switch { flex-direction: row; display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 12px; font-weight: 700; }
 .switch small { display: block; color: var(--muted); font-weight: 600; font-size: .85rem; }
 .switch input { width: 52px; height: 30px; accent-color: var(--ok); flex-shrink: 0; }
 .dia { display: grid; grid-template-columns: 82px 1fr 1fr; gap: 8px; align-items: center; margin-bottom: 10px; }
@@ -292,19 +292,28 @@ select { font: 600 1.05rem var(--body); color: var(--fg); background: var(--bg);
     desenhaLista('pratos'); desenhaLista('chopes');
     desenhaCapas();
   }
-  const VIDEOS = [['', 'Sem vídeo (usar foto)'], ['vid/moela.mp4', 'Moela ao molho'], ['vid/pastel.mp4', 'Pastezim de queijo']];
+  const VIDEOS = [['vid/moela.mp4', 'Moela ao molho'], ['vid/feijoada.mp4', 'Feijoada'], ['vid/pastel.mp4', 'Mini pastéis de queijo']];
   const MOMS = [['antes', 'Antes de abrir', 'Dia de Feijuca, antes das 11h'], ['aberto', 'Aberto', 'Enquanto a Feijuca está funcionando'], ['fechado', 'Fechado', 'Depois das 15h e nos dias sem Feijuca']];
   function desenhaCapas() {
     C.capas = C.capas || {};
     const box = $('capas'); box.textContent = '';
     MOMS.forEach(([k, nome, quando]) => {
       const cp = C.capas[k] = C.capas[k] || { video: '', foto: '' };
-      const sel = el('select');
-      VIDEOS.forEach(([v, t]) => sel.append(el('option', { value: v, textContent: t, selected: (cp.video || '') === v })));
-      sel.addEventListener('change', () => { cp.video = sel.value; cp.foto = sel.value ? sel.value.replace(/\.mp4$/, '.jpg') : ''; marca(); desenhaCapas(); });
-      const kids = [el('h2', { textContent: nome }), el('p', { className: 'note', textContent: quando }), el('label', {}, ['Vídeo', sel])];
-      if (cp.video) kids.push(el('p', { className: 'note', textContent: 'Com vídeo, a foto de espera é tirada do próprio vídeo.' }));
-      else {
+      const lista = (cp.videos && cp.videos.length ? cp.videos : (cp.video ? [cp.video] : [])).slice();
+      const kids = [el('h2', { textContent: nome }), el('p', { className: 'note', textContent: quando + '. Marque um ou mais vídeos: com mais de um, eles passam um depois do outro.' })];
+      VIDEOS.forEach(([v, t]) => {
+        const cb = el('input', { type: 'checkbox', checked: lista.indexOf(v) >= 0 });
+        cb.addEventListener('change', () => {
+          let L = lista.filter(x => x !== v); if (cb.checked) L.push(v);
+          L = VIDEOS.map(x => x[0]).filter(x => L.indexOf(x) >= 0).concat(L.filter(x => !VIDEOS.some(y => y[0] === x)));
+          cp.videos = L; cp.video = L[0] || ''; cp.foto = L[0] ? L[0].replace(/\.mp4$/, '.jpg') : '';
+          marca(); desenhaCapas();
+        });
+        const lab = el('label', { className: 'switch' }, [el('span', { textContent: t }), cb]);
+        kids.push(lab);
+      });
+      if (!lista.length) {
+        kids.push(el('p', { className: 'note', textContent: 'Sem vídeo: escolha uma foto.' }));
         kids.push(fotoBtn(cp, 'foto', 'Toque para escolher a foto', 'capa-prev'));
         if (cp.foto) { const t = el('button', { type: 'button', className: 'mini', textContent: 'Tirar a foto' }); t.addEventListener('click', () => { cp.foto = ''; marca(); desenhaCapas(); }); kids.push(t); }
       }
