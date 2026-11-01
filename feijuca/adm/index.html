@@ -653,7 +653,7 @@ input[type=date] { font: 600 1.05rem var(--body); color: var(--fg); background: 
     if (shaAtual) body.sha = shaAtual;
     const put = () => fetch(API + arq, { method: 'PUT', headers: Object.assign({ 'Content-Type': 'application/json' }, headers()), body: JSON.stringify(body) });
     let r = await put();
-    if (r.status === 409 || r.status === 422) { const g = await fetch(API + arq + '?ref=' + BRANCH + '&t=' + Date.now(), { headers: headers(), cache: 'no-store' }); if (g.ok) body.sha = (await g.json()).sha; r = await put(); }
+    if (r.status === 409 || r.status === 422) { const e = new Error('conflito'); e.conflito = true; throw e; }
     if (r.status === 401 || r.status === 403) { const e = new Error('perm'); e.perm = true; throw e; }
     if (!r.ok) throw new Error('HTTP ' + r.status);
     return (await r.json()).content.sha;
@@ -671,6 +671,7 @@ input[type=date] { font: 600 1.05rem var(--body); color: var(--fg); background: 
       msg($('msg'), 'Salvo! Em 1 a 2 minutos a bio já mostra a mudança.', 'ok');
     } catch (e) {
       if (e.perm) { sair('A chave não tem permissão para salvar.'); return; }
+      if (e.conflito) { sujo = false; sujoM = false; $('salvar').classList.remove('sujo'); await carregar(); msg($('msg'), 'A bio foi mudada em outro lugar enquanto o adm estava aberto. Recarreguei a versão mais nova: refaça sua mudança e salve de novo.', 'err'); return; }
       msg($('msg'), 'Não consegui salvar. Verifique a internet e tente de novo.', 'err');
     }
     finally { $('salvar').disabled = false; }
