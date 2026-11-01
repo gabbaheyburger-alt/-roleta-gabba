@@ -254,7 +254,7 @@
     "ate": ""
   },
   "levar": {
-    "ativo": false,
+    "ativo": true,
     "ref": "Feijoada congelada",
     "titulo": "Feijoada congelada para levar",
     "nomeMsg": "Feijoada congelada (sem acompanhamento, serve 2)",

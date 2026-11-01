@@ -330,7 +330,7 @@ body.travado { overflow: hidden; }
       <button class="ex-btn" id="fd-entrar" type="button" data-ev="feijuca-fidelidade-entrar"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2z"/></svg> Quero participar</button><p class="ex-nota" id="fd-nota"></p></div>
   </section>
   <section class="garanta" id="garanta" hidden>
-    <button class="g-card" id="g-enc" type="button" data-ev="feijuca-abrir-encomenda"><span class="g-ic" aria-hidden="true">🍲</span><span><b>Encomendar</b><span>Garanta sua feijoada para o fim de semana</span></span></button>
+    <button class="g-card" id="g-enc" type="button" data-ev="feijuca-abrir-encomenda"><span class="g-ic" aria-hidden="true">🍲</span><span><b>Encomendar</b><span>Garanta sua feijoada para os dias de Feijuca</span></span></button>
     <button class="g-card" id="g-res" type="button" data-ev="feijuca-abrir-reserva"><span class="g-ic" aria-hidden="true">🪑</span><span><b>Reservar mesa</b><span>Para a resenha com a turma</span></span></button>
   </section>
   <section class="parte" id="pratos">
@@ -371,7 +371,7 @@ body.travado { overflow: hidden; }
 <div class="folha" id="f-enc" hidden role="dialog" aria-modal="true" aria-labelledby="f-enc-h">
   <div class="caixa"><div class="alca"></div>
     <h2 id="f-enc-h">Encomendar</h2>
-    <p class="dica">Escolha os pratos, o dia e o horário. O pedido vai pronto para o nosso WhatsApp.</p>
+    <p class="dica">Para os dias de Feijuca (sexta, sábado e domingo). Escolha os pratos, o dia e o horário. O pedido vai pronto para o nosso WhatsApp.</p>
     <h3>O que vai querer</h3><div id="enc-itens"></div>
     <h3>Para quando</h3><div class="chips" id="enc-dias"></div>
     <h3>Horário</h3><div class="chips" id="enc-horas"></div>
@@ -388,7 +388,7 @@ body.travado { overflow: hidden; }
 </div>
 <div class="folha" id="f-lev" hidden role="dialog" aria-modal="true" aria-labelledby="f-lev-h">
   <div class="caixa"><div class="alca"></div>
-    <h2 id="f-lev-h">Feijoada para levar</h2>
+    <h2 id="f-lev-h">Feijoada congelada para levar</h2>
     <p class="dica" id="lev-dica"></p>
     <h3>Quantidade</h3><div class="qtd" id="lev-item"><div class="n"><b id="lev-nome"></b><small id="lev-preco"></small></div><div class="ctl"><button type="button" id="lev-menos" aria-label="Menos uma">−</button><output id="lev-q">1</output><button type="button" id="lev-mais" aria-label="Mais uma">+</button></div></div>
     <h3>Quando você quer retirar</h3><div class="chips" id="lev-dias"></div>
@@ -589,7 +589,7 @@ body.travado { overflow: hidden; }
       }
       PROX = p;
       var rec = C.recursos || {};
-      if (rec.encomenda !== false && p) { b1.textContent = 'ENCOMENDAR PARA ' + (p.quando === 'amanhã' ? 'AMANHÃ' : p.quando.toUpperCase()); b1.dataset.link = ''; b1.dataset.acao = 'encomenda'; b1.href = '#encomendar'; }
+      if ((C.levar || {}).ativo) { b1.textContent = 'ENCOMENDAR FEIJOADA CONGELADA'; b1.dataset.link = ''; b1.dataset.acao = 'levar'; b1.href = '#levar'; }
       else { b1.textContent = 'VER CARDÁPIO'; b1.dataset.link = ''; b1.dataset.acao = ''; b1.href = 'cardapio/'; }
     }
     return n;
@@ -1000,8 +1000,9 @@ body.travado { overflow: hidden; }
   });
   $('g-enc').addEventListener('click', abreEncomenda);
   $('g-res').addEventListener('click', abreReserva);
-  $('b1').addEventListener('click', function (e) { if (this.dataset.acao === 'encomenda') { e.preventDefault(); abreEncomenda(); } });
-  if (/#encomendar/.test(location.hash)) setTimeout(abreEncomenda, 600);
+  $('b1').addEventListener('click', function (e) { if (this.dataset.acao === 'levar') { e.preventDefault(); abreLevar(); } });
+  if (/#encomendar/.test(location.hash)) setTimeout(abreEncomenda, 900);
+  if (/#levar/.test(location.hash)) setTimeout(function () { if ((C.levar || {}).ativo) abreLevar(); }, 900);
   if (/#reservar/.test(location.hash)) setTimeout(abreReserva, 600);
   function garanta() { var r = C.recursos || {}; $('g-enc').hidden = r.encomenda === false; $('g-res').hidden = r.reserva === false; $('garanta').hidden = r.encomenda === false && r.reserva === false; $('garanta').style.gridTemplateColumns = (r.encomenda === false || r.reserva === false) ? '1fr' : ''; }
 
@@ -1039,7 +1040,8 @@ body.travado { overflow: hidden; }
   }
   $('lev-menos').addEventListener('click', function () { LEV.q = Math.max(1, LEV.q - 1); desenhaLev(); });
   $('lev-mais').addEventListener('click', function () { LEV.q = Math.min(30, LEV.q + 1); desenhaLev(); });
-  $('lv-abrir').addEventListener('click', function () { $('lev-nome-c').value = $('lev-nome-c').value || lembra('nome'); $('lev-erro').textContent = ''; desenhaLev(); abreFolha('f-lev'); });
+  function abreLevar() { $('lev-nome-c').value = $('lev-nome-c').value || lembra('nome'); $('lev-erro').textContent = ''; desenhaLev(); abreFolha('f-lev'); }
+  $('lv-abrir').addEventListener('click', abreLevar);
   $('lev-enviar').addEventListener('click', function () {
     var nome = $('lev-nome-c').value.trim(), er = $('lev-erro'), L = LEV.L, d = LEV.dSel;
     if (!d) { er.textContent = 'Escolha o dia da retirada.'; return; }
