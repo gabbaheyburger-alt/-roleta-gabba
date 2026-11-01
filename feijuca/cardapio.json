@@ -1,42 +1,166 @@
 {
   "atualizado": "Novembro de 2026",
   "secoes": [
-    { "titulo": "Entradas", "itens": [
-      { "nome": "Moela ao molho", "preco": "18,00", "desc": "Moela macia no molho especial da casa, servida com torradas de alho e farofa." },
-      { "nome": "Caldinho de feijoada", "preco": "10,00", "desc": "Caldinho direto da nossa feijoada, com couve crispy." },
-      { "nome": "Bolinho de feijoada", "preco": "15,00", "desc": "5 unidades, recheadas com couve refogada e bacon." },
-      { "nome": "Batata frita", "preco": "20,00", "desc": "300 g de batata frita com nosso tempero especial. Acompanha maionese de alho." },
-      { "nome": "Torradinhas de alho", "preco": "10,00", "desc": "Torradas artesanais na manteiga de alho, sequinhas e crocantes. Acompanha maionese de alho." },
-      { "nome": "Mini pastéis de queijo", "preco": "20,00", "desc": "12 unidades de mini pastéis de queijo." }
-    ]},
-    { "titulo": "Pratos", "itens": [
-      { "nome": "Feijoada individual", "preco": "30,00", "desc": "300 g de feijoada, arroz branco, couve refogada na manteiga com bacon, farofa, laranja, torresmo e banana empanada.", "destaque": true },
-      { "nome": "Feijoada para 2 pessoas", "preco": "58,00", "desc": "750 g de feijoada, arroz branco, couve refogada na manteiga com bacon, farofa, laranja, torresmo e banana empanada.", "destaque": true },
-      { "nome": "Feijoada sem acompanhamento", "preco": "37,00", "desc": "A melhor feijoada, sem acompanhamentos. Serve 2 pessoas." },
-      { "nome": "Filé à parmegiana", "preco": "30,00", "desc": "Frango empanado coberto com molho de tomate caseiro e queijo gratinado. Acompanha arroz branco e batata frita." },
-      { "nome": "Parmegiana de carne", "preco": "37,00", "desc": "Fraldinha empanada na farinha panko, dourada e crocante, coberta com molho pomodoro e queijo gratinado. Acompanha macarrão ao molho pomodoro e batata frita." },
-      { "nome": "Frango teriyaki", "preco": "35,00", "desc": "Frango frito envolvido em molho teriyaki, com arroz com gergelim, couve crispy com alho frito e batata frita." }
-    ]},
-    { "titulo": "Bebidas", "itens": [
-      { "nome": "Chopp", "preco": "10,00", "desc": "Chopp Turatti gelado." },
-      { "nome": "Cerveja long neck", "preco": "12,00" },
-      { "nome": "Suco de cajá 300 ml", "preco": "7,00" },
-      { "nome": "Suco de maracujá 300 ml", "preco": "8,00" },
-      { "nome": "Refrigerante lata", "preco": "6,00", "desc": "Coca-Cola ou Coca-Cola Zero." },
-      { "nome": "Refrigerante 1 L", "preco": "10,00", "desc": "Coca-Cola ou Coca-Cola Zero." }
-    ]},
-    { "titulo": "Adicionais", "itens": [
-      { "nome": "Ovo frito", "preco": "3,00" },
-      { "nome": "Banana empanada", "preco": "5,00" },
-      { "nome": "Porção de farofa", "preco": "5,00" },
-      { "nome": "½ porção de arroz (250 g)", "preco": "6,00" },
-      { "nome": "Porção de arroz (500 g)", "preco": "10,00" },
-      { "nome": "Couve refogada com bacon", "preco": "10,00" }
-    ]},
-    { "titulo": "Sobremesas", "itens": [
-      { "nome": "Brownie de chocolate", "preco": "17,00" },
-      { "nome": "Pudim de leite", "preco": "10,00" },
-      { "nome": "Sundae", "preco": "8,00", "desc": "Chocolate ou morango." }
-    ]}
+    {
+      "titulo": "Entradas",
+      "itens": [
+        {
+          "nome": "Moela ao molho",
+          "preco": "18,00",
+          "desc": "Moela macia no molho especial da casa, servida com torradas de alho e farofa."
+        },
+        {
+          "nome": "Caldinho de feijoada",
+          "preco": "10,00",
+          "desc": "Caldinho direto da nossa feijoada, com couve crispy."
+        },
+        {
+          "nome": "Bolinho de feijoada",
+          "preco": "15,00",
+          "desc": "5 unidades, recheadas com couve refogada e bacon."
+        },
+        {
+          "nome": "Batata frita",
+          "preco": "20,00",
+          "desc": "300 g de batata frita com nosso tempero especial. Acompanha maionese de alho."
+        },
+        {
+          "nome": "Torradinhas de alho",
+          "preco": "10,00",
+          "desc": "Torradas artesanais na manteiga de alho, sequinhas e crocantes. Acompanha maionese de alho."
+        },
+        {
+          "nome": "Mini pastéis de queijo",
+          "preco": "20,00",
+          "desc": "12 unidades de mini pastéis de queijo."
+        }
+      ]
+    },
+    {
+      "titulo": "Pratos",
+      "itens": [
+        {
+          "nome": "Feijoada individual",
+          "preco": "30,00",
+          "desc": "300 g de feijoada, arroz branco, couve refogada na manteiga com bacon, farofa, laranja, torresmo e banana empanada.",
+          "destaque": true
+        },
+        {
+          "nome": "Feijoada para 2 pessoas",
+          "preco": "58,00",
+          "desc": "750 g de feijoada, arroz branco, couve refogada na manteiga com bacon, farofa, laranja, torresmo e banana empanada.",
+          "destaque": true
+        },
+        {
+          "nome": "Feijoada sem acompanhamento",
+          "preco": "37,00",
+          "desc": "A melhor feijoada, sem acompanhamentos. Serve 2 pessoas."
+        },
+        {
+          "nome": "Filé à parmegiana",
+          "preco": "30,00",
+          "desc": "Frango empanado coberto com molho de tomate caseiro e queijo gratinado. Acompanha arroz branco e batata frita."
+        },
+        {
+          "nome": "Parmegiana de carne",
+          "preco": "37,00",
+          "desc": "Fraldinha empanada na farinha panko, dourada e crocante, coberta com molho pomodoro e queijo gratinado. Acompanha macarrão ao molho pomodoro e batata frita."
+        },
+        {
+          "nome": "Frango teriyaki",
+          "preco": "35,00",
+          "desc": "Frango frito envolvido em molho teriyaki, com arroz com gergelim, couve crispy com alho frito e batata frita."
+        }
+      ]
+    },
+    {
+      "titulo": "Para levar",
+      "itens": [
+        {
+          "nome": "Feijoada congelada",
+          "preco": "40,00",
+          "desc": "A nossa feijoada, sem acompanhamento, congelada para esquentar em casa. Serve 2 pessoas. Retirada combinada pelo WhatsApp."
+        }
+      ]
+    },
+    {
+      "titulo": "Bebidas",
+      "itens": [
+        {
+          "nome": "Chopp",
+          "preco": "10,00",
+          "desc": "Chopp Turatti gelado."
+        },
+        {
+          "nome": "Cerveja long neck",
+          "preco": "12,00"
+        },
+        {
+          "nome": "Suco de cajá 300 ml",
+          "preco": "7,00"
+        },
+        {
+          "nome": "Suco de maracujá 300 ml",
+          "preco": "8,00"
+        },
+        {
+          "nome": "Refrigerante lata",
+          "preco": "6,00",
+          "desc": "Coca-Cola ou Coca-Cola Zero."
+        },
+        {
+          "nome": "Refrigerante 1 L",
+          "preco": "10,00",
+          "desc": "Coca-Cola ou Coca-Cola Zero."
+        }
+      ]
+    },
+    {
+      "titulo": "Adicionais",
+      "itens": [
+        {
+          "nome": "Ovo frito",
+          "preco": "3,00"
+        },
+        {
+          "nome": "Banana empanada",
+          "preco": "5,00"
+        },
+        {
+          "nome": "Porção de farofa",
+          "preco": "5,00"
+        },
+        {
+          "nome": "½ porção de arroz (250 g)",
+          "preco": "6,00"
+        },
+        {
+          "nome": "Porção de arroz (500 g)",
+          "preco": "10,00"
+        },
+        {
+          "nome": "Couve refogada com bacon",
+          "preco": "10,00"
+        }
+      ]
+    },
+    {
+      "titulo": "Sobremesas",
+      "itens": [
+        {
+          "nome": "Brownie de chocolate",
+          "preco": "17,00"
+        },
+        {
+          "nome": "Pudim de leite",
+          "preco": "10,00"
+        },
+        {
+          "nome": "Sundae",
+          "preco": "8,00",
+          "desc": "Chocolate ou morango."
+        }
+      ]
+    }
   ]
 }

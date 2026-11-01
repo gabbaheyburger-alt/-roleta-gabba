@@ -250,13 +250,13 @@
   },
   "levar": {
     "ativo": false,
-    "ref": "Feijoada sem acompanhamento",
+    "ref": "Feijoada congelada",
     "titulo": "Feijoada congelada para levar",
     "nomeMsg": "Feijoada congelada (sem acompanhamento, serve 2)",
     "unidade": "serve 2 pessoas",
-    "texto": "A nossa feijoada, congelada e pronta para esquentar em casa. Serve 2 pessoas. Peça para qualquer dia da semana.",
+    "texto": "A nossa feijoada, sem acompanhamento, congelada e pronta para esquentar em casa. Serve 2 pessoas. Peça para qualquer dia da semana.",
     "foto": "",
-    "retirada": "Local e horário da retirada são combinados no WhatsApp.",
+    "retirada": "Depois do pedido, a gente combina com você pelo WhatsApp onde e quando retirar.",
     "dias": [
       0,
       1,

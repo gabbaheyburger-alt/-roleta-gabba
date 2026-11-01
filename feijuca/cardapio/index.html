@@ -156,9 +156,13 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--ouro); outline-
   }
   // PDF sempre com os preços atuais: usa a impressão do celular (Salvar como PDF)
   document.getElementById('pdf').addEventListener('click', function (e) { if (window.print) { e.preventDefault(); window.print(); } });
-  fetch('../cardapio.json?v=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (c) { if (c) desenha(c); }).catch(function () {});
+  // a seção "Para levar" só aparece quando a feijoada congelada está ligada no adm
+  var CARD = null, LEVAR = false;
+  function redesenha() { if (!CARD) return; desenha({ atualizado: CARD.atualizado, secoes: (CARD.secoes || []).filter(function (s) { return LEVAR || !/levar/i.test(s.titulo); }) }); }
+  fetch('../cardapio.json?v=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (c) { if (c) { CARD = c; redesenha(); } }).catch(function () {});
   // mesmos links da bio
   fetch('../config.json?v=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (c) {
+    LEVAR = !!(c && c.levar && c.levar.ativo); redesenha();
     var L = (c && c.links) || {};
     if (L.pedir) document.getElementById('pedir').href = L.pedir;
     if (L.whatsapp) document.getElementById('zap').href = L.whatsapp;
