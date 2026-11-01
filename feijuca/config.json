@@ -1,9 +1,18 @@
 {
   "slogan": "Se a Feijuca é boa, imagina a resenha.",
   "horarios": {
-    "5": ["11:00", "15:00"],
-    "6": ["11:00", "15:00"],
-    "0": ["11:00", "15:00"]
+    "5": [
+      "11:00",
+      "15:00"
+    ],
+    "6": [
+      "11:00",
+      "15:00"
+    ],
+    "0": [
+      "11:00",
+      "15:00"
+    ]
   },
   "fechadoEm": "",
   "aviso": "",
@@ -11,16 +20,73 @@
   "links": {
     "pedir": "https://gabbaburger.saipos.com/home",
     "whatsapp": "https://wa.me/5585998515015",
-    "mapa": "",
+    "mapa": "https://www.google.com/maps/place/Feijuca+Do+Gabba/@-3.4204044,-39.0300081,17z/data=!4m6!3m5!1s0x7c0e1d52f8faeb3:0xeb58b17b979a68ba!8m2!3d-3.4204044!4d-39.0300081!16s%2Fg%2F11nk11nlw2",
     "instagram": ""
   },
   "pratos": [
-    { "selo": "A estrela", "nome": "Feijuca completa", "desc": "Feijoada com os acompanhamentos da casa", "preco": "", "foto": "", "oculto": false },
-    { "selo": "Petisco", "nome": "Moela ao molho", "desc": "Servida com torradinhas", "preco": "", "foto": "", "oculto": false },
-    { "selo": "Da casa", "nome": "Pastezim de queijo", "desc": "Sequinho e crocante", "preco": "", "foto": "", "oculto": false }
+    {
+      "selo": "Petisco da casa",
+      "nome": "Moela ao molho",
+      "desc": "Servida na panelinha de barro, com torradinhas",
+      "preco": "",
+      "foto": "fotos/moela.jpg",
+      "oculto": false
+    },
+    {
+      "selo": "Da casa",
+      "nome": "Pastezim de queijo",
+      "desc": "Com queijo ralado por cima e molho cremoso",
+      "preco": "",
+      "foto": "fotos/pastel.jpg",
+      "oculto": false
+    },
+    {
+      "selo": "",
+      "nome": "Bolinho de feijoada",
+      "desc": "Com couve, limão e caldinho de feijão",
+      "preco": "",
+      "foto": "fotos/bolinho.jpg",
+      "oculto": false
+    },
+    {
+      "selo": "",
+      "nome": "Parmegiana de frango",
+      "desc": "Com arroz branco",
+      "preco": "",
+      "foto": "fotos/parmegiana.jpg",
+      "oculto": false
+    },
+    {
+      "selo": "A estrela",
+      "nome": "Feijuca completa",
+      "desc": "Feijoada com os acompanhamentos da casa",
+      "preco": "",
+      "foto": "",
+      "oculto": true
+    }
   ],
   "chopes": [
-    { "selo": "", "nome": "Chopp Pilsen", "desc": "Gelado, na pressão", "preco": "", "foto": "", "oculto": false },
-    { "selo": "", "nome": "Chopp IPA", "desc": "Mais encorpado e lupulado", "preco": "", "foto": "", "oculto": false }
-  ]
+    {
+      "selo": "Turatti",
+      "nome": "Chopp Turatti",
+      "desc": "Gelado, na caneca",
+      "preco": "",
+      "foto": "fotos/chopp.jpg",
+      "oculto": false
+    }
+  ],
+  "capas": {
+    "antes": {
+      "video": "vid/pastel.mp4",
+      "foto": "vid/pastel.jpg"
+    },
+    "aberto": {
+      "video": "vid/moela.mp4",
+      "foto": "vid/moela.jpg"
+    },
+    "fechado": {
+      "video": "",
+      "foto": "fotos/chopp.jpg"
+    }
+  }
 }

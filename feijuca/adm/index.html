@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Adm · Bio da Feijuca</title>
 <meta name="robots" content="noindex, nofollow">
-<meta name="theme-color" content="#15100c">
+<meta name="theme-color" content="#0c1610">
+<link rel="icon" href="../logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Barlow:wght@400;600;700;800&display=swap">
@@ -13,8 +14,8 @@
 /* Área do dono da bio da Feijuca: Hoje, Capa, Horários, Pratos, Chopes, Slogan e Links.
    Salvar grava feijuca/config.json; fotos vão para feijuca/fotos/ (API do GitHub, mesma chave dos outros adms). */
 :root {
-  --bg: #15100c; --surface: #211913; --surface-2: #2b2119; --line: #3a2c22;
-  --fg: #f7ecd8; --muted: #b9a690; --laranja: #f28a1e; --laranja-deep: #b85f08;
+  --bg: #0c1610; --surface: #142319; --surface-2: #1b2f22; --line: #2a4232;
+  --fg: #f7f0e2; --muted: #a8b8a6; --laranja: #eab14a; --laranja-deep: #b5821f;
   --ok: #6fd36a; --bad: #ff8a80;
   --display: 'Alfa Slab One', Georgia, serif;
   --body: 'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -50,7 +51,8 @@ input:focus-visible, button:focus-visible, a:focus-visible { outline: 3px solid 
 .fotobtn { position: relative; width: 96px; height: 96px; border-radius: 12px; border: 1px dashed var(--line); background: var(--surface-2); overflow: hidden; cursor: pointer; color: var(--muted); font: 700 .8rem var(--body); display: flex; align-items: center; justify-content: center; text-align: center; padding: 6px; }
 .fotobtn img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .fotobtn.carregando::after { content: 'Enviando…'; position: absolute; inset: 0; background: rgba(0,0,0,.7); color: #fff; display: flex; align-items: center; justify-content: center; }
-.capa-prev { position: relative; width: 100%; aspect-ratio: 9 / 12; max-height: 360px; height: auto; }
+.capa-prev { position: relative; width: 150px; height: 220px; }
+select { font: 600 1.05rem var(--body); color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 11px; width: 100%; }
 .campos { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .acoes { display: flex; gap: 8px; flex-wrap: wrap; }
 .mini { font: 700 .9rem var(--body); color: var(--fg); background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; cursor: pointer; }
@@ -64,7 +66,7 @@ input:focus-visible, button:focus-visible, a:focus-visible { outline: 3px solid 
 .btn.sujo { background: #ffd27a; }
 .ghost { background: transparent; border: 1px solid var(--line); color: var(--muted); border-radius: 10px; padding: 10px 12px; font: 700 .88rem var(--body); cursor: pointer; text-decoration: none; text-align: center; flex: 1; }
 .row { display: flex; gap: 8px; flex-wrap: wrap; }
-.barra { position: fixed; left: 0; right: 0; bottom: 0; z-index: 9; background: rgba(21,16,12,.96); border-top: 1px solid var(--line); padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px)); }
+.barra { position: fixed; left: 0; right: 0; bottom: 0; z-index: 9; background: rgba(12,22,16,.96); border-top: 1px solid var(--line); padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px)); }
 .barra > div { max-width: 540px; margin: 0 auto; display: flex; flex-direction: column; gap: 6px; }
 .msg { margin: 0; font-weight: 700; min-height: 1.3em; text-align: center; font-size: .92rem; }
 .msg.ok { color: var(--ok); } .msg.err { color: var(--bad); }
@@ -121,12 +123,8 @@ input:focus-visible, button:focus-visible, a:focus-visible { outline: 3px solid 
       </div>
 
       <div data-painel="capa" hidden>
-        <section class="card">
-          <h2>Foto da capa</h2>
-          <p class="note">Foto em pé (vertical) fica melhor. Sem foto, a capa usa o fundo com as cores da Feijuca.</p>
-          <button type="button" class="fotobtn capa-prev" id="capa-foto">Toque para escolher a foto da capa</button>
-          <button type="button" class="mini" id="capa-tirar">Tirar a foto da capa</button>
-        </section>
+        <p class="note">Cada horário tem sua capa: um vídeo ou uma foto em pé (vertical). Sem nada, a capa usa o fundo verde da marca.</p>
+        <div id="capas" style="display:flex;flex-direction:column;gap:12px;margin-top:12px"></div>
         <section class="card" style="margin-top:16px">
           <h2>Slogan</h2>
           <label for="slogan">Frase grande da capa <small>A parte depois da vírgula fica em laranja.</small>
@@ -221,7 +219,7 @@ input:focus-visible, button:focus-visible, a:focus-visible { outline: 3px solid 
     const { obj, chave, botao } = alvo; alvo = null;
     botao.classList.add('carregando');
     try {
-      const dataUrl = await reduz(f, chave === 'capa' ? 1440 : 1080);
+      const dataUrl = await reduz(f, botao.classList.contains('capa-prev') ? 1440 : 1080);
       const nome = 'feijuca/fotos/' + Date.now() + '.jpg';
       const r = await fetch(API + nome, { method: 'PUT', headers: Object.assign({ 'Content-Type': 'application/json' }, headers()), body: JSON.stringify({ message: 'Bio Feijuca: foto nova', content: dataUrl.split(',')[1], branch: BRANCH }) });
       if (!r.ok) throw new Error('HTTP ' + r.status);
@@ -292,12 +290,27 @@ input:focus-visible, button:focus-visible, a:focus-visible { outline: 3px solid 
 
   function desenha() {
     desenhaLista('pratos'); desenhaLista('chopes');
-    const cb = $('capa-foto'); cb.textContent = '';
-    if (C.capa) cb.append(el('img', { src: fotoSrc(C.capa), alt: '' })); else cb.textContent = 'Toque para escolher a foto da capa';
-    $('capa-tirar').hidden = !C.capa;
+    desenhaCapas();
   }
-  $('capa-foto').addEventListener('click', () => escolheFoto(C, 'capa', $('capa-foto')));
-  $('capa-tirar').addEventListener('click', () => { C.capa = ''; marca(); desenha(); });
+  const VIDEOS = [['', 'Sem vídeo (usar foto)'], ['vid/moela.mp4', 'Moela ao molho'], ['vid/pastel.mp4', 'Pastezim de queijo']];
+  const MOMS = [['antes', 'Antes de abrir', 'Dia de Feijuca, antes das 11h'], ['aberto', 'Aberto', 'Enquanto a Feijuca está funcionando'], ['fechado', 'Fechado', 'Depois das 15h e nos dias sem Feijuca']];
+  function desenhaCapas() {
+    C.capas = C.capas || {};
+    const box = $('capas'); box.textContent = '';
+    MOMS.forEach(([k, nome, quando]) => {
+      const cp = C.capas[k] = C.capas[k] || { video: '', foto: '' };
+      const sel = el('select');
+      VIDEOS.forEach(([v, t]) => sel.append(el('option', { value: v, textContent: t, selected: (cp.video || '') === v })));
+      sel.addEventListener('change', () => { cp.video = sel.value; cp.foto = sel.value ? sel.value.replace(/\.mp4$/, '.jpg') : ''; marca(); desenhaCapas(); });
+      const kids = [el('h2', { textContent: nome }), el('p', { className: 'note', textContent: quando }), el('label', {}, ['Vídeo', sel])];
+      if (cp.video) kids.push(el('p', { className: 'note', textContent: 'Com vídeo, a foto de espera é tirada do próprio vídeo.' }));
+      else {
+        kids.push(fotoBtn(cp, 'foto', 'Toque para escolher a foto', 'capa-prev'));
+        if (cp.foto) { const t = el('button', { type: 'button', className: 'mini', textContent: 'Tirar a foto' }); t.addEventListener('click', () => { cp.foto = ''; marca(); desenhaCapas(); }); kids.push(t); }
+      }
+      box.append(el('section', { className: 'card' }, kids));
+    });
+  }
 
   function preenche() {
     $('fechado').checked = C.fechadoEm === hojeStr();
