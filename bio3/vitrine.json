@@ -134,16 +134,7 @@
       "oculto": false
     }
   ],
-  "eventos": [
-    {
-      "data": "2026-10-17",
-      "hora": "18:30",
-      "titulo": "Uma noite de Blues & Rock",
-      "desc": "18h30 Arthur Leite (Blues Rock) · 20h Banda 3 Elementos (Pop Rock nacional e internacional)",
-      "foto": "fotos/evento-blues-rock-3.jpg",
-      "oculto": false
-    }
-  ],
+  "eventos": [],
   "ordem": [
     "especiais",
     "agenda",
