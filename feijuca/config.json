@@ -30,7 +30,8 @@
       "desc": "750 g de feijoada, arroz branco, couve refogada na manteiga com bacon, farofa, laranja, torresmo e banana empanada. Serve 2 pessoas.",
       "preco": "58,00",
       "foto": "fotos/feijoada-completa.jpg",
-      "oculto": false
+      "oculto": false,
+      "foto2": "fotos/feijoada-completa-2.jpg"
     },
     {
       "selo": "Petisco da casa",

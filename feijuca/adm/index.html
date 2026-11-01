@@ -53,6 +53,9 @@ label.switch, .switch { flex-direction: row; display: flex; align-items: center;
 .fotobtn.carregando::after { content: 'Enviando…'; position: absolute; inset: 0; background: rgba(0,0,0,.7); color: #fff; display: flex; align-items: center; justify-content: center; }
 .capa-prev { position: relative; width: 150px; height: 220px; }
 select { font: 600 1.05rem var(--body); color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 11px; width: 100%; }
+.fotos2 { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
+.fotos2 > div { display: flex; flex-direction: column; gap: 4px; }
+.fotos2 small { color: var(--muted); font-weight: 700; font-size: .8rem; }
 .campos { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .acoes { display: flex; gap: 8px; flex-wrap: wrap; }
 .mini { font: 700 .9rem var(--body); color: var(--fg); background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; cursor: pointer; }
@@ -269,13 +272,15 @@ select { font: 600 1.05rem var(--body); color: var(--fg); background: var(--bg);
       esc.addEventListener('click', () => { it.oculto = !it.oculto; marca(); desenha(); });
       const apaga = el('button', { type: 'button', className: 'mini apagar', textContent: 'Apagar' });
       apaga.addEventListener('click', () => { if (confirm('Apagar "' + (it.nome || 'este item') + '"?')) { L.splice(i, 1); marca(); desenha(); } });
-      const tirar = el('button', { type: 'button', className: 'mini', textContent: 'Tirar foto', hidden: !it.foto });
-      tirar.addEventListener('click', () => { it.foto = ''; marca(); desenha(); });
+      const tirar = el('button', { type: 'button', className: 'mini', textContent: 'Tirar foto 1', hidden: !it.foto });
+      tirar.addEventListener('click', () => { it.foto = it.foto2 || ''; delete it.foto2; marca(); desenha(); });
       box.append(el('section', { className: 'card item' + (it.oculto ? ' oculto' : '') }, [
-        el('div', { className: 'linha1' }, [
-          fotoBtn(it, 'foto', 'Toque para pôr foto'),
-          el('div', { className: 'campos' }, [campo('Nome', it, 'nome', k === 'pratos' ? 'Ex.: Moela ao molho' : 'Ex.: Chopp Pilsen'), campo('Preço', it, 'preco', 'Ex.: 39,90')])
+        el('div', { className: 'fotos2' }, [
+          el('div', {}, [el('small', { textContent: 'Foto 1' }), fotoBtn(it, 'foto', 'Toque para pôr foto')]),
+          el('div', {}, [el('small', { textContent: 'Foto 2 (opcional)' }), fotoBtn(it, 'foto2', it.foto ? '+ 2ª foto' : 'Primeiro a foto 1')]),
+          (() => { const t = el('button', { type: 'button', className: 'mini', textContent: 'Tirar 2ª foto', hidden: !it.foto2 }); t.addEventListener('click', () => { delete it.foto2; marca(); desenha(); }); return t; })()
         ]),
+        el('div', { className: 'campos' }, [campo('Nome', it, 'nome', k === 'pratos' ? 'Ex.: Moela ao molho' : 'Ex.: Chopp Pilsen'), campo('Preço', it, 'preco', 'Ex.: 39,90')]),
         campo('Descrição', it, 'desc', 'Ex.: Servida com torradinhas'),
         campo('Selo (opcional)', it, 'selo', 'Ex.: Petisco, Novidade'),
         el('div', { className: 'acoes' }, [sobe, desce, esc, tirar, apaga])

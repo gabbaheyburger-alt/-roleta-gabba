@@ -87,6 +87,7 @@ section.parte { padding: 34px 0 6px; }
 .item .img { position: relative; aspect-ratio: 1 / 1; background: var(--surface-2); overflow: hidden; }
 .item.grande .img { aspect-ratio: 4 / 3; }
 .item.grande .img img { object-position: center 15%; }
+.item.grande .img .trilho > img + img { object-position: center 40%; }
 .item .img img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .item .vazio { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
   background: repeating-linear-gradient(135deg, rgba(234,177,74,.16) 0 12px, rgba(234,177,74,.06) 12px 24px); }
@@ -139,6 +140,18 @@ footer a.grupo { color: var(--muted); }
 .capa > .seta-capa { position: absolute; top: 32svh; z-index: 2; width: 38px; height: 38px; border-radius: 50%; border: 1px solid rgba(247,240,226,.3); background: rgba(12,22,16,.45); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); color: var(--cream); font-size: 1.3rem; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 .seta-capa.esq { left: 10px; } .seta-capa.dir { right: 10px; }
 .luz .quadro video { width: 100%; height: 100%; max-width: 100%; max-height: 100%; border-radius: 14px; object-fit: contain; background: #000; }
+
+/* ---------- Até 2 fotos por card (deslizar) ---------- */
+.trilho { display: flex; width: 100%; height: 100%; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.trilho::-webkit-scrollbar { display: none; }
+.trilho > img { flex: 0 0 100%; width: 100%; height: 100%; scroll-snap-align: center; scroll-snap-stop: always; }
+.mini-pontos { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); display: flex; gap: 5px; padding: 4px 7px; border-radius: 999px; background: rgba(12,22,16,.55); pointer-events: none; }
+.mini-pontos i { width: 6px; height: 6px; border-radius: 999px; background: rgba(247,240,226,.55); transition: width .2s ease, background .2s ease; }
+.mini-pontos i.on { width: 14px; background: var(--laranja); }
+.luz .quadro .trilho { max-height: 100%; align-items: center; }
+.luz .quadro .trilho > img { object-fit: contain; border-radius: 14px; max-height: 100%; }
+.luz .quadro .mini-pontos { bottom: 6px; }
+.luz .quadro { position: relative; }
 
 /* ---------- Foto ampliada (toque no card) ---------- */
 .item[data-abre] { cursor: pointer; -webkit-tap-highlight-color: transparent; transition: transform .15s ease; }
@@ -343,7 +356,9 @@ body.travado { overflow: hidden; }
   function cartao(it, grande, chope) {
     var a = document.createElement('article'); a.className = 'item' + (grande ? ' grande' : '') + (chope ? ' chope' : '');
     var img = document.createElement('div'); img.className = 'img';
-    if (it.foto) { var im = document.createElement('img'); im.src = src(it.foto); im.alt = it.nome || ''; im.loading = 'lazy'; img.append(im); }
+    var fotos = fotosDe(it);
+    if (fotos.length === 1) { var im = document.createElement('img'); im.src = src(fotos[0]); im.alt = it.nome || ''; im.loading = 'lazy'; img.append(im); }
+    else if (fotos.length > 1) { img.append(trilho(fotos, it.nome, true)); }
     else { var v = document.createElement('div'); v.className = 'vazio'; var b = document.createElement('b'); b.textContent = (it.nome || '?').trim().charAt(0).toUpperCase(); v.append(b); img.append(v); }
     if (it.selo) { var s = document.createElement('span'); s.className = 'selo'; s.textContent = it.selo; img.append(s); }
     var t = document.createElement('div'); t.className = 'txt';
@@ -351,24 +366,43 @@ body.travado { overflow: hidden; }
     if (it.desc) { var ds = document.createElement('span'); ds.textContent = it.desc; t.append(ds); }
     if (it.preco) { var pr = document.createElement('div'); pr.className = 'preco'; pr.textContent = precoTxt(it.preco); t.append(pr); }
     a.append(img, t);
-    if (it.foto) {
+    if (fotos.length) {
       var lu = document.createElement('span'); lu.className = 'lupa'; lu.setAttribute('aria-hidden', 'true');
       lu.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#f7f0e2" stroke-width="2.4" stroke-linecap="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>';
       img.append(lu);
       a.dataset.abre = '1'; a.tabIndex = 0; a.setAttribute('role', 'button'); a.setAttribute('aria-label', 'Ver foto: ' + (it.nome || ''));
-      a.addEventListener('click', function () { abreFoto(it); });
-      a.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abreFoto(it); } });
+      var qual = function () { var tr = img.querySelector('.trilho'); return tr ? Math.round(tr.scrollLeft / Math.max(1, tr.clientWidth)) : 0; };
+      a.addEventListener('click', function () { abreFoto(it, null, qual()); });
+      a.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abreFoto(it, null, qual()); } });
     }
     return a;
   }
 
+  function fotosDe(it) { return [it.foto, it.foto2].filter(Boolean); }
+  // faixa deslizante com as fotos e bolinhas que acompanham
+  function trilho(fotos, alt, preguica) {
+    var box = document.createDocumentFragment();
+    var tr = document.createElement('div'); tr.className = 'trilho';
+    fotos.forEach(function (f, k) { var im = document.createElement('img'); im.src = src(f); im.alt = (alt || '') + (fotos.length > 1 ? ' (foto ' + (k + 1) + ')' : ''); if (preguica) im.loading = 'lazy'; im.draggable = false; tr.append(im); });
+    var pts = document.createElement('div'); pts.className = 'mini-pontos'; pts.setAttribute('aria-hidden', 'true');
+    fotos.forEach(function (_, k) { var i = document.createElement('i'); if (!k) i.className = 'on'; pts.append(i); });
+    tr.addEventListener('scroll', function () { var k = Math.round(tr.scrollLeft / Math.max(1, tr.clientWidth)); [].forEach.call(pts.children, function (i, j) { i.classList.toggle('on', j === k); }); }, { passive: true });
+    box.append(tr, pts); return box;
+  }
   var ultimoFoco = null;
   function precoTxt(p) { return !p ? '' : /^\s*R\$/.test(p) ? p : 'R$ ' + p; }
-  function abreFoto(it, video) {
+  function abreFoto(it, video, inicio) {
     ultimoFoco = document.activeElement;
-    var lv = $('luz-vid'), li = $('luz-img');
+    var lv = $('luz-vid'), li = $('luz-img'), q = li.parentNode;
+    [].forEach.call(q.querySelectorAll('.trilho, .mini-pontos'), function (x) { x.remove(); });
+    var fotos = video ? [] : fotosDe(it);
+    if (fotos.length > 1) {
+      lv.pause(); lv.removeAttribute('src'); lv.hidden = true; li.hidden = true;
+      q.append(trilho(fotos, it.nome, false));
+      var tr = q.querySelector('.trilho'); requestAnimationFrame(function () { tr.scrollLeft = (inicio || 0) * tr.clientWidth; });
+    } else
     if (video) { li.hidden = true; lv.hidden = false; lv.poster = src(video.replace(/\.mp4$/, '.jpg')); lv.src = src(video); lv.muted = true; var pl = lv.play(); if (pl && pl.catch) pl.catch(function () {}); }
-    else { lv.pause(); lv.removeAttribute('src'); lv.hidden = true; li.hidden = false; li.src = src(it.foto); li.alt = it.nome || ''; }
+    else if (video) {} else { lv.pause(); lv.removeAttribute('src'); lv.hidden = true; li.hidden = false; li.src = src(it.foto); li.alt = it.nome || ''; }
     $('luz-nome').textContent = it.nome || '';
     $('luz-desc').textContent = it.desc || ''; $('luz-desc').hidden = !it.desc;
     $('luz-preco').textContent = precoTxt(it.preco); $('luz-preco').hidden = !it.preco;
