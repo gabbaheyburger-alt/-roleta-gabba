@@ -105,6 +105,7 @@ input[type=date] { font: 600 1.05rem var(--body); color: var(--fg); background: 
         <button type="button" data-aba="pratos" aria-selected="false">Destaques</button>
         <button type="button" data-aba="chopes" aria-selected="false">Chopes</button>
         <button type="button" data-aba="stories" aria-selected="false">Stories</button>
+        <button type="button" data-aba="novidade" aria-selected="false">Novidade</button>
         <button type="button" data-aba="capa" aria-selected="false">Capa</button>
         <button type="button" data-aba="links" aria-selected="false">Links</button>
       </nav>
@@ -129,6 +130,13 @@ input[type=date] { font: 600 1.05rem var(--body); color: var(--fg); background: 
           <p class="note">Botões que mandam o pedido pronto para o WhatsApp. Desligue se não estiver aceitando.</p>
           <label class="switch"><span>Aceitar encomendas</span><input type="checkbox" id="rec-enc"></label>
           <label class="switch"><span>Aceitar reservas</span><input type="checkbox" id="rec-res"></label>
+        </section>
+        <section class="card" style="margin-top:16px">
+          <h2>Quando está fechado</h2>
+          <label class="switch"><span>Mostrar contagem regressiva<small>"Faltam 4 dias 20 horas…" até a próxima Feijuca</small></span><input type="checkbox" id="rec-cd"></label>
+          <p class="note">Mensagem de agradecimento depois do último dia da semana (domingo, depois das 15h):</p>
+          <label>Título <small>A parte depois do ponto fica em dourado.</small><input type="text" id="enc-tit" maxlength="60" placeholder="Já encerramos. Muito obrigado!"></label>
+          <label>Texto <small>Depois dele entra sozinho "sexta às 11h".</small><input type="text" id="enc-txt" maxlength="120" placeholder="Valeu pela resenha deste fim de semana! A gente se vê"></label>
         </section>
       </div>
 
@@ -173,6 +181,21 @@ input[type=date] { font: 600 1.05rem var(--body); color: var(--fg); background: 
         <button class="add" type="button" id="grupo-add" style="margin-top:12px;width:100%">+ Nova bolinha</button>
       </div>
 
+      <div data-painel="novidade" hidden>
+        <section class="card">
+          <h2>Novidade</h2>
+          <p class="note">Um quadro de destaque na bio, logo depois dos stories. Só aparece quando estiver ligado.</p>
+          <label class="switch"><span>Mostrar a novidade</span><input type="checkbox" id="nv-ativo"></label>
+          <label>Título <input type="text" id="nv-tit" maxlength="60" placeholder="Ex.: Chegou a feijoada vegana!"></label>
+          <label>Texto <input type="text" id="nv-txt" maxlength="200" placeholder="Ex.: Só neste sábado, enquanto durar."></label>
+          <div><small class="note">Foto (opcional)</small><div id="nv-foto"></div></div>
+          <label>Botão <select id="nv-botao"><option value="">Sem botão</option><option value="pedir">Pedir delivery</option><option value="whatsapp">Chamar no WhatsApp</option><option value="cardapio">Ver cardápio</option><option value="mapa">Como chegar</option><option value="link">Outro link</option></select></label>
+          <label id="nv-link-l">Link do botão <input type="url" id="nv-link" placeholder="https://"></label>
+          <label>Texto do botão (opcional) <input type="text" id="nv-btxt" maxlength="30" placeholder="Ex.: Quero provar"></label>
+          <label>Tirar do ar sozinho no dia (opcional) <input type="date" id="nv-ate"></label>
+        </section>
+      </div>
+
       <div data-painel="capa" hidden>
         <p class="note">Cada horário tem sua capa: um vídeo ou uma foto em pé (vertical). Sem nada, a capa usa o fundo verde da marca.</p>
         <div id="capas" style="display:flex;flex-direction:column;gap:12px;margin-top:12px"></div>
@@ -189,6 +212,7 @@ input[type=date] { font: 600 1.05rem var(--body); color: var(--fg); background: 
           <label for="l-pedir">Pedir delivery <input type="url" id="l-pedir" data-k="pedir" autocomplete="off"></label>
           <label for="l-whatsapp">WhatsApp <input type="url" id="l-whatsapp" data-k="whatsapp" autocomplete="off"></label>
           <label for="l-mapa">Como chegar (mapa) <small>Google Maps → Compartilhar → Copiar link. Vazio esconde o botão.</small><input type="url" id="l-mapa" data-k="mapa" autocomplete="off"></label>
+          <label for="l-avaliar">Avaliação no Google <small>Já preenchido com o endereço de avaliação da Feijuca. Vazio esconde o botão.</small><input type="url" id="l-avaliar" data-k="avaliar" autocomplete="off"></label>
           <label for="l-instagram">Instagram <small>Ex.: https://www.instagram.com/feijucadogabba. Vazio esconde o botão.</small><input type="url" id="l-instagram" data-k="instagram" autocomplete="off"></label>
         </section>
       </div>
@@ -398,6 +422,7 @@ input[type=date] { font: 600 1.05rem var(--body); color: var(--fg); background: 
     desenhaStories();
     desenhaCardapio();
     desenhaAgora();
+    desenhaNovidade();
   }
   // ---------- Stories ----------
   const BOTOES = [['pedir', 'Pedir delivery'], ['whatsapp', 'Chamar no WhatsApp'], ['mapa', 'Como chegar'], ['cardapio', 'Ver cardápio'], ['', 'Sem botão']];
@@ -493,6 +518,24 @@ input[type=date] { font: 600 1.05rem var(--body); color: var(--fg); background: 
   }
   $('rec-enc').addEventListener('change', e => { C.recursos.encomenda = e.target.checked; marca(); });
   $('rec-res').addEventListener('change', e => { C.recursos.reserva = e.target.checked; marca(); });
+  function desenhaNovidade() {
+    const N = C.novidade = C.novidade || { ativo: false };
+    $('nv-ativo').checked = !!N.ativo; $('nv-tit').value = N.titulo || ''; $('nv-txt').value = N.texto || '';
+    $('nv-botao').value = N.botao || ''; $('nv-link').value = N.link || ''; $('nv-btxt').value = N.botaoTexto || ''; $('nv-ate').value = N.ate || '';
+    $('nv-link-l').hidden = N.botao !== 'link';
+    const f = $('nv-foto'); f.textContent = ''; f.append(fotoBtn(N, 'foto', 'Toque para pôr foto'));
+    if (N.foto) { const t = el('button', { type: 'button', className: 'mini', textContent: 'Tirar foto' }); t.addEventListener('click', () => { N.foto = ''; marca(); desenhaNovidade(); }); f.append(t); }
+    const E = C.encerramento = C.encerramento || {};
+    $('enc-tit').value = E.titulo || ''; $('enc-txt').value = E.texto || '';
+    $('rec-cd').checked = (C.recursos || {}).contagem !== false;
+  }
+  [['nv-tit', 'titulo'], ['nv-txt', 'texto'], ['nv-link', 'link'], ['nv-btxt', 'botaoTexto']].forEach(([id, k]) => $(id).addEventListener('input', e => { C.novidade[k] = e.target.value; marca(); }));
+  $('nv-ativo').addEventListener('change', e => { C.novidade.ativo = e.target.checked; marca(); });
+  $('nv-botao').addEventListener('change', e => { C.novidade.botao = e.target.value; $('nv-link-l').hidden = e.target.value !== 'link'; marca(); });
+  $('nv-ate').addEventListener('change', e => { C.novidade.ate = e.target.value; marca(); });
+  $('enc-tit').addEventListener('input', e => { C.encerramento.titulo = e.target.value; marca(); });
+  $('enc-txt').addEventListener('input', e => { C.encerramento.texto = e.target.value; marca(); });
+  $('rec-cd').addEventListener('change', e => { C.recursos.contagem = e.target.checked; marca(); });
   function preenche() {
     $('fechado').checked = C.fechadoEm === hojeStr();
     $('aviso').value = C.aviso || '';
@@ -529,6 +572,9 @@ input[type=date] { font: 600 1.05rem var(--body); color: var(--fg); background: 
     [].concat(((S.hoje || {}).itens || []), ...((S.grupos || []).map(g => g.itens || []))).forEach(st => { if (!st.midia && !erro) erro = 'Tem story sem foto ou vídeo na aba Stories. Escolha a mídia ou apague.'; if (!st.prato && !(st.txt || '').trim() && !erro) erro = 'Tem story sem prato e sem texto na aba Stories.'; });
     (S.grupos || []).forEach(g => { g.nome = (g.nome || '').trim(); if (!g.nome && !erro) erro = 'Tem bolinha sem nome na aba Stories.'; });
     if (S.hoje && S.hoje.ativo && !(S.hoje.itens || []).length && !erro) erro = 'O story do dia está ligado mas não tem nenhum story.';
+    const N = C.novidade || {};
+    if (N.ativo && !(N.titulo || '').trim() && !erro) erro = 'A Novidade está ligada mas está sem título.';
+    if (N.ativo && N.botao === 'link' && !/^https:\/\//.test(N.link || '') && !erro) erro = 'O link do botão da Novidade precisa começar com https://';
     C.horarios = horarios; C.links = links;
     C.fechadoEm = $('fechado').checked ? hojeStr() : '';
     C.aviso = $('aviso').value.trim();

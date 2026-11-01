@@ -21,7 +21,8 @@
     "pedir": "https://gabbaburger.saipos.com/home",
     "whatsapp": "https://wa.me/5585998515015",
     "mapa": "https://www.google.com/maps/place/Feijuca+Do+Gabba/@-3.4204044,-39.0300081,17z/data=!4m6!3m5!1s0x7c0e1d52f8faeb3:0xeb58b17b979a68ba!8m2!3d-3.4204044!4d-39.0300081!16s%2Fg%2F11nk11nlw2",
-    "instagram": "https://www.instagram.com/feijucadogabba"
+    "instagram": "https://www.instagram.com/feijucadogabba",
+    "avaliar": "https://search.google.com/local/writereview?placeid=ChIJs66PL9XhwAcRumial3uxWOs"
   },
   "pratos": [
     {
@@ -230,6 +231,21 @@
   },
   "recursos": {
     "encomenda": true,
-    "reserva": true
+    "reserva": true,
+    "contagem": true
+  },
+  "encerramento": {
+    "titulo": "Já encerramos. Muito obrigado!",
+    "texto": "Valeu pela resenha deste fim de semana! A gente se vê"
+  },
+  "novidade": {
+    "ativo": false,
+    "titulo": "",
+    "texto": "",
+    "foto": "",
+    "botao": "",
+    "botaoTexto": "",
+    "link": "",
+    "ate": ""
   }
 }

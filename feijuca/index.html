@@ -68,6 +68,7 @@ h1 em { font-style: normal; color: var(--laranja); }
 .aviso small { display: block; font: 700 .7rem var(--label); letter-spacing: .16em; text-transform: uppercase; color: var(--laranja); }
 .botoes { display: grid; grid-template-columns: 1fr auto; gap: 10px; }
 .b1 { display: flex; align-items: center; justify-content: center; min-height: 56px; border-radius: 14px; background: var(--laranja); color: #10180f; text-decoration: none; font: 400 1.25rem var(--display); letter-spacing: .02em; box-shadow: 0 10px 28px rgba(234,177,74,.28); padding: 0 14px; text-align: center; }
+.b1.longo { font-size: 1.02rem; letter-spacing: 0; }
 .b1:active { background: var(--laranja-deep); }
 .b2 { min-width: 56px; height: 56px; border-radius: 14px; border: 1px solid rgba(247,236,216,.35); background: rgba(12,22,16,.45); display: flex; align-items: center; justify-content: center; text-decoration: none; }
 .b2 svg { width: 24px; height: 24px; }
@@ -253,6 +254,22 @@ body.travado { overflow: hidden; }
 .erro-f { color: #ff8a80; font-weight: 600; font-size: .9rem; margin: 10px 0 0; min-height: 1.2em; }
 .fechar-f { display: block; width: 100%; margin-top: 10px; min-height: 46px; border-radius: 14px; border: 1px solid var(--line); background: transparent; color: var(--muted); font: 600 .95rem var(--body); cursor: pointer; }
 .nota-f { color: var(--muted); font-size: .82rem; margin: 10px 0 0; text-align: center; }
+
+/* ---------- Contagem, encerramento, novidade ---------- */
+.contagem { margin: -4px 0 16px; }
+.contagem small { display: block; font: 700 .74rem var(--label); letter-spacing: .16em; text-transform: uppercase; color: var(--laranja); margin-bottom: 6px; }
+.contagem .cd { display: flex; gap: 8px; }
+.contagem .cd span { min-width: 62px; background: rgba(12,22,16,.62); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); border: 1px solid rgba(247,240,226,.18); border-radius: 12px; padding: 7px 8px 6px; text-align: center; }
+.contagem .cd b { display: block; font: 400 1.7rem/1 var(--display); font-variant-numeric: tabular-nums; }
+.contagem .cd i { font-style: normal; font: 600 .7rem var(--label); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.avaliar-capa { display: block; margin: 0 0 14px; padding: 10px 14px; border-radius: 12px; background: rgba(234,177,74,.16); border: 1px solid rgba(234,177,74,.5); color: var(--cream); text-decoration: none; font: 700 .95rem var(--body); text-align: center; }
+.novidade { margin-top: 22px; border-radius: 20px; overflow: hidden; border: 1px solid var(--laranja); background: var(--surface); display: flex; flex-direction: column; }
+.novidade .nv-img img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; display: block; }
+.novidade .nv-txt { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 6px; }
+.novidade .nv-tag { align-self: flex-start; background: var(--laranja); color: #10180f; font: 700 .72rem var(--label); letter-spacing: .14em; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; }
+.novidade b { font: 400 1.4rem/1.1 var(--display); }
+.novidade p { margin: 0; color: #d7dccf; font-size: .98rem; white-space: pre-line; }
+.novidade .nv-btn { display: flex; align-items: center; justify-content: center; margin-top: 6px; min-height: 48px; border-radius: 12px; background: var(--laranja); color: #10180f; text-decoration: none; font: 700 1rem var(--body); }
 @media (prefers-reduced-motion: reduce) { .capa .foto img, .status.aberto .bola { animation: none; } }
 </style>
 </head>
@@ -272,6 +289,8 @@ body.travado { overflow: hidden; }
     <div class="acabando-faixa" id="acabando" hidden></div>
     <h1 id="m-titulo">Se a Feijuca é boa, <em>imagina a resenha.</em></h1>
     <p class="sub" id="m-sub">Sexta, sábado e domingo, das 11h às 15h · Paracuru</p>
+    <div class="contagem" id="contagem" hidden aria-live="off"><small id="cd-rot">Faltam</small><div class="cd"><span><b id="cd-d">0</b><i>dias</i></span><span><b id="cd-h">0</b><i>horas</i></span><span><b id="cd-m">0</b><i>min</i></span><span><b id="cd-s">0</b><i>seg</i></span></div></div>
+    <a class="avaliar-capa" id="avaliar-capa" data-ev="feijuca-avaliar-capa" href="#" target="_blank" rel="noopener" hidden>⭐ Gostou? Avalie a Feijuca no Google</a>
     <div class="aviso" id="aviso" hidden><small>Hoje na Feijuca</small><span id="aviso-txt"></span></div>
     <div class="botoes">
       <a data-ev="feijuca-capa-botao" class="b1" id="b1" data-link="pedir" href="https://gabbaburger.saipos.com/home">PEDIR DELIVERY</a>
@@ -284,6 +303,10 @@ body.travado { overflow: hidden; }
 
 <main class="col">
   <div class="stories" id="stories" aria-label="Stories da Feijuca" hidden></div>
+  <section class="novidade" id="novidade" hidden>
+    <div class="nv-img" id="nv-img" hidden></div>
+    <div class="nv-txt"><span class="nv-tag">Novidade</span><b id="nv-tit"></b><p id="nv-desc"></p><a class="nv-btn" id="nv-btn" data-ev="feijuca-novidade" href="#" hidden></a></div>
+  </section>
   <section class="garanta" id="garanta" hidden>
     <button class="g-card" id="g-enc" type="button" data-ev="feijuca-abrir-encomenda"><span class="g-ic" aria-hidden="true">🍲</span><span><b>Encomendar</b><span>Garanta sua feijoada para o fim de semana</span></span></button>
     <button class="g-card" id="g-res" type="button" data-ev="feijuca-abrir-reserva"><span class="g-ic" aria-hidden="true">🪑</span><span><b>Reservar mesa</b><span>Para a resenha com a turma</span></span></button>
@@ -309,6 +332,7 @@ body.travado { overflow: hidden; }
   <section class="parte">
     <div class="cards">
       <a data-ev="feijuca-mapa" class="card" id="c-mapa" data-link="mapa" href="#" hidden><span class="ic">📍</span><span><b>Como chegar</b><span>Av. João Lopes Meireles, 1792 · Praia, Paracuru</span></span><span class="seta">›</span></a>
+      <a data-ev="feijuca-avaliar" class="card" id="c-avaliar" data-link="avaliar" href="#" target="_blank" rel="noopener" hidden><span class="ic">⭐</span><span><b>Avalie no Google</b><span>Sua opinião ajuda muito a Feijuca</span></span><span class="seta">›</span></a>
       <a data-ev="feijuca-instagram" class="card" id="c-insta" data-link="instagram" href="#" hidden><span class="ic">📷</span><span><b id="c-insta-t">Instagram</b><span>Siga a Feijuca</span></span><span class="seta">›</span></a>
       <a class="card" href="cardapio/"><span class="ic">📖</span><span><b>Cardápio completo</b><span>Pratos, petiscos, bebidas e preços</span></span><span class="seta">›</span></a>
       <a class="card" data-link="whatsapp" href="https://wa.me/5585998515015"><span class="ic">💬</span><span><b>Reservas e dúvidas</b><span>Fale com a gente no WhatsApp</span></span><span class="seta">›</span></a>
@@ -402,10 +426,45 @@ body.travado { overflow: hidden; }
     else h.textContent = t;
   }
 
+  var ENCERROU = false, PROX = null, CD = null;
+  function poeTitulo(t) {
+    var h = $('m-titulo'), i = t.indexOf('.'); h.textContent = '';
+    if (i > 0 && i < t.length - 1) { h.append(t.slice(0, i + 1) + ' '); var em = document.createElement('em'); em.textContent = t.slice(i + 1).trim(); h.append(em); } else h.textContent = t;
+  }
+  // contagem regressiva até a próxima abertura (fechado) ou até abrir hoje (antes)
+  function contagem() {
+    var box = $('contagem'), n = agora(), alvo = null, rot = '';
+    if (MOM === 'fechado' && PROX) { alvo = Date.parse(n.data + 'T00:00:00-03:00') + PROX.k * 864e5 + toMin(PROX.h[0]) * 6e4; rot = 'Faltam para a próxima Feijuca'; }
+    else if (MOM === 'antes') { var h = C.horarios[n.dia]; if (h) { alvo = Date.parse(n.data + 'T00:00:00-03:00') + toMin(h[0]) * 6e4; rot = 'Abrimos em'; } }
+    clearInterval(CD);
+    if (!alvo || alvo <= Date.now() || (C.recursos || {}).contagem === false) { box.hidden = true; return; }
+    $('cd-rot').textContent = rot; box.hidden = false;
+    var pinta = function () {
+      var r = Math.max(0, alvo - Date.now()), d = Math.floor(r / 864e5), hh = Math.floor(r % 864e5 / 36e5), mm = Math.floor(r % 36e5 / 6e4), ss = Math.floor(r % 6e4 / 1e3);
+      $('cd-d').textContent = d; $('cd-h').textContent = hh; $('cd-m').textContent = mm; $('cd-s').textContent = ('0' + ss).slice(-2);
+      $('cd-d').parentNode.hidden = d === 0;
+      if (r <= 0) { clearInterval(CD); setTimeout(aplica, 1500); }
+    };
+    pinta(); CD = setInterval(pinta, 1000);
+  }
+  function novidade() {
+    var N = C.novidade || {}, sec = $('novidade'), ok = N.ativo && (N.titulo || N.texto);
+    if (ok && N.ate && agora().data > N.ate) ok = false;
+    sec.hidden = !ok; if (!ok) return;
+    $('nv-tit').textContent = N.titulo || ''; $('nv-desc').textContent = N.texto || ''; $('nv-desc').hidden = !N.texto;
+    var im = $('nv-img'); im.textContent = ''; if (N.foto) { var i = document.createElement('img'); poeImg(i, N.foto, 'md'); i.alt = N.titulo || ''; im.append(i); } im.hidden = !N.foto;
+    var L = C.links || {}, link = { pedir: L.pedir, whatsapp: L.whatsapp, cardapio: 'cardapio/', mapa: L.mapa, link: N.link }[N.botao] || '';
+    var BT = { pedir: 'Pedir delivery', whatsapp: 'Chamar no WhatsApp', cardapio: 'Ver cardápio', mapa: 'Como chegar', link: N.botaoTexto || 'Saiba mais' };
+    var b = $('nv-btn'); b.hidden = !link; if (link) { b.href = link; b.textContent = N.botaoTexto || BT[N.botao]; if (/^https?:/.test(link)) { b.target = '_blank'; b.rel = 'noopener'; } else b.removeAttribute('target'); }
+  }
+  function avaliar() {
+    var u = (C.links || {}).avaliar || '';
+    $('c-avaliar').hidden = !u; var ac = $('avaliar-capa'); ac.hidden = !(u && ENCERROU); if (u) ac.href = u;
+  }
   function proxima(n) {
     for (var k = 1; k <= 7; k++) {
       var d = (n.dia + k) % 7, h = C.horarios[d];
-      if (h) return { quando: k === 1 ? 'amanhã' : NOMES_MIN[d], h: h };
+      if (h) return { quando: k === 1 ? 'amanhã' : NOMES_MIN[d], h: h, k: k, dia: d };
     }
     return null;
   }
@@ -462,6 +521,8 @@ body.travado { overflow: hidden; }
     if (forcado) { m = forcado; } if (forcado && !document.querySelector('.previa')) { var pv = document.createElement('div'); pv.className = 'previa'; pv.textContent = 'Prévia: momento "' + m + '"'; document.body.append(pv); }
 
     var st = $('status'), stt = $('status-txt'), rot = $('m-rotulo'), b1 = $('b1'), sub = $('m-sub');
+    ENCERROU = false; PROX = null;
+    var b1x = $('b1'); setTimeout(function () { b1x.classList.toggle('longo', b1x.textContent.length > 16); }, 0);
     MOM = m; b1.dataset.ev = 'feijuca-capa-' + m;
     st.classList.toggle('aberto', m === 'aberto');
     rot.classList.toggle('quente', m === 'aberto');
@@ -482,6 +543,14 @@ body.travado { overflow: hidden; }
       rot.textContent = 'Feijuca do Gabba';
       stt.textContent = 'Fechado agora';
       sub.textContent = p ? 'Volta ' + p.quando + ' às ' + fmt(p.h[0]) + '. ' + resumoDias() + '.' : resumoDias();
+      // encerramos hoje (depois do horário num dia de Feijuca): no último dia da semana, agradecimento
+      var hojeAbriu = !!h && (n.min >= toMin(h[1]) || C.fechadoEm === n.data);
+      if ((hojeAbriu || forcado === 'fechado' && /encerrou/.test(location.search)) && p) {
+        var E = C.encerramento || {};
+        if (p.k > 1) { rot.textContent = 'Já encerramos'; poeTitulo(E.titulo || 'Já encerramos. Muito obrigado!'); sub.textContent = (E.texto || 'Valeu pela resenha deste fim de semana! A gente se vê') + ' ' + p.quando + ' às ' + fmt(p.h[0]) + '.'; ENCERROU = true; }
+        else { rot.textContent = 'Encerramos por hoje'; poeTitulo('Encerramos por hoje. Amanhã tem mais!'); sub.textContent = 'Obrigado pela visita! Amanhã a partir das ' + fmt(p.h[0]) + '.'; ENCERROU = true; }
+      }
+      PROX = p;
       var rec = C.recursos || {};
       if (rec.encomenda !== false && p) { b1.textContent = 'ENCOMENDAR PARA ' + (p.quando === 'amanhã' ? 'AMANHÃ' : p.quando.toUpperCase()); b1.dataset.link = ''; b1.dataset.acao = 'encomenda'; b1.href = '#encomendar'; }
       else { b1.textContent = 'VER CARDÁPIO'; b1.dataset.link = ''; b1.dataset.acao = ''; b1.href = 'cardapio/'; }
@@ -660,6 +729,7 @@ body.travado { overflow: hidden; }
     lista('lista-chopes', C.chopes, true, 'chopes');
     horas(n);
     if (typeof comoEsta === 'function') { comoEsta(); garanta(); }
+    contagem(); novidade(); avaliar();
   }
 
   var capa = $('capa');
