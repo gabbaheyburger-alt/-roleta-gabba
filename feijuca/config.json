@@ -21,46 +21,46 @@
     "pedir": "https://gabbaburger.saipos.com/home",
     "whatsapp": "https://wa.me/5585998515015",
     "mapa": "https://www.google.com/maps/place/Feijuca+Do+Gabba/@-3.4204044,-39.0300081,17z/data=!4m6!3m5!1s0x7c0e1d52f8faeb3:0xeb58b17b979a68ba!8m2!3d-3.4204044!4d-39.0300081!16s%2Fg%2F11nk11nlw2",
-    "instagram": ""
+    "instagram": "https://www.instagram.com/feijucadogabba"
   },
   "pratos": [
     {
       "selo": "Petisco da casa",
       "nome": "Moela ao molho",
-      "desc": "Servida na panelinha de barro, com torradinhas",
-      "preco": "",
+      "desc": "Moela macia no molho da casa, com torradas de alho e farofa",
+      "preco": "18,00",
       "foto": "fotos/moela.jpg",
       "oculto": false
     },
     {
       "selo": "Da casa",
-      "nome": "Pastezim de queijo",
-      "desc": "Com queijo ralado por cima e molho cremoso",
-      "preco": "",
+      "nome": "Mini pastéis de queijo",
+      "desc": "12 mini pastéis de queijo",
+      "preco": "20,00",
       "foto": "fotos/pastel.jpg",
       "oculto": false
     },
     {
       "selo": "",
       "nome": "Bolinho de feijoada",
-      "desc": "Com couve, limão e caldinho de feijão",
-      "preco": "",
+      "desc": "5 unidades, recheadas com couve refogada e bacon",
+      "preco": "15,00",
       "foto": "fotos/bolinho.jpg",
       "oculto": false
     },
     {
       "selo": "",
-      "nome": "Parmegiana de frango",
-      "desc": "Com arroz branco",
-      "preco": "",
+      "nome": "Filé à parmegiana",
+      "desc": "Com arroz branco e batata frita",
+      "preco": "30,00",
       "foto": "fotos/parmegiana.jpg",
       "oculto": false
     },
     {
       "selo": "A estrela",
-      "nome": "Feijuca completa",
-      "desc": "Feijoada com os acompanhamentos da casa",
-      "preco": "",
+      "nome": "Feijoada individual",
+      "desc": "300 g de feijoada com arroz, couve, farofa, laranja, torresmo e banana empanada",
+      "preco": "30,00",
       "foto": "",
       "oculto": true
     }
@@ -70,7 +70,7 @@
       "selo": "Turatti",
       "nome": "Chopp Turatti",
       "desc": "Gelado, na caneca",
-      "preco": "",
+      "preco": "10,00",
       "foto": "fotos/chopp.jpg",
       "oculto": false
     }
