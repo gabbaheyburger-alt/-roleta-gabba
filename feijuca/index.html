@@ -391,7 +391,7 @@ body.travado { overflow: hidden; }
     <h2 id="f-lev-h">Feijoada para levar</h2>
     <p class="dica" id="lev-dica"></p>
     <h3>Quantidade</h3><div class="qtd" id="lev-item"><div class="n"><b id="lev-nome"></b><small id="lev-preco"></small></div><div class="ctl"><button type="button" id="lev-menos" aria-label="Menos uma">−</button><output id="lev-q">1</output><button type="button" id="lev-mais" aria-label="Mais uma">+</button></div></div>
-    <h3>Dia da retirada</h3><div class="chips" id="lev-dias"></div>
+    <h3>Quando você quer retirar</h3><div class="chips" id="lev-dias"></div>
     <label class="campo">Seu nome<input type="text" id="lev-nome-c" autocomplete="name" placeholder="Como te chamamos?"></label>
     <label class="campo">Observação (opcional)<input type="text" id="lev-obs" placeholder="Ex.: prefiro de manhã"></label>
     <div class="total"><span>Total</span><b id="lev-total">R$ 0,00</b></div>
@@ -1045,7 +1045,7 @@ body.travado { overflow: hidden; }
     if (!d) { er.textContent = 'Escolha o dia da retirada.'; return; }
     if (!nome) { er.textContent = 'Escreva seu nome.'; $('lev-nome-c').focus(); return; }
     er.textContent = ''; lembra('nome', nome);
-    var linhas = ['Olá! Quero encomendar *feijoada para levar* 🍲', '', LEV.q + 'x ' + L.nome + (L.preco ? ' — ' + reais(LEV.q * valor(L.preco)) : ''), '', '*Retirada:* ' + DIAS_SEM[d.dia] + ', ' + d.dm, '*Nome:* ' + nome];
+    var linhas = ['Olá! Quero encomendar *feijoada para levar* 🍲', '', LEV.q + 'x ' + L.nome + (L.preco ? ' — ' + reais(LEV.q * valor(L.preco)) : ''), '', '*Quero retirar:* ' + DIAS_SEM[d.dia] + ', ' + d.dm, '*Nome:* ' + nome, '', 'Podem me passar o horário e o local da retirada?'];
     var obs = $('lev-obs').value.trim(); if (obs) linhas.push('*Obs.:* ' + obs);
     abreZap(linhas.join('\n'));
   });
