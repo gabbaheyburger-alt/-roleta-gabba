@@ -137,7 +137,7 @@ summary {cursor:pointer;padding:12px 0;font-weight:700}
       <button type="button" data-aba="semana" aria-selected="false">Semana</button>
       <button type="button" data-aba="registros" aria-selected="false">Registros</button>
       <button type="button" data-aba="internet" aria-selected="false">Internet</button>
-      <button type="button" data-aba="intervalos" aria-selected="false">Intervalos</button><button type="button" data-aba="equipe" aria-selected="false">Equipe</button>
+      <button type="button" data-aba="intervalos" aria-selected="false">Intervalos</button><button type="button" data-aba="ausencias" aria-selected="false">Ausências</button><button type="button" data-aba="equipe" aria-selected="false">Equipe</button>
     </nav>
 
     <section id="aba-hoje" style="display:flex;flex-direction:column;gap:12px">
@@ -180,6 +180,14 @@ summary {cursor:pointer;padding:12px 0;font-weight:700}
       <div class="panel"><div class="label">Trocar PIN</div><div class="row"><input id="novo-pin" type="password" inputmode="numeric" maxlength="8" placeholder="Novo PIN"><button class="btn sec" id="troca-pin" type="button" style="flex:0 0 auto">Trocar</button></div></div>
     </section>
     <section id="aba-intervalos" hidden style="display:flex;flex-direction:column;gap:16px"><div class="panel"><div class="label">Horários obrigatórios de início do intervalo</div><p class="hint">Escolha a vigência e o horário de cada dia da semana. Marque Folga quando não houver intervalo naquele dia. Campo vazio = sem horário obrigatório. Este quadro não altera a escala de entrada/saída nem a duração do intervalo; mantenha as folgas também na aba Equipe. Para outra pessoa, cadastre primeiro na aba Equipe.</p><label>Válido a partir de<input type="date" id="int-vigencia"></label><label>Tolerância em minutos<input id="int-tolerancia" type="number" min="0" max="30" value="3"></label><div id="int-campos"></div><button type="button" class="btn" id="int-salvar">Salvar horários de intervalo</button><p id="int-feedback" role="status" class="hint"></p></div><div class="panel"><div class="label">Consultar intervalos registrados</div><label>Data<input type="date" id="int-dia"></label><button class="btn sec" type="button" id="int-consultar">Consultar</button><div id="int-registros"></div></div></section>
+<section id="aba-ausencias" hidden>
+<div class="panel"><h2>Ausências e justificativas</h2><p class="hint">Registre a ocorrência sem alterar a escala e sem criar horários de ponto. Não calcula descontos nem abonos.</p>
+<label for="aus-dia">Data</label><input type="date" id="aus-dia"><button type="button" id="aus-consultar" class="btn">Consultar data</button>
+<label for="aus-nome">Funcionário</label><select id="aus-nome"></select>
+<label for="aus-tipo">Motivo</label><select id="aus-tipo"><option>Doença informada</option><option>Atestado apresentado</option><option>Ausência justificada pelo gestor</option><option>Ausência sem justificativa</option><option>Outro motivo</option></select>
+<label for="aus-nota">Observação</label><textarea id="aus-nota" maxlength="500" rows="3" placeholder="Descreva a ocorrência sem incluir diagnóstico ou outros detalhes médicos desnecessários."></textarea>
+<button type="button" class="btn" id="aus-salvar">Salvar ausência</button><button type="button" class="btn" id="aus-remover" disabled>Cancelar registro de ausência</button>
+<p id="aus-feedback" role="status"></p></div><div class="panel" id="aus-lista"></div></section>
 <section id="aba-equipe" hidden style="display:flex;flex-direction:column;gap:16px">
       <div class="panel">
         <div class="label" id="eq-titulo">Adicionar funcionário e escala</div>
@@ -230,7 +238,7 @@ summary {cursor:pointer;padding:12px 0;font-weight:700}
   function escala(p, dia, loja) {
     return PontoEscala.detalhe(p, dia, loja).horario;
   }
-  function diaPessoa(p, dia, regs, loja, agora) {
+  function diaPessoa(p, dia, regs, loja, agora, ausencias=[]) {
     const r = regs.filter(x => !x.removido && x.nome === p.nome && x.dia === dia).sort((a,b) => a.ts-b.ts || (a.id || 0)-(b.id || 0));
     const h = escala(p, dia, loja), ini = h ? stamp(dia,h[0]) : null;
     let fim = h ? stamp(dia,h[1]) : null;
@@ -240,6 +248,9 @@ summary {cursor:pointer;padding:12px 0;font-weight:700}
     const out = { nome:p.nome, setor:p.setor || 'Não informado', dia, escala:h ? h.join(' às ') : 'Folga / sem escala', previsto, entrada:null, saida:null, atraso:null, antecipada:null, saidaAntes:null, saidaDepois:null, intervalo:null, trabalhado:null, saldo:null, excedente:null, status:'Sem registros válidos', notas:[], r };
     out.intervaloPrevisto = plano.intervalo ? plano.intervalo.join(' às ') : (h ? loja.intervalos_pendentes && !plano.intervalo ? 'A definir pelo gestor' : plano.intervaloMin + ' min (horário livre)' : '—');
     if (plano.excecao) { out.escala += ' · alteração só nesta data'; out.notas.push('Escala específica' + (plano.nota ? ': ' + plano.nota : '')); }
+    const ausencia=ausencias.find(a=>!a.removido&&a.nome===p.nome&&a.dia===dia);
+    if(ausencia){out.notas.push('Ausência: '+ausencia.tipo+' — '+ausencia.nota);out.ausencia=ausencia;}
+    if (!r.length && ausencia){out.status='Ausência registrada · '+ausencia.tipo;return out;}
     if (!r.length) { if (h && agora < ini) out.status='Turno não iniciado'; else if (!h) out.status='Folga / sem escala'; return out; }
     let estado='fora', inicio=null, pausaInicio=null, trab=0, pausa=0, valido=true, nPausas=0;
     for (const x of r) {
@@ -264,15 +275,15 @@ summary {cursor:pointer;padding:12px 0;font-weight:700}
     } else out.status='Pendente de conferência';
     return out;
   }
-  function model(equipe, regs, de, ate, loja, agora=Date.now()) {
+  function model(equipe, regs, de, ate, loja, agora=Date.now(), ausencias=[]) {
     const dias=[];for(let d=de;d<=ate;d=shift(d,1)) dias.push(d);
     const nomes=new Set(equipe.map(p=>p.nome));
-    const pessoas=[...equipe,...[...new Set(regs.filter(r=>!r.removido && !nomes.has(r.nome)).map(r=>r.nome))].map(nome=>({nome,setor:'Não cadastrado',dias:[]}))].filter(p=>p.ativo!==false || regs.some(x=>!x.removido && x.nome===p.nome));
-    const detalhes=pessoas.flatMap(p=>dias.map(d=>diaPessoa(p,d,regs,loja,agora)));
+    const pessoas=[...equipe,...[...new Set(regs.filter(r=>!r.removido && !nomes.has(r.nome)).map(r=>r.nome))].map(nome=>({nome,setor:'Não cadastrado',dias:[]}))].filter(p=>p.ativo!==false || regs.some(x=>!x.removido && x.nome===p.nome) || ausencias.some(a=>!a.removido&&a.nome===p.nome));
+    const detalhes=pessoas.flatMap(p=>dias.map(d=>diaPessoa(p,d,regs,loja,agora,ausencias)));
     const resumo=pessoas.map(p=>{
       const ds=detalhes.filter(d=>d.nome===p.nome), completos=ds.filter(d=>d.status==='Completo'), com=ds.filter(d=>d.r.length);
       const soma=(arr,k)=>arr.reduce((t,d)=>t+(d[k] || 0),0);
-      return {nome:p.nome,setor:p.setor || 'Não informado',dias:com.length,fechados:completos.length,pendentes:com.filter(d=>d.status!=='Completo').length,trabalhado:completos.length?soma(completos,'trabalhado'):null,atraso:com.some(d=>d.atraso!==null)?soma(com,'atraso'):null,antecipada:com.some(d=>d.antecipada!==null)?soma(com,'antecipada'):null,saidaAntes:com.some(d=>d.saidaAntes!==null)?soma(com,'saidaAntes'):null,saidaDepois:com.some(d=>d.saidaDepois!==null)?soma(com,'saidaDepois'):null,excedente:completos.some(d=>d.excedente!==null)?soma(completos,'excedente'):null,status:!com.length?'Sem registros válidos':com.some(d=>d.status!=='Completo')?'Conferência pendente':'Registros completos'};
+      return {nome:p.nome,setor:p.setor || 'Não informado',ausencias:ds.filter(d=>d.ausencia).length,dias:com.length,fechados:completos.length,pendentes:com.filter(d=>d.status!=='Completo').length,trabalhado:completos.length?soma(completos,'trabalhado'):null,atraso:com.some(d=>d.atraso!==null)?soma(com,'atraso'):null,antecipada:com.some(d=>d.antecipada!==null)?soma(com,'antecipada'):null,saidaAntes:com.some(d=>d.saidaAntes!==null)?soma(com,'saidaAntes'):null,saidaDepois:com.some(d=>d.saidaDepois!==null)?soma(com,'saidaDepois'):null,excedente:completos.some(d=>d.excedente!==null)?soma(completos,'excedente'):null,status:!com.length?(ds.some(d=>d.ausencia)?'Ausência registrada no período':'Sem registros válidos'):com.some(d=>d.status!=='Completo')?'Conferência pendente':'Registros completos'};
     });
     return {de,ate,resumo,detalhes,removidos:regs.filter(x=>x.removido).length,validos:regs.filter(x=>!x.removido).length};
   }
@@ -291,10 +302,11 @@ summary {cursor:pointer;padding:12px 0;font-weight:700}
       const card=el('section',undefined,'panel rel-pessoa');card.append(el('h3',p.nome),el('p',p.setor+' · '+p.status,'hint'));
       const grid=el('div',undefined,'rel-metricas');
       for(const [label,key] of [['Horas em dias completos','trabalhado'],['Atraso na entrada','atraso'],['Entrada antecipada','antecipada'],['Saída antecipada','saidaAntes'],['Após fim da escala','saidaDepois'],['Excedente a conferir','excedente']]) {const item=el('div');item.append(el('strong',fmt(p[key])),el('span',label));grid.append(item);}
-      card.append(grid,el('p',p.dias+' dias com marcações · '+p.fechados+' completos · '+p.pendentes+' a conferir','hint'));
+      card.append(grid,el('p',p.dias+' dias com marcações · '+p.fechados+' completos · '+p.pendentes+' a conferir · '+p.ausencias+' ausências registradas','hint'));
       const details=el('details');details.append(el('summary','Ver detalhe por dia'));
       for(const d of m.detalhes.filter(d=>d.nome===p.nome)) {
         const row=el('div',undefined,'rel-dia');row.append(el('b',date(d.dia)+' · '+d.status),el('p','Escala: '+d.escala,'hint'),el('p','Intervalo previsto: '+d.intervaloPrevisto,'hint'));
+        if(!d.r.length&&d.notas.length)row.append(el('p',d.notas.join('. '),'hint'));
         if(d.r.length) {row.append(el('p','Entrada: '+hm(d.entrada)+' · Saída: '+hm(d.saida),'hint'),el('p','Trabalhado: '+fmt(d.trabalhado)+' · Intervalo: '+fmt(d.intervalo),'hint'),el('p','Atraso: '+fmt(d.atraso)+' · Entrada antecipada: '+fmt(d.antecipada),'hint'),el('p','Saída antecipada: '+fmt(d.saidaAntes)+' · Após escala: '+fmt(d.saidaDepois),'hint'),el('p','Excedente a conferir: '+fmt(d.excedente),'hint'));if(d.notas.length)row.append(el('p',d.notas.join('. '),'flag'));}
         details.append(row);
       }
@@ -302,10 +314,10 @@ summary {cursor:pointer;padding:12px 0;font-weight:700}
     }
     const rodape=el('div',undefined,'panel');rodape.append(el('div','Critérios de leitura','label'),el('p','Atrasos e antecipações mostram a diferença integral em relação à escala, sem descontos de tolerância. Tolerância de alerta configurada: '+tolerancia+' min. Horas e excedentes somam somente dias completos, com escala e intervalo marcado.','hint'),el('p','Excedente é a diferença positiva entre horas registradas e horas previstas líquidas do intervalo previsto para cada funcionário e dia. Não equivale automaticamente a hora extra para pagamento. Entrada antecipada e saída após o horário ficam separadas e não são somadas novamente ao excedente.','hint'),el('p','Dias sem marcação, turnos abertos e sequências incompletas não recebem horas estimadas. Escalas consideradas conforme a vigência cadastrada e alterações específicas por data. Horários em America/Fortaleza.','hint'));box.append(rodape);
   }
-  const colsResumo=['Funcionário','Setor','Dias com marcações','Dias completos','Dias a conferir','Horas em dias completos','Atraso entrada','Entrada antecipada','Saída antecipada','Após fim escala','Excedente a conferir','Situação'];
+  const colsResumo=['Ausências registradas','Funcionário','Setor','Dias com marcações','Dias completos','Dias a conferir','Horas em dias completos','Atraso entrada','Entrada antecipada','Saída antecipada','Após fim escala','Excedente a conferir','Situação'];
   const colsDetalhe=['Dia','Funcionário','Setor','Escala prevista','Intervalo previsto','Horas previstas líquidas','Entrada','Saída','Intervalo marcado','Horas registradas completas','Atraso entrada','Entrada antecipada','Saída antecipada','Após fim escala','Excedente a conferir','Saldo em minutos','Situação','Observações'];
   function rows(m,tipo) {
-    return tipo==='resumo'?[colsResumo,...m.resumo.map(p=>[p.nome,p.setor,p.dias,p.fechados,p.pendentes,...['trabalhado','atraso','antecipada','saidaAntes','saidaDepois','excedente'].map(k=>fmt(p[k])),p.status])]:[colsDetalhe,...m.detalhes.map(d=>[d.dia,d.nome,d.setor,d.escala,d.intervaloPrevisto,fmt(d.previsto),hm(d.entrada),hm(d.saida),...['intervalo','trabalhado','atraso','antecipada','saidaAntes','saidaDepois','excedente'].map(k=>fmt(d[k])),d.saldo===null?'':Math.round(d.saldo/60000),d.status,d.notas.concat(d.r.filter(r=>r.intervalo).map(r=>'Intervalo previsto '+r.intervalo.inicio+', registrado '+hm(r.ts)+', '+r.intervalo.fora+', atraso '+r.intervalo.atraso+' min, tolerância '+r.intervalo.tolerancia+' min')).join('. ')])];
+    return tipo==='resumo'?[colsResumo,...m.resumo.map(p=>[p.ausencias,p.nome,p.setor,p.dias,p.fechados,p.pendentes,...['trabalhado','atraso','antecipada','saidaAntes','saidaDepois','excedente'].map(k=>fmt(p[k])),p.status])]:[colsDetalhe,...m.detalhes.map(d=>[d.dia,d.nome,d.setor,d.escala,d.intervaloPrevisto,fmt(d.previsto),hm(d.entrada),hm(d.saida),...['intervalo','trabalhado','atraso','antecipada','saidaAntes','saidaDepois','excedente'].map(k=>fmt(d[k])),d.saldo===null?'':Math.round(d.saldo/60000),d.status,d.notas.concat(d.r.filter(r=>r.intervalo).map(r=>'Intervalo previsto '+r.intervalo.inicio+', registrado '+hm(r.ts)+', '+r.intervalo.fora+', atraso '+r.intervalo.atraso+' min, tolerância '+r.intervalo.tolerancia+' min')).join('. ')])];
   }
   function download(m,tipo,loja) {
     const safe=v=>{let s=String(v??'');if(/^[=+@-]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"';};
@@ -373,7 +385,7 @@ summary {cursor:pointer;padding:12px 0;font-weight:700}
   // ---------- Hoje ----------
   async function abaHoje() {
     const dia = $('hoje-dia').value || hoje();
-    const { registros } = await adm('registros', { de: dia, ate: dia });
+    const { registros, ausencias=[] } = await adm('registros', { de: dia, ate: dia });
     const box = $('hoje-cards'); box.innerHTML = '';
     const contagem = { 'Na loja': 0, 'Intervalo': 0, 'Não bateu': 0, 'Com alertas': 0 };
     L.equipe.filter(p => p.ativo !== false || registros.some(x => x.nome === p.nome)).forEach(p => {
@@ -384,6 +396,7 @@ summary {cursor:pointer;padding:12px 0;font-weight:700}
       let st = 'Não bateu', cls = '';
       if (s.ultimo) { if (s.ultimo.acao === 'saida') st = 'Saiu'; else if (s.ultimo.acao === 'saida_intervalo') { st = 'Intervalo'; cls = 'pausa'; } else { st = 'Na loja'; cls = 'dentro'; } }
       else if (folga) st = 'Não escalada';
+      const ausencia=ausencias.find(a=>!a.removido&&a.nome===p.nome);if(ausencia&&!s.ultimo)st='Ausência registrada';
       if (st in contagem) contagem[st]++;
       if (s.flags.length) contagem['Com alertas']++;
       const h3 = document.createElement('h3'); h3.textContent = p.nome; const sp = document.createElement('span'); sp.className = 'st ' + cls; sp.textContent = st; h3.append(sp); c.append(h3);
@@ -393,6 +406,7 @@ summary {cursor:pointer;padding:12px 0;font-weight:700}
       if (s.pausa) add('Intervalo', durTxt(s.pausa));
       if (s.trab) add('Trabalhado', durTxt(s.trab) + (s.aberto && dia === hoje() ? ' até agora' : ''));
       if (s.esperado) add('Escala', s.esperado[0] + ' às ' + s.esperado[1] + (toMin(s.esperado[1]) <= toMin(s.esperado[0]) ? ' (+1 dia)' : ''));
+      if(ausencia)add(ausencia.tipo,ausencia.nota);
       c.append(ln);
       s.flags.forEach(f => { const x = document.createElement('div'); x.className = 'flag' + (/manual/.test(f) ? ' am' : ''); x.textContent = '⚠ ' + f; c.append(x); });
       if (p.obs) { const o = document.createElement('div'); o.className = 'hint'; o.textContent = p.obs; c.append(o); }
@@ -417,10 +431,10 @@ summary {cursor:pointer;padding:12px 0;font-weight:700}
     const inicio = semIni;
     const fim = somaDia(semIni, 6);
     $('sem-txt').textContent = semIni.slice(8) + '/' + semIni.slice(5, 7) + ' a ' + fim.slice(8) + '/' + fim.slice(5, 7);
-    const { registros } = await adm('registros', { de: inicio, ate: fim });
+    const { registros, ausencias=[] } = await adm('registros', { de: inicio, ate: fim });
     if (pedido !== relPedido) return;
     SEMREGS = registros;
-    RELATORIO = GabbaRelatorio.model(L.equipe, registros, inicio, fim, L);
+    RELATORIO = GabbaRelatorio.model(L.equipe, registros, inicio, fim, L, Date.now(), ausencias);
     GabbaRelatorio.render($('sem-relatorio'), RELATORIO, L, CFG.tolerancia_min);
     ['rel-resumo','rel-detalhe','rel-imprimir','csv'].forEach(id => $(id).disabled = false);
     const dias = [...Array(7)].map((_, i) => somaDia(semIni, i));
@@ -666,10 +680,33 @@ summary {cursor:pointer;padding:12px 0;font-weight:700}
     catch (e) { $('eq-feedback').textContent = 'Não foi possível salvar: ' + e.message; }
     finally { b.disabled = false; }
   };
+  let AUS=[],AUS_DATA='',AUS_REV=0;
+  function escolheAusencia(){
+    const a=AUS.find(x=>x.nome===$('aus-nome').value);AUS_REV=a?.revisao||0;
+    $('aus-tipo').value=a?.tipo||'Doença informada';$('aus-nota').value=a?.nota||'';$('aus-remover').disabled=!a||!!a.removido;
+  }
+  async function abaAusencias(){
+    const dia=$('aus-dia').value||hoje();$('aus-dia').value=dia;
+    const j=await adm('ausencias',{de:dia,ate:dia});AUS=j.ausencias;AUS_DATA=dia;
+    const atual=$('aus-nome').value;$('aus-nome').replaceChildren();
+    for(const p of j.equipe){const o=document.createElement('option');o.value=p.nome;o.textContent=p.nome+(p.ativo===false?' (inativo)':'');$('aus-nome').append(o);}
+    if(j.equipe.some(p=>p.nome===atual))$('aus-nome').value=atual;
+    escolheAusencia();const box=$('aus-lista');box.replaceChildren();
+    if(!AUS.length)box.textContent='Nenhuma ausência registrada nesta data.';
+    for(const a of AUS){const card=document.createElement('div'),t=document.createElement('p');t.textContent=a.nome+' · '+a.tipo+(a.removido?' · CANCELADO':'');card.append(t);const n=document.createElement('p');n.textContent=a.nota;card.append(n);
+      const det=document.createElement('details'),sum=document.createElement('summary');sum.textContent='Histórico de alterações';det.append(sum);for(const v of JSON.parse(a.historico||'[]')){const ln=document.createElement('p');ln.textContent=new Date(v.ts).toLocaleString('pt-BR',{timeZone:'America/Fortaleza'})+' · '+v.tipo+' · '+v.nota+(v.removido?' · cancelado':'');det.append(ln);}card.append(det);box.append(card);}
+  }
+  async function salvaAusencia(removido){
+    const b=$('aus-salvar'),c=$('aus-remover');b.disabled=c.disabled=true;
+    try{if($('aus-dia').value!==AUS_DATA)throw Error('Consulte a data escolhida antes de salvar.');await adm('ausencia_salvar',{nome:$('aus-nome').value,dia:AUS_DATA,tipo:$('aus-tipo').value,nota:$('aus-nota').value,revisao:AUS_REV,removido});await abaAusencias();$('aus-feedback').textContent=removido?'Registro cancelado. Histórico preservado.':'Ausência salva. Escala e marcações preservadas.';}catch(e){$('aus-feedback').textContent=e.message;}finally{b.disabled=false;const a=AUS.find(x=>x.nome===$('aus-nome').value);c.disabled=!a||!!a.removido;}
+  }
+  $('aus-consultar').onclick=()=>abaAusencias().catch(e=>$('aus-feedback').textContent=e.message);
+  $('aus-nome').onchange=escolheAusencia;$('aus-salvar').onclick=()=>salvaAusencia(false);
+  $('aus-remover').onclick=()=>{if(confirm('Cancelar esta ausência? O histórico será preservado.'))salvaAusencia(true);};
   function mostra() {
     document.querySelectorAll('.abas button').forEach(b => b.setAttribute('aria-selected', b.dataset.aba === aba));
-    ['hoje', 'semana', 'registros', 'internet', 'equipe', 'intervalos'].forEach(a => $('aba-' + a).hidden = a !== aba);
-    const f = { hoje: abaHoje, semana: abaSemana, registros: abaRegistros, internet: abaInternet, equipe: abaEquipe, intervalos: abaIntervalos }[aba];
+    ['hoje', 'semana', 'registros', 'internet', 'equipe', 'intervalos', 'ausencias'].forEach(a => $('aba-' + a).hidden = a !== aba);
+    const f = { hoje: abaHoje, semana: abaSemana, registros: abaRegistros, internet: abaInternet, equipe: abaEquipe, intervalos: abaIntervalos, ausencias: abaAusencias }[aba];
     f().catch(e => { if (e.message !== 'pin') msg('Erro ao carregar: ' + e.message, 'err'); });
   }
   document.querySelectorAll('.abas button').forEach(b => b.onclick = () => { aba = b.dataset.aba; mostra(); });
@@ -716,4 +753,5 @@ summary {cursor:pointer;padding:12px 0;font-weight:700}
 </script>
 </body>
 </html>
+
 
