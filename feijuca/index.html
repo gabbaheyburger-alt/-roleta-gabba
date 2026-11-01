@@ -168,6 +168,44 @@ footer a.grupo { color: var(--muted); }
 .luz .info .preco { margin-top: 8px; font: 700 1.3rem var(--label); color: var(--laranja); }
 .luz .info a { display: flex; align-items: center; justify-content: center; margin-top: 12px; min-height: 52px; border-radius: 14px; background: var(--laranja); color: #10180f; text-decoration: none; font: 400 1.15rem var(--display); }
 body.travado { overflow: hidden; }
+
+/* ---------- Stories estilo Instagram (conteúdo em config.json → stories) ---------- */
+.marca { border: 0; background: none; padding: 0; position: relative; cursor: default; }
+.marca.tem-story { cursor: pointer; }
+.marca.tem-story::before { content: ''; position: absolute; inset: -6px; border-radius: 50%; background: conic-gradient(from 210deg, #eab14a, #e0662f, #c43a6b, #eab14a); z-index: -1; animation: gira 6s linear infinite; }
+.marca.tem-story::after { content: ''; position: absolute; inset: -2px; border-radius: 50%; background: #0c1610; z-index: -1; }
+.marca.tem-story img { position: relative; }
+.marca.tem-story .novo { position: absolute; left: 50%; bottom: -10px; transform: translateX(-50%); background: #e0662f; color: #fff; font: 700 .68rem var(--label); letter-spacing: .12em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; border: 2px solid #0c1610; z-index: 2; white-space: nowrap; }
+@keyframes gira { to { transform: rotate(360deg); } }
+.stories { display: flex; gap: 14px; overflow-x: auto; padding: 22px 16px 4px; margin: 0 -16px; scrollbar-width: none; }
+.stories::-webkit-scrollbar { display: none; }
+.st-bola { flex: 0 0 auto; width: 74px; display: flex; flex-direction: column; align-items: center; gap: 6px; background: none; border: 0; color: var(--cream); cursor: pointer; padding: 0; }
+.st-bola .aro { width: 70px; height: 70px; border-radius: 50%; padding: 3px; background: conic-gradient(from 210deg, #eab14a, #e0662f, #c43a6b, #eab14a); }
+.st-bola.visto .aro { background: #3a5244; }
+.st-bola .aro img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid var(--bg); display: block; }
+.st-bola span { font: 600 .8rem var(--body); max-width: 74px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.story { position: fixed; inset: 0; z-index: 90; background: #000; display: flex; align-items: center; justify-content: center; touch-action: none; user-select: none; -webkit-user-select: none; }
+.story .tela-st { position: relative; width: 100%; height: 100%; max-width: 480px; overflow: hidden; background: #000; }
+@media (min-width: 520px) { .story .tela-st { height: min(100%, 860px); border-radius: 16px; } }
+.story .midia-st { position: absolute; inset: 0; }
+.story .midia-st img, .story .midia-st video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.story .topo-st { position: absolute; left: 0; right: 0; top: 0; padding: max(10px, env(safe-area-inset-top)) 10px 30px; background: linear-gradient(rgba(0,0,0,.55), transparent); z-index: 3; }
+.story .barras { display: flex; gap: 4px; }
+.story .barras i { flex: 1; height: 3px; border-radius: 3px; background: rgba(255,255,255,.35); overflow: hidden; }
+.story .barras i b { display: block; height: 100%; width: 0; background: #fff; }
+.story .quem { display: flex; align-items: center; gap: 9px; margin-top: 10px; color: #fff; }
+.story .quem img { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 1px solid rgba(255,255,255,.4); background: #fff; }
+.story .quem b { font: 700 .95rem var(--body); }
+.story .quem small { opacity: .75; font-size: .82rem; }
+.story .quem .x { margin-left: auto; width: 40px; height: 40px; border: 0; background: none; color: #fff; font-size: 1.7rem; cursor: pointer; }
+.story .baixo-st { position: absolute; left: 0; right: 0; bottom: 0; padding: 60px 16px calc(18px + env(safe-area-inset-bottom)); background: linear-gradient(transparent, rgba(0,0,0,.75)); color: #fff; z-index: 3; }
+.story .baixo-st .txt-st { font: 400 1.5rem/1.1 var(--display); text-shadow: 0 2px 10px rgba(0,0,0,.5); }
+.story .baixo-st .sub-st { margin-top: 6px; font-size: .95rem; opacity: .9; }
+.story .baixo-st .preco-st { margin-top: 6px; font: 700 1.25rem var(--label); color: #eab14a; }
+.story .baixo-st a { display: flex; align-items: center; justify-content: center; margin-top: 12px; min-height: 50px; border-radius: 999px; background: #fff; color: #10180f; text-decoration: none; font: 700 1rem var(--body); }
+.story .zona { position: absolute; top: 80px; bottom: 140px; z-index: 2; }
+.story .zona.esq { left: 0; width: 32%; } .story .zona.dir { right: 0; width: 68%; }
+.teste-faixa { position: fixed; left: 0; right: 0; top: 0; z-index: 70; background: #ffe7b0; color: #10180f; text-align: center; font: 700 .82rem var(--body); padding: calc(4px + env(safe-area-inset-top)) 10px 4px; }
 @media (prefers-reduced-motion: reduce) { .capa .foto img, .status.aberto .bola { animation: none; } }
 </style>
 </head>
@@ -176,7 +214,7 @@ body.travado { overflow: hidden; }
 <header class="capa" id="capa">
   <div class="foto" id="foto" hidden></div>
   <div class="topo">
-    <span class="marca"><img src="logo.png" alt="Feijuca do Gabba · Sabor de Boteco" width="382" height="364"></span>
+    <button class="marca" id="logo-story" type="button" aria-label="Feijuca do Gabba" tabindex="-1"><img src="logo.png" alt="Feijuca do Gabba · Sabor de Boteco" width="382" height="364"><span class="novo" hidden>Hoje</span></button>
     <a class="zap-topo" data-link="whatsapp" href="https://wa.me/5585998515015" aria-label="WhatsApp"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3z"/></svg><span>WhatsApp</span></a>
   </div>
   <button class="seta-capa esq" id="capa-ant" type="button" aria-label="Vídeo anterior" hidden>‹</button>
@@ -197,6 +235,7 @@ body.travado { overflow: hidden; }
 </header>
 
 <main class="col">
+  <div class="stories" id="stories" aria-label="Stories da Feijuca" hidden></div>
   <section class="parte" id="pratos">
     <div class="titulo"><h2>Pra resenha</h2><span>Destaques</span></div>
     <div class="grade" id="lista-pratos"></div>
@@ -229,6 +268,16 @@ body.travado { overflow: hidden; }
   <button class="fechar" id="luz-x" type="button" aria-label="Fechar">×</button>
   <div class="quadro"><img id="luz-img" alt=""><video id="luz-vid" muted loop playsinline controls hidden></video></div>
   <div class="info"><b id="luz-nome"></b><p id="luz-desc"></p><div class="preco" id="luz-preco"></div><a id="luz-pedir" data-link="pedir" href="https://gabbaburger.saipos.com/home" target="_blank" rel="noopener">PEDIR DELIVERY</a></div>
+</div>
+
+<div class="story" id="story" hidden role="dialog" aria-modal="true" aria-label="Story">
+  <div class="tela-st">
+    <div class="midia-st" id="st-midia"></div>
+    <div class="topo-st"><div class="barras" id="st-barras"></div>
+      <div class="quem"><img src="logo.png" alt=""><b id="st-grupo"></b><small>agora</small><button class="x" id="st-x" type="button" aria-label="Fechar">×</button></div></div>
+    <div class="zona esq" id="st-ant"></div><div class="zona dir" id="st-prox"></div>
+    <div class="baixo-st"><div class="txt-st" id="st-txt"></div><div class="sub-st" id="st-sub"></div><div class="preco-st" id="st-preco"></div><a id="st-btn" href="#" target="_blank" rel="noopener"></a></div>
+  </div>
 </div>
 
 <footer>
@@ -519,12 +568,98 @@ body.travado { overflow: hidden; }
     ampliaCapa();
   });
 
-  aplica();
+
+  // ---------- Stories ----------
+  function it(nome) { return (C.pratos || []).concat(C.chopes || []).filter(function (i) { return i.nome === nome; })[0] || null; }
+  var BTN = { pedir: 'Pedir delivery', whatsapp: 'Chamar no WhatsApp', mapa: 'Como chegar', cardapio: 'Ver cardápio' };
+  // um story do config → o que aparece na tela (nome, descrição e preço vêm do destaque escolhido)
+  function story(s) {
+    var p = s.prato ? it(s.prato) : null, L = C.links || {};
+    var link = { pedir: L.pedir, whatsapp: L.whatsapp, mapa: L.mapa, cardapio: 'cardapio/' }[s.btn] || '';
+    return { midia: s.midia, txt: p ? p.nome : (s.txt || ''), sub: p ? (p.desc || '') : (s.sub || ''), preco: p && p.preco ? precoTxt(p.preco) : '', btn: link ? (BTN[s.btn] || '') : '', link: link };
+  }
+  function capaDe(g) { var m = g.capa || ((g.itens || [])[0] || {}).midia || ''; return m.replace(/\.mp4$/, '.jpg'); }
+  function grupos() {
+    return ((C.stories || {}).grupos || []).filter(function (g) { return g && g.nome && (g.itens || []).length; })
+      .map(function (g) { return { nome: g.nome, capa: capaDe(g), itens: g.itens.filter(function (s) { return s && s.midia; }).map(story) }; })
+      .filter(function (g) { return g.itens.length; });
+  }
+  function agoraLocal() { return new Date(Date.now() - 3 * 3600 * 1000).toISOString().slice(0, 16); }
+  function storyHoje() {
+    var h = (C.stories || {}).hoje; if (!h || !h.ativo || !(h.itens || []).length) return null;
+    if (h.ate && agoraLocal() >= h.ate) return null;
+    var itens = h.itens.filter(function (s) { return s && s.midia; }).map(story);
+    return itens.length ? { nome: 'Hoje', capa: capaDe(h), itens: itens } : null;
+  }
+  var G = [], gi = 0, si = 0, timer = null, t0 = 0, dur = 5000, pausa = false, passado = 0, vistos = {};
+  var HOJE_L = [];
+  function montaBolas() {
+    var h = storyHoje(), lg = $('logo-story');
+    HOJE_L = h ? [h] : [];
+    lg.classList.toggle('tem-story', !!h); lg.querySelector('.novo').hidden = !h;
+    lg.tabIndex = h ? 0 : -1; lg.setAttribute('aria-label', h ? 'Ver o story de hoje' : 'Feijuca do Gabba');
+    G = grupos(); var box = $('stories'); box.textContent = ''; box.hidden = !G.length;
+    G.forEach(function (g, k) {
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'st-bola' + (vistos[k] ? ' visto' : '');
+      b.innerHTML = '<span class="aro"><img alt=""></span><span></span>';
+      b.querySelector('img').src = src(g.capa); b.lastChild.textContent = g.nome;
+      b.addEventListener('click', function () { abreStory(G, k); }); box.append(b);
+    });
+  }
+  function abreStory(lista, k) { G = lista; gi = k; si = 0; $('story').hidden = false; document.body.classList.add('travado'); mostra(); try { history.pushState({ st: 1 }, ''); } catch (e) {} }
+  function fechaStory(viaVoltar) {
+    if ($('story').hidden) return; clearInterval(timer); $('st-midia').textContent = '';
+    $('story').hidden = true; document.body.classList.remove('travado'); montaBolas();
+    if (!viaVoltar) { try { if (history.state && history.state.st) history.back(); } catch (e) {} }
+  }
+  function mostra() {
+    var g = G[gi], s = g.itens[si]; if (G !== HOJE_L) vistos[G.indexOf(g)] = true;
+    $('st-grupo').textContent = g.nome;
+    var bar = $('st-barras'); bar.textContent = '';
+    g.itens.forEach(function (_, k) { var i = document.createElement('i'); i.innerHTML = '<b></b>'; if (k < si) i.firstChild.style.width = '100%'; bar.append(i); });
+    $('st-txt').textContent = s.txt || ''; $('st-sub').textContent = s.sub || ''; $('st-preco').textContent = s.preco || '';
+    var btn = $('st-btn'); btn.textContent = s.btn || ''; btn.hidden = !s.btn; btn.href = s.link || '#';
+    if (/^cardapio/.test(btn.getAttribute('href'))) btn.removeAttribute('target'); else btn.target = '_blank';
+    var m = $('st-midia'); m.textContent = ''; clearInterval(timer); passado = 0; pausa = false;
+    if (/\.mp4$/.test(s.midia)) {
+      var v = document.createElement('video'); v.muted = true; v.playsInline = true; v.setAttribute('playsinline', ''); v.autoplay = true;
+      v.poster = src(s.midia.replace(/\.mp4$/, '.jpg')); v.src = src(s.midia); m.append(v); dur = 8000;
+      v.addEventListener('loadedmetadata', function () { if (v.duration && isFinite(v.duration)) dur = Math.max(3000, v.duration * 1000); });
+      v.addEventListener('ended', function () { avanca(); });
+      var p = v.play(); if (p && p.catch) p.catch(function () {});
+    } else { var im = document.createElement('img'); im.src = src(s.midia); im.alt = s.txt || ''; m.append(im); dur = 5000; }
+    t0 = Date.now();
+    timer = setInterval(function () {
+      if (pausa) return;
+      var f = Math.min(1, (passado + Date.now() - t0) / dur), b = bar.children[si] && bar.children[si].firstChild; if (b) b.style.width = (f * 100) + '%';
+      if (f >= 1 && !/\.mp4$/.test(s.midia)) avanca();
+    }, 50);
+  }
+  function avanca() { var g = G[gi]; if (si < g.itens.length - 1) si++; else if (gi < G.length - 1) { gi++; si = 0; } else { fechaStory(false); return; } mostra(); }
+  function volta() { if (si > 0) si--; else if (gi > 0) { gi--; si = G[gi].itens.length - 1; } mostra(); }
+  function pausar(on) { var v = $('st-midia').querySelector('video'); if (on && !pausa) { pausa = true; passado += Date.now() - t0; if (v) v.pause(); } else if (!on && pausa) { pausa = false; t0 = Date.now(); if (v) v.play(); } }
+  $('logo-story').addEventListener('click', function () { if (HOJE_L.length) abreStory(HOJE_L, 0); });
+  // toque: esquerda volta, direita avança; segurar pausa; arrastar para baixo fecha
+  var segurou = false, hold = null, y0 = null;
+  ['st-ant', 'st-prox'].forEach(function (id) {
+    var z = $(id);
+    z.addEventListener('pointerdown', function (e) { segurou = false; y0 = e.clientY; hold = setTimeout(function () { segurou = true; pausar(true); }, 220); });
+    z.addEventListener('pointerup', function (e) {
+      clearTimeout(hold); if (y0 !== null && e.clientY - y0 > 90) { fechaStory(false); return; }
+      if (segurou) { pausar(false); return; } if (id === 'st-ant') volta(); else avanca();
+    });
+    z.addEventListener('pointercancel', function () { clearTimeout(hold); pausar(false); });
+  });
+  $('st-x').addEventListener('click', function () { fechaStory(false); });
+  document.addEventListener('keydown', function (e) { if ($('story').hidden) return; if (e.key === 'Escape') fechaStory(false); if (e.key === 'ArrowRight') avanca(); if (e.key === 'ArrowLeft') volta(); });
+  window.addEventListener('popstate', function () { fechaStory(true); });
+
+  aplica(); montaBolas();
   fetch('config.json?v=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (c) {
     if (!c) return;
     Object.keys(c).forEach(function (k) { C[k] = c[k]; });
     C.horarios = c.horarios || {};
-    aplica();
+    aplica(); montaBolas();
   }).catch(function () {});
   // Atualiza a capa quando muda de momento (ex.: deu 11h com a página aberta)
   setInterval(function () { if (!/momento=/.test(location.search)) aplica(); }, 60000);

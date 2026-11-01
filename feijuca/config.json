@@ -102,5 +102,118 @@
       "video": "",
       "foto": "fotos/chopp.jpg"
     }
+  },
+  "stories": {
+    "hoje": {
+      "ativo": true,
+      "ate": "2026-11-01T15:00",
+      "itens": [
+        {
+          "midia": "fotos/feijoada-completa-2.jpg",
+          "prato": "",
+          "txt": "Hoje tem Feijuca!",
+          "sub": "Das 11h às 15h · Av. João Lopes Meireles, 1792",
+          "btn": "mapa"
+        },
+        {
+          "midia": "vid/feijoada-completa.mp4",
+          "prato": "",
+          "txt": "Saindo quentinha",
+          "sub": "Se a Feijuca é boa, imagina a resenha.",
+          "btn": "pedir"
+        }
+      ]
+    },
+    "grupos": [
+      {
+        "nome": "Feijoada",
+        "capa": "fotos/feijoada-completa.jpg",
+        "itens": [
+          {
+            "midia": "vid/feijoada-completa.mp4",
+            "prato": "Feijoada completa",
+            "btn": "pedir"
+          },
+          {
+            "midia": "fotos/feijoada-completa.jpg",
+            "prato": "Feijoada completa",
+            "btn": "pedir"
+          },
+          {
+            "midia": "fotos/feijoada-completa-2.jpg",
+            "prato": "Feijoada completa",
+            "btn": "pedir"
+          },
+          {
+            "midia": "vid/feijoada.mp4",
+            "prato": "Feijoada completa",
+            "btn": "pedir"
+          }
+        ]
+      },
+      {
+        "nome": "Petiscos",
+        "capa": "fotos/moela.jpg",
+        "itens": [
+          {
+            "midia": "vid/moela.mp4",
+            "prato": "Moela ao molho",
+            "btn": "pedir"
+          },
+          {
+            "midia": "vid/pastel.mp4",
+            "prato": "Mini pastéis de queijo",
+            "btn": "pedir"
+          },
+          {
+            "midia": "fotos/bolinho.jpg",
+            "prato": "Bolinho de feijoada",
+            "btn": "pedir"
+          },
+          {
+            "midia": "fotos/torresmo.jpg",
+            "prato": "",
+            "txt": "Porção de torresmo",
+            "sub": "Pergunte o preço no WhatsApp",
+            "btn": "whatsapp"
+          }
+        ]
+      },
+      {
+        "nome": "Chopp",
+        "capa": "fotos/chopp.jpg",
+        "itens": [
+          {
+            "midia": "fotos/chopp.jpg",
+            "prato": "Chopp Turatti",
+            "btn": "pedir"
+          }
+        ]
+      },
+      {
+        "nome": "Pratos",
+        "capa": "fotos/parmegiana.jpg",
+        "itens": [
+          {
+            "midia": "fotos/parmegiana.jpg",
+            "prato": "Filé à parmegiana",
+            "btn": "pedir"
+          }
+        ]
+      },
+      {
+        "nome": "Resenha",
+        "capa": "fotos/pastel-mao.jpg",
+        "itens": [
+          {
+            "midia": "fotos/pastel-mao.jpg",
+            "prato": "",
+            "txt": "Bora pra resenha?",
+            "sub": "Sexta, sábado e domingo, das 11h às 15h",
+            "btn": "whatsapp"
+          }
+        ]
+      }
+    ]
   }
 }

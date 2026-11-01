@@ -53,6 +53,14 @@ label.switch, .switch { flex-direction: row; display: flex; align-items: center;
 .fotobtn.carregando::after { content: 'Enviando…'; position: absolute; inset: 0; background: rgba(0,0,0,.7); color: #fff; display: flex; align-items: center; justify-content: center; }
 .capa-prev { position: relative; width: 150px; height: 220px; }
 select { font: 600 1.05rem var(--body); color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 11px; width: 100%; }
+.st-item { border: 1px solid var(--line); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 8px; background: var(--bg); }
+.st-item .lin { display: grid; grid-template-columns: 76px 1fr; gap: 10px; align-items: start; }
+.st-item .fotobtn { width: 76px; height: 120px; }
+.st-item .prev { width: 76px; height: 120px; border-radius: 10px; object-fit: cover; display: block; }
+.dois { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 10px; }
+.dois > label { min-width: 0; }
+input[type=time] { min-width: 0; width: 100%; }
+input[type=date] { font: 600 1.05rem var(--body); color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 11px; width: 100%; min-width: 0; }
 .fotos2 { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
 .fotos2 > div { display: flex; flex-direction: column; gap: 4px; }
 .fotos2 small { color: var(--muted); font-weight: 700; font-size: .8rem; }
@@ -91,6 +99,7 @@ select { font: 600 1.05rem var(--body); color: var(--fg); background: var(--bg);
         <button type="button" data-aba="horarios" aria-selected="false">Horários</button>
         <button type="button" data-aba="pratos" aria-selected="false">Pratos</button>
         <button type="button" data-aba="chopes" aria-selected="false">Chopes</button>
+        <button type="button" data-aba="stories" aria-selected="false">Stories</button>
         <button type="button" data-aba="capa" aria-selected="false">Capa</button>
         <button type="button" data-aba="links" aria-selected="false">Links</button>
       </nav>
@@ -123,6 +132,20 @@ select { font: 600 1.05rem var(--body); color: var(--fg); background: var(--bg);
         <p class="note">Chopes e bebidas em destaque. Se esconder todos, a seção some da bio.</p>
         <div id="lista-chopes" style="display:flex;flex-direction:column;gap:12px;margin-top:12px"></div>
         <button class="add" type="button" data-add="chopes" style="margin-top:12px;width:100%">+ Adicionar chopp</button>
+      </div>
+
+      <div data-painel="stories" hidden>
+        <section class="card">
+          <h2>Story do dia</h2>
+          <p class="note">Aparece com um aro colorido na logo e a etiqueta "HOJE". Some sozinho na hora marcada.</p>
+          <label class="switch"><span>Story do dia ligado</span><input type="checkbox" id="hoje-ativo"></label>
+          <div class="dois"><label>Some no dia <input type="date" id="hoje-dia"></label><label>às <input type="time" id="hoje-hora"></label></div>
+          <div id="hoje-itens" style="display:flex;flex-direction:column;gap:10px"></div>
+          <button class="add" type="button" id="hoje-add">+ Story no "Hoje"</button>
+        </section>
+        <p class="note" style="margin-top:16px">Bolinhas (destaques fixos). Cada bolinha tem seus stories. Escolha um prato para usar o nome, a descrição e o preço do cardápio.</p>
+        <div id="grupos" style="display:flex;flex-direction:column;gap:14px;margin-top:12px"></div>
+        <button class="add" type="button" id="grupo-add" style="margin-top:12px;width:100%">+ Nova bolinha</button>
       </div>
 
       <div data-painel="capa" hidden>
@@ -296,7 +319,54 @@ select { font: 600 1.05rem var(--body); color: var(--fg); background: var(--bg);
   function desenha() {
     desenhaLista('pratos'); desenhaLista('chopes');
     desenhaCapas();
+    desenhaStories();
   }
+  // ---------- Stories ----------
+  const BOTOES = [['pedir', 'Pedir delivery'], ['whatsapp', 'Chamar no WhatsApp'], ['mapa', 'Como chegar'], ['cardapio', 'Ver cardápio'], ['', 'Sem botão']];
+  function sel(op, val, onch) { const x = el('select'); op.forEach(([v, t]) => x.append(el('option', { value: v, textContent: t, selected: (val || '') === v }))); x.addEventListener('change', () => onch(x.value)); return x; }
+  function editorStory(lista, i) {
+    const s = lista[i];
+    const ehVideo = /\.mp4$/.test(s.midia || '');
+    const midiaSel = sel([['', 'Foto da galeria']].concat(VIDEOS.map(([v, t]) => [v, 'Vídeo: ' + t])), ehVideo ? s.midia : '', v => { s.midia = v; marca(); desenhaStories(); });
+    const prev = ehVideo ? el('img', { className: 'prev', src: fotoSrc(s.midia.replace(/\.mp4$/, '.jpg')), alt: '' }) : fotoBtn(s, 'midia', 'Toque p/ foto');
+    const pratos = (C.pratos || []).concat(C.chopes || []).map(p => [p.nome, p.nome]);
+    const pratoSel = sel([['', 'Nenhum (escrever texto)']].concat(pratos), s.prato, v => { s.prato = v; if (v && !s.btn) s.btn = 'pedir'; marca(); desenhaStories(); });
+    const campos = [el('label', {}, ['Mídia', midiaSel]), el('label', {}, ['Prato do cardápio', pratoSel])];
+    if (!s.prato) { campos.push(campo('Texto grande', s, 'txt', 'Ex.: Hoje tem Feijuca!')); campos.push(campo('Texto menor', s, 'sub', 'Ex.: Das 11h às 15h')); }
+    campos.push(el('label', {}, ['Botão', sel(BOTOES, s.btn, v => { s.btn = v; marca(); })]));
+    const sobe = el('button', { type: 'button', className: 'mini', textContent: '↑', disabled: i === 0 }); sobe.addEventListener('click', () => { [lista[i - 1], lista[i]] = [lista[i], lista[i - 1]]; marca(); desenhaStories(); });
+    const desce = el('button', { type: 'button', className: 'mini', textContent: '↓', disabled: i === lista.length - 1 }); desce.addEventListener('click', () => { [lista[i + 1], lista[i]] = [lista[i], lista[i + 1]]; marca(); desenhaStories(); });
+    const ap = el('button', { type: 'button', className: 'mini apagar', textContent: 'Apagar' }); ap.addEventListener('click', () => { lista.splice(i, 1); marca(); desenhaStories(); });
+    return el('div', { className: 'st-item' }, [el('div', { className: 'lin' }, [prev, el('div', { className: 'campos' }, campos)]), el('div', { className: 'acoes' }, [sobe, desce, ap])]);
+  }
+  function novoStory() { return { midia: '', prato: '', txt: '', sub: '', btn: 'pedir' }; }
+  function desenhaStories() {
+    C.stories = C.stories || {}; const S = C.stories;
+    S.hoje = S.hoje || { ativo: false, ate: '', itens: [] }; S.grupos = S.grupos || [];
+    $('hoje-ativo').checked = !!S.hoje.ativo;
+    $('hoje-dia').value = (S.hoje.ate || '').slice(0, 10); $('hoje-hora').value = (S.hoje.ate || '').slice(11, 16);
+    const hi = $('hoje-itens'); hi.textContent = '';
+    S.hoje.itens.forEach((_, i) => hi.append(editorStory(S.hoje.itens, i)));
+    const box = $('grupos'); box.textContent = '';
+    S.grupos.forEach((g, gi) => {
+      g.itens = g.itens || [];
+      const sobe = el('button', { type: 'button', className: 'mini', textContent: '↑', disabled: gi === 0 }); sobe.addEventListener('click', () => { [S.grupos[gi - 1], S.grupos[gi]] = [S.grupos[gi], S.grupos[gi - 1]]; marca(); desenhaStories(); });
+      const desce = el('button', { type: 'button', className: 'mini', textContent: '↓', disabled: gi === S.grupos.length - 1 }); desce.addEventListener('click', () => { [S.grupos[gi + 1], S.grupos[gi]] = [S.grupos[gi], S.grupos[gi + 1]]; marca(); desenhaStories(); });
+      const ap = el('button', { type: 'button', className: 'mini apagar', textContent: 'Apagar bolinha' }); ap.addEventListener('click', () => { if (confirm('Apagar a bolinha "' + (g.nome || '') + '" e os stories dela?')) { S.grupos.splice(gi, 1); marca(); desenhaStories(); } });
+      const add = el('button', { type: 'button', className: 'add', textContent: '+ Story em "' + (g.nome || 'bolinha') + '"' }); add.addEventListener('click', () => { g.itens.push(novoStory()); marca(); desenhaStories(); });
+      const capa = el('div', {}, [el('small', { className: 'note', textContent: 'Foto da bolinha (opcional; sem ela usa o 1º story)' }), fotoBtn(g, 'capa', 'Toque p/ foto')]);
+      const kids = [el('h2', { textContent: g.nome || 'Nova bolinha' }), campo('Nome da bolinha', g, 'nome', 'Ex.: Petiscos'), capa];
+      g.itens.forEach((_, i) => kids.push(editorStory(g.itens, i)));
+      kids.push(add, el('div', { className: 'acoes' }, [sobe, desce, ap]));
+      box.append(el('section', { className: 'card' }, kids));
+    });
+  }
+  $('hoje-ativo').addEventListener('change', e => { C.stories.hoje.ativo = e.target.checked; marca(); });
+  const ateMuda = () => { const d = $('hoje-dia').value, h = $('hoje-hora').value || '23:59'; C.stories.hoje.ate = d ? d + 'T' + h : ''; marca(); };
+  $('hoje-dia').addEventListener('change', ateMuda); $('hoje-hora').addEventListener('change', ateMuda);
+  $('hoje-add').addEventListener('click', () => { const H = C.stories.hoje; H.itens.push(novoStory()); if (!H.ativo) { H.ativo = true; } if (!H.ate) { H.ate = hojeStr() + 'T23:59'; } marca(); desenhaStories(); });
+  $('grupo-add').addEventListener('click', () => { C.stories.grupos.push({ nome: '', capa: '', itens: [novoStory()] }); marca(); desenhaStories(); const cs = $('grupos').querySelectorAll('section'); const u = cs[cs.length - 1]; if (u) { u.scrollIntoView({ behavior: 'smooth', block: 'start' }); const inp = u.querySelector('input[type=text]'); if (inp) inp.focus(); } });
+
   const VIDEOS = [['vid/feijoada-completa.mp4', 'Feijoada completa (fumaça)'], ['vid/moela.mp4', 'Moela ao molho'], ['vid/feijoada.mp4', 'Feijoada sendo servida'], ['vid/pastel.mp4', 'Mini pastéis de queijo']];
   const MOMS = [['antes', 'Antes de abrir', 'Dia de Feijuca, antes das 11h'], ['aberto', 'Aberto', 'Enquanto a Feijuca está funcionando'], ['fechado', 'Fechado', 'Depois das 15h e nos dias sem Feijuca']];
   function desenhaCapas() {
@@ -358,6 +428,10 @@ select { font: 600 1.05rem var(--body); color: var(--fg); background: var(--bg);
       links[i.dataset.k] = v;
     });
     ['pratos', 'chopes'].forEach(k => (C[k] || []).forEach(it => { ['nome', 'desc', 'preco', 'selo'].forEach(c => it[c] = (it[c] || '').trim()); if (!it.nome && !erro) erro = 'Tem item sem nome em ' + (k === 'pratos' ? 'Pratos' : 'Chopes') + '. Preencha ou apague.'; }));
+    const S = C.stories || {};
+    [].concat(((S.hoje || {}).itens || []), ...((S.grupos || []).map(g => g.itens || []))).forEach(st => { if (!st.midia && !erro) erro = 'Tem story sem foto ou vídeo na aba Stories. Escolha a mídia ou apague.'; if (!st.prato && !(st.txt || '').trim() && !erro) erro = 'Tem story sem prato e sem texto na aba Stories.'; });
+    (S.grupos || []).forEach(g => { g.nome = (g.nome || '').trim(); if (!g.nome && !erro) erro = 'Tem bolinha sem nome na aba Stories.'; });
+    if (S.hoje && S.hoje.ativo && !(S.hoje.itens || []).length && !erro) erro = 'O story do dia está ligado mas não tem nenhum story.';
     C.horarios = horarios; C.links = links;
     C.fechadoEm = $('fechado').checked ? hojeStr() : '';
     C.aviso = $('aviso').value.trim();
