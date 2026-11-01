@@ -76,6 +76,7 @@ function validaEscala(c) {
   return { vigencia, horarios, ...(c.intervalos !== undefined ? { intervalos } : {}) };
 }
 
+function dataAusencia(d){return /^\d{4}-\d{2}-\d{2}$/.test(d)&&Number.isFinite(Date.parse(d+'T12:00:00Z'))&&new Date(d+'T12:00:00Z').toISOString().slice(0,10)===d;}
 async function hashPin(pin, sal) {
   const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(sal + ':' + pin));
   return [...new Uint8Array(d)].map(b => b.toString(16).padStart(2, '0')).join('');
@@ -91,6 +92,7 @@ export class PontoDB {
     this.sql.exec(`CREATE TABLE IF NOT EXISTS recusas (ts INTEGER, loja TEXT, nome TEXT, rede TEXT)`);
     this.sql.exec(`CREATE TABLE IF NOT EXISTS meta (k TEXT PRIMARY KEY, v TEXT)`);
     this.sql.exec('CREATE TABLE IF NOT EXISTS registros_hub_identidade (registro INTEGER PRIMARY KEY, membro TEXT NOT NULL)');
+    this.sql.exec('CREATE TABLE IF NOT EXISTS ausencias (loja TEXT NOT NULL,nome TEXT NOT NULL,dia TEXT NOT NULL,tipo TEXT NOT NULL,nota TEXT NOT NULL,revisao INTEGER NOT NULL,removido INTEGER NOT NULL DEFAULT 0,historico TEXT NOT NULL,PRIMARY KEY(loja,nome,dia))');
     this.sql.exec('CREATE TABLE IF NOT EXISTS intervalo_auditoria (registro INTEGER PRIMARY KEY, dados TEXT NOT NULL)');
     if(!this.meta('intervalos_regras_gabba'))this.meta('intervalos_regras_gabba',JSON.stringify({rev:1,versoes:[{vigencia:diaDo(Date.now()),horarios:{'Natália':'17:00',Marta:'17:30',Paulo:'18:00',Arthur:'17:00'},tolerancia:3}]}));
     if(!this.meta('intervalos_semanal_v1_gabba')){
@@ -139,6 +141,7 @@ export class PontoDB {
     const id=[...this.sql.exec('SELECT last_insert_rowid() id')][0].id;
     this.sql.exec('INSERT INTO intervalo_auditoria(registro,dados) VALUES(?,?)',id,JSON.stringify(dados));return dados;
   }
+  ausencias(loja,de,ate){return [...this.sql.exec('SELECT nome,dia,tipo,nota,revisao,removido,historico FROM ausencias WHERE loja=? AND dia BETWEEN ? AND ? ORDER BY dia,nome',loja,de,ate)];}
   ultimosHoje(loja) {
     const dia = diaDo(Date.now()), out = {};
     for (const r of this.sql.exec('SELECT nome, acao, ts FROM registros WHERE loja = ? AND dia = ? AND removido = 0 ORDER BY ts', loja, dia)) out[r.nome] = { acao: r.acao, ts: r.ts };
@@ -288,6 +291,22 @@ export class PontoDB {
     const L = loja || 'gabba';
 
     switch (c.op) {
+      case 'ausencias': {
+        const de=String(c.de||diaDo(Date.now())),ate=String(c.ate||de);
+        if(!dataAusencia(de)||!dataAusencia(ate)||ate<de)return json({erro:'data',detalhe:'Confira as datas.'},400);
+        return json({ok:true,ausencias:this.ausencias(L,de,ate),equipe:this.equipe(L)});
+      }
+      case 'ausencia_salvar': {
+        const nome=String(c.nome||''),dia=String(c.dia||''),tipos=['Doença informada','Atestado apresentado','Ausência justificada pelo gestor','Ausência sem justificativa','Outro motivo'];
+        if(!dataAusencia(dia)||!this.equipe(L).some(p=>p.nome===nome)||!Number.isInteger(c.revisao)||typeof c.nota!=='string'||c.nota.length>500||typeof c.tipo!=='string'||!tipos.includes(c.tipo)||!c.nota.trim()||typeof c.removido!=='boolean')return json({erro:'dados',detalhe:'Confira funcionário, data, motivo e observação (até 500 caracteres).'},400);
+        const anterior=this.ausencias(L,dia,dia).find(a=>a.nome===nome),rev=anterior?.revisao||0;
+        if(c.revisao!==rev)return json({erro:'conflito',detalhe:'Este registro mudou. Consulte a data novamente antes de salvar.'},409);
+        if(c.removido&&!anterior)return json({erro:'dados'},400);
+        const nota=c.nota.trim(),historico=JSON.parse(anterior?.historico||'[]');
+        historico.push({ts:Date.now(),tipo:c.tipo,nota,removido:c.removido,revisao:rev+1});
+        this.sql.exec('INSERT INTO ausencias(loja,nome,dia,tipo,nota,revisao,removido,historico) VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(loja,nome,dia) DO UPDATE SET tipo=excluded.tipo,nota=excluded.nota,revisao=excluded.revisao,removido=excluded.removido,historico=excluded.historico',L,nome,dia,c.tipo,nota,rev+1,c.removido?1:0,JSON.stringify(historico));
+        return json({ok:true});
+      }
       case 'intervalos': return json({ok:true,regras:this.regrasIntervalo(L),equipe:this.equipe(L)});
       case 'intervalos_salvar': {
         const anterior=this.regrasIntervalo(L);
@@ -353,7 +372,7 @@ export class PontoDB {
         const de = String(c.de || diaDo(Date.now())), ate = String(c.ate || de);
         const regs = [...this.sql.exec('SELECT id, ts, dia, nome, acao, aparelho, origem, nota, removido FROM registros WHERE loja = ? AND dia BETWEEN ? AND ? ORDER BY ts', L, de, ate)];
         for(const r of regs){const a=[...this.sql.exec('SELECT dados FROM intervalo_auditoria WHERE registro=?',r.id)][0];if(a)r.intervalo=JSON.parse(a.dados);}
-        return json({ ok: true, registros: regs });
+        return json({ ok: true, registros: regs, ausencias:this.ausencias(L,de,ate) });
       }
       case 'redes': {
         const redes = [...this.sql.exec('SELECT rede, rotulo, criado FROM redes WHERE loja = ? ORDER BY criado', L)];
@@ -393,4 +412,5 @@ export async function rotaPonto(req, env, cors) {
   const r = await stub.fetch(new Request(req.url, { method: req.method, headers: h, body: b }));
   return new Response(r.body, { status: r.status, headers: { ...cors, 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' } });
 }
+
 
