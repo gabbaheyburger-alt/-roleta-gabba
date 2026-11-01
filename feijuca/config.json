@@ -25,6 +25,14 @@
   },
   "pratos": [
     {
+      "selo": "A estrela",
+      "nome": "Feijoada individual",
+      "desc": "300 g de feijoada, arroz branco, couve refogada na manteiga com bacon, farofa, laranja, torresmo e banana empanada.",
+      "preco": "30,00",
+      "foto": "fotos/feijoada-completa.jpg",
+      "oculto": false
+    },
+    {
       "selo": "Petisco da casa",
       "nome": "Moela ao molho",
       "desc": "Moela macia no molho especial da casa, servida com torradas de alho e farofa.",
@@ -57,11 +65,11 @@
       "oculto": false
     },
     {
-      "selo": "A estrela",
-      "nome": "Feijoada individual",
-      "desc": "300 g de feijoada, arroz branco, couve refogada na manteiga com bacon, farofa, laranja, torresmo e banana empanada.",
-      "preco": "30,00",
-      "foto": "",
+      "selo": "",
+      "nome": "Porção de torresmo",
+      "desc": "",
+      "preco": "",
+      "foto": "fotos/torresmo.jpg",
       "oculto": true
     }
   ],
