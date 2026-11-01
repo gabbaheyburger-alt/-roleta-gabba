@@ -1,15 +1,15 @@
 {
   "slogan": "Se a Feijuca é boa, imagina a resenha.",
   "horarios": {
+    "0": [
+      "11:00",
+      "15:00"
+    ],
     "5": [
       "11:00",
       "15:00"
     ],
     "6": [
-      "11:00",
-      "15:00"
-    ],
-    "0": [
       "11:00",
       "15:00"
     ]
@@ -21,8 +21,8 @@
     "pedir": "https://gabbaburger.saipos.com/home",
     "whatsapp": "https://wa.me/5585998515015",
     "mapa": "https://www.google.com/maps/place/Feijuca+Do+Gabba/@-3.4204044,-39.0300081,17z/data=!4m6!3m5!1s0x7c0e1d52f8faeb3:0xeb58b17b979a68ba!8m2!3d-3.4204044!4d-39.0300081!16s%2Fg%2F11nk11nlw2",
-    "instagram": "https://www.instagram.com/feijucadogabba",
-    "avaliar": "https://search.google.com/local/writereview?placeid=ChIJs66PL9XhwAcRumial3uxWOs"
+    "avaliar": "https://search.google.com/local/writereview?placeid=ChIJs66PL9XhwAcRumial3uxWOs",
+    "instagram": "https://www.instagram.com/feijucadogabba"
   },
   "pratos": [
     {
@@ -254,7 +254,7 @@
     "ate": ""
   },
   "levar": {
-    "ativo": true,
+    "ativo": false,
     "ref": "Feijoada congelada",
     "titulo": "Feijoada congelada para levar",
     "nomeMsg": "Feijoada congelada (sem acompanhamento, serve 2)",
