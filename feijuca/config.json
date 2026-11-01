@@ -107,8 +107,13 @@
       "foto": "vid/feijoada-completa.jpg"
     },
     "fechado": {
-      "video": "",
-      "foto": "fotos/chopp.jpg"
+      "videos": [
+        "vid/feijoada-completa.mp4",
+        "vid/moela.mp4",
+        "vid/feijoada.mp4"
+      ],
+      "video": "vid/feijoada-completa.mp4",
+      "foto": "vid/feijoada-completa.jpg"
     }
   },
   "stories": {
