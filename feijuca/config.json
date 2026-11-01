@@ -26,9 +26,9 @@
   "pratos": [
     {
       "selo": "A estrela",
-      "nome": "Feijoada individual",
-      "desc": "300 g de feijoada, arroz branco, couve refogada na manteiga com bacon, farofa, laranja, torresmo e banana empanada.",
-      "preco": "30,00",
+      "nome": "Feijoada completa",
+      "desc": "Feijoada com arroz branco, couve refogada na manteiga com bacon, farofa, laranja, torresmo e banana empanada. Individual (300 g) ou para 2 pessoas (750 g).",
+      "preco": "R$ 30,00 individual · R$ 58,00 para 2",
       "foto": "fotos/feijoada-completa.jpg",
       "oculto": false
     },
