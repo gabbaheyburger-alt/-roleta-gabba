@@ -1,0 +1,26 @@
+{
+  "slogan": "Se a Feijuca é boa, imagina a resenha.",
+  "horarios": {
+    "5": ["11:00", "15:00"],
+    "6": ["11:00", "15:00"],
+    "0": ["11:00", "15:00"]
+  },
+  "fechadoEm": "",
+  "aviso": "",
+  "capa": "",
+  "links": {
+    "pedir": "https://gabbaburger.saipos.com/home",
+    "whatsapp": "https://wa.me/5585998515015",
+    "mapa": "",
+    "instagram": ""
+  },
+  "pratos": [
+    { "selo": "A estrela", "nome": "Feijuca completa", "desc": "Feijoada com os acompanhamentos da casa", "preco": "", "foto": "", "oculto": false },
+    { "selo": "Petisco", "nome": "Moela ao molho", "desc": "Servida com torradinhas", "preco": "", "foto": "", "oculto": false },
+    { "selo": "Da casa", "nome": "Pastezim de queijo", "desc": "Sequinho e crocante", "preco": "", "foto": "", "oculto": false }
+  ],
+  "chopes": [
+    { "selo": "", "nome": "Chopp Pilsen", "desc": "Gelado, na pressão", "preco": "", "foto": "", "oculto": false },
+    { "selo": "", "nome": "Chopp IPA", "desc": "Mais encorpado e lupulado", "preco": "", "foto": "", "oculto": false }
+  ]
+}

@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Adm · Bio da Feijuca</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#15100c">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Barlow:wght@400;600;700;800&display=swap">
+<style>
+/* Área do dono da bio da Feijuca: Hoje, Capa, Horários, Pratos, Chopes, Slogan e Links.
+   Salvar grava feijuca/config.json; fotos vão para feijuca/fotos/ (API do GitHub, mesma chave dos outros adms). */
+:root {
+  --bg: #15100c; --surface: #211913; --surface-2: #2b2119; --line: #3a2c22;
+  --fg: #f7ecd8; --muted: #b9a690; --laranja: #f28a1e; --laranja-deep: #b85f08;
+  --ok: #6fd36a; --bad: #ff8a80;
+  --display: 'Alfa Slab One', Georgia, serif;
+  --body: 'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { background: var(--bg); color: var(--fg); }
+body { margin: 0; padding-top: env(safe-area-inset-top, 0px); font-family: var(--body); font-size: 16px; line-height: 1.45; }
+[hidden] { display: none !important; }
+.wrap { max-width: 540px; margin: 0 auto; padding: 22px 16px 140px; display: flex; flex-direction: column; gap: 16px; }
+.tag { font-size: .72rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--laranja); }
+h1 { font-family: var(--display); font-weight: 400; font-size: clamp(1.7rem, 8vw, 2.1rem); line-height: 1; margin: 4px 0 0; }
+h1 span { color: var(--laranja); }
+h2 { font-family: var(--display); font-weight: 400; font-size: 1.1rem; margin: 0; }
+p { margin: 0; }
+.note { color: var(--muted); font-weight: 600; font-size: .88rem; }
+.abas { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; position: sticky; top: 0; z-index: 5; background: var(--bg); padding-top: 8px; }
+.abas button { flex-shrink: 0; background: var(--surface); border: 1px solid var(--line); color: var(--fg); border-radius: 999px; padding: 9px 14px; font: 700 .92rem var(--body); cursor: pointer; }
+.abas button[aria-selected="true"] { background: var(--laranja); border-color: var(--laranja); color: var(--bg); }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+label { display: flex; flex-direction: column; gap: 5px; font-weight: 700; font-size: .9rem; }
+label small { color: var(--muted); font-weight: 600; font-size: .84rem; }
+input[type=text], input[type=url], input[type=time], input[type=password] { font: 600 1.05rem var(--body); color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 11px; width: 100%; min-width: 0; }
+input:focus-visible, button:focus-visible, a:focus-visible { outline: 3px solid var(--laranja); outline-offset: 2px; }
+.switch { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 12px; font-weight: 700; }
+.switch small { display: block; color: var(--muted); font-weight: 600; font-size: .85rem; }
+.switch input { width: 52px; height: 30px; accent-color: var(--ok); flex-shrink: 0; }
+.dia { display: grid; grid-template-columns: 82px 1fr 1fr; gap: 8px; align-items: center; margin-bottom: 10px; }
+.dia .nome { font-weight: 800; display: flex; flex-direction: column; gap: 2px; }
+.dia .nome label { flex-direction: row; align-items: center; gap: 6px; font-size: .8rem; color: var(--muted); }
+.dia.off input[type=time] { opacity: .35; }
+.item .linha1 { display: grid; grid-template-columns: 96px 1fr; gap: 12px; align-items: start; }
+.fotobtn { position: relative; width: 96px; height: 96px; border-radius: 12px; border: 1px dashed var(--line); background: var(--surface-2); overflow: hidden; cursor: pointer; color: var(--muted); font: 700 .8rem var(--body); display: flex; align-items: center; justify-content: center; text-align: center; padding: 6px; }
+.fotobtn img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.fotobtn.carregando::after { content: 'Enviando…'; position: absolute; inset: 0; background: rgba(0,0,0,.7); color: #fff; display: flex; align-items: center; justify-content: center; }
+.capa-prev { position: relative; width: 100%; aspect-ratio: 9 / 12; max-height: 360px; height: auto; }
+.campos { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.acoes { display: flex; gap: 8px; flex-wrap: wrap; }
+.mini { font: 700 .9rem var(--body); color: var(--fg); background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; cursor: pointer; }
+.mini:disabled { opacity: .35; }
+.mini.apagar { color: var(--bad); margin-left: auto; }
+.item.oculto { opacity: .55; }
+.add { font: 800 1rem var(--body); color: var(--laranja); background: transparent; border: 2px dashed var(--line); border-radius: 14px; padding: 14px; cursor: pointer; }
+.btn { font-family: var(--display); font-size: 1.1rem; letter-spacing: .02em; background: var(--laranja); color: var(--bg); border: none; border-radius: 14px; padding: 14px 18px; cursor: pointer; box-shadow: 0 5px 0 var(--laranja-deep); width: 100%; }
+.btn:active { transform: translateY(4px); box-shadow: none; }
+.btn:disabled { opacity: .5; }
+.btn.sujo { background: #ffd27a; }
+.ghost { background: transparent; border: 1px solid var(--line); color: var(--muted); border-radius: 10px; padding: 10px 12px; font: 700 .88rem var(--body); cursor: pointer; text-decoration: none; text-align: center; flex: 1; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; }
+.barra { position: fixed; left: 0; right: 0; bottom: 0; z-index: 9; background: rgba(21,16,12,.96); border-top: 1px solid var(--line); padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px)); }
+.barra > div { max-width: 540px; margin: 0 auto; display: flex; flex-direction: column; gap: 6px; }
+.msg { margin: 0; font-weight: 700; min-height: 1.3em; text-align: center; font-size: .92rem; }
+.msg.ok { color: var(--ok); } .msg.err { color: var(--bad); }
+.steps { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; color: var(--muted); }
+.steps b { color: var(--fg); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="tag">Área do dono</div>
+    <h1>Bio da <span>Feijuca</span></h1>
+  </header>
+
+  <div id="app" hidden>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <nav class="abas" role="tablist" aria-label="Partes da bio">
+        <button type="button" data-aba="hoje" aria-selected="true">Hoje</button>
+        <button type="button" data-aba="horarios" aria-selected="false">Horários</button>
+        <button type="button" data-aba="pratos" aria-selected="false">Pratos</button>
+        <button type="button" data-aba="chopes" aria-selected="false">Chopes</button>
+        <button type="button" data-aba="capa" aria-selected="false">Capa</button>
+        <button type="button" data-aba="links" aria-selected="false">Links</button>
+      </nav>
+      <p class="note" id="current">Carregando…</p>
+
+      <div data-painel="hoje">
+        <section class="card">
+          <h2>Hoje</h2>
+          <div class="switch"><span>Fechado hoje<small>Volta ao normal sozinho amanhã</small></span><input type="checkbox" id="fechado" aria-label="Fechado hoje"></div>
+          <label for="aviso">Aviso na capa <small>Ex.: "Hoje tem samba ao vivo a partir das 12h". Deixe vazio para não mostrar.</small>
+            <input type="text" id="aviso" maxlength="90" autocomplete="off"></label>
+        </section>
+      </div>
+
+      <div data-painel="horarios" hidden>
+        <section class="card">
+          <h2>Horários</h2>
+          <div id="dias"></div>
+          <p class="note">Desmarque "aberto" nos dias em que a Feijuca não funciona. A capa da bio muda sozinha com esses horários.</p>
+        </section>
+      </div>
+
+      <div data-painel="pratos" hidden>
+        <p class="note">O primeiro prato visível vira o card grande. Toque no quadrado para pôr a foto. Preço é opcional.</p>
+        <div id="lista-pratos" style="display:flex;flex-direction:column;gap:12px;margin-top:12px"></div>
+        <button class="add" type="button" data-add="pratos" style="margin-top:12px;width:100%">+ Adicionar prato</button>
+      </div>
+
+      <div data-painel="chopes" hidden>
+        <p class="note">Chopes e bebidas em destaque. Se esconder todos, a seção some da bio.</p>
+        <div id="lista-chopes" style="display:flex;flex-direction:column;gap:12px;margin-top:12px"></div>
+        <button class="add" type="button" data-add="chopes" style="margin-top:12px;width:100%">+ Adicionar chopp</button>
+      </div>
+
+      <div data-painel="capa" hidden>
+        <section class="card">
+          <h2>Foto da capa</h2>
+          <p class="note">Foto em pé (vertical) fica melhor. Sem foto, a capa usa o fundo com as cores da Feijuca.</p>
+          <button type="button" class="fotobtn capa-prev" id="capa-foto">Toque para escolher a foto da capa</button>
+          <button type="button" class="mini" id="capa-tirar">Tirar a foto da capa</button>
+        </section>
+        <section class="card" style="margin-top:16px">
+          <h2>Slogan</h2>
+          <label for="slogan">Frase grande da capa <small>A parte depois da vírgula fica em laranja.</small>
+            <input type="text" id="slogan" maxlength="70" autocomplete="off"></label>
+        </section>
+      </div>
+
+      <div data-painel="links" hidden>
+        <section class="card">
+          <h2>Links dos botões</h2>
+          <label for="l-pedir">Pedir delivery <input type="url" id="l-pedir" data-k="pedir" autocomplete="off"></label>
+          <label for="l-whatsapp">WhatsApp <input type="url" id="l-whatsapp" data-k="whatsapp" autocomplete="off"></label>
+          <label for="l-mapa">Como chegar (mapa) <small>Google Maps → Compartilhar → Copiar link. Vazio esconde o botão.</small><input type="url" id="l-mapa" data-k="mapa" autocomplete="off"></label>
+          <label for="l-instagram">Instagram <small>Ex.: https://www.instagram.com/feijucadogabba. Vazio esconde o botão.</small><input type="url" id="l-instagram" data-k="instagram" autocomplete="off"></label>
+        </section>
+      </div>
+
+      <div class="row">
+        <a class="ghost" href="../" target="_blank" rel="noopener">Abrir a bio</a>
+        <button class="ghost" id="sair" type="button">Desconectar este celular</button>
+      </div>
+    </div>
+  </div>
+
+  <section class="card" id="setup" hidden>
+    <h2>Conectar este celular</h2>
+    <p class="note">É a <b>mesma chave do GitHub</b> dos outros adms. Se este celular já está conectado lá, esta tela nem aparece.</p>
+    <ol class="steps">
+      <li>Abra <b>github.com/settings/personal-access-tokens/new</b>.</li>
+      <li>Nome: <b>adm gabba</b>. Expiration: <b>366 days</b>.</li>
+      <li>Repository access: <b>Only select repositories</b> → <b>-roleta-gabba</b>.</li>
+      <li>Permissions → <b>Contents: Read and write</b>.</li>
+      <li><b>Generate token</b>, copie (começa com <b>github_pat_</b>) e cole aqui.</li>
+    </ol>
+    <label for="token">Chave do GitHub <input type="password" id="token" autocomplete="off" placeholder="github_pat_…"></label>
+    <button class="btn" id="conectar" type="button">CONECTAR</button>
+    <p class="msg" id="msg-setup" aria-live="polite"></p>
+  </section>
+</div>
+
+<div class="barra" id="barra" hidden><div>
+  <button class="btn" id="salvar" type="button">SALVAR</button>
+  <p class="msg" id="msg" aria-live="polite"></p>
+</div></div>
+<input type="file" id="arquivo" accept="image/*" hidden>
+
+<script>
+(function () {
+  const OWNER = 'gabbaheyburger-alt', REPO = '-roleta-gabba', BRANCH = 'main';
+  const API = 'https://api.github.com/repos/' + OWNER + '/' + REPO + '/contents/';
+  const ARQ = 'feijuca/config.json';
+  const KEY = 'gabba-adm-token';
+  const $ = id => document.getElementById(id);
+  const NOMES = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+  const ORDEM = [5, 6, 0, 1, 2, 3, 4];
+
+  let token = null, sha = null, C = null, sujo = false;
+  const previas = {};
+  try { token = localStorage.getItem(KEY); } catch (e) {}
+
+  const b64enc = s => btoa(unescape(encodeURIComponent(s)));
+  const b64dec = s => decodeURIComponent(escape(atob(s.replace(/\n/g, ''))));
+  const headers = () => ({ 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' });
+  const hojeStr = () => new Date(Date.now() - 3 * 3600 * 1000).toISOString().slice(0, 10);
+  const msg = (el, t, k) => { el.textContent = t; el.className = 'msg' + (k ? ' ' + k : ''); };
+  const marca = () => { sujo = true; $('salvar').classList.add('sujo'); msg($('msg'), 'Alterações ainda não salvas.'); };
+  const src = p => previas[p] || (!p ? '' : /^(https?:|data:)/.test(p) ? p : '../' + p);
+  const el = (tag, props, kids) => { const e = document.createElement(tag); Object.assign(e, props || {}); (kids || []).forEach(k => e.append(k)); return e; };
+
+  // ---------- Abas ----------
+  document.querySelectorAll('.abas button').forEach(b => b.addEventListener('click', () => {
+    document.querySelectorAll('.abas button').forEach(x => x.setAttribute('aria-selected', x === b));
+    document.querySelectorAll('[data-painel]').forEach(p => { p.hidden = p.dataset.painel !== b.dataset.aba; });
+    window.scrollTo(0, 0);
+  }));
+
+  // ---------- Horários ----------
+  ORDEM.forEach(d => {
+    const row = el('div', { className: 'dia' }); row.dataset.d = d;
+    row.innerHTML = '<div class="nome"><span>' + NOMES[d] + '</span><label><input type="checkbox" class="aberto"> aberto</label></div>' +
+      '<input type="time" class="ini" aria-label="' + NOMES[d] + ' abre"><input type="time" class="fim" aria-label="' + NOMES[d] + ' fecha">';
+    row.querySelector('.aberto').addEventListener('change', e => { row.classList.toggle('off', !e.target.checked); marca(); });
+    row.querySelectorAll('input[type=time]').forEach(i => i.addEventListener('change', marca));
+    $('dias').append(row);
+  });
+
+  // ---------- Fotos ----------
+  let alvo = null;
+  function escolheFoto(obj, chave, botao) { alvo = { obj, chave, botao }; $('arquivo').value = ''; $('arquivo').click(); }
+  $('arquivo').addEventListener('change', async () => {
+    const f = $('arquivo').files[0]; if (!f || !alvo) return;
+    const { obj, chave, botao } = alvo; alvo = null;
+    botao.classList.add('carregando');
+    try {
+      const dataUrl = await reduz(f, chave === 'capa' ? 1440 : 1080);
+      const nome = 'feijuca/fotos/' + Date.now() + '.jpg';
+      const r = await fetch(API + nome, { method: 'PUT', headers: Object.assign({ 'Content-Type': 'application/json' }, headers()), body: JSON.stringify({ message: 'Bio Feijuca: foto nova', content: dataUrl.split(',')[1], branch: BRANCH }) });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const caminho = nome.replace('feijuca/', '');
+      previas['feijuca/' + caminho] = dataUrl; previas[caminho] = dataUrl;
+      obj[chave] = caminho; marca(); desenha();
+      msg($('msg'), 'Foto enviada. Toque em Salvar para colocar na bio.');
+    } catch (e) { msg($('msg'), 'Não consegui enviar a foto. Tente de novo.', 'err'); }
+    finally { botao.classList.remove('carregando'); }
+  });
+  function reduz(file, max) {
+    return new Promise((ok, erro) => {
+      const img = new Image(), url = URL.createObjectURL(file);
+      img.onload = () => {
+        const s = Math.min(1, max / Math.max(img.width, img.height));
+        const c = document.createElement('canvas'); c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
+        ok(c.toDataURL('image/jpeg', 0.82));
+      };
+      img.onerror = erro; img.src = url;
+    });
+  }
+  // fotos ficam em feijuca/fotos/; a página da bio está em feijuca/, o adm em feijuca/adm/
+  const fotoSrc = p => previas[p] || (!p ? '' : /^(https?:|data:)/.test(p) ? p : '../' + p);
+  function fotoBtn(obj, chave, texto, extra) {
+    const b = el('button', { type: 'button', className: 'fotobtn' + (extra ? ' ' + extra : '') });
+    if (obj[chave]) b.append(el('img', { src: fotoSrc(obj[chave]), alt: '' })); else b.textContent = texto;
+    b.addEventListener('click', () => escolheFoto(obj, chave, b));
+    return b;
+  }
+
+  // ---------- Listas ----------
+  function campo(rot, obj, chave, ph) {
+    const i = el('input', { type: 'text', value: obj[chave] || '', placeholder: ph || '' });
+    i.addEventListener('input', () => { obj[chave] = i.value; marca(); });
+    return el('label', {}, [rot, i]);
+  }
+  function desenhaLista(k) {
+    const L = C[k] = C[k] || [];
+    const box = $('lista-' + k); box.textContent = '';
+    L.forEach((it, i) => {
+      const sobe = el('button', { type: 'button', className: 'mini', textContent: '↑', disabled: i === 0 }); sobe.setAttribute('aria-label', 'Subir');
+      sobe.addEventListener('click', () => { [L[i - 1], L[i]] = [L[i], L[i - 1]]; marca(); desenha(); });
+      const desce = el('button', { type: 'button', className: 'mini', textContent: '↓', disabled: i === L.length - 1 }); desce.setAttribute('aria-label', 'Descer');
+      desce.addEventListener('click', () => { [L[i + 1], L[i]] = [L[i], L[i + 1]]; marca(); desenha(); });
+      const esc = el('button', { type: 'button', className: 'mini', textContent: it.oculto ? 'Mostrar' : 'Esconder' });
+      esc.addEventListener('click', () => { it.oculto = !it.oculto; marca(); desenha(); });
+      const apaga = el('button', { type: 'button', className: 'mini apagar', textContent: 'Apagar' });
+      apaga.addEventListener('click', () => { if (confirm('Apagar "' + (it.nome || 'este item') + '"?')) { L.splice(i, 1); marca(); desenha(); } });
+      const tirar = el('button', { type: 'button', className: 'mini', textContent: 'Tirar foto', hidden: !it.foto });
+      tirar.addEventListener('click', () => { it.foto = ''; marca(); desenha(); });
+      box.append(el('section', { className: 'card item' + (it.oculto ? ' oculto' : '') }, [
+        el('div', { className: 'linha1' }, [
+          fotoBtn(it, 'foto', 'Toque para pôr foto'),
+          el('div', { className: 'campos' }, [campo('Nome', it, 'nome', k === 'pratos' ? 'Ex.: Moela ao molho' : 'Ex.: Chopp Pilsen'), campo('Preço', it, 'preco', 'Ex.: 39,90')])
+        ]),
+        campo('Descrição', it, 'desc', 'Ex.: Servida com torradinhas'),
+        campo('Selo (opcional)', it, 'selo', 'Ex.: Petisco, Novidade'),
+        el('div', { className: 'acoes' }, [sobe, desce, esc, tirar, apaga])
+      ]));
+    });
+  }
+  document.querySelectorAll('[data-add]').forEach(b => b.addEventListener('click', () => {
+    const k = b.dataset.add; C[k].push({ selo: '', nome: '', desc: '', preco: '', foto: '', oculto: false }); marca(); desenha();
+    const cards = $('lista-' + k).querySelectorAll('.item'); const u = cards[cards.length - 1];
+    if (u) { u.scrollIntoView({ behavior: 'smooth', block: 'center' }); const inp = u.querySelector('input'); if (inp) inp.focus(); }
+  }));
+
+  function desenha() {
+    desenhaLista('pratos'); desenhaLista('chopes');
+    const cb = $('capa-foto'); cb.textContent = '';
+    if (C.capa) cb.append(el('img', { src: fotoSrc(C.capa), alt: '' })); else cb.textContent = 'Toque para escolher a foto da capa';
+    $('capa-tirar').hidden = !C.capa;
+  }
+  $('capa-foto').addEventListener('click', () => escolheFoto(C, 'capa', $('capa-foto')));
+  $('capa-tirar').addEventListener('click', () => { C.capa = ''; marca(); desenha(); });
+
+  function preenche() {
+    $('fechado').checked = C.fechadoEm === hojeStr();
+    $('aviso').value = C.aviso || '';
+    $('slogan').value = C.slogan || '';
+    document.querySelectorAll('.dia').forEach(row => {
+      const h = (C.horarios || {})[row.dataset.d];
+      row.querySelector('.aberto').checked = !!h; row.classList.toggle('off', !h);
+      row.querySelector('.ini').value = h ? h[0] : '11:00'; row.querySelector('.fim').value = h ? h[1] : '15:00';
+    });
+    document.querySelectorAll('[data-k]').forEach(i => { i.value = (C.links || {})[i.dataset.k] || ''; });
+    desenha();
+  }
+  ['fechado', 'aviso', 'slogan'].forEach(id => $(id).addEventListener('input', marca));
+  $('fechado').addEventListener('change', marca);
+  document.querySelectorAll('[data-k]').forEach(i => i.addEventListener('input', marca));
+
+  function coleta() {
+    let erro = '';
+    const horarios = {};
+    document.querySelectorAll('.dia').forEach(row => {
+      if (!row.querySelector('.aberto').checked) return;
+      const a = row.querySelector('.ini').value, b = row.querySelector('.fim').value;
+      if (!a || !b) erro = 'Preencha o horário de ' + NOMES[row.dataset.d] + '.';
+      horarios[row.dataset.d] = [a, b];
+    });
+    const links = {};
+    document.querySelectorAll('[data-k]').forEach(i => {
+      const v = i.value.trim();
+      if (v && !/^https:\/\//.test(v)) erro = 'O link de "' + i.closest('label').firstChild.textContent.trim() + '" precisa começar com https://';
+      links[i.dataset.k] = v;
+    });
+    ['pratos', 'chopes'].forEach(k => (C[k] || []).forEach(it => { ['nome', 'desc', 'preco', 'selo'].forEach(c => it[c] = (it[c] || '').trim()); if (!it.nome && !erro) erro = 'Tem item sem nome em ' + (k === 'pratos' ? 'Pratos' : 'Chopes') + '. Preencha ou apague.'; }));
+    C.horarios = horarios; C.links = links;
+    C.fechadoEm = $('fechado').checked ? hojeStr() : '';
+    C.aviso = $('aviso').value.trim();
+    C.slogan = $('slogan').value.trim() || 'Se a Feijuca é boa, imagina a resenha.';
+    return erro;
+  }
+
+  async function carregar() {
+    $('setup').hidden = true; $('app').hidden = false; $('barra').hidden = false;
+    try {
+      const r = await fetch(API + ARQ + '?ref=' + BRANCH + '&t=' + Date.now(), { headers: headers(), cache: 'no-store' });
+      if (r.status === 401 || r.status === 403) { sair('A chave não funcionou. Crie uma nova e conecte de novo.'); return; }
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const j = await r.json(); sha = j.sha; C = JSON.parse(b64dec(j.content));
+      C.pratos = C.pratos || []; C.chopes = C.chopes || [];
+      preenche(); $('current').textContent = 'Mude o que precisar e toque em Salvar.';
+    } catch (e) { $('current').textContent = 'Não consegui carregar. Verifique a internet e atualize a página.'; }
+  }
+
+  async function salvar() {
+    if (!C) return;
+    const erro = coleta();
+    if (erro) { msg($('msg'), erro, 'err'); return; }
+    $('salvar').disabled = true; msg($('msg'), 'Salvando…');
+    try {
+      const body = { message: 'Bio Feijuca atualizada pela área do dono', content: b64enc(JSON.stringify(C, null, 2) + '\n'), branch: BRANCH };
+      if (sha) body.sha = sha;
+      const put = () => fetch(API + ARQ, { method: 'PUT', headers: Object.assign({ 'Content-Type': 'application/json' }, headers()), body: JSON.stringify(body) });
+      let r = await put();
+      if (r.status === 409 || r.status === 422) { const g = await fetch(API + ARQ + '?ref=' + BRANCH + '&t=' + Date.now(), { headers: headers(), cache: 'no-store' }); if (g.ok) body.sha = (await g.json()).sha; r = await put(); }
+      if (r.status === 401 || r.status === 403) { sair('A chave não tem permissão para salvar.'); return; }
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      sha = (await r.json()).content.sha; sujo = false; $('salvar').classList.remove('sujo');
+      msg($('msg'), 'Salvo! Em 1 a 2 minutos a bio já mostra a mudança.', 'ok');
+    } catch (e) { msg($('msg'), 'Não consegui salvar. Verifique a internet e tente de novo.', 'err'); }
+    finally { $('salvar').disabled = false; }
+  }
+
+  async function conectar() {
+    const t = $('token').value.trim();
+    if (!/^(github_pat_|ghp_)/.test(t)) { msg($('msg-setup'), 'Essa não parece uma chave do GitHub. Ela começa com github_pat_.', 'err'); return; }
+    token = t; $('conectar').disabled = true; msg($('msg-setup'), 'Testando a chave…');
+    try {
+      const r = await fetch(API + ARQ + '?ref=' + BRANCH, { headers: headers() });
+      if (!r.ok) { token = null; msg($('msg-setup'), 'A chave não funcionou. Confira os passos e tente de novo.', 'err'); return; }
+      try { localStorage.setItem(KEY, t); } catch (e) {}
+      $('token').value = ''; carregar();
+    } catch (e) { token = null; msg($('msg-setup'), 'Sem conexão. Tente de novo.', 'err'); }
+    finally { $('conectar').disabled = false; }
+  }
+  function sair(motivo) {
+    token = null;
+    try { localStorage.removeItem(KEY); } catch (e) {}
+    $('app').hidden = true; $('barra').hidden = true; $('setup').hidden = false;
+    msg($('msg-setup'), motivo || '', motivo ? 'err' : '');
+  }
+  window.addEventListener('beforeunload', e => { if (sujo) { e.preventDefault(); e.returnValue = ''; } });
+  $('salvar').addEventListener('click', salvar);
+  $('conectar').addEventListener('click', conectar);
+  $('sair').addEventListener('click', () => sair());
+  if (token) carregar(); else sair();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Feijuca do Gabba</title>
+<meta name="description" content="Feijuca do Gabba, Paracuru-CE. Sexta, sábado e domingo, das 11h às 15h. Se a Feijuca é boa, imagina a resenha.">
+<meta name="theme-color" content="#15100c">
+<meta property="og:title" content="Feijuca do Gabba">
+<meta property="og:description" content="Se a Feijuca é boa, imagina a resenha. Sexta, sábado e domingo, das 11h às 15h.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600;700&display=swap">
+<style>
+/* Bio da Feijuca do Gabba: capa que muda com o horário (antes de abrir / aberto / fechado),
+   destaques de pratos e chopes, horários e contato. Conteúdo em config.json, editado em adm/.
+   Prévia de cada momento: ?momento=antes|aberto|fechado */
+:root {
+  --bg: #15100c; --surface: #211913; --surface-2: #2b2119; --line: #3a2c22;
+  --cream: #f7ecd8; --muted: #b9a690; --laranja: #f28a1e; --laranja-deep: #b85f08; --couve: #5b9a48; --ok: #6fd36a;
+  --display: 'Alfa Slab One', 'Rockwell', Georgia, serif;
+  --label: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  --body: 'Barlow', system-ui, -apple-system, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--cream); }
+body { font-family: var(--body); font-size: 16px; line-height: 1.45; -webkit-font-smoothing: antialiased; }
+[hidden] { display: none !important; }
+a { color: inherit; }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--cream); outline-offset: 3px; }
+.col { max-width: 520px; margin: 0 auto; padding: 0 16px; }
+
+/* ---------- Capa ---------- */
+.capa { position: relative; min-height: max(600px, 100svh); display: flex; flex-direction: column; overflow: hidden;
+  background:
+    radial-gradient(120% 70% at 85% 10%, rgba(242,138,30,.30), transparent 60%),
+    radial-gradient(90% 60% at 0% 100%, rgba(91,154,72,.22), transparent 60%),
+    radial-gradient(circle at 1px 1px, rgba(247,236,216,.06) 1px, transparent 1.5px) 0 0 / 14px 14px,
+    var(--bg); }
+.capa .foto { position: absolute; inset: 0; z-index: 0; }
+.capa .foto img { width: 100%; height: 100%; object-fit: cover; display: block; animation: zoom 22s ease-in-out infinite alternate; }
+@keyframes zoom { from { transform: scale(1); } to { transform: scale(1.08); } }
+.capa.comfoto::after { content: ''; position: absolute; inset: 0; z-index: 0;
+  background: linear-gradient(180deg, rgba(21,16,12,.65) 0%, rgba(21,16,12,0) 22%, rgba(21,16,12,0) 38%, rgba(21,16,12,.82) 60%, rgba(21,16,12,.97) 82%, var(--bg) 100%); }
+.capa > :not(.foto) { position: relative; z-index: 1; }
+.topo { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: max(16px, env(safe-area-inset-top)) 16px 0; max-width: 520px; width: 100%; align-self: center; }
+.marca { line-height: .9; text-decoration: none; }
+.marca b { display: block; font: 400 2.1rem var(--display); color: var(--cream); letter-spacing: .01em; text-shadow: 0 2px 10px rgba(0,0,0,.5); }
+.marca small { display: block; font: 700 .78rem var(--label); letter-spacing: .28em; text-transform: uppercase; color: var(--laranja); margin-top: 4px; }
+.zap-topo { display: inline-flex; align-items: center; gap: 7px; text-decoration: none; color: #fff; background: #1fa855; border-radius: 999px; padding: 8px 13px 8px 10px; font: 700 .95rem var(--label); letter-spacing: .03em; box-shadow: 0 6px 18px rgba(0,0,0,.4); white-space: nowrap; }
+.zap-topo svg { width: 20px; height: 20px; flex-shrink: 0; }
+.base { margin-top: auto; padding: 0 16px 18px; width: 100%; max-width: 520px; align-self: center; }
+.linha { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.momento { display: inline-block; font: 700 .78rem var(--label); letter-spacing: .16em; text-transform: uppercase; background: var(--cream); color: var(--bg); padding: 4px 10px; border-radius: 999px; }
+.momento.quente { background: var(--laranja); color: var(--bg); }
+.status { display: inline-flex; align-items: center; gap: 7px; font: 600 .82rem var(--label); letter-spacing: .07em; text-transform: uppercase; background: rgba(21,16,12,.55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); border: 1px solid rgba(247,236,216,.18); padding: 5px 11px; border-radius: 999px; }
+.status .bola { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+.status.aberto .bola { background: var(--ok); animation: pulsa 1.8s infinite; }
+@keyframes pulsa { 0% { box-shadow: 0 0 0 0 rgba(111,211,106,.6); } 70%, 100% { box-shadow: 0 0 0 8px rgba(111,211,106,0); } }
+h1 { font: 400 clamp(2.5rem, 12.5vw, 3.6rem)/.98 var(--display); margin: 0 0 10px; letter-spacing: .005em; text-wrap: balance; }
+h1 em { font-style: normal; color: var(--laranja); }
+.sub { margin: 0 0 16px; color: #e3d6c1; font-size: 1.05rem; max-width: 34ch; }
+.aviso { margin: 0 0 14px; border-left: 3px solid var(--laranja); background: rgba(21,16,12,.6); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); padding: 9px 13px; border-radius: 0 12px 12px 0; font-weight: 600; }
+.aviso small { display: block; font: 700 .7rem var(--label); letter-spacing: .16em; text-transform: uppercase; color: var(--laranja); }
+.botoes { display: grid; grid-template-columns: 1fr auto; gap: 10px; }
+.b1 { display: flex; align-items: center; justify-content: center; min-height: 56px; border-radius: 14px; background: var(--laranja); color: var(--bg); text-decoration: none; font: 400 1.25rem var(--display); letter-spacing: .02em; box-shadow: 0 10px 28px rgba(242,138,30,.3); padding: 0 14px; text-align: center; }
+.b1:active { background: var(--laranja-deep); }
+.b2 { min-width: 56px; height: 56px; border-radius: 14px; border: 1px solid rgba(247,236,216,.35); background: rgba(21,16,12,.45); display: flex; align-items: center; justify-content: center; text-decoration: none; }
+.b2 svg { width: 24px; height: 24px; }
+.desce { display: block; margin: 14px auto 0; text-align: center; color: var(--muted); font: 600 .85rem var(--label); letter-spacing: .1em; text-transform: uppercase; text-decoration: none; }
+.previa { position: fixed; left: 50%; top: calc(12px + env(safe-area-inset-top)); white-space: nowrap; transform: translateX(-50%); z-index: 50; background: #ffe7b0; color: #15100c; font: 700 .85rem var(--body); padding: 6px 14px; border-radius: 999px; }
+
+/* ---------- Seções ---------- */
+section.parte { padding: 34px 0 6px; }
+.titulo { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin: 0 0 14px; }
+.titulo h2 { font: 400 1.7rem/1 var(--display); margin: 0; }
+.titulo span { font: 600 .8rem var(--label); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.grade { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.item { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; display: flex; flex-direction: column; }
+.item.grande { grid-column: 1 / -1; }
+.item .img { position: relative; aspect-ratio: 1 / 1; background: var(--surface-2); overflow: hidden; }
+.item.grande .img { aspect-ratio: 4 / 3; }
+.item .img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.item .vazio { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  background: repeating-linear-gradient(135deg, rgba(242,138,30,.16) 0 12px, rgba(242,138,30,.06) 12px 24px); }
+.item.chope .vazio { background: repeating-linear-gradient(135deg, rgba(91,154,72,.2) 0 12px, rgba(91,154,72,.07) 12px 24px); }
+.item .vazio b { font: 400 3.4rem var(--display); color: rgba(247,236,216,.55); }
+.item .selo { position: absolute; left: 10px; top: 10px; background: var(--laranja); color: var(--bg); font: 700 .74rem var(--label); letter-spacing: .1em; text-transform: uppercase; padding: 4px 9px; border-radius: 999px; }
+.item.chope .selo { background: var(--couve); color: #fff; }
+.item .txt { padding: 11px 12px 13px; display: flex; flex-direction: column; gap: 3px; flex: 1; }
+.item .txt b { font: 700 1.05rem/1.15 var(--body); }
+.item.grande .txt b { font: 400 1.45rem/1.05 var(--display); }
+.item .txt span { color: var(--muted); font-size: .9rem; line-height: 1.3; }
+.item .preco { margin-top: auto; padding-top: 6px; font: 700 1.15rem var(--label); color: var(--laranja); letter-spacing: .02em; }
+.pedir { display: flex; align-items: center; justify-content: center; margin-top: 14px; min-height: 52px; border-radius: 14px; border: 1px solid var(--laranja); color: var(--laranja); text-decoration: none; font: 400 1.1rem var(--display); }
+
+.faixa { margin: 34px 0 0; padding: 22px 18px; border-radius: 20px; background: var(--laranja); color: var(--bg); }
+.faixa p { margin: 0; font: 400 clamp(1.5rem, 7vw, 2rem)/1.05 var(--display); text-wrap: balance; }
+.faixa small { display: block; margin-top: 8px; font: 700 .8rem var(--label); letter-spacing: .16em; text-transform: uppercase; }
+
+.horas { list-style: none; margin: 0; padding: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; }
+.horas li { display: flex; justify-content: space-between; gap: 10px; padding: 13px 16px; border-bottom: 1px solid var(--line); font-weight: 600; }
+.horas li:last-child { border-bottom: 0; }
+.horas li span:last-child { color: var(--muted); }
+.horas li.hoje { background: var(--surface-2); }
+.horas li.hoje span:first-child::after { content: 'hoje'; margin-left: 8px; font: 700 .7rem var(--label); letter-spacing: .12em; text-transform: uppercase; color: var(--bg); background: var(--laranja); padding: 2px 7px; border-radius: 999px; vertical-align: 2px; }
+.horas li.hoje span:last-child { color: var(--cream); }
+.horas li.off span:last-child { color: #6f604f; }
+
+.cards { display: flex; flex-direction: column; gap: 10px; }
+.card { display: flex; align-items: center; gap: 14px; padding: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; text-decoration: none; }
+.card .ic { width: 42px; height: 42px; border-radius: 12px; background: var(--surface-2); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; }
+.card b { display: block; }
+.card span span { color: var(--muted); font-size: .9rem; }
+.card .seta { margin-left: auto; color: var(--muted); font-size: 1.4rem; }
+
+footer { text-align: center; padding: 36px 16px calc(28px + env(safe-area-inset-bottom)); color: var(--muted); font-size: .85rem; }
+.zap-rod { display: inline-flex; align-items: center; gap: 8px; margin: 0 auto 14px; text-decoration: none; color: var(--cream); border: 1px solid var(--line); background: var(--surface); border-radius: 14px; padding: 12px 16px; font: 700 1.15rem var(--label); letter-spacing: .03em; }
+.zap-rod svg { width: 22px; height: 22px; color: #25d366; }
+.zap-rod small { display: block; font: 600 .75rem var(--label); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); text-align: left; }
+footer a.grupo { color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { .capa .foto img, .status.aberto .bola { animation: none; } }
+</style>
+</head>
+<body>
+
+<header class="capa" id="capa">
+  <div class="foto" id="foto" hidden></div>
+  <div class="topo">
+    <span class="marca"><b>Feijuca</b><small>do Gabba</small></span>
+    <a class="zap-topo" data-link="whatsapp" href="https://wa.me/5585998515015" aria-label="WhatsApp"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3z"/></svg><span>WhatsApp</span></a>
+  </div>
+  <div class="base">
+    <div class="linha"><span class="momento" id="m-rotulo">Feijuca</span><span class="status" id="status"><span class="bola"></span><span id="status-txt">Sexta a domingo</span></span></div>
+    <h1 id="m-titulo">Se a Feijuca é boa, <em>imagina a resenha.</em></h1>
+    <p class="sub" id="m-sub">Sexta, sábado e domingo, das 11h às 15h · Paracuru</p>
+    <div class="aviso" id="aviso" hidden><small>Hoje na Feijuca</small><span id="aviso-txt"></span></div>
+    <div class="botoes">
+      <a class="b1" id="b1" data-link="pedir" href="https://gabbaburger.saipos.com/home">PEDIR DELIVERY</a>
+      <a class="b2" data-link="whatsapp" href="https://wa.me/5585998515015" aria-label="WhatsApp"><svg viewBox="0 0 24 24" fill="#25d366" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3z"/></svg></a>
+    </div>
+    <a class="desce" href="#pratos">Ver destaques ↓</a>
+  </div>
+</header>
+
+<main class="col">
+  <section class="parte" id="pratos">
+    <div class="titulo"><h2>Pra resenha</h2><span>Destaques</span></div>
+    <div class="grade" id="lista-pratos"></div>
+    <a class="pedir" data-link="pedir" href="https://gabbaburger.saipos.com/home">PEDIR DELIVERY</a>
+  </section>
+
+  <section class="parte" id="chopes">
+    <div class="titulo"><h2>Chopp gelado</h2><span>Na pressão</span></div>
+    <div class="grade" id="lista-chopes"></div>
+  </section>
+
+  <div class="faixa"><p id="faixa-txt">Se a Feijuca é boa, imagina a resenha.</p><small>Feijuca do Gabba · Paracuru</small></div>
+
+  <section class="parte" id="horarios">
+    <div class="titulo"><h2>Horários</h2></div>
+    <ul class="horas" id="horas"></ul>
+  </section>
+
+  <section class="parte">
+    <div class="cards">
+      <a class="card" id="c-mapa" data-link="mapa" href="#" hidden><span class="ic">📍</span><span><b>Como chegar</b><span>Abrir no mapa · Paracuru-CE</span></span><span class="seta">›</span></a>
+      <a class="card" id="c-insta" data-link="instagram" href="#" hidden><span class="ic">📷</span><span><b id="c-insta-t">Instagram</b><span>Siga a Feijuca</span></span><span class="seta">›</span></a>
+      <a class="card" data-link="whatsapp" href="https://wa.me/5585998515015"><span class="ic">💬</span><span><b>Reservas e dúvidas</b><span>Fale com a gente no WhatsApp</span></span><span class="seta">›</span></a>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <a class="zap-rod" data-link="whatsapp" href="https://wa.me/5585998515015"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3z"/></svg><span><small>WhatsApp</small>(85) 9 9851-5015</span></a><br>
+  Feijuca do Gabba · Paracuru-CE<br>
+  <a class="grupo" href="../bio3/">Conheça o Gabba Burger</a>
+</footer>
+
+<script>
+(function () {
+  var NOMES = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+  var NOMES_MIN = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
+  var ORDEM = [5, 6, 0, 1, 2, 3, 4];
+  var C = {
+    slogan: 'Se a Feijuca é boa, imagina a resenha.',
+    horarios: { 5: ['11:00', '15:00'], 6: ['11:00', '15:00'], 0: ['11:00', '15:00'] },
+    fechadoEm: '', aviso: '', capa: '',
+    links: { pedir: 'https://gabbaburger.saipos.com/home', whatsapp: 'https://wa.me/5585998515015', mapa: '', instagram: '' },
+    pratos: [], chopes: []
+  };
+  var $ = function (id) { return document.getElementById(id); };
+  var src = function (p) { return !p ? '' : /^(https?:|data:)/.test(p) ? p : p; };
+
+  // Hora em Paracuru (America/Fortaleza, UTC-3)
+  function agora() {
+    var d = new Date(Date.now() - 3 * 3600 * 1000);
+    return { dia: d.getUTCDay(), min: d.getUTCHours() * 60 + d.getUTCMinutes(), data: d.toISOString().slice(0, 10) };
+  }
+  var toMin = function (h) { var p = String(h || '').split(':'); return (+p[0] || 0) * 60 + (+p[1] || 0); };
+  var fmt = function (h) { var p = String(h || '').split(':'); return (+p[0]) + 'h' + (p[1] && p[1] !== '00' ? p[1] : ''); };
+
+  function slogan(txt) {
+    var t = txt || C.slogan || '';
+    var i = t.indexOf(',');
+    var h = $('m-titulo'); h.textContent = '';
+    if (i > 0) { h.append(t.slice(0, i + 1) + ' '); var em = document.createElement('em'); em.textContent = t.slice(i + 1).trim(); h.append(em); }
+    else h.textContent = t;
+  }
+
+  function proxima(n) {
+    for (var k = 1; k <= 7; k++) {
+      var d = (n.dia + k) % 7, h = C.horarios[d];
+      if (h) return { quando: k === 1 ? 'amanhã' : NOMES_MIN[d], h: h };
+    }
+    return null;
+  }
+
+  function resumoDias() {
+    var abertos = ORDEM.filter(function (d) { return C.horarios[d]; });
+    if (!abertos.length) return '';
+    var mesmos = abertos.every(function (d) { return C.horarios[d][0] === C.horarios[abertos[0]][0] && C.horarios[d][1] === C.horarios[abertos[0]][1]; });
+    var nomes = abertos.map(function (d) { return NOMES_MIN[d]; });
+    var lista = nomes.length > 1 ? nomes.slice(0, -1).join(', ') + ' e ' + nomes[nomes.length - 1] : nomes[0];
+    lista = lista.charAt(0).toUpperCase() + lista.slice(1);
+    return mesmos ? lista + ', das ' + fmt(C.horarios[abertos[0]][0]) + ' às ' + fmt(C.horarios[abertos[0]][1]) : lista;
+  }
+
+  function momento() {
+    var n = agora(), forcado = (location.search.match(/momento=(antes|aberto|fechado)/) || [])[1];
+    var h = C.horarios[n.dia], m;
+    if (C.fechadoEm === n.data) m = 'fechado';
+    else if (h && n.min < toMin(h[0])) m = 'antes';
+    else if (h && n.min < toMin(h[1])) m = 'aberto';
+    else m = 'fechado';
+    if (forcado) { m = forcado; var pv = document.createElement('div'); pv.className = 'previa'; pv.textContent = 'Prévia: momento "' + m + '"'; document.body.append(pv); }
+
+    var st = $('status'), stt = $('status-txt'), rot = $('m-rotulo'), b1 = $('b1'), sub = $('m-sub');
+    st.classList.toggle('aberto', m === 'aberto');
+    rot.classList.toggle('quente', m === 'aberto');
+    slogan();
+    var hh = h || ['11:00', '15:00'];
+    if (m === 'antes') {
+      rot.textContent = 'Hoje tem Feijuca';
+      stt.textContent = 'Abre às ' + fmt(hh[0]);
+      sub.textContent = 'Hoje das ' + fmt(hh[0]) + ' às ' + fmt(hh[1]) + '. Já separa a turma da resenha.';
+      b1.textContent = 'PEDIR DELIVERY'; b1.dataset.link = 'pedir';
+    } else if (m === 'aberto') {
+      rot.textContent = 'Feijuca rolando';
+      stt.textContent = 'Aberto até ' + fmt(hh[1]);
+      sub.textContent = 'Feijoada, petiscos e chopp gelado. Vem pra cá ou peça em casa.';
+      b1.textContent = 'PEDIR DELIVERY'; b1.dataset.link = 'pedir';
+    } else {
+      var p = proxima(n);
+      rot.textContent = 'Feijuca do Gabba';
+      stt.textContent = 'Fechado agora';
+      sub.textContent = p ? 'Volta ' + p.quando + ' às ' + fmt(p.h[0]) + '. ' + resumoDias() + '.' : resumoDias();
+      b1.textContent = 'VER DESTAQUES'; b1.dataset.link = ''; b1.href = '#pratos';
+    }
+    return n;
+  }
+
+  function cartao(it, grande, chope) {
+    var a = document.createElement('article'); a.className = 'item' + (grande ? ' grande' : '') + (chope ? ' chope' : '');
+    var img = document.createElement('div'); img.className = 'img';
+    if (it.foto) { var im = document.createElement('img'); im.src = src(it.foto); im.alt = it.nome || ''; im.loading = 'lazy'; img.append(im); }
+    else { var v = document.createElement('div'); v.className = 'vazio'; var b = document.createElement('b'); b.textContent = (it.nome || '?').trim().charAt(0).toUpperCase(); v.append(b); img.append(v); }
+    if (it.selo) { var s = document.createElement('span'); s.className = 'selo'; s.textContent = it.selo; img.append(s); }
+    var t = document.createElement('div'); t.className = 'txt';
+    var nb = document.createElement('b'); nb.textContent = it.nome || ''; t.append(nb);
+    if (it.desc) { var ds = document.createElement('span'); ds.textContent = it.desc; t.append(ds); }
+    if (it.preco) { var pr = document.createElement('div'); pr.className = 'preco'; pr.textContent = /^\s*R\$/.test(it.preco) ? it.preco : 'R$ ' + it.preco; t.append(pr); }
+    a.append(img, t);
+    return a;
+  }
+
+  function lista(id, itens, chope, secao) {
+    var box = $(id); box.textContent = '';
+    var vis = (itens || []).filter(function (i) { return i && !i.oculto && i.nome; });
+    $(secao).hidden = !vis.length;
+    vis.forEach(function (it, k) { box.append(cartao(it, !chope && k === 0, chope)); });
+    // número ímpar de cards pequenos: o último ocupa a linha inteira
+    var peq = chope ? vis.length : vis.length - 1;
+    if (peq > 0 && peq % 2 === 1) box.lastChild.classList.add('grande');
+  }
+
+  function horas(n) {
+    var ul = $('horas'); ul.textContent = '';
+    ORDEM.forEach(function (d) {
+      var h = C.horarios[d], li = document.createElement('li');
+      if (d === n.dia) li.className = 'hoje';
+      if (!h) li.classList.add('off');
+      var a = document.createElement('span'); a.textContent = NOMES[d];
+      var b = document.createElement('span'); b.textContent = h ? fmt(h[0]) + ' às ' + fmt(h[1]) : 'Fechado';
+      li.append(a, b); ul.append(li);
+    });
+  }
+
+  function aplica() {
+    var n = momento();
+    var L = C.links || {};
+    document.querySelectorAll('[data-link]').forEach(function (a) { var k = a.dataset.link; if (k && L[k]) a.href = L[k]; });
+    $('c-mapa').hidden = !L.mapa;
+    $('c-insta').hidden = !L.instagram;
+    if (L.instagram) { var u = (L.instagram.match(/instagram\.com\/([^/?#]+)/) || [])[1]; if (u) $('c-insta-t').textContent = '@' + u; }
+    document.querySelectorAll('a[href^="http"]').forEach(function (a) { a.target = '_blank'; a.rel = 'noopener'; });
+    var aviso = (C.aviso || '').trim();
+    $('aviso').hidden = !aviso; $('aviso-txt').textContent = aviso;
+    $('faixa-txt').textContent = C.slogan || '';
+    var f = $('foto'), capa = $('capa');
+    if (C.capa) { f.textContent = ''; var im = document.createElement('img'); im.src = src(C.capa); im.alt = ''; f.append(im); f.hidden = false; capa.classList.add('comfoto'); }
+    else { f.hidden = true; capa.classList.remove('comfoto'); }
+    lista('lista-pratos', C.pratos, false, 'pratos');
+    lista('lista-chopes', C.chopes, true, 'chopes');
+    horas(n);
+  }
+
+  aplica();
+  fetch('config.json?v=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (c) {
+    if (!c) return;
+    Object.keys(c).forEach(function (k) { C[k] = c[k]; });
+    C.horarios = c.horarios || {};
+    aplica();
+  }).catch(function () {});
+  // Atualiza a capa quando muda de momento (ex.: deu 11h com a página aberta)
+  setInterval(function () { if (!/momento=/.test(location.search)) aplica(); }, 60000);
+})();
+</script>
+</body>
+</html>
