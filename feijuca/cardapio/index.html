@@ -107,7 +107,7 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--ouro); outline-
 
 <nav class="barra-topo">
   <a href="../">‹ Voltar</a>
-  <a class="pdf" href="cardapio-feijuca.pdf" download>Baixar PDF</a>
+  <a class="pdf" href="cardapio-feijuca.pdf" id="pdf">Salvar em PDF</a>
 </nav>
 
 <article class="folha">
@@ -154,6 +154,8 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--ouro); outline-
     });
     document.getElementById('atual').textContent = C.atualizado ? 'Preços de ' + C.atualizado.toLowerCase() + '. Podem mudar sem aviso.' : '';
   }
+  // PDF sempre com os preços atuais: usa a impressão do celular (Salvar como PDF)
+  document.getElementById('pdf').addEventListener('click', function (e) { if (window.print) { e.preventDefault(); window.print(); } });
   fetch('../cardapio.json?v=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (c) { if (c) desenha(c); }).catch(function () {});
   // mesmos links da bio
   fetch('../config.json?v=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (c) {

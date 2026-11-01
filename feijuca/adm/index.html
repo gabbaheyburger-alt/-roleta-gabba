@@ -61,6 +61,10 @@ select { font: 600 1.05rem var(--body); color: var(--fg); background: var(--bg);
 .dois > label { min-width: 0; }
 input[type=time] { min-width: 0; width: 100%; }
 input[type=date] { font: 600 1.05rem var(--body); color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 11px; width: 100%; min-width: 0; }
+.dois.np { grid-template-columns: minmax(0,2fr) minmax(0,1fr); }
+.chips2 { display: flex; flex-wrap: wrap; gap: 8px; }
+.chips2 button { border: 1px solid var(--line); background: var(--bg); color: var(--fg); border-radius: 999px; padding: 9px 13px; font: 700 .92rem var(--body); cursor: pointer; }
+.chips2 button[aria-pressed="true"] { background: var(--laranja); border-color: var(--laranja); color: var(--bg); }
 .fotos2 { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
 .fotos2 > div { display: flex; flex-direction: column; gap: 4px; }
 .fotos2 small { color: var(--muted); font-weight: 700; font-size: .8rem; }
@@ -97,7 +101,8 @@ input[type=date] { font: 600 1.05rem var(--body); color: var(--fg); background: 
       <nav class="abas" role="tablist" aria-label="Partes da bio">
         <button type="button" data-aba="hoje" aria-selected="true">Hoje</button>
         <button type="button" data-aba="horarios" aria-selected="false">Horários</button>
-        <button type="button" data-aba="pratos" aria-selected="false">Pratos</button>
+        <button type="button" data-aba="cardapio" aria-selected="false">Cardápio</button>
+        <button type="button" data-aba="pratos" aria-selected="false">Destaques</button>
         <button type="button" data-aba="chopes" aria-selected="false">Chopes</button>
         <button type="button" data-aba="stories" aria-selected="false">Stories</button>
         <button type="button" data-aba="capa" aria-selected="false">Capa</button>
@@ -112,6 +117,19 @@ input[type=date] { font: 600 1.05rem var(--body); color: var(--fg); background: 
           <label for="aviso">Aviso na capa <small>Ex.: "Hoje tem samba ao vivo a partir das 12h". Deixe vazio para não mostrar.</small>
             <input type="text" id="aviso" maxlength="90" autocomplete="off"></label>
         </section>
+        <section class="card" style="margin-top:16px">
+          <h2>Como está agora</h2>
+          <p class="note">Aparece na capa enquanto a Feijuca está aberta. Volta ao normal sozinho amanhã.</p>
+          <div class="chips2" id="mov-chips"></div>
+          <p class="note" style="margin-top:6px">Acabando (toque para marcar):</p>
+          <div class="chips2" id="acab-chips"></div>
+        </section>
+        <section class="card" style="margin-top:16px">
+          <h2>Encomenda e reserva</h2>
+          <p class="note">Botões que mandam o pedido pronto para o WhatsApp. Desligue se não estiver aceitando.</p>
+          <label class="switch"><span>Aceitar encomendas</span><input type="checkbox" id="rec-enc"></label>
+          <label class="switch"><span>Aceitar reservas</span><input type="checkbox" id="rec-res"></label>
+        </section>
       </div>
 
       <div data-painel="horarios" hidden>
@@ -122,8 +140,15 @@ input[type=date] { font: 600 1.05rem var(--body); color: var(--fg); background: 
         </section>
       </div>
 
+      <div data-painel="cardapio" hidden>
+        <p class="note">Aqui ficam os preços oficiais. Os destaques e os stories ligados a um item puxam o preço e a descrição daqui, então mude só neste lugar.</p>
+        <section class="card" style="margin-top:12px"><label>Preços válidos a partir de <input type="text" id="card-atual" placeholder="Ex.: Novembro de 2026"></label></section>
+        <div id="card-secoes" style="display:flex;flex-direction:column;gap:14px;margin-top:14px"></div>
+        <p class="note" style="margin-top:12px">A página do cardápio na bio atualiza sozinha, e o botão "Salvar em PDF" de lá também sai com o preço novo. Só a imagem pronta que te mandei (cardapio-feijuca.jpg) precisa ser refeita: me avise quando mudar preços.</p>
+      </div>
+
       <div data-painel="pratos" hidden>
-        <p class="note">O primeiro prato visível vira o card grande. Toque no quadrado para pôr a foto. Preço é opcional.</p>
+        <p class="note">O primeiro visível vira o card grande. Toque no quadrado para pôr a foto. Ligue cada destaque a um item do cardápio para o preço ficar sempre igual.</p>
         <div id="lista-pratos" style="display:flex;flex-direction:column;gap:12px;margin-top:12px"></div>
         <button class="add" type="button" data-add="pratos" style="margin-top:12px;width:100%">+ Adicionar prato</button>
       </div>
@@ -208,6 +233,8 @@ input[type=date] { font: 600 1.05rem var(--body); color: var(--fg); background: 
   const ORDEM = [5, 6, 0, 1, 2, 3, 4];
 
   let token = null, sha = null, C = null, sujo = false;
+  let M = null, shaM = null, sujoM = false;
+  const ARQ_M = 'feijuca/cardapio.json';
   const previas = {};
   try { token = localStorage.getItem(KEY); } catch (e) {}
 
@@ -224,6 +251,7 @@ input[type=date] { font: 600 1.05rem var(--body); color: var(--fg); background: 
   document.querySelectorAll('.abas button').forEach(b => b.addEventListener('click', () => {
     document.querySelectorAll('.abas button').forEach(x => x.setAttribute('aria-selected', x === b));
     document.querySelectorAll('[data-painel]').forEach(p => { p.hidden = p.dataset.painel !== b.dataset.aba; });
+    if (C) desenha();
     window.scrollTo(0, 0);
   }));
 
@@ -283,6 +311,54 @@ input[type=date] { font: 600 1.05rem var(--body); color: var(--fg); background: 
     i.addEventListener('input', () => { obj[chave] = i.value; marca(); });
     return el('label', {}, [rot, i]);
   }
+  function itensMenu() { const r = []; ((M || {}).secoes || []).forEach(sec => (sec.itens || []).forEach(i => { if (i.nome) r.push([sec.titulo, i]); })); return r; }
+  function achaMenu(nome) { const x = itensMenu().find(([, i]) => i.nome === nome); return x ? x[1] : null; }
+  function camposPreco(it) {
+    const op = [['', 'Não está no cardápio (escrever)']].concat(itensMenu().map(([t, i]) => [i.nome, t + ' · ' + i.nome + (i.preco ? ' · R$ ' + i.preco : '')]));
+    const x = el('select'); op.forEach(([v, t]) => x.append(el('option', { value: v, textContent: t, selected: (it.ref || '') === v })));
+    x.addEventListener('change', () => { it.ref = x.value; marca(); desenha(); });
+    const out = [el('label', {}, ['Preço e descrição', x])];
+    const m = it.ref && achaMenu(it.ref);
+    if (m) out.push(el('p', { className: 'note', textContent: (m.preco ? 'R$ ' + m.preco + ' · ' : '') + (m.desc || 'sem descrição') + '  (vem do cardápio; para mudar, use a aba Cardápio)' }));
+    else { if (it.ref) out.push(el('p', { className: 'note', textContent: 'O item "' + it.ref + '" não existe mais no cardápio. Escolha outro.' })); out.push(campo('Preço', it, 'preco', 'Ex.: 39,90'), campo('Descrição', it, 'desc', 'Ex.: Servida com torradinhas')); }
+    return out;
+  }
+  // ---------- Aba Cardápio ----------
+  const marcaM = () => { sujoM = true; marca(); };
+  function campoM(rot, obj, chave, ph, aoMudar) {
+    const i = el('input', { type: 'text', value: obj[chave] || '', placeholder: ph || '' });
+    i.addEventListener('input', () => { obj[chave] = i.value; marcaM(); });
+    if (aoMudar) i.addEventListener('change', aoMudar);
+    return el('label', {}, [rot, i]);
+  }
+  function desenhaCardapio() {
+    if (!M) { $('card-secoes').textContent = 'Carregando o cardápio…'; return; }
+    $('card-atual').value = M.atualizado || '';
+    const box = $('card-secoes'); box.textContent = '';
+    (M.secoes || []).forEach(sec => {
+      sec.itens = sec.itens || [];
+      const kids = [el('h2', { textContent: sec.titulo })];
+      sec.itens.forEach((i, n) => {
+        const antigo = i.nome;
+        const renomeia = () => { const novo = i.nome.trim(); i.nome = novo; ['pratos', 'chopes'].forEach(k => (C[k] || []).forEach(d => { if (d.ref === antigo && novo) d.ref = novo; })); desenha(); };
+        const sobe = el('button', { type: 'button', className: 'mini', textContent: '↑', disabled: n === 0 }); sobe.addEventListener('click', () => { [sec.itens[n - 1], sec.itens[n]] = [sec.itens[n], sec.itens[n - 1]]; marcaM(); desenhaCardapio(); });
+        const desce = el('button', { type: 'button', className: 'mini', textContent: '↓', disabled: n === sec.itens.length - 1 }); desce.addEventListener('click', () => { [sec.itens[n + 1], sec.itens[n]] = [sec.itens[n], sec.itens[n + 1]]; marcaM(); desenhaCardapio(); });
+        const esc = el('button', { type: 'button', className: 'mini', textContent: i.oculto ? 'Mostrar' : 'Esconder' }); esc.addEventListener('click', () => { i.oculto = !i.oculto; marcaM(); desenhaCardapio(); });
+        const est = el('button', { type: 'button', className: 'mini', textContent: i.destaque ? '★ Destacado' : '☆ Destacar' }); est.addEventListener('click', () => { i.destaque = !i.destaque; marcaM(); desenhaCardapio(); });
+        const ap = el('button', { type: 'button', className: 'mini apagar', textContent: 'Apagar' }); ap.addEventListener('click', () => { if (confirm('Apagar "' + (i.nome || 'este item') + '" do cardápio?')) { sec.itens.splice(n, 1); marcaM(); desenha(); } });
+        kids.push(el('div', { className: 'st-item' + (i.oculto ? ' oculto' : '') }, [
+          el('div', { className: 'dois np' }, [campoM('Nome', i, 'nome', 'Ex.: Moela ao molho', renomeia), campoM('Preço', i, 'preco', 'Ex.: 18,00')]),
+          campoM('Descrição (opcional)', i, 'desc', ''),
+          el('div', { className: 'acoes' }, [sobe, desce, est, esc, ap])
+        ]));
+      });
+      const add = el('button', { type: 'button', className: 'add', textContent: '+ Item em ' + sec.titulo });
+      add.addEventListener('click', () => { sec.itens.push({ nome: '', preco: '', desc: '' }); marcaM(); desenhaCardapio(); });
+      kids.push(add);
+      box.append(el('section', { className: 'card' }, kids));
+    });
+  }
+  $('card-atual').addEventListener('input', e => { if (M) { M.atualizado = e.target.value; marcaM(); } });
   function desenhaLista(k) {
     const L = C[k] = C[k] || [];
     const box = $('lista-' + k); box.textContent = '';
@@ -303,8 +379,8 @@ input[type=date] { font: 600 1.05rem var(--body); color: var(--fg); background: 
           el('div', {}, [el('small', { textContent: 'Foto 2 (opcional)' }), fotoBtn(it, 'foto2', it.foto ? '+ 2ª foto' : 'Primeiro a foto 1')]),
           (() => { const t = el('button', { type: 'button', className: 'mini', textContent: 'Tirar 2ª foto', hidden: !it.foto2 }); t.addEventListener('click', () => { delete it.foto2; marca(); desenha(); }); return t; })()
         ]),
-        el('div', { className: 'campos' }, [campo('Nome', it, 'nome', k === 'pratos' ? 'Ex.: Moela ao molho' : 'Ex.: Chopp Pilsen'), campo('Preço', it, 'preco', 'Ex.: 39,90')]),
-        campo('Descrição', it, 'desc', 'Ex.: Servida com torradinhas'),
+        campo('Nome no card', it, 'nome', k === 'pratos' ? 'Ex.: Moela ao molho' : 'Ex.: Chopp Pilsen'),
+        ...camposPreco(it),
         campo('Selo (opcional)', it, 'selo', 'Ex.: Petisco, Novidade'),
         el('div', { className: 'acoes' }, [sobe, desce, esc, tirar, apaga])
       ]));
@@ -320,6 +396,8 @@ input[type=date] { font: 600 1.05rem var(--body); color: var(--fg); background: 
     desenhaLista('pratos'); desenhaLista('chopes');
     desenhaCapas();
     desenhaStories();
+    desenhaCardapio();
+    desenhaAgora();
   }
   // ---------- Stories ----------
   const BOTOES = [['pedir', 'Pedir delivery'], ['whatsapp', 'Chamar no WhatsApp'], ['mapa', 'Como chegar'], ['cardapio', 'Ver cardápio'], ['', 'Sem botão']];
@@ -396,6 +474,25 @@ input[type=date] { font: 600 1.05rem var(--body); color: var(--fg); background: 
     });
   }
 
+  function desenhaAgora() {
+    const A = C.agora = C.agora || { data: '', mov: '', acabando: [] };
+    const vale = A.data === hojeStr(), mov = vale ? A.mov : '', acab = vale ? (A.acabando || []) : [];
+    const mc = $('mov-chips'); mc.textContent = '';
+    [['', 'Não mostrar'], ['livre', '🟢 Mesas livres'], ['enchendo', '🟡 Enchendo'], ['cheia', '🔴 Casa cheia']].forEach(([v, t]) => {
+      const b = el('button', { type: 'button', textContent: t }); b.setAttribute('aria-pressed', mov === v ? 'true' : 'false');
+      b.addEventListener('click', () => { if (!vale) A.acabando = []; A.data = hojeStr(); A.mov = v; marca(); desenhaAgora(); }); mc.append(b);
+    });
+    const ac = $('acab-chips'); ac.textContent = '';
+    (C.pratos || []).concat(C.chopes || []).filter(i => i.nome && !i.oculto).forEach(i => {
+      const on = acab.indexOf(i.nome) >= 0, b = el('button', { type: 'button', textContent: (on ? '🔥 ' : '') + i.nome }); b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      b.addEventListener('click', () => { if (!vale) { A.mov = ''; A.acabando = []; } A.data = hojeStr(); A.acabando = on ? A.acabando.filter(x => x !== i.nome) : (A.acabando || []).concat(i.nome); marca(); desenhaAgora(); });
+      ac.append(b);
+    });
+    const R = C.recursos = C.recursos || { encomenda: true, reserva: true };
+    $('rec-enc').checked = R.encomenda !== false; $('rec-res').checked = R.reserva !== false;
+  }
+  $('rec-enc').addEventListener('change', e => { C.recursos.encomenda = e.target.checked; marca(); });
+  $('rec-res').addEventListener('change', e => { C.recursos.reserva = e.target.checked; marca(); });
   function preenche() {
     $('fechado').checked = C.fechadoEm === hojeStr();
     $('aviso').value = C.aviso || '';
@@ -447,26 +544,39 @@ input[type=date] { font: 600 1.05rem var(--body); color: var(--fg); background: 
       if (!r.ok) throw new Error('HTTP ' + r.status);
       const j = await r.json(); sha = j.sha; C = JSON.parse(b64dec(j.content));
       C.pratos = C.pratos || []; C.chopes = C.chopes || [];
+      try {
+        const rm = await fetch(API + ARQ_M + '?ref=' + BRANCH + '&t=' + Date.now(), { headers: headers(), cache: 'no-store' });
+        if (rm.ok) { const jm = await rm.json(); shaM = jm.sha; M = JSON.parse(b64dec(jm.content)); }
+      } catch (e) {}
       preenche(); $('current').textContent = 'Mude o que precisar e toque em Salvar.';
     } catch (e) { $('current').textContent = 'Não consegui carregar. Verifique a internet e atualize a página.'; }
   }
 
+  async function grava(arq, obj, shaAtual, mensagem) {
+    const body = { message: mensagem, content: b64enc(JSON.stringify(obj, null, 2) + '\n'), branch: BRANCH };
+    if (shaAtual) body.sha = shaAtual;
+    const put = () => fetch(API + arq, { method: 'PUT', headers: Object.assign({ 'Content-Type': 'application/json' }, headers()), body: JSON.stringify(body) });
+    let r = await put();
+    if (r.status === 409 || r.status === 422) { const g = await fetch(API + arq + '?ref=' + BRANCH + '&t=' + Date.now(), { headers: headers(), cache: 'no-store' }); if (g.ok) body.sha = (await g.json()).sha; r = await put(); }
+    if (r.status === 401 || r.status === 403) { const e = new Error('perm'); e.perm = true; throw e; }
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return (await r.json()).content.sha;
+  }
   async function salvar() {
     if (!C) return;
-    const erro = coleta();
+    let erro = coleta();
+    if (!erro && M) (M.secoes || []).forEach(sec => (sec.itens || []).forEach(i => { i.nome = (i.nome || '').trim(); i.preco = (i.preco || '').replace(/^\s*R\$\s*/, '').trim(); i.desc = (i.desc || '').trim(); if (!i.desc) delete i.desc; if (!i.nome && !erro) erro = 'Tem item sem nome no Cardápio (' + sec.titulo + '). Preencha ou apague.'; }));
     if (erro) { msg($('msg'), erro, 'err'); return; }
     $('salvar').disabled = true; msg($('msg'), 'Salvando…');
     try {
-      const body = { message: 'Bio Feijuca atualizada pela área do dono', content: b64enc(JSON.stringify(C, null, 2) + '\n'), branch: BRANCH };
-      if (sha) body.sha = sha;
-      const put = () => fetch(API + ARQ, { method: 'PUT', headers: Object.assign({ 'Content-Type': 'application/json' }, headers()), body: JSON.stringify(body) });
-      let r = await put();
-      if (r.status === 409 || r.status === 422) { const g = await fetch(API + ARQ + '?ref=' + BRANCH + '&t=' + Date.now(), { headers: headers(), cache: 'no-store' }); if (g.ok) body.sha = (await g.json()).sha; r = await put(); }
-      if (r.status === 401 || r.status === 403) { sair('A chave não tem permissão para salvar.'); return; }
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      sha = (await r.json()).content.sha; sujo = false; $('salvar').classList.remove('sujo');
+      if (M && sujoM) { shaM = await grava(ARQ_M, M, shaM, 'Cardápio da Feijuca atualizado pela área do dono'); sujoM = false; }
+      sha = await grava(ARQ, C, sha, 'Bio Feijuca atualizada pela área do dono');
+      sujo = false; $('salvar').classList.remove('sujo');
       msg($('msg'), 'Salvo! Em 1 a 2 minutos a bio já mostra a mudança.', 'ok');
-    } catch (e) { msg($('msg'), 'Não consegui salvar. Verifique a internet e tente de novo.', 'err'); }
+    } catch (e) {
+      if (e.perm) { sair('A chave não tem permissão para salvar.'); return; }
+      msg($('msg'), 'Não consegui salvar. Verifique a internet e tente de novo.', 'err');
+    }
     finally { $('salvar').disabled = false; }
   }
 

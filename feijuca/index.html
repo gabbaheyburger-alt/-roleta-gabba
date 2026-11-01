@@ -206,6 +206,53 @@ body.travado { overflow: hidden; }
 .story .zona { position: absolute; top: 80px; bottom: 140px; z-index: 2; }
 .story .zona.esq { left: 0; width: 32%; } .story .zona.dir { right: 0; width: 68%; }
 .teste-faixa { position: fixed; left: 0; right: 0; top: 0; z-index: 70; background: #ffe7b0; color: #10180f; text-align: center; font: 700 .82rem var(--body); padding: calc(4px + env(safe-area-inset-top)) 10px 4px; }
+
+/* ---------- Como está agora ---------- */
+.mov { display: inline-flex; align-items: center; gap: 6px; font: 700 .8rem var(--label); letter-spacing: .07em; text-transform: uppercase; padding: 5px 11px; border-radius: 999px; background: rgba(12,22,16,.6); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); border: 1px solid rgba(247,240,226,.2); }
+.mov i { width: 8px; height: 8px; border-radius: 50%; }
+.mov.livre i { background: #74d68a; } .mov.enchendo i { background: #eab14a; } .mov.cheia i { background: #ff5a4f; }
+.acabando-faixa { margin: -4px 0 12px; display: inline-flex; align-items: center; gap: 8px; background: #c4331f; color: #fff; font: 700 .9rem var(--body); padding: 7px 12px; border-radius: 10px; animation: pisca 2.4s ease-in-out infinite; }
+@keyframes pisca { 50% { box-shadow: 0 0 0 6px rgba(196,51,31,.25); } }
+.item .tag-acab { position: absolute; right: 10px; top: 10px; background: #c4331f; color: #fff; font: 700 .72rem var(--label); letter-spacing: .1em; text-transform: uppercase; padding: 4px 9px; border-radius: 999px; }
+/* ---------- Encomenda e reserva ---------- */
+.garanta { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding-top: 22px; }
+.g-card { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; text-align: left; padding: 14px; border-radius: 18px; border: 1px solid var(--line); background: linear-gradient(160deg, var(--surface-2), var(--surface)); color: var(--cream); cursor: pointer; font: inherit; }
+.g-card .g-ic { font-size: 1.6rem; }
+.g-card b { display: block; font: 400 1.15rem/1.1 var(--display); color: var(--laranja); }
+.g-card span span { color: var(--muted); font-size: .88rem; line-height: 1.3; }
+.folha { position: fixed; inset: 0; z-index: 85; background: rgba(0,0,0,.6); display: flex; align-items: flex-end; justify-content: center; }
+.folha .caixa { width: 100%; max-width: 520px; max-height: 92svh; overflow-y: auto; background: var(--surface); border: 1px solid var(--line); border-bottom: 0; border-radius: 22px 22px 0 0; padding: 10px 16px calc(16px + env(safe-area-inset-bottom)); }
+.folha .alca { width: 40px; height: 4px; border-radius: 2px; background: var(--line); margin: 0 auto 12px; }
+.folha h2 { font: 400 1.6rem/1 var(--display); margin: 0 0 4px; }
+.folha .dica { margin: 0 0 14px; color: var(--muted); font-size: .9rem; }
+.folha h3 { font: 700 .82rem var(--label); letter-spacing: .14em; text-transform: uppercase; color: var(--laranja); margin: 18px 0 8px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chips button { border: 1px solid var(--line); background: var(--bg); color: var(--cream); border-radius: 12px; padding: 10px 13px; font: 600 .95rem var(--body); cursor: pointer; }
+.chips button[aria-pressed="true"] { background: var(--laranja); border-color: var(--laranja); color: #10180f; }
+.chips button small { display: block; font-weight: 500; font-size: .78rem; opacity: .8; }
+.qtd { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px dashed var(--line); }
+.qtd .n { flex: 1; min-width: 0; }
+.qtd .n b { display: block; font-weight: 600; }
+.qtd .n small { color: var(--laranja); font: 700 .95rem var(--label); }
+.qtd .ctl { display: flex; align-items: center; gap: 8px; }
+.qtd .ctl button { width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--line); background: var(--bg); color: var(--cream); font-size: 1.3rem; line-height: 1; cursor: pointer; }
+.qtd .ctl button:disabled { opacity: .3; }
+.qtd .ctl output { min-width: 18px; text-align: center; font: 700 1.1rem var(--label); }
+.qtd.tem .n b { color: var(--laranja); }
+.folha label.campo { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; font-weight: 600; font-size: .92rem; }
+.folha input[type=text], .folha textarea { font: 500 1rem var(--body); color: var(--cream); background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 12px; width: 100%; }
+.folha textarea { min-height: 70px; resize: vertical; }
+.pessoas { display: flex; align-items: center; gap: 14px; }
+.pessoas output { font: 400 2rem var(--display); min-width: 40px; text-align: center; }
+.pessoas button { width: 46px; height: 46px; border-radius: 50%; border: 1px solid var(--line); background: var(--bg); color: var(--cream); font-size: 1.5rem; cursor: pointer; }
+.total { display: flex; justify-content: space-between; align-items: baseline; margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--line); }
+.total b { font: 700 1.4rem var(--label); color: var(--laranja); }
+.enviar { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; margin-top: 14px; min-height: 54px; border-radius: 14px; border: 0; background: #1fa855; color: #fff; font: 700 1.05rem var(--body); cursor: pointer; }
+.enviar:disabled { opacity: .45; }
+.enviar svg { width: 22px; height: 22px; }
+.erro-f { color: #ff8a80; font-weight: 600; font-size: .9rem; margin: 10px 0 0; min-height: 1.2em; }
+.fechar-f { display: block; width: 100%; margin-top: 10px; min-height: 46px; border-radius: 14px; border: 1px solid var(--line); background: transparent; color: var(--muted); font: 600 .95rem var(--body); cursor: pointer; }
+.nota-f { color: var(--muted); font-size: .82rem; margin: 10px 0 0; text-align: center; }
 @media (prefers-reduced-motion: reduce) { .capa .foto img, .status.aberto .bola { animation: none; } }
 </style>
 </head>
@@ -215,19 +262,20 @@ body.travado { overflow: hidden; }
   <div class="foto" id="foto" hidden></div>
   <div class="topo">
     <button class="marca" id="logo-story" type="button" aria-label="Feijuca do Gabba" tabindex="-1"><img src="logo.png" alt="Feijuca do Gabba · Sabor de Boteco" width="382" height="364"><span class="novo" hidden>Hoje</span></button>
-    <a class="zap-topo" data-link="whatsapp" href="https://wa.me/5585998515015" aria-label="WhatsApp"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3z"/></svg><span>WhatsApp</span></a>
+    <a data-ev="feijuca-whatsapp-topo" class="zap-topo" data-link="whatsapp" href="https://wa.me/5585998515015" aria-label="WhatsApp"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3z"/></svg><span>WhatsApp</span></a>
   </div>
   <button class="seta-capa esq" id="capa-ant" type="button" aria-label="Vídeo anterior" hidden>‹</button>
   <button class="seta-capa dir" id="capa-prox" type="button" aria-label="Próximo vídeo" hidden>›</button>
   <div class="base">
     <div class="pontos" id="pontos" hidden></div>
-    <div class="linha"><span class="momento" id="m-rotulo">Feijuca</span><span class="status" id="status"><span class="bola"></span><span id="status-txt">Sexta a domingo</span></span></div>
+    <div class="linha"><span class="momento" id="m-rotulo">Feijuca</span><span class="status" id="status"><span class="bola"></span><span id="status-txt">Sexta a domingo</span></span><span class="mov" id="mov" hidden></span></div>
+    <div class="acabando-faixa" id="acabando" hidden></div>
     <h1 id="m-titulo">Se a Feijuca é boa, <em>imagina a resenha.</em></h1>
     <p class="sub" id="m-sub">Sexta, sábado e domingo, das 11h às 15h · Paracuru</p>
     <div class="aviso" id="aviso" hidden><small>Hoje na Feijuca</small><span id="aviso-txt"></span></div>
     <div class="botoes">
-      <a class="b1" id="b1" data-link="pedir" href="https://gabbaburger.saipos.com/home">PEDIR DELIVERY</a>
-      <a class="b2" data-link="whatsapp" href="https://wa.me/5585998515015" aria-label="WhatsApp"><svg viewBox="0 0 24 24" fill="#25d366" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3z"/></svg></a>
+      <a data-ev="feijuca-capa-botao" class="b1" id="b1" data-link="pedir" href="https://gabbaburger.saipos.com/home">PEDIR DELIVERY</a>
+      <a data-ev="feijuca-whatsapp-capa" class="b2" data-link="whatsapp" href="https://wa.me/5585998515015" aria-label="WhatsApp"><svg viewBox="0 0 24 24" fill="#25d366" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3z"/></svg></a>
     </div>
     <a class="vercard" data-ev="feijuca-cardapio-capa" href="cardapio/"><span aria-hidden="true">📖</span> Veja nosso cardápio</a>
     <a class="desce" href="#pratos">Ver destaques ↓</a>
@@ -236,10 +284,14 @@ body.travado { overflow: hidden; }
 
 <main class="col">
   <div class="stories" id="stories" aria-label="Stories da Feijuca" hidden></div>
+  <section class="garanta" id="garanta" hidden>
+    <button class="g-card" id="g-enc" type="button" data-ev="feijuca-abrir-encomenda"><span class="g-ic" aria-hidden="true">🍲</span><span><b>Encomendar</b><span>Garanta sua feijoada para o fim de semana</span></span></button>
+    <button class="g-card" id="g-res" type="button" data-ev="feijuca-abrir-reserva"><span class="g-ic" aria-hidden="true">🪑</span><span><b>Reservar mesa</b><span>Para a resenha com a turma</span></span></button>
+  </section>
   <section class="parte" id="pratos">
     <div class="titulo"><h2>Pra resenha</h2><span>Destaques</span></div>
     <div class="grade" id="lista-pratos"></div>
-    <a class="pedir" href="cardapio/">VEJA O CARDÁPIO COMPLETO</a>
+    <a class="pedir" href="cardapio/" data-ev="feijuca-cardapio-destaques">VEJA O CARDÁPIO COMPLETO</a>
   </section>
 
   <section class="parte" id="chopes">
@@ -256,8 +308,8 @@ body.travado { overflow: hidden; }
 
   <section class="parte">
     <div class="cards">
-      <a class="card" id="c-mapa" data-link="mapa" href="#" hidden><span class="ic">📍</span><span><b>Como chegar</b><span>Av. João Lopes Meireles, 1792 · Praia, Paracuru</span></span><span class="seta">›</span></a>
-      <a class="card" id="c-insta" data-link="instagram" href="#" hidden><span class="ic">📷</span><span><b id="c-insta-t">Instagram</b><span>Siga a Feijuca</span></span><span class="seta">›</span></a>
+      <a data-ev="feijuca-mapa" class="card" id="c-mapa" data-link="mapa" href="#" hidden><span class="ic">📍</span><span><b>Como chegar</b><span>Av. João Lopes Meireles, 1792 · Praia, Paracuru</span></span><span class="seta">›</span></a>
+      <a data-ev="feijuca-instagram" class="card" id="c-insta" data-link="instagram" href="#" hidden><span class="ic">📷</span><span><b id="c-insta-t">Instagram</b><span>Siga a Feijuca</span></span><span class="seta">›</span></a>
       <a class="card" href="cardapio/"><span class="ic">📖</span><span><b>Cardápio completo</b><span>Pratos, petiscos, bebidas e preços</span></span><span class="seta">›</span></a>
       <a class="card" data-link="whatsapp" href="https://wa.me/5585998515015"><span class="ic">💬</span><span><b>Reservas e dúvidas</b><span>Fale com a gente no WhatsApp</span></span><span class="seta">›</span></a>
     </div>
@@ -267,21 +319,54 @@ body.travado { overflow: hidden; }
 <div class="luz" id="luz" hidden role="dialog" aria-modal="true" aria-labelledby="luz-nome">
   <button class="fechar" id="luz-x" type="button" aria-label="Fechar">×</button>
   <div class="quadro"><img id="luz-img" alt=""><video id="luz-vid" muted loop playsinline controls hidden></video></div>
-  <div class="info"><b id="luz-nome"></b><p id="luz-desc"></p><div class="preco" id="luz-preco"></div><a id="luz-pedir" data-link="pedir" href="https://gabbaburger.saipos.com/home" target="_blank" rel="noopener">PEDIR DELIVERY</a></div>
+  <div class="info"><b id="luz-nome"></b><p id="luz-desc"></p><div class="preco" id="luz-preco"></div><a data-ev="feijuca-foto-pedir" id="luz-pedir" data-link="pedir" href="https://gabbaburger.saipos.com/home" target="_blank" rel="noopener">PEDIR DELIVERY</a></div>
 </div>
 
+<div class="folha" id="f-enc" hidden role="dialog" aria-modal="true" aria-labelledby="f-enc-h">
+  <div class="caixa"><div class="alca"></div>
+    <h2 id="f-enc-h">Encomendar</h2>
+    <p class="dica">Escolha os pratos, o dia e o horário. O pedido vai pronto para o nosso WhatsApp.</p>
+    <h3>O que vai querer</h3><div id="enc-itens"></div>
+    <h3>Para quando</h3><div class="chips" id="enc-dias"></div>
+    <h3>Horário</h3><div class="chips" id="enc-horas"></div>
+    <h3>Como recebe</h3><div class="chips" id="enc-modo"><button type="button" data-v="retirar" aria-pressed="true">Retiro na loja</button><button type="button" data-v="entrega" aria-pressed="false">Entrega<small>taxa a combinar</small></button></div>
+    <label class="campo" id="enc-end-l" hidden>Endereço de entrega<textarea id="enc-end" placeholder="Rua, número, bairro e ponto de referência"></textarea></label>
+    <label class="campo">Seu nome<input type="text" id="enc-nome" autocomplete="name" placeholder="Como te chamamos?"></label>
+    <label class="campo">Observação (opcional)<input type="text" id="enc-obs" placeholder="Ex.: sem pimenta"></label>
+    <div class="total"><span>Total estimado</span><b id="enc-total">R$ 0,00</b></div>
+    <p class="erro-f" id="enc-erro" aria-live="polite"></p>
+    <button class="enviar" id="enc-enviar" type="button" data-ev="feijuca-enviar-encomenda"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2z"/></svg>Enviar encomenda no WhatsApp</button>
+    <p class="nota-f">A encomenda é confirmada pela nossa equipe no WhatsApp.</p>
+    <button class="fechar-f" type="button" data-fecha>Fechar</button>
+  </div>
+</div>
+<div class="folha" id="f-res" hidden role="dialog" aria-modal="true" aria-labelledby="f-res-h">
+  <div class="caixa"><div class="alca"></div>
+    <h2 id="f-res-h">Reservar mesa</h2>
+    <p class="dica">Escolha o dia, o horário e quantas pessoas vêm para a resenha.</p>
+    <h3>Dia</h3><div class="chips" id="res-dias"></div>
+    <h3>Horário</h3><div class="chips" id="res-horas"></div>
+    <h3>Quantas pessoas</h3><div class="pessoas"><button type="button" id="res-menos" aria-label="Menos uma pessoa">−</button><output id="res-n">2</output><button type="button" id="res-mais" aria-label="Mais uma pessoa">+</button></div>
+    <label class="campo">Seu nome<input type="text" id="res-nome" autocomplete="name" placeholder="Nome da reserva"></label>
+    <label class="campo">Observação (opcional)<input type="text" id="res-obs" placeholder="Ex.: aniversário, cadeirinha de bebê"></label>
+    <p class="erro-f" id="res-erro" aria-live="polite"></p>
+    <button class="enviar" id="res-enviar" type="button" data-ev="feijuca-enviar-reserva"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2z"/></svg>Pedir reserva no WhatsApp</button>
+    <p class="nota-f">A reserva é confirmada pela nossa equipe no WhatsApp.</p>
+    <button class="fechar-f" type="button" data-fecha>Fechar</button>
+  </div>
+</div>
 <div class="story" id="story" hidden role="dialog" aria-modal="true" aria-label="Story">
   <div class="tela-st">
     <div class="midia-st" id="st-midia"></div>
     <div class="topo-st"><div class="barras" id="st-barras"></div>
       <div class="quem"><img src="logo.png" alt=""><b id="st-grupo"></b><small>agora</small><button class="x" id="st-x" type="button" aria-label="Fechar">×</button></div></div>
     <div class="zona esq" id="st-ant"></div><div class="zona dir" id="st-prox"></div>
-    <div class="baixo-st"><div class="txt-st" id="st-txt"></div><div class="sub-st" id="st-sub"></div><div class="preco-st" id="st-preco"></div><a id="st-btn" href="#" target="_blank" rel="noopener"></a></div>
+    <div class="baixo-st"><div class="txt-st" id="st-txt"></div><div class="sub-st" id="st-sub"></div><div class="preco-st" id="st-preco"></div><a data-ev="feijuca-story-botao" id="st-btn" href="#" target="_blank" rel="noopener"></a></div>
   </div>
 </div>
 
 <footer>
-  <a class="zap-rod" data-link="whatsapp" href="https://wa.me/5585998515015"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3z"/></svg><span><small>WhatsApp</small>(85) 9 9851-5015</span></a><br>
+  <a data-ev="feijuca-whatsapp-rodape" class="zap-rod" data-link="whatsapp" href="https://wa.me/5585998515015"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3z"/></svg><span><small>WhatsApp</small>(85) 9 9851-5015</span></a><br>
   Feijuca do Gabba · Paracuru-CE<br>
   <a class="grupo" href="../bio3/">Conheça o Gabba Burger</a>
 </footer>
@@ -340,7 +425,7 @@ body.travado { overflow: hidden; }
   var CAPA_ITEM = { 'feijoada-completa': 'Feijoada completa', 'feijoada': 'Feijoada completa', 'moela': 'Moela ao molho', 'pastel': 'Mini pastéis de queijo', 'chopp': 'Chopp Turatti' };
   function itemDaCapa(u) {
     var base = String(u || '').split('/').pop().replace(/\.(mp4|jpg)$/, '');
-    var nome = CAPA_ITEM[base]; var todos = (C.pratos || []).concat(C.chopes || []);
+    var nome = CAPA_ITEM[base]; var todos = todosDestaques();
     return todos.filter(function (i) { return i.nome === nome; })[0] || { nome: nome || 'Feijuca do Gabba', desc: '', preco: '' };
   }
   function pinta() {
@@ -374,10 +459,10 @@ body.travado { overflow: hidden; }
     else if (h && n.min < toMin(h[0])) m = 'antes';
     else if (h && n.min < toMin(h[1])) m = 'aberto';
     else m = 'fechado';
-    if (forcado) { m = forcado; var pv = document.createElement('div'); pv.className = 'previa'; pv.textContent = 'Prévia: momento "' + m + '"'; document.body.append(pv); }
+    if (forcado) { m = forcado; } if (forcado && !document.querySelector('.previa')) { var pv = document.createElement('div'); pv.className = 'previa'; pv.textContent = 'Prévia: momento "' + m + '"'; document.body.append(pv); }
 
     var st = $('status'), stt = $('status-txt'), rot = $('m-rotulo'), b1 = $('b1'), sub = $('m-sub');
-    MOM = m;
+    MOM = m; b1.dataset.ev = 'feijuca-capa-' + m;
     st.classList.toggle('aberto', m === 'aberto');
     rot.classList.toggle('quente', m === 'aberto');
     slogan();
@@ -386,18 +471,20 @@ body.travado { overflow: hidden; }
       rot.textContent = 'Hoje tem Feijuca';
       stt.textContent = 'Abre às ' + fmt(hh[0]);
       sub.textContent = 'Hoje das ' + fmt(hh[0]) + ' às ' + fmt(hh[1]) + '. Já separa a turma da resenha.';
-      b1.textContent = 'PEDIR DELIVERY'; b1.dataset.link = 'pedir';
+      b1.textContent = 'PEDIR DELIVERY'; b1.dataset.link = 'pedir'; b1.dataset.acao = '';
     } else if (m === 'aberto') {
       rot.textContent = 'Feijuca rolando';
       stt.textContent = 'Aberto até ' + fmt(hh[1]);
       sub.textContent = 'Feijoada, petiscos e chopp gelado. Vem pra cá ou peça em casa.';
-      b1.textContent = 'PEDIR DELIVERY'; b1.dataset.link = 'pedir';
+      b1.textContent = 'PEDIR DELIVERY'; b1.dataset.link = 'pedir'; b1.dataset.acao = '';
     } else {
       var p = proxima(n);
       rot.textContent = 'Feijuca do Gabba';
       stt.textContent = 'Fechado agora';
       sub.textContent = p ? 'Volta ' + p.quando + ' às ' + fmt(p.h[0]) + '. ' + resumoDias() + '.' : resumoDias();
-      b1.textContent = 'VER CARDÁPIO'; b1.dataset.link = ''; b1.href = 'cardapio/';
+      var rec = C.recursos || {};
+      if (rec.encomenda !== false && p) { b1.textContent = 'ENCOMENDAR PARA ' + (p.quando === 'amanhã' ? 'AMANHÃ' : p.quando.toUpperCase()); b1.dataset.link = ''; b1.dataset.acao = 'encomenda'; b1.href = '#encomendar'; }
+      else { b1.textContent = 'VER CARDÁPIO'; b1.dataset.link = ''; b1.dataset.acao = ''; b1.href = 'cardapio/'; }
     }
     return n;
   }
@@ -406,7 +493,7 @@ body.travado { overflow: hidden; }
     var a = document.createElement('article'); a.className = 'item' + (grande ? ' grande' : '') + (chope ? ' chope' : '');
     var img = document.createElement('div'); img.className = 'img';
     var fotos = fotosDe(it);
-    if (fotos.length === 1) { var im = document.createElement('img'); im.src = src(fotos[0]); im.alt = it.nome || ''; im.loading = 'lazy'; img.append(im); }
+    if (fotos.length === 1) { var im = document.createElement('img'); poeImg(im, fotos[0], 'md'); im.alt = it.nome || ''; im.loading = 'lazy'; img.append(im); }
     else if (fotos.length > 1) { img.append(trilho(fotos, it.nome, true)); }
     else { var v = document.createElement('div'); v.className = 'vazio'; var b = document.createElement('b'); b.textContent = (it.nome || '?').trim().charAt(0).toUpperCase(); v.append(b); img.append(v); }
     if (it.selo) { var s = document.createElement('span'); s.className = 'selo'; s.textContent = it.selo; img.append(s); }
@@ -427,12 +514,23 @@ body.travado { overflow: hidden; }
     return a;
   }
 
+  // versões menores das fotos (fotos/md para os cards, fotos/mini para as bolinhas); se não existir, usa a original
+  function variante(p, pasta) {
+    if (/^fotos\/[^/]+\.jpg$/.test(p)) return p.replace('fotos/', 'fotos/' + pasta + '/');
+    if (/^vid\/[^/]+\.jpg$/.test(p)) return 'fotos/' + pasta + '/vid-' + p.slice(4);
+    return p;
+  }
+  function poeImg(im, p, pasta) {
+    var v = variante(p, pasta);
+    if (v !== p) im.onerror = function () { im.onerror = null; im.src = src(p); };
+    im.src = src(v);
+  }
   function fotosDe(it) { return [it.foto, it.foto2].filter(Boolean); }
   // faixa deslizante com as fotos e bolinhas que acompanham
   function trilho(fotos, alt, preguica) {
     var box = document.createDocumentFragment();
     var tr = document.createElement('div'); tr.className = 'trilho';
-    fotos.forEach(function (f, k) { var im = document.createElement('img'); im.src = src(f); im.alt = (alt || '') + (fotos.length > 1 ? ' (foto ' + (k + 1) + ')' : ''); if (preguica) im.loading = 'lazy'; im.draggable = false; tr.append(im); });
+    fotos.forEach(function (f, k) { var im = document.createElement('img'); if (preguica) poeImg(im, f, 'md'); else im.src = src(f); im.alt = (alt || '') + (fotos.length > 1 ? ' (foto ' + (k + 1) + ')' : ''); if (preguica) im.loading = 'lazy'; im.draggable = false; tr.append(im); });
     var pts = document.createElement('div'); pts.className = 'mini-pontos'; pts.setAttribute('aria-hidden', 'true');
     fotos.forEach(function (_, k) { var i = document.createElement('i'); if (!k) i.className = 'on'; pts.append(i); });
     tr.addEventListener('scroll', function () { var k = Math.round(tr.scrollLeft / Math.max(1, tr.clientWidth)); [].forEach.call(pts.children, function (i, j) { i.classList.toggle('on', j === k); }); }, { passive: true });
@@ -441,6 +539,7 @@ body.travado { overflow: hidden; }
   var ultimoFoco = null;
   function precoTxt(p) { return !p ? '' : /^\s*R\$/.test(p) ? p : 'R$ ' + p; }
   function abreFoto(it, video, inicio) {
+    if (window.gabbaConta) window.gabbaConta('feijuca-ampliou-' + String(it.nome || '').toLowerCase().replace(/[^a-z0-9]+/g, '-'), 'Feijuca: ampliou ' + (it.nome || ''));
     ultimoFoco = document.activeElement;
     var lv = $('luz-vid'), li = $('luz-img'), q = li.parentNode;
     [].forEach.call(q.querySelectorAll('.trilho, .mini-pontos'), function (x) { x.remove(); });
@@ -472,7 +571,17 @@ body.travado { overflow: hidden; }
   // botão "voltar" do celular fecha a foto em vez de sair da bio
   window.addEventListener('popstate', function () { fechaFoto(true); });
 
+  // preço e descrição vêm do cardápio (cardapio.json) quando o destaque aponta para um item dele (campo ref)
+  var MENU = {}, CARD = null;
+  function doMenu(i) {
+    if (!i) return i; var m = i.ref && MENU[i.ref];
+    if (!m) return i;
+    var r = {}; Object.keys(i).forEach(function (k) { r[k] = i[k]; });
+    r.preco = m.preco || ''; r.desc = m.desc || i.desc || ''; return r;
+  }
+  function todosDestaques() { return (C.pratos || []).concat(C.chopes || []).map(doMenu); }
   function lista(id, itens, chope, secao) {
+    itens = (itens || []).map(doMenu);
     var box = $(id); box.textContent = '';
     var vis = (itens || []).filter(function (i) { return i && !i.oculto && i.nome; });
     $(secao).hidden = !vis.length;
@@ -550,6 +659,7 @@ body.travado { overflow: hidden; }
     lista('lista-pratos', C.pratos, false, 'pratos');
     lista('lista-chopes', C.chopes, true, 'chopes');
     horas(n);
+    if (typeof comoEsta === 'function') { comoEsta(); garanta(); }
   }
 
   var capa = $('capa');
@@ -570,7 +680,7 @@ body.travado { overflow: hidden; }
 
 
   // ---------- Stories ----------
-  function it(nome) { return (C.pratos || []).concat(C.chopes || []).filter(function (i) { return i.nome === nome; })[0] || null; }
+  function it(nome) { return todosDestaques().filter(function (i) { return i.nome === nome; })[0] || null; }
   var BTN = { pedir: 'Pedir delivery', whatsapp: 'Chamar no WhatsApp', mapa: 'Como chegar', cardapio: 'Ver cardápio' };
   // um story do config → o que aparece na tela (nome, descrição e preço vêm do destaque escolhido)
   function story(s) {
@@ -602,11 +712,11 @@ body.travado { overflow: hidden; }
     G.forEach(function (g, k) {
       var b = document.createElement('button'); b.type = 'button'; b.className = 'st-bola' + (vistos[k] ? ' visto' : '');
       b.innerHTML = '<span class="aro"><img alt=""></span><span></span>';
-      b.querySelector('img').src = src(g.capa); b.lastChild.textContent = g.nome;
+      poeImg(b.querySelector('img'), g.capa, 'mini'); b.lastChild.textContent = g.nome;
       b.addEventListener('click', function () { abreStory(G, k); }); box.append(b);
     });
   }
-  function abreStory(lista, k) { G = lista; gi = k; si = 0; $('story').hidden = false; document.body.classList.add('travado'); mostra(); try { history.pushState({ st: 1 }, ''); } catch (e) {} }
+  function abreStory(lista, k) { if (window.gabbaConta) window.gabbaConta('feijuca-story-' + ((lista[k] || {}).nome || '').toLowerCase(), 'Feijuca: abriu story ' + ((lista[k] || {}).nome || '')); G = lista; gi = k; si = 0; $('story').hidden = false; document.body.classList.add('travado'); mostra(); try { history.pushState({ st: 1 }, ''); } catch (e) {} }
   function fechaStory(viaVoltar) {
     if ($('story').hidden) return; clearInterval(timer); $('st-midia').textContent = '';
     $('story').hidden = true; document.body.classList.remove('travado'); montaBolas();
@@ -654,6 +764,139 @@ body.travado { overflow: hidden; }
   document.addEventListener('keydown', function (e) { if ($('story').hidden) return; if (e.key === 'Escape') fechaStory(false); if (e.key === 'ArrowRight') avanca(); if (e.key === 'ArrowLeft') volta(); });
   window.addEventListener('popstate', function () { fechaStory(true); });
 
+
+  // ---------- Como está agora (vale só no dia marcado) ----------
+  function comoEsta() {
+    var A = C.agora || {}, hoje = agora().data, vale = A.data === hoje && MOM !== 'fechado';
+    var mv = $('mov'), MV = { livre: 'Mesas livres', enchendo: 'Enchendo', cheia: 'Casa cheia' };
+    if (vale && MV[A.mov]) { mv.className = 'mov ' + A.mov; mv.innerHTML = '<i></i>'; mv.append(MV[A.mov]); mv.hidden = false; } else mv.hidden = true;
+    var ac = vale ? (A.acabando || []) : [];
+    var fx = $('acabando'); fx.hidden = !ac.length; fx.textContent = ac.length ? '🔥 ' + (ac.length === 1 ? ac[0] + ' está acabando' : ac.slice(0, -1).join(', ') + ' e ' + ac[ac.length - 1] + ' estão acabando') : '';
+    [].forEach.call(document.querySelectorAll('.item'), function (el) {
+      var nm = el.querySelector('.txt b'), t = el.querySelector('.tag-acab');
+      var on = nm && ac.indexOf(nm.textContent) >= 0;
+      if (on && !t) { t = document.createElement('span'); t.className = 'tag-acab'; t.textContent = 'Acabando'; el.querySelector('.img').append(t); }
+      if (!on && t) t.remove();
+    });
+  }
+
+  // ---------- Encomenda e reserva (mensagem pronta no WhatsApp) ----------
+  function numeroZap() { var m = String((C.links || {}).whatsapp || '').match(/wa\.me\/(\d{10,15})/); return m ? m[1] : '5585998515015'; }
+  function abreZap(txt) { var u = 'https://wa.me/' + numeroZap() + '?text=' + encodeURIComponent(txt); var w = window.open(u, '_blank'); if (!w) location.href = u; }
+  var DIAS_SEM = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
+  function proximosDias(qtd) {
+    var n = agora(), r = [], base = new Date(n.data + 'T12:00:00Z');
+    for (var k = 0; k < 15 && r.length < qtd; k++) {
+      var d = new Date(base.getTime() + k * 864e5), dia = d.getUTCDay(), h = C.horarios[dia], iso = d.toISOString().slice(0, 10);
+      if (!h) continue;
+      if (k === 0 && (C.fechadoEm === iso || !horasDo({ h: h, hoje: true }, 60).length)) continue;
+      r.push({ iso: iso, dia: dia, h: h, rot: k === 0 ? 'Hoje' : k === 1 ? 'Amanhã' : DIAS_SEM[dia].charAt(0).toUpperCase() + DIAS_SEM[dia].slice(1), dm: iso.slice(8, 10) + '/' + iso.slice(5, 7), hoje: k === 0 });
+    }
+    return r;
+  }
+  function horasDo(d, folga) {
+    var r = [], ini = toMin(d.h[0]), fim = toMin(d.h[1]) - (folga || 30), n = agora();
+    for (var m = ini; m <= fim; m += 30) { if (d.hoje && m < n.min + 30) continue; r.push(('0' + Math.floor(m / 60)).slice(-2) + ':' + ('0' + m % 60).slice(-2)); }
+    return r;
+  }
+  function chips(box, ops, sel, onSel) {
+    box.textContent = '';
+    ops.forEach(function (o) {
+      var b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-pressed', o.v === sel ? 'true' : 'false');
+      b.append(o.t); if (o.s) { var sm = document.createElement('small'); sm.textContent = o.s; b.append(sm); }
+      b.addEventListener('click', function () { onSel(o.v); }); box.append(b);
+    });
+  }
+  var folhaAberta = null;
+  function abreFolha(id) { folhaAberta = $(id); folhaAberta.hidden = false; document.body.classList.add('travado'); try { history.pushState({ folha: 1 }, ''); } catch (e) {} }
+  function fechaFolha(viaVoltar) { if (!folhaAberta) return; folhaAberta.hidden = true; folhaAberta = null; document.body.classList.remove('travado'); if (!viaVoltar) { try { if (history.state && history.state.folha) history.back(); } catch (e) {} } }
+  [].forEach.call(document.querySelectorAll('.folha'), function (f) {
+    f.addEventListener('click', function (e) { if (e.target === f || e.target.hasAttribute('data-fecha')) fechaFolha(false); });
+  });
+  window.addEventListener('popstate', function () { fechaFolha(true); });
+  function lembra(k, v) { try { if (v === undefined) return localStorage.getItem('feijuca-' + k) || ''; localStorage.setItem('feijuca-' + k, v); } catch (e) { return ''; } }
+  function reais(v) { return 'R$ ' + v.toFixed(2).replace('.', ','); }
+  function valor(p) { var x = parseFloat(String(p || '').replace(/[^\d,]/g, '').replace(',', '.')); return isNaN(x) ? 0 : x; }
+
+  // Encomenda
+  var ENC = { q: {}, dia: '', hora: '', modo: 'retirar' };
+  function itensEncomenda() {
+    var r = [], secs = (CARD || {}).secoes || [];
+    [/prato/i, /entrada/i, /sobremesa/i].forEach(function (re) { secs.forEach(function (sec) { if (!re.test(sec.titulo)) return; (sec.itens || []).forEach(function (i) { if (i && i.nome && !i.oculto) r.push(i); }); }); });
+    return r;
+  }
+  function desenhaEnc() {
+    var box = $('enc-itens'); box.textContent = ''; var tot = 0, qtd = 0;
+    itensEncomenda().forEach(function (i) {
+      var q = ENC.q[i.nome] || 0; tot += q * valor(i.preco); qtd += q;
+      var row = document.createElement('div'); row.className = 'qtd' + (q ? ' tem' : '');
+      row.innerHTML = '<div class="n"><b></b><small></small></div><div class="ctl"><button type="button" aria-label="Menos">−</button><output>0</output><button type="button" aria-label="Mais">+</button></div>';
+      row.querySelector('b').textContent = i.nome; row.querySelector('small').textContent = i.preco ? 'R$ ' + i.preco : '';
+      var bs = row.querySelectorAll('button'); row.querySelector('output').textContent = q; bs[0].disabled = !q;
+      bs[0].setAttribute('aria-label', 'Menos ' + i.nome); bs[1].setAttribute('aria-label', 'Mais ' + i.nome);
+      bs[0].addEventListener('click', function () { ENC.q[i.nome] = Math.max(0, q - 1); desenhaEnc(); });
+      bs[1].addEventListener('click', function () { ENC.q[i.nome] = q + 1; desenhaEnc(); });
+      box.append(row);
+    });
+    $('enc-total').textContent = reais(tot) + (ENC.modo === 'entrega' ? ' + entrega' : '');
+    var dias = proximosDias(4); if (!dias.some(function (d) { return d.iso === ENC.dia; })) ENC.dia = dias[0] ? dias[0].iso : '';
+    chips($('enc-dias'), dias.map(function (d) { return { v: d.iso, t: d.rot, s: d.dm }; }), ENC.dia, function (v) { ENC.dia = v; desenhaEnc(); });
+    var dSel = dias.filter(function (d) { return d.iso === ENC.dia; })[0], hs = dSel ? horasDo(dSel, 30) : [];
+    if (hs.indexOf(ENC.hora) < 0) ENC.hora = hs.indexOf('12:00') >= 0 ? '12:00' : (hs[0] || '');
+    chips($('enc-horas'), hs.map(function (h) { return { v: h, t: h }; }), ENC.hora, function (v) { ENC.hora = v; desenhaEnc(); });
+    [].forEach.call($('enc-modo').children, function (b) { b.setAttribute('aria-pressed', b.dataset.v === ENC.modo ? 'true' : 'false'); });
+    $('enc-end-l').hidden = ENC.modo !== 'entrega';
+    $('enc-enviar').disabled = !qtd;
+    ENC.tot = tot; ENC.dSel = dSel;
+  }
+  [].forEach.call($('enc-modo').children, function (b) { b.addEventListener('click', function () { ENC.modo = b.dataset.v; desenhaEnc(); }); });
+  function abreEncomenda() { $('enc-nome').value = $('enc-nome').value || lembra('nome'); $('enc-end').value = $('enc-end').value || lembra('end'); $('enc-erro').textContent = ''; desenhaEnc(); abreFolha('f-enc'); }
+  $('enc-enviar').addEventListener('click', function () {
+    var nome = $('enc-nome').value.trim(), end = $('enc-end').value.trim(), er = $('enc-erro');
+    if (!ENC.dia || !ENC.hora) { er.textContent = 'Escolha o dia e o horário.'; return; }
+    if (!nome) { er.textContent = 'Escreva seu nome.'; $('enc-nome').focus(); return; }
+    if (ENC.modo === 'entrega' && !end) { er.textContent = 'Escreva o endereço de entrega.'; $('enc-end').focus(); return; }
+    er.textContent = ''; lembra('nome', nome); if (end) lembra('end', end);
+    var linhas = ['Olá! Quero fazer uma *encomenda* na Feijuca do Gabba 🍲', ''];
+    itensEncomenda().forEach(function (i) { var q = ENC.q[i.nome] || 0; if (q) linhas.push(q + 'x ' + i.nome + (i.preco ? ' — ' + reais(q * valor(i.preco)) : '')); });
+    var d = ENC.dSel;
+    linhas.push('', '*Total estimado:* ' + reais(ENC.tot) + (ENC.modo === 'entrega' ? ' + taxa de entrega' : ''),
+      '*Dia:* ' + DIAS_SEM[d.dia] + ', ' + d.dm, '*Horário:* ' + ENC.hora,
+      ENC.modo === 'entrega' ? '*Entrega em:* ' + end : '*Retiro na loja*', '*Nome:* ' + nome);
+    var obs = $('enc-obs').value.trim(); if (obs) linhas.push('*Obs.:* ' + obs);
+    abreZap(linhas.join('\n'));
+  });
+
+  // Reserva
+  var RES = { dia: '', hora: '', n: 2 };
+  function desenhaRes() {
+    var dias = proximosDias(4); if (!dias.some(function (d) { return d.iso === RES.dia; })) RES.dia = dias[0] ? dias[0].iso : '';
+    chips($('res-dias'), dias.map(function (d) { return { v: d.iso, t: d.rot, s: d.dm }; }), RES.dia, function (v) { RES.dia = v; desenhaRes(); });
+    var dSel = dias.filter(function (d) { return d.iso === RES.dia; })[0], hs = dSel ? horasDo(dSel, 60) : [];
+    if (hs.indexOf(RES.hora) < 0) RES.hora = hs.indexOf('12:00') >= 0 ? '12:00' : (hs[0] || '');
+    chips($('res-horas'), hs.map(function (h) { return { v: h, t: h }; }), RES.hora, function (v) { RES.hora = v; desenhaRes(); });
+    $('res-n').textContent = RES.n; $('res-menos').disabled = RES.n <= 1; RES.dSel = dSel;
+  }
+  $('res-menos').addEventListener('click', function () { RES.n = Math.max(1, RES.n - 1); desenhaRes(); });
+  $('res-mais').addEventListener('click', function () { RES.n = Math.min(40, RES.n + 1); desenhaRes(); });
+  function abreReserva() { $('res-nome').value = $('res-nome').value || lembra('nome'); $('res-erro').textContent = ''; desenhaRes(); abreFolha('f-res'); }
+  $('res-enviar').addEventListener('click', function () {
+    var nome = $('res-nome').value.trim(), er = $('res-erro');
+    if (!RES.dia || !RES.hora) { er.textContent = 'Escolha o dia e o horário.'; return; }
+    if (!nome) { er.textContent = 'Escreva o nome da reserva.'; $('res-nome').focus(); return; }
+    er.textContent = ''; lembra('nome', nome);
+    var d = RES.dSel, linhas = ['Olá! Quero *reservar uma mesa* na Feijuca do Gabba 🪑', '',
+      '*Dia:* ' + DIAS_SEM[d.dia] + ', ' + d.dm, '*Horário:* ' + RES.hora, '*Pessoas:* ' + RES.n, '*Nome:* ' + nome];
+    var obs = $('res-obs').value.trim(); if (obs) linhas.push('*Obs.:* ' + obs);
+    abreZap(linhas.join('\n'));
+  });
+  $('g-enc').addEventListener('click', abreEncomenda);
+  $('g-res').addEventListener('click', abreReserva);
+  $('b1').addEventListener('click', function (e) { if (this.dataset.acao === 'encomenda') { e.preventDefault(); abreEncomenda(); } });
+  if (/#encomendar/.test(location.hash)) setTimeout(abreEncomenda, 600);
+  if (/#reservar/.test(location.hash)) setTimeout(abreReserva, 600);
+  function garanta() { var r = C.recursos || {}; $('g-enc').hidden = r.encomenda === false; $('g-res').hidden = r.reserva === false; $('garanta').hidden = r.encomenda === false && r.reserva === false; $('garanta').style.gridTemplateColumns = (r.encomenda === false || r.reserva === false) ? '1fr' : ''; }
+
   aplica(); montaBolas();
   fetch('config.json?v=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (c) {
     if (!c) return;
@@ -661,9 +904,22 @@ body.travado { overflow: hidden; }
     C.horarios = c.horarios || {};
     aplica(); montaBolas();
   }).catch(function () {});
+  fetch('cardapio.json?v=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (c) {
+    if (!c) return; MENU = {}; CARD = c;
+    (c.secoes || []).forEach(function (sec) { (sec.itens || []).forEach(function (i) { if (i && i.nome) MENU[i.nome] = i; }); });
+    aplica(); montaBolas();
+  }).catch(function () {});
   // Atualiza a capa quando muda de momento (ex.: deu 11h com a página aberta)
   setInterval(function () { if (!/momento=/.test(location.search)) aplica(); }, 60000);
 })();
+</script>
+<script src="../contador.js"></script>
+<script>
+/* Contagem de cliques (GoatCounter, sem cookies): botões com data-ev */
+document.addEventListener('click', function (e) {
+  var a = e.target.closest && e.target.closest('[data-ev]'); if (!a) return;
+  var ev = a.getAttribute('data-ev'); if (window.gabbaConta) window.gabbaConta(ev, 'Feijuca: ' + ev.replace('feijuca-', ''));
+}, true);
 </script>
 </body>
 </html>

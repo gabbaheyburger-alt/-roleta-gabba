@@ -31,7 +31,8 @@
       "preco": "58,00",
       "foto": "fotos/feijoada-completa.jpg",
       "oculto": false,
-      "foto2": "fotos/feijoada-completa-2.jpg"
+      "foto2": "fotos/feijoada-completa-2.jpg",
+      "ref": "Feijoada para 2 pessoas"
     },
     {
       "selo": "Petisco da casa",
@@ -39,7 +40,8 @@
       "desc": "Moela macia no molho especial da casa, servida com torradas de alho e farofa.",
       "preco": "18,00",
       "foto": "fotos/moela.jpg",
-      "oculto": false
+      "oculto": false,
+      "ref": "Moela ao molho"
     },
     {
       "selo": "Da casa",
@@ -47,7 +49,8 @@
       "desc": "12 unidades de mini pastéis de queijo.",
       "preco": "20,00",
       "foto": "fotos/pastel.jpg",
-      "oculto": false
+      "oculto": false,
+      "ref": "Mini pastéis de queijo"
     },
     {
       "selo": "",
@@ -55,7 +58,8 @@
       "desc": "5 unidades, recheadas com couve refogada e bacon.",
       "preco": "15,00",
       "foto": "fotos/bolinho.jpg",
-      "oculto": false
+      "oculto": false,
+      "ref": "Bolinho de feijoada"
     },
     {
       "selo": "",
@@ -63,7 +67,8 @@
       "desc": "Frango empanado coberto com molho de tomate caseiro e queijo gratinado. Acompanha arroz branco e batata frita.",
       "preco": "30,00",
       "foto": "fotos/parmegiana.jpg",
-      "oculto": false
+      "oculto": false,
+      "ref": "Filé à parmegiana"
     },
     {
       "selo": "",
@@ -71,7 +76,8 @@
       "desc": "",
       "preco": "",
       "foto": "fotos/torresmo.jpg",
-      "oculto": true
+      "oculto": true,
+      "ref": ""
     }
   ],
   "chopes": [
@@ -81,7 +87,8 @@
       "desc": "Chopp Turatti gelado.",
       "preco": "10,00",
       "foto": "fotos/chopp.jpg",
-      "oculto": false
+      "oculto": false,
+      "ref": "Chopp"
     }
   ],
   "capas": {
@@ -215,5 +222,14 @@
         ]
       }
     ]
+  },
+  "agora": {
+    "data": "",
+    "mov": "",
+    "acabando": []
+  },
+  "recursos": {
+    "encomenda": true,
+    "reserva": true
   }
 }
