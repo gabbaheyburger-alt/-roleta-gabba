@@ -128,6 +128,18 @@ footer { text-align: center; padding: 36px 16px calc(28px + env(safe-area-inset-
 .zap-rod small { display: block; font: 600 .75rem var(--label); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); text-align: left; }
 footer a.grupo { color: var(--muted); }
 
+/* ---------- Capa deslizável ---------- */
+.capa.toca .foto { cursor: zoom-in; }
+.pontos { display: flex; gap: 6px; margin: 0 0 12px; align-items: center; }
+.pontos button[data-k] { width: 8px; height: 8px; padding: 0; border: 0; border-radius: 999px; background: rgba(247,240,226,.45); cursor: pointer; transition: width .25s ease, background .25s ease; }
+.pontos button[data-k].on { width: 22px; background: var(--laranja); }
+.pontos button[data-k]::before { content: ''; display: block; margin: -10px; padding: 14px; }
+.pontos .amp { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; border: 1px solid rgba(247,240,226,.35); background: rgba(12,22,16,.5); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); color: var(--cream); border-radius: 999px; padding: 5px 11px; font: 600 .8rem var(--label); letter-spacing: .08em; text-transform: uppercase; cursor: pointer; }
+.pontos .amp svg { width: 13px; height: 13px; }
+.capa > .seta-capa { position: absolute; top: 32svh; z-index: 2; width: 38px; height: 38px; border-radius: 50%; border: 1px solid rgba(247,240,226,.3); background: rgba(12,22,16,.45); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); color: var(--cream); font-size: 1.3rem; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.seta-capa.esq { left: 10px; } .seta-capa.dir { right: 10px; }
+.luz .quadro video { width: 100%; height: 100%; max-width: 100%; max-height: 100%; border-radius: 14px; object-fit: contain; background: #000; }
+
 /* ---------- Foto ampliada (toque no card) ---------- */
 .item[data-abre] { cursor: pointer; -webkit-tap-highlight-color: transparent; transition: transform .15s ease; }
 .item[data-abre]:active { transform: scale(.98); }
@@ -154,7 +166,10 @@ body.travado { overflow: hidden; }
     <span class="marca"><img src="logo.png" alt="Feijuca do Gabba · Sabor de Boteco" width="382" height="364"></span>
     <a class="zap-topo" data-link="whatsapp" href="https://wa.me/5585998515015" aria-label="WhatsApp"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3z"/></svg><span>WhatsApp</span></a>
   </div>
+  <button class="seta-capa esq" id="capa-ant" type="button" aria-label="Vídeo anterior" hidden>‹</button>
+  <button class="seta-capa dir" id="capa-prox" type="button" aria-label="Próximo vídeo" hidden>›</button>
   <div class="base">
+    <div class="pontos" id="pontos" hidden></div>
     <div class="linha"><span class="momento" id="m-rotulo">Feijuca</span><span class="status" id="status"><span class="bola"></span><span id="status-txt">Sexta a domingo</span></span></div>
     <h1 id="m-titulo">Se a Feijuca é boa, <em>imagina a resenha.</em></h1>
     <p class="sub" id="m-sub">Sexta, sábado e domingo, das 11h às 15h · Paracuru</p>
@@ -199,7 +214,7 @@ body.travado { overflow: hidden; }
 
 <div class="luz" id="luz" hidden role="dialog" aria-modal="true" aria-labelledby="luz-nome">
   <button class="fechar" id="luz-x" type="button" aria-label="Fechar">×</button>
-  <div class="quadro"><img id="luz-img" alt=""></div>
+  <div class="quadro"><img id="luz-img" alt=""><video id="luz-vid" muted loop playsinline controls hidden></video></div>
   <div class="info"><b id="luz-nome"></b><p id="luz-desc"></p><div class="preco" id="luz-preco"></div><a id="luz-pedir" data-link="pedir" href="https://gabbaburger.saipos.com/home" target="_blank" rel="noopener">PEDIR DELIVERY</a></div>
 </div>
 
@@ -258,7 +273,38 @@ body.travado { overflow: hidden; }
     return mesmos ? lista + ', das ' + fmt(C.horarios[abertos[0]][0]) + ' às ' + fmt(C.horarios[abertos[0]][1]) : lista;
   }
 
-  var MOM = 'fechado', CAPA_ATUAL = null, PAINEL = null;
+  var MOM = 'fechado', CAPA_ATUAL = null, PAINEL = null, PAINEL_ST = null;
+  // vídeo/foto da capa → card correspondente (nome, preço e descrição vêm dos destaques)
+  var CAPA_ITEM = { 'feijoada-completa': 'Feijoada completa', 'feijoada': 'Feijoada completa', 'moela': 'Moela ao molho', 'pastel': 'Mini pastéis de queijo', 'chopp': 'Chopp Turatti' };
+  function itemDaCapa(u) {
+    var base = String(u || '').split('/').pop().replace(/\.(mp4|jpg)$/, '');
+    var nome = CAPA_ITEM[base]; var todos = (C.pratos || []).concat(C.chopes || []);
+    return todos.filter(function (i) { return i.nome === nome; })[0] || { nome: nome || 'Feijuca do Gabba', desc: '', preco: '' };
+  }
+  function pinta() {
+    var P = PAINEL_ST; if (!P) return;
+    [].forEach.call(document.querySelectorAll('#pontos button[data-k]'), function (b) { var on = +b.dataset.k === P.atual; b.classList.toggle('on', on); b.setAttribute('aria-current', on ? 'true' : 'false'); });
+  }
+  function ampliaCapa() {
+    var P = PAINEL_ST; if (!P) return;
+    if (P.vids.length) abreFoto(itemDaCapa(P.vids[P.atual]), P.vids[P.atual]);
+    else if (P.foto) { var it = itemDaCapa(P.foto); abreFoto({ nome: it.nome, desc: it.desc, preco: it.preco, foto: P.foto }); }
+  }
+  function montaControles() {
+    var P = PAINEL_ST, box = $('pontos'); box.textContent = '';
+    var varios = !!(P && P.els.length > 1);
+    $('capa-ant').hidden = $('capa-prox').hidden = !varios;
+    capa.classList.toggle('toca', !!P);
+    if (!P) { box.hidden = true; return; }
+    if (varios) P.els.forEach(function (_, k) {
+      var b = document.createElement('button'); b.type = 'button'; b.dataset.k = k; b.setAttribute('aria-label', 'Vídeo ' + (k + 1) + ': ' + itemDaCapa(P.vids[k]).nome);
+      b.addEventListener('click', function () { P.vai(k); }); box.append(b);
+    });
+    var amp = document.createElement('button'); amp.type = 'button'; amp.className = 'amp';
+    amp.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>Ampliar';
+    amp.addEventListener('click', ampliaCapa); box.append(amp);
+    box.hidden = false; pinta();
+  }
   function momento() {
     var n = agora(), forcado = (location.search.match(/momento=(antes|aberto|fechado)/) || [])[1];
     var h = C.horarios[n.dia], m;
@@ -318,9 +364,11 @@ body.travado { overflow: hidden; }
 
   var ultimoFoco = null;
   function precoTxt(p) { return !p ? '' : /^\s*R\$/.test(p) ? p : 'R$ ' + p; }
-  function abreFoto(it) {
+  function abreFoto(it, video) {
     ultimoFoco = document.activeElement;
-    $('luz-img').src = src(it.foto); $('luz-img').alt = it.nome || '';
+    var lv = $('luz-vid'), li = $('luz-img');
+    if (video) { li.hidden = true; lv.hidden = false; lv.poster = src(video.replace(/\.mp4$/, '.jpg')); lv.src = src(video); lv.muted = true; var pl = lv.play(); if (pl && pl.catch) pl.catch(function () {}); }
+    else { lv.pause(); lv.removeAttribute('src'); lv.hidden = true; li.hidden = false; li.src = src(it.foto); li.alt = it.nome || ''; }
     $('luz-nome').textContent = it.nome || '';
     $('luz-desc').textContent = it.desc || ''; $('luz-desc').hidden = !it.desc;
     $('luz-preco').textContent = precoTxt(it.preco); $('luz-preco').hidden = !it.preco;
@@ -331,6 +379,7 @@ body.travado { overflow: hidden; }
   function fechaFoto(viaVoltar) {
     if ($('luz').hidden) return;
     $('luz').hidden = true; document.body.classList.remove('travado');
+    var lv = $('luz-vid'); lv.pause(); lv.removeAttribute('src'); lv.load();
     if (ultimoFoco && ultimoFoco.focus) ultimoFoco.focus();
     if (!viaVoltar) { try { if (history.state && history.state.foto) history.back(); } catch (e) {} }
   }
@@ -392,27 +441,49 @@ body.travado { overflow: hidden; }
           v.src = src(u); f.append(v); return v;
         });
         var toca = function (v) { try { v.currentTime = 0; } catch (e) {} var t = v.play(); if (t && t.catch) t.catch(function () {}); };
+        PAINEL_ST = { els: els, vids: vids, atual: 0, inicio: Date.now() };
+        var P = PAINEL_ST;
+        P.vai = function (k) {
+          k = (k + els.length) % els.length;
+          els.forEach(function (x, j) { if (j !== k) x.pause(); x.classList.toggle('on', j === k); });
+          P.atual = k; P.inicio = Date.now(); els[k].preload = 'auto'; toca(els[k]); pinta();
+        };
         if (els.length > 1) {
           // cada vídeo fica no ar pelo menos 8 s (os curtos repetem) e passa para o próximo quando termina
-          var atual = 0, inicio = Date.now();
           els.forEach(function (v, k) {
             v.addEventListener('ended', function () {
-              if (k !== atual) return;
-              if (Date.now() - inicio < 8000) { toca(v); return; }
-              atual = (atual + 1) % els.length; inicio = Date.now();
-              var prox = els[atual]; prox.preload = 'auto'; toca(prox);
-              els.forEach(function (x, j) { x.classList.toggle('on', j === atual); });
+              if (k !== P.atual) return;
+              if (Date.now() - P.inicio < 8000) { toca(v); return; }
+              P.vai(P.atual + 1);
             });
           });
         }
         toca(els[0]);
       } else if (fot) { var im = document.createElement('img'); im.src = src(fot); im.alt = ''; f.append(im); }
+      if (!vids.length) PAINEL_ST = fot ? { els: [], vids: [], foto: fot, atual: 0 } : null;
+      montaControles();
       f.hidden = !(vids.length || fot); capa.classList.toggle('comfoto', !!(vids.length || fot));
     }
     lista('lista-pratos', C.pratos, false, 'pratos');
     lista('lista-chopes', C.chopes, true, 'chopes');
     horas(n);
   }
+
+  var capa = $('capa');
+  $('capa-ant').addEventListener('click', function () { if (PAINEL_ST && PAINEL_ST.vai) PAINEL_ST.vai(PAINEL_ST.atual - 1); });
+  $('capa-prox').addEventListener('click', function () { if (PAINEL_ST && PAINEL_ST.vai) PAINEL_ST.vai(PAINEL_ST.atual + 1); });
+  var tx = null, ty = null, arrastou = false;
+  capa.addEventListener('touchstart', function (e) { var t = e.touches[0]; tx = t.clientX; ty = t.clientY; arrastou = false; }, { passive: true });
+  capa.addEventListener('touchend', function (e) {
+    if (tx === null) return; var t = e.changedTouches[0], dx = t.clientX - tx, dy = t.clientY - ty; tx = null;
+    if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.3 && PAINEL_ST && PAINEL_ST.vai) { arrastou = true; PAINEL_ST.vai(PAINEL_ST.atual + (dx < 0 ? 1 : -1)); }
+  }, { passive: true });
+  // toque na imagem da capa (fora de botões e links) amplia o vídeo/foto
+  capa.addEventListener('click', function (e) {
+    if (arrastou) { arrastou = false; return; }
+    if (e.target.closest('a, button, .aviso, .base')) return;
+    ampliaCapa();
+  });
 
   aplica();
   fetch('config.json?v=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (c) {
