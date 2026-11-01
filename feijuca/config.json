@@ -27,7 +27,7 @@
     {
       "selo": "Petisco da casa",
       "nome": "Moela ao molho",
-      "desc": "Moela macia no molho da casa, com torradas de alho e farofa",
+      "desc": "Moela macia no molho especial da casa, servida com torradas de alho e farofa.",
       "preco": "18,00",
       "foto": "fotos/moela.jpg",
       "oculto": false
@@ -35,7 +35,7 @@
     {
       "selo": "Da casa",
       "nome": "Mini pastéis de queijo",
-      "desc": "12 mini pastéis de queijo",
+      "desc": "12 unidades de mini pastéis de queijo.",
       "preco": "20,00",
       "foto": "fotos/pastel.jpg",
       "oculto": false
@@ -43,7 +43,7 @@
     {
       "selo": "",
       "nome": "Bolinho de feijoada",
-      "desc": "5 unidades, recheadas com couve refogada e bacon",
+      "desc": "5 unidades, recheadas com couve refogada e bacon.",
       "preco": "15,00",
       "foto": "fotos/bolinho.jpg",
       "oculto": false
@@ -51,7 +51,7 @@
     {
       "selo": "",
       "nome": "Filé à parmegiana",
-      "desc": "Com arroz branco e batata frita",
+      "desc": "Frango empanado coberto com molho de tomate caseiro e queijo gratinado. Acompanha arroz branco e batata frita.",
       "preco": "30,00",
       "foto": "fotos/parmegiana.jpg",
       "oculto": false
@@ -59,7 +59,7 @@
     {
       "selo": "A estrela",
       "nome": "Feijoada individual",
-      "desc": "300 g de feijoada com arroz, couve, farofa, laranja, torresmo e banana empanada",
+      "desc": "300 g de feijoada, arroz branco, couve refogada na manteiga com bacon, farofa, laranja, torresmo e banana empanada.",
       "preco": "30,00",
       "foto": "",
       "oculto": true
@@ -69,7 +69,7 @@
     {
       "selo": "Turatti",
       "nome": "Chopp Turatti",
-      "desc": "Gelado, na caneca",
+      "desc": "Chopp Turatti gelado.",
       "preco": "10,00",
       "foto": "fotos/chopp.jpg",
       "oculto": false
