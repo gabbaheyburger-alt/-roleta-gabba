@@ -104,6 +104,7 @@ input[type=date] { font: 600 1.05rem var(--body); color: var(--fg); background: 
         <button type="button" data-aba="cardapio" aria-selected="false">Cardápio</button>
         <button type="button" data-aba="pratos" aria-selected="false">Destaques</button>
         <button type="button" data-aba="chopes" aria-selected="false">Chopes</button>
+        <button type="button" data-aba="sobremesas" aria-selected="false">Sobremesas</button>
         <button type="button" data-aba="stories" aria-selected="false">Stories</button>
         <button type="button" data-aba="novidade" aria-selected="false">Novidade</button>
         <button type="button" data-aba="extras" aria-selected="false">Extras</button>
@@ -160,6 +161,12 @@ input[type=date] { font: 600 1.05rem var(--body); color: var(--fg); background: 
         <p class="note">O primeiro visível vira o card grande. Toque no quadrado para pôr a foto. Ligue cada destaque a um item do cardápio para o preço ficar sempre igual.</p>
         <div id="lista-pratos" style="display:flex;flex-direction:column;gap:12px;margin-top:12px"></div>
         <button class="add" type="button" data-add="pratos" style="margin-top:12px;width:100%">+ Adicionar prato</button>
+      </div>
+
+      <div data-painel="sobremesas" hidden>
+        <p class="note">Sobremesas em destaque na bio. Ligue cada uma a um item do cardápio para o preço ficar sempre igual. Se esconder todas, a seção some da bio.</p>
+        <div id="lista-sobremesas" style="display:flex;flex-direction:column;gap:12px;margin-top:12px"></div>
+        <button class="add" type="button" data-add="sobremesas" style="margin-top:12px;width:100%">+ Adicionar sobremesa</button>
       </div>
 
       <div data-painel="chopes" hidden>
@@ -390,7 +397,7 @@ input[type=date] { font: 600 1.05rem var(--body); color: var(--fg); background: 
       const kids = [el('h2', { textContent: sec.titulo })];
       sec.itens.forEach((i, n) => {
         const antigo = i.nome;
-        const renomeia = () => { const novo = i.nome.trim(); i.nome = novo; ['pratos', 'chopes'].forEach(k => (C[k] || []).forEach(d => { if (d.ref === antigo && novo) d.ref = novo; })); desenha(); };
+        const renomeia = () => { const novo = i.nome.trim(); i.nome = novo; ['pratos', 'chopes', 'sobremesas'].forEach(k => (C[k] || []).forEach(d => { if (d.ref === antigo && novo) d.ref = novo; })); desenha(); };
         const sobe = el('button', { type: 'button', className: 'mini', textContent: '↑', disabled: n === 0 }); sobe.addEventListener('click', () => { [sec.itens[n - 1], sec.itens[n]] = [sec.itens[n], sec.itens[n - 1]]; marcaM(); desenhaCardapio(); });
         const desce = el('button', { type: 'button', className: 'mini', textContent: '↓', disabled: n === sec.itens.length - 1 }); desce.addEventListener('click', () => { [sec.itens[n + 1], sec.itens[n]] = [sec.itens[n], sec.itens[n + 1]]; marcaM(); desenhaCardapio(); });
         const esc = el('button', { type: 'button', className: 'mini', textContent: i.oculto ? 'Mostrar' : 'Esconder' }); esc.addEventListener('click', () => { i.oculto = !i.oculto; marcaM(); desenhaCardapio(); });
@@ -429,7 +436,7 @@ input[type=date] { font: 600 1.05rem var(--body); color: var(--fg); background: 
           el('div', {}, [el('small', { textContent: 'Foto 2 (opcional)' }), fotoBtn(it, 'foto2', it.foto ? '+ 2ª foto' : 'Primeiro a foto 1')]),
           (() => { const t = el('button', { type: 'button', className: 'mini', textContent: 'Tirar 2ª foto', hidden: !it.foto2 }); t.addEventListener('click', () => { delete it.foto2; marca(); desenha(); }); return t; })()
         ]),
-        campo('Nome no card', it, 'nome', k === 'pratos' ? 'Ex.: Moela ao molho' : 'Ex.: Chopp Pilsen'),
+        campo('Nome no card', it, 'nome', k === 'pratos' ? 'Ex.: Moela ao molho' : k === 'sobremesas' ? 'Ex.: Pudim de leite' : 'Ex.: Chopp Pilsen'),
         ...camposPreco(it),
         campo('Selo (opcional)', it, 'selo', 'Ex.: Petisco, Novidade'),
         el('div', { className: 'acoes' }, [sobe, desce, esc, tirar, apaga])
@@ -443,7 +450,7 @@ input[type=date] { font: 600 1.05rem var(--body); color: var(--fg); background: 
   }));
 
   function desenha() {
-    desenhaLista('pratos'); desenhaLista('chopes');
+    desenhaLista('pratos'); desenhaLista('chopes'); desenhaLista('sobremesas');
     desenhaCapas();
     desenhaStories();
     desenhaCardapio();
@@ -459,7 +466,7 @@ input[type=date] { font: 600 1.05rem var(--body); color: var(--fg); background: 
     const ehVideo = /\.mp4$/.test(s.midia || '');
     const midiaSel = sel([['', 'Foto da galeria']].concat(VIDEOS.map(([v, t]) => [v, 'Vídeo: ' + t])), ehVideo ? s.midia : '', v => { s.midia = v; marca(); desenhaStories(); });
     const prev = ehVideo ? el('img', { className: 'prev', src: fotoSrc(s.midia.replace(/\.mp4$/, '.jpg')), alt: '' }) : fotoBtn(s, 'midia', 'Toque p/ foto');
-    const pratos = (C.pratos || []).concat(C.chopes || []).map(p => [p.nome, p.nome]);
+    const pratos = (C.pratos || []).concat(C.chopes || [], C.sobremesas || []).map(p => [p.nome, p.nome]);
     const pratoSel = sel([['', 'Nenhum (escrever texto)']].concat(pratos), s.prato, v => { s.prato = v; if (v && !s.btn) s.btn = 'pedir'; marca(); desenhaStories(); });
     const campos = [el('label', {}, ['Mídia', midiaSel]), el('label', {}, ['Prato do cardápio', pratoSel])];
     if (!s.prato) { campos.push(campo('Texto grande', s, 'txt', 'Ex.: Hoje tem Feijuca!')); campos.push(campo('Texto menor', s, 'sub', 'Ex.: Das 11h às 15h')); }
@@ -535,7 +542,7 @@ input[type=date] { font: 600 1.05rem var(--body); color: var(--fg); background: 
       b.addEventListener('click', () => { if (!vale) A.acabando = []; A.data = hojeStr(); A.mov = v; marca(); desenhaAgora(); }); mc.append(b);
     });
     const ac = $('acab-chips'); ac.textContent = '';
-    (C.pratos || []).concat(C.chopes || []).filter(i => i.nome && !i.oculto).forEach(i => {
+    (C.pratos || []).concat(C.chopes || [], C.sobremesas || []).filter(i => i.nome && !i.oculto).forEach(i => {
       const on = acab.indexOf(i.nome) >= 0, b = el('button', { type: 'button', textContent: (on ? '🔥 ' : '') + i.nome }); b.setAttribute('aria-pressed', on ? 'true' : 'false');
       b.addEventListener('click', () => { if (!vale) { A.mov = ''; A.acabando = []; } A.data = hojeStr(); A.acabando = on ? A.acabando.filter(x => x !== i.nome) : (A.acabando || []).concat(i.nome); marca(); desenhaAgora(); });
       ac.append(b);
@@ -614,7 +621,7 @@ input[type=date] { font: 600 1.05rem var(--body); color: var(--fg); background: 
       if (v && !/^https:\/\//.test(v)) erro = 'O link de "' + i.closest('label').firstChild.textContent.trim() + '" precisa começar com https://';
       links[i.dataset.k] = v;
     });
-    ['pratos', 'chopes'].forEach(k => (C[k] || []).forEach(it => { ['nome', 'desc', 'preco', 'selo'].forEach(c => it[c] = (it[c] || '').trim()); if (!it.nome && !erro) erro = 'Tem item sem nome em ' + (k === 'pratos' ? 'Pratos' : 'Chopes') + '. Preencha ou apague.'; }));
+    ['pratos', 'chopes', 'sobremesas'].forEach(k => (C[k] || []).forEach(it => { ['nome', 'desc', 'preco', 'selo'].forEach(c => it[c] = (it[c] || '').trim()); if (!it.nome && !erro) erro = 'Tem item sem nome em ' + ({ pratos: 'Destaques', chopes: 'Chopes', sobremesas: 'Sobremesas' }[k]) + '. Preencha ou apague.'; }));
     const S = C.stories || {};
     [].concat(((S.hoje || {}).itens || []), ...((S.grupos || []).map(g => g.itens || []))).forEach(st => { if (!st.midia && !erro) erro = 'Tem story sem foto ou vídeo na aba Stories. Escolha a mídia ou apague.'; if (!st.prato && !(st.txt || '').trim() && !erro) erro = 'Tem story sem prato e sem texto na aba Stories.'; });
     (S.grupos || []).forEach(g => { g.nome = (g.nome || '').trim(); if (!g.nome && !erro) erro = 'Tem bolinha sem nome na aba Stories.'; });
@@ -639,7 +646,7 @@ input[type=date] { font: 600 1.05rem var(--body); color: var(--fg); background: 
       if (r.status === 401 || r.status === 403) { sair('A chave não funcionou. Crie uma nova e conecte de novo.'); return; }
       if (!r.ok) throw new Error('HTTP ' + r.status);
       const j = await r.json(); sha = j.sha; C = JSON.parse(b64dec(j.content));
-      C.pratos = C.pratos || []; C.chopes = C.chopes || [];
+      C.pratos = C.pratos || []; C.chopes = C.chopes || []; C.sobremesas = C.sobremesas || [];
       try {
         const rm = await fetch(API + ARQ_M + '?ref=' + BRANCH + '&t=' + Date.now(), { headers: headers(), cache: 'no-store' });
         if (rm.ok) { const jm = await rm.json(); shaM = jm.sha; M = JSON.parse(b64dec(jm.content)); }

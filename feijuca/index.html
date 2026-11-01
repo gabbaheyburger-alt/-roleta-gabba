@@ -336,6 +336,11 @@ body.travado { overflow: hidden; }
     <a class="pedir" href="cardapio/" data-ev="feijuca-cardapio-destaques">VEJA O CARDÁPIO COMPLETO</a>
   </section>
 
+  <section class="parte" id="sobremesas" hidden>
+    <div class="titulo"><h2>Sobremesas</h2><span>Pra fechar</span></div>
+    <div class="grade" id="lista-sobremesas"></div>
+  </section>
+
   <section class="parte" id="chopes">
     <div class="titulo"><h2>Chopp gelado</h2><span>Na pressão</span></div>
     <div class="grade" id="lista-chopes"></div>
@@ -684,7 +689,7 @@ body.travado { overflow: hidden; }
     var r = {}; Object.keys(i).forEach(function (k) { r[k] = i[k]; });
     r.preco = m.preco || ''; r.desc = m.desc || i.desc || ''; return r;
   }
-  function todosDestaques() { return (C.pratos || []).concat(C.chopes || []).map(doMenu); }
+  function todosDestaques() { return (C.pratos || []).concat(C.chopes || [], C.sobremesas || []).map(doMenu); }
   function lista(id, itens, chope, secao) {
     itens = (itens || []).map(doMenu);
     var box = $(id); box.textContent = '';
@@ -764,6 +769,7 @@ body.travado { overflow: hidden; }
     }
     lista('lista-pratos', C.pratos, false, 'pratos');
     lista('lista-chopes', C.chopes, true, 'chopes');
+    lista('lista-sobremesas', C.sobremesas, 'doce', 'sobremesas');
     horas(n);
     if (typeof comoEsta === 'function') { comoEsta(); garanta(); }
     contagem(); novidade(); avaliar();

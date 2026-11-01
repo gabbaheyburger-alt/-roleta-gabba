@@ -279,5 +279,16 @@
     "valor": 300,
     "validade": 45,
     "texto": "A cada R$ 300 em consumo, você ganha uma sobremesa."
-  }
+  },
+  "sobremesas": [
+    {
+      "selo": "",
+      "nome": "Pudim de leite",
+      "ref": "Pudim de leite",
+      "desc": "",
+      "preco": "",
+      "foto": "fotos/pudim.jpg",
+      "oculto": false
+    }
+  ]
 }
