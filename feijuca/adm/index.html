@@ -106,6 +106,7 @@ input[type=date] { font: 600 1.05rem var(--body); color: var(--fg); background: 
         <button type="button" data-aba="chopes" aria-selected="false">Chopes</button>
         <button type="button" data-aba="stories" aria-selected="false">Stories</button>
         <button type="button" data-aba="novidade" aria-selected="false">Novidade</button>
+        <button type="button" data-aba="extras" aria-selected="false">Extras</button>
         <button type="button" data-aba="capa" aria-selected="false">Capa</button>
         <button type="button" data-aba="links" aria-selected="false">Links</button>
       </nav>
@@ -193,6 +194,31 @@ input[type=date] { font: 600 1.05rem var(--body); color: var(--fg); background: 
           <label id="nv-link-l">Link do botão <input type="url" id="nv-link" placeholder="https://"></label>
           <label>Texto do botão (opcional) <input type="text" id="nv-btxt" maxlength="30" placeholder="Ex.: Quero provar"></label>
           <label>Tirar do ar sozinho no dia (opcional) <input type="date" id="nv-ate"></label>
+        </section>
+      </div>
+
+      <div data-painel="extras" hidden>
+        <section class="card">
+          <h2>Feijoada para levar (congelada)</h2>
+          <p class="note">Aparece na bio todos os dias, com encomenda pelo WhatsApp. Ligue só quando a operação estiver pronta (embalagem, rótulo, freezer).</p>
+          <label class="switch"><span>Mostrar na bio</span><input type="checkbox" id="lv-ativo"></label>
+          <label>Título <input type="text" id="lv-tit" maxlength="60"></label>
+          <label>Texto <input type="text" id="lv-txt" maxlength="200"></label>
+          <label>Preço vem do cardápio <select id="lv-ref"></select></label>
+          <label>Tamanho / rendimento <input type="text" id="lv-uni" maxlength="40" placeholder="Ex.: serve 2 pessoas · 750 g"></label>
+          <label>Onde e quando retira <input type="text" id="lv-ret" maxlength="140" placeholder="Ex.: Retirada no Gabba Burger, das 17h às 22h"></label>
+          <p class="note">Dias em que dá para retirar:</p>
+          <div class="chips2" id="lv-dias"></div>
+          <label>Antecedência mínima <select id="lv-ant"><option value="0">Pode ser no mesmo dia</option><option value="1">1 dia</option><option value="2">2 dias</option></select></label>
+          <div><small class="note">Foto</small><div id="lv-foto"></div></div>
+        </section>
+        <section class="card" style="margin-top:16px">
+          <h2>Fidelidade (Cliente Premiado)</h2>
+          <p class="note">Mostra a regra na bio e um botão para o cliente se cadastrar pelo WhatsApp. A contagem do valor gasto é feita pela equipe.</p>
+          <label class="switch"><span>Mostrar na bio</span><input type="checkbox" id="fd-ativo"></label>
+          <label>Nome do programa <input type="text" id="fd-nome" maxlength="40"></label>
+          <div class="dois"><label>A cada (R$) <input type="text" id="fd-valor" inputmode="numeric" maxlength="6"></label><label>Validade (dias) <input type="text" id="fd-val" inputmode="numeric" maxlength="3"></label></div>
+          <label>Texto na bio <input type="text" id="fd-txt" maxlength="160"></label>
         </section>
       </div>
 
@@ -423,6 +449,7 @@ input[type=date] { font: 600 1.05rem var(--body); color: var(--fg); background: 
     desenhaCardapio();
     desenhaAgora();
     desenhaNovidade();
+    desenhaExtras();
   }
   // ---------- Stories ----------
   const BOTOES = [['pedir', 'Pedir delivery'], ['whatsapp', 'Chamar no WhatsApp'], ['mapa', 'Como chegar'], ['cardapio', 'Ver cardápio'], ['', 'Sem botão']];
@@ -536,6 +563,26 @@ input[type=date] { font: 600 1.05rem var(--body); color: var(--fg); background: 
   $('enc-tit').addEventListener('input', e => { C.encerramento.titulo = e.target.value; marca(); });
   $('enc-txt').addEventListener('input', e => { C.encerramento.texto = e.target.value; marca(); });
   $('rec-cd').addEventListener('change', e => { C.recursos.contagem = e.target.checked; marca(); });
+  function desenhaExtras() {
+    const V = C.levar = C.levar || { ativo: false, dias: [0, 1, 2, 3, 4, 5, 6], antecedencia: 1 };
+    $('lv-ativo').checked = !!V.ativo; $('lv-tit').value = V.titulo || ''; $('lv-txt').value = V.texto || ''; $('lv-uni').value = V.unidade || ''; $('lv-ret').value = V.retirada || ''; $('lv-ant').value = String(V.antecedencia == null ? 1 : V.antecedencia);
+    const rs = $('lv-ref'); rs.textContent = ''; rs.append(el('option', { value: '', textContent: 'Escolha um item do cardápio' }));
+    itensMenu().forEach(([t, i]) => rs.append(el('option', { value: i.nome, textContent: t + ' · ' + i.nome + (i.preco ? ' · R$ ' + i.preco : ''), selected: V.ref === i.nome })));
+    const dc = $('lv-dias'); dc.textContent = ''; V.dias = V.dias || [];
+    [1, 2, 3, 4, 5, 6, 0].forEach(d => { const on = V.dias.indexOf(d) >= 0, b = el('button', { type: 'button', textContent: NOMES[d].slice(0, 3) }); b.setAttribute('aria-pressed', on ? 'true' : 'false'); b.addEventListener('click', () => { V.dias = on ? V.dias.filter(x => x !== d) : V.dias.concat(d); marca(); desenhaExtras(); }); dc.append(b); });
+    const f = $('lv-foto'); f.textContent = ''; f.append(fotoBtn(V, 'foto', 'Toque para pôr foto'));
+    const F = C.fidelidade = C.fidelidade || { ativo: false, nome: 'Cliente Premiado', valor: 300, validade: 45 };
+    $('fd-ativo').checked = !!F.ativo; $('fd-nome').value = F.nome || ''; $('fd-valor').value = F.valor || ''; $('fd-val').value = F.validade || ''; $('fd-txt').value = F.texto || '';
+  }
+  [['lv-tit', 'titulo'], ['lv-txt', 'texto'], ['lv-uni', 'unidade'], ['lv-ret', 'retirada']].forEach(([id, k]) => $(id).addEventListener('input', e => { C.levar[k] = e.target.value; marca(); }));
+  $('lv-ativo').addEventListener('change', e => { C.levar.ativo = e.target.checked; marca(); });
+  $('lv-ref').addEventListener('change', e => { C.levar.ref = e.target.value; marca(); });
+  $('lv-ant').addEventListener('change', e => { C.levar.antecedencia = +e.target.value; marca(); });
+  $('fd-ativo').addEventListener('change', e => { C.fidelidade.ativo = e.target.checked; marca(); });
+  $('fd-nome').addEventListener('input', e => { C.fidelidade.nome = e.target.value; marca(); });
+  $('fd-txt').addEventListener('input', e => { C.fidelidade.texto = e.target.value; marca(); });
+  $('fd-valor').addEventListener('input', e => { C.fidelidade.valor = +e.target.value.replace(/\D/g, '') || ''; marca(); });
+  $('fd-val').addEventListener('input', e => { C.fidelidade.validade = +e.target.value.replace(/\D/g, '') || ''; marca(); });
   function preenche() {
     $('fechado').checked = C.fechadoEm === hojeStr();
     $('aviso').value = C.aviso || '';
@@ -575,6 +622,9 @@ input[type=date] { font: 600 1.05rem var(--body); color: var(--fg); background: 
     const N = C.novidade || {};
     if (N.ativo && !(N.titulo || '').trim() && !erro) erro = 'A Novidade está ligada mas está sem título.';
     if (N.ativo && N.botao === 'link' && !/^https:\/\//.test(N.link || '') && !erro) erro = 'O link do botão da Novidade precisa começar com https://';
+    const V = C.levar || {};
+    if (V.ativo && !V.ref && !erro) erro = 'Na aba Extras, escolha o item do cardápio da feijoada para levar.';
+    if (V.ativo && !(V.dias || []).length && !erro) erro = 'Na aba Extras, marque pelo menos um dia de retirada.';
     C.horarios = horarios; C.links = links;
     C.fechadoEm = $('fechado').checked ? hojeStr() : '';
     C.aviso = $('aviso').value.trim();

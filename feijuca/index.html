@@ -270,6 +270,19 @@ body.travado { overflow: hidden; }
 .novidade b { font: 400 1.4rem/1.1 var(--display); }
 .novidade p { margin: 0; color: #d7dccf; font-size: .98rem; white-space: pre-line; }
 .novidade .nv-btn { display: flex; align-items: center; justify-content: center; margin-top: 6px; min-height: 48px; border-radius: 12px; background: var(--laranja); color: #10180f; text-decoration: none; font: 700 1rem var(--body); }
+
+/* ---------- Para levar e fidelidade ---------- */
+.extra { margin-top: 14px; border-radius: 20px; overflow: hidden; border: 1px solid var(--line); background: linear-gradient(160deg, var(--surface-2), var(--surface)); display: grid; grid-template-columns: 1fr; }
+.extra .ex-img img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; display: block; }
+.extra .ex-txt { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 6px; }
+.extra .ex-tag { align-self: flex-start; background: var(--couve); color: #fff; font: 700 .72rem var(--label); letter-spacing: .12em; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; }
+.extra b { font: 400 1.35rem/1.1 var(--display); }
+.extra p { margin: 0; color: #d7dccf; font-size: .95rem; }
+.extra .ex-preco { font: 700 1.25rem var(--label); color: var(--laranja); }
+.extra .ex-btn { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 6px; min-height: 50px; border-radius: 12px; border: 0; background: var(--laranja); color: #10180f; font: 700 1rem var(--body); cursor: pointer; }
+.extra.fidel .ex-btn { background: #1fa855; color: #fff; }
+.extra .ex-btn svg { width: 20px; height: 20px; }
+.extra .ex-nota { color: var(--muted); font-size: .8rem; }
 @media (prefers-reduced-motion: reduce) { .capa .foto img, .status.aberto .bola { animation: none; } }
 </style>
 </head>
@@ -306,6 +319,15 @@ body.travado { overflow: hidden; }
   <section class="novidade" id="novidade" hidden>
     <div class="nv-img" id="nv-img" hidden></div>
     <div class="nv-txt"><span class="nv-tag">Novidade</span><b id="nv-tit"></b><p id="nv-desc"></p><a class="nv-btn" id="nv-btn" data-ev="feijuca-novidade" href="#" hidden></a></div>
+  </section>
+  <section class="extra levar" id="levar" hidden>
+    <div class="ex-img" id="lv-img"></div>
+    <div class="ex-txt"><span class="ex-tag">Para levar · qualquer dia</span><b id="lv-tit">Feijoada congelada para levar</b><p id="lv-desc"></p><div class="ex-preco" id="lv-preco"></div>
+      <button class="ex-btn" id="lv-abrir" type="button" data-ev="feijuca-abrir-levar">Encomendar para levar</button></div>
+  </section>
+  <section class="extra fidel" id="fidel" hidden>
+    <div class="ex-txt"><span class="ex-tag">🍮 Fidelidade</span><b id="fd-tit">Cliente Premiado</b><p id="fd-desc"></p>
+      <button class="ex-btn" id="fd-entrar" type="button" data-ev="feijuca-fidelidade-entrar"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2z"/></svg> Quero participar</button><p class="ex-nota" id="fd-nota"></p></div>
   </section>
   <section class="garanta" id="garanta" hidden>
     <button class="g-card" id="g-enc" type="button" data-ev="feijuca-abrir-encomenda"><span class="g-ic" aria-hidden="true">🍲</span><span><b>Encomendar</b><span>Garanta sua feijoada para o fim de semana</span></span></button>
@@ -361,6 +383,21 @@ body.travado { overflow: hidden; }
     <p class="erro-f" id="enc-erro" aria-live="polite"></p>
     <button class="enviar" id="enc-enviar" type="button" data-ev="feijuca-enviar-encomenda"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2z"/></svg>Enviar encomenda no WhatsApp</button>
     <p class="nota-f">A encomenda é confirmada pela nossa equipe no WhatsApp.</p>
+    <button class="fechar-f" type="button" data-fecha>Fechar</button>
+  </div>
+</div>
+<div class="folha" id="f-lev" hidden role="dialog" aria-modal="true" aria-labelledby="f-lev-h">
+  <div class="caixa"><div class="alca"></div>
+    <h2 id="f-lev-h">Feijoada para levar</h2>
+    <p class="dica" id="lev-dica"></p>
+    <h3>Quantidade</h3><div class="qtd" id="lev-item"><div class="n"><b id="lev-nome"></b><small id="lev-preco"></small></div><div class="ctl"><button type="button" id="lev-menos" aria-label="Menos uma">−</button><output id="lev-q">1</output><button type="button" id="lev-mais" aria-label="Mais uma">+</button></div></div>
+    <h3>Dia da retirada</h3><div class="chips" id="lev-dias"></div>
+    <label class="campo">Seu nome<input type="text" id="lev-nome-c" autocomplete="name" placeholder="Como te chamamos?"></label>
+    <label class="campo">Observação (opcional)<input type="text" id="lev-obs" placeholder="Ex.: prefiro de manhã"></label>
+    <div class="total"><span>Total</span><b id="lev-total">R$ 0,00</b></div>
+    <p class="erro-f" id="lev-erro" aria-live="polite"></p>
+    <button class="enviar" id="lev-enviar" type="button" data-ev="feijuca-enviar-levar"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2z"/></svg>Encomendar no WhatsApp</button>
+    <p class="nota-f" id="lev-nota"></p>
     <button class="fechar-f" type="button" data-fecha>Fechar</button>
   </div>
 </div>
@@ -730,6 +767,7 @@ body.travado { overflow: hidden; }
     horas(n);
     if (typeof comoEsta === 'function') { comoEsta(); garanta(); }
     contagem(); novidade(); avaliar();
+    if (typeof levar === 'function') { levar(); fidelidade(); }
   }
 
   var capa = $('capa');
@@ -966,6 +1004,63 @@ body.travado { overflow: hidden; }
   if (/#encomendar/.test(location.hash)) setTimeout(abreEncomenda, 600);
   if (/#reservar/.test(location.hash)) setTimeout(abreReserva, 600);
   function garanta() { var r = C.recursos || {}; $('g-enc').hidden = r.encomenda === false; $('g-res').hidden = r.reserva === false; $('garanta').hidden = r.encomenda === false && r.reserva === false; $('garanta').style.gridTemplateColumns = (r.encomenda === false || r.reserva === false) ? '1fr' : ''; }
+
+
+  // ---------- Feijoada para levar (congelada, qualquer dia) ----------
+  var LEV = { q: 1, dia: '' };
+  function levarCfg() {
+    var V = C.levar || {}, m = (V.ref && MENU[V.ref]) || {};
+    return { V: V, nome: V.nomeMsg || V.titulo || 'Feijoada congelada', preco: m.preco || V.preco || '', desc: V.texto || m.desc || '' };
+  }
+  function diasRetirada() {
+    var n = agora(), base = new Date(n.data + 'T12:00:00Z'), r = [], V = C.levar || {}, ok = V.dias && V.dias.length ? V.dias : [0, 1, 2, 3, 4, 5, 6];
+    for (var k = (V.antecedencia || 1); k < 15 && r.length < 6; k++) {
+      var d = new Date(base.getTime() + k * 864e5), dia = d.getUTCDay(), iso = d.toISOString().slice(0, 10);
+      if (ok.indexOf(dia) < 0) continue;
+      r.push({ iso: iso, dia: dia, rot: k === 1 ? 'Amanhã' : DIAS_SEM[dia].charAt(0).toUpperCase() + DIAS_SEM[dia].slice(1), dm: iso.slice(8, 10) + '/' + iso.slice(5, 7) });
+    }
+    return r;
+  }
+  function levar() {
+    var L = levarCfg(), sec = $('levar'); sec.hidden = !L.V.ativo; if (!L.V.ativo) return;
+    $('lv-tit').textContent = L.V.titulo || 'Feijoada congelada para levar';
+    $('lv-desc').textContent = L.desc; $('lv-preco').textContent = L.preco ? 'R$ ' + L.preco + (L.V.unidade ? ' · ' + L.V.unidade : '') : '';
+    var im = $('lv-img'); im.textContent = ''; if (L.V.foto) { var i = document.createElement('img'); poeImg(i, L.V.foto, 'md'); i.alt = ''; im.append(i); } im.hidden = !L.V.foto;
+  }
+  function desenhaLev() {
+    var L = levarCfg();
+    $('lev-dica').textContent = L.desc; $('lev-nome').textContent = L.nome; $('lev-preco').textContent = L.preco ? 'R$ ' + L.preco + (L.V.unidade ? ' · ' + L.V.unidade : '') : '';
+    $('lev-q').textContent = LEV.q; $('lev-menos').disabled = LEV.q <= 1;
+    $('lev-total').textContent = reais(LEV.q * valor(L.preco));
+    var dias = diasRetirada(); if (!dias.some(function (d) { return d.iso === LEV.dia; })) LEV.dia = dias[0] ? dias[0].iso : '';
+    chips($('lev-dias'), dias.map(function (d) { return { v: d.iso, t: d.rot, s: d.dm }; }), LEV.dia, function (v) { LEV.dia = v; desenhaLev(); });
+    $('lev-nota').textContent = L.V.retirada || 'Local e horário da retirada são combinados no WhatsApp.';
+    LEV.dSel = dias.filter(function (d) { return d.iso === LEV.dia; })[0]; LEV.L = L;
+  }
+  $('lev-menos').addEventListener('click', function () { LEV.q = Math.max(1, LEV.q - 1); desenhaLev(); });
+  $('lev-mais').addEventListener('click', function () { LEV.q = Math.min(30, LEV.q + 1); desenhaLev(); });
+  $('lv-abrir').addEventListener('click', function () { $('lev-nome-c').value = $('lev-nome-c').value || lembra('nome'); $('lev-erro').textContent = ''; desenhaLev(); abreFolha('f-lev'); });
+  $('lev-enviar').addEventListener('click', function () {
+    var nome = $('lev-nome-c').value.trim(), er = $('lev-erro'), L = LEV.L, d = LEV.dSel;
+    if (!d) { er.textContent = 'Escolha o dia da retirada.'; return; }
+    if (!nome) { er.textContent = 'Escreva seu nome.'; $('lev-nome-c').focus(); return; }
+    er.textContent = ''; lembra('nome', nome);
+    var linhas = ['Olá! Quero encomendar *feijoada para levar* 🍲', '', LEV.q + 'x ' + L.nome + (L.preco ? ' — ' + reais(LEV.q * valor(L.preco)) : ''), '', '*Retirada:* ' + DIAS_SEM[d.dia] + ', ' + d.dm, '*Nome:* ' + nome];
+    var obs = $('lev-obs').value.trim(); if (obs) linhas.push('*Obs.:* ' + obs);
+    abreZap(linhas.join('\n'));
+  });
+
+  // ---------- Fidelidade (Cliente Premiado) ----------
+  function fidelidade() {
+    var F = C.fidelidade || {}, sec = $('fidel'); sec.hidden = !F.ativo; if (!F.ativo) return;
+    $('fd-tit').textContent = F.nome || 'Cliente Premiado';
+    $('fd-desc').textContent = F.texto || ('A cada R$ ' + (F.valor || 300) + ' em consumo, você ganha uma sobremesa.');
+    $('fd-nota').textContent = 'Vale para o que você consumir em até ' + (F.validade || 45) + ' dias. Cadastro grátis pelo WhatsApp.';
+  }
+  $('fd-entrar').addEventListener('click', function () {
+    var F = C.fidelidade || {};
+    abreZap('Olá! Quero participar do *' + (F.nome || 'Cliente Premiado') + '* da Feijuca do Gabba 🍮\n\n*Nome:* ');
+  });
 
   aplica(); montaBolas();
   fetch('config.json?v=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (c) {
