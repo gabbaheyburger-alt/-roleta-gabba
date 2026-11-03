@@ -33,6 +33,7 @@ Central de jogos rápidos para o cliente passar o tempo enquanto espera, no ende
 - **Gabba Hero:** jogo de ritmo com 3 músicas.
 - **Corre, Gabba!:** corrida com o mascote.
 - **Obby do Gabba:** percurso 3D.
+- **Gabba Crush:** combinar 3 iguais e estourar o item sorteado.
 - Atalho para o **Desafio da Espera**.
 
 Os recordes ficam salvos no celular de cada cliente. As perguntas do quiz ficam na lista `BANK` dentro de `jogos/index.html`.
@@ -55,13 +56,14 @@ Substituto em teste do Desafio da Espera, no endereço `/combo/`, ainda fora do 
 - Abrir com `/combo/?teste` joga sem gastar chance, sem prêmio e sem contar no GoatCounter.
 - Eventos: `partida-combo`, `combo-passou-<fase>`, `combo-perdeu-<fase>`, `combo-venceu` e `combo-completou-sem-premio`, para ver em qual fase o pessoal para.
 
-## Gabba Crush (teste)
+## Gabba Crush
 
-Jogo de combinar 3 iguais (estilo Candy Crush), no endereço `/crush/`, ainda fora do Fliperama, para comparar com o Monte o Combo. O cliente arrasta um item (ou toca em um e depois no vizinho) para trocar de lugar e formar fileiras de 3 ou mais iguais. Meta: estourar **25 batatas em 12 jogadas** (numa simulação, um jogador razoável ganha em cerca de 11 a 14% das partidas).
+Jogo de combinar 3 iguais (estilo Candy Crush), no Fliperama, no endereço `/crush/`. Por enquanto é **só mais um jogo, sem prêmio** (`VALE_PREMIO = false`). O cliente arrasta um item (ou toca em um e depois no vizinho) para trocar de lugar e formar fileiras de 3 ou mais iguais. A cada partida é sorteado um item (batata, burger, refri, chopp ou queijo) e a meta é estourar **25 dele em 12 jogadas** (numa simulação, um jogador razoável ganha em cerca de 11 a 14% das partidas). O placar mostra quantas vezes o cliente já venceu.
 
-- Mesmo esquema do Monte o Combo: prêmio do `desafio/config.json`, 3 chances por dia por celular, `?teste` para testar.
+- Para virar jogo de prêmio: `VALE_PREMIO = true`. Aí usa o prêmio do `desafio/config.json` e 3 chances por dia por celular.
+- `?teste` joga sem contar no GoatCounter.
 - Dificuldade no topo do script de `crush/index.html` (`META`, `JOGADAS`, `CHANCES`).
-- Eventos: `partida-crush`, `crush-venceu`, `crush-perdeu` e `crush-perdeu-faltou-1a2` / `3a5` / `mais5`.
+- Eventos: `partida-crush`, `crush-venceu-sem-premio` (ou `crush-venceu` quando valer prêmio), `crush-perdeu` e `crush-perdeu-faltou-1a2` / `3a5` / `mais5`.
 
 ## Chapa do Gabba (teste)
 

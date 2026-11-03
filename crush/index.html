@@ -80,21 +80,21 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
       <a class="back" href="../jogos/">‹ Jogos</a>
       <div class="brand">Gabba<br><span>Crush</span></div>
     </div>
-    <div class="score"><small>Chances hoje</small><b id="chances">3</b></div>
+    <div class="score"><small id="chances-lbl">Chances hoje</small><b id="chances">3</b></div>
   </div>
   <div class="goals">
-    <div class="goal" id="goal-box"><span class="emo">🍟</span><small>Batatas</small><b id="goal">0/25</b></div>
+    <div class="goal" id="goal-box"><span class="emo" id="goal-emo">🎲</span><small id="goal-nome">Meta</small><b id="goal">0/25</b></div>
     <div class="goal" id="moves-box"><small>Jogadas</small><b id="moves">12</b></div>
   </div>
 
   <div class="field" id="field">
     <canvas id="game" aria-label="Tabuleiro do Gabba Crush"></canvas>
-    <div class="teste" id="teste-tag" hidden>MODO TESTE · SEM PRÊMIO · v1</div>
+    <div class="teste" id="teste-tag" hidden>MODO TESTE · SEM PRÊMIO · v2</div>
 
     <div class="overlay" id="start">
       <h1>Gabba <span>Crush</span></h1>
       <p><strong>Arraste</strong> um item para o lado, para cima ou para baixo e troque de lugar com o vizinho. Junte <strong>3 ou mais iguais</strong> em linha para estourar.</p>
-      <p>Estoure <strong id="meta-txt">25</strong> batatas 🍟 em <strong id="jog-txt">12</strong> jogadas.</p>
+      <p>A cada partida sorteamos um item. Estoure <strong id="meta-txt">25</strong> dele em <strong id="jog-txt">12</strong> jogadas.</p>
       <p id="regra">Conseguiu, ganhou: <strong id="prize-txt"></strong></p>
       <p class="chances" id="chances-txt"></p>
       <button class="btn" id="play" type="button">JOGAR</button>
@@ -128,16 +128,20 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
      O prêmio e o liga/desliga vêm de ../desafio/config.json (o mesmo que o dono muda em /adm/).
      A dificuldade fica aqui: menos jogadas ou meta maior = mais difícil. */
   let PRIZE = 'Molho extra por conta da casa';
-  let ATIVO = true;
+  // Por enquanto o Crush é só mais um jogo do Fliperama, sem prêmio. Para virar jogo de prêmio, mude para true.
+  const VALE_PREMIO = false;
+  let ATIVO = VALE_PREMIO;
   const CHANCES = 3;     // partidas valendo prêmio por dia, por celular
-  const META = 25;       // batatas para estourar
+  const META = 25;       // itens do tipo sorteado para estourar
   const JOGADAS = 12;    // jogadas disponíveis (simulação: 25 em 12 ≈ 11–14% de vitória por partida)
   const COLS = 7, ROWS = 8;
   /* ================================ */
 
-  // Itens do tabuleiro. O índice 0 é o alvo (batata).
+  // Itens do tabuleiro. O item da meta é sorteado a cada partida (todos aparecem com a mesma frequência).
   const ITEMS = ['🍟', '🍔', '🥤', '🍺', '🧀'];
-  const ALVO = 0;
+  const NOMES = ['batatas', 'burgers', 'refris', 'chopps', 'queijos'];
+  const NOME1 = ['batata', 'burger', 'refri', 'chopp', 'queijo'];
+  let ALVO = 0;
 
   const TESTE = /[?&]teste\b/.test(location.search);
   const STORE = 'gabba-crush-v1';
@@ -146,7 +150,7 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
   const today = () => { const d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
   const conta = (n, t) => { if (!TESTE && window.gabbaConta) gabbaConta(n, t); };
 
-  let saved = { triesDay: null, tries: 0, wonDay: null, wonPrize: null, usedDay: null, usedAt: null };
+  let saved = { wins: 0, triesDay: null, tries: 0, wonDay: null, wonPrize: null, usedDay: null, usedAt: null };
   try { saved = Object.assign(saved, JSON.parse(localStorage.getItem(STORE) || '{}')); } catch (e) {}
   const persist = () => { try { localStorage.setItem(STORE, JSON.stringify(saved)); } catch (e) {} };
   const triesUsed = () => saved.triesDay === today() ? saved.tries : 0;
@@ -161,12 +165,14 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
     $('regra').hidden = !ATIVO || TESTE;
     let t = '';
     if (TESTE) t = 'Modo teste: não gasta chance e não dá prêmio.';
-    else if (!ATIVO) t = 'Hoje o jogo está sem prêmio. Jogue pela diversão!';
+    else if (!ATIVO) t = VALE_PREMIO ? 'Hoje o jogo está sem prêmio. Jogue pela diversão!' : (saved.wins ? 'Você já venceu ' + saved.wins + (saved.wins === 1 ? ' vez.' : ' vezes.') : '');
     else if (wonToday()) t = 'Você já ganhou hoje! Agora é só pela diversão.';
     else if (chancesLeft() > 0) t = 'Você tem ' + chancesLeft() + (chancesLeft() === 1 ? ' chance' : ' chances') + ' valendo prêmio hoje.';
     else t = 'Suas chances de hoje acabaram. Jogue pela diversão e volte na próxima visita!';
     $('chances-txt').textContent = t;
-    $('chances').textContent = TESTE ? '∞' : (ATIVO && !wonToday() ? chancesLeft() : '–');
+    $('chances-lbl').textContent = VALE_PREMIO ? 'Chances hoje' : 'Vitórias';
+    $('chances').textContent = !VALE_PREMIO ? saved.wins : TESTE ? '∞' : (ATIVO && !wonToday() ? chancesLeft() : '–');
+    $('chances-txt').hidden = !t;
     $('see-prize').hidden = !wonToday() || TESTE;
   }
   aplicarConfig();
@@ -175,7 +181,7 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
     .then(c => {
       if (!c) return;
       if (typeof c.premio === 'string' && c.premio.trim()) PRIZE = c.premio.trim().slice(0, 60);
-      if (typeof c.ativo === 'boolean') ATIVO = c.ativo;
+      if (typeof c.ativo === 'boolean') ATIVO = VALE_PREMIO && c.ativo;
       aplicarConfig();
     }).catch(() => {});
 
@@ -269,7 +275,7 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
     if (alvo) {
       got = Math.min(META, got + alvo); updateHud();
       const ex = [...hit].find(i => grid[Math.floor(i / COLS)][i % COLS].t === ALVO);
-      floatAt('+' + alvo + ' 🍟', ex);
+      floatAt('+' + alvo + ' ' + ITEMS[ALVO], ex);
     }
     if (combo >= 2) floatText(combo === 2 ? 'Combo!' : 'Combo x' + combo + '!');
     beep(520 + combo * 90, 0.08, 'square');
@@ -381,18 +387,21 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
     if (valendo) { if (saved.triesDay !== today()) { saved.triesDay = today(); saved.tries = 0; } saved.tries++; persist(); }
     conta('partida-crush', 'Partida: Gabba Crush');
     moves = JOGADAS; got = 0; sel = null; anim = null;
+    ALVO = Math.floor(Math.random() * ITEMS.length);
+    $('goal-emo').textContent = ITEMS[ALVO]; $('goal-nome').textContent = NOMES[ALVO];
     newBoard(); updateHud(); aplicarConfig();
     $('start').hidden = true; $('over').hidden = true;
     state = 'play';
   }
   function win() {
     state = 'over';
+    if (!TESTE) { saved.wins = (saved.wins || 0) + 1; persist(); }
     if (valendo) { saved.wonDay = today(); saved.wonPrize = PRIZE; persist(); conta('crush-venceu', 'Gabba Crush: venceu'); }
-    else conta('crush-completou-sem-premio', 'Gabba Crush: completou sem prêmio');
+    else conta('crush-venceu-sem-premio', 'Gabba Crush: venceu (sem prêmio)');
     fanfare();
     setTimeout(() => {
-      $('over-title').textContent = 'Batatas no ponto!';
-      $('over-msg').textContent = META + ' batatas com ' + moves + (moves === 1 ? ' jogada' : ' jogadas') + ' sobrando.' + (TESTE ? ' Modo teste: sem prêmio.' : '');
+      $('over-title').textContent = 'Mandou bem!';
+      $('over-msg').textContent = META + ' ' + NOMES[ALVO] + ' com ' + moves + (moves === 1 ? ' jogada' : ' jogadas') + ' sobrando.' + (TESTE ? ' Modo teste: sem prêmio.' : '');
       $('over-normal').hidden = false; showPrize(valendo); overChances(true); $('over').hidden = false;
     }, 700);
   }
@@ -404,7 +413,7 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
     beep(160, 0.3, 'sawtooth');
     setTimeout(() => {
       $('over-title').textContent = falta <= 2 ? 'Por pouco!' : 'Quase!';
-      $('over-msg').textContent = 'Acabaram as jogadas. Faltaram ' + falta + (falta === 1 ? ' batata.' : ' batatas.');
+      $('over-msg').textContent = 'Acabaram as jogadas. Faltaram ' + falta + ' ' + (falta === 1 ? NOME1[ALVO] : NOMES[ALVO]) + '.';
       $('over-normal').hidden = false; showPrize(false); overChances(false); $('over').hidden = false;
     }, 600);
   }
