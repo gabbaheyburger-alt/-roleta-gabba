@@ -50,6 +50,7 @@ body { margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: en
 .meter { height: 8px; background: var(--surface); border-radius: 999px; overflow: hidden; border: 1px solid var(--line); }
 .meter i { display: block; height: 100%; width: 0; background: var(--mustard); transition: width .2s; }
 
+.field, .field * { touch-action: none; }
 .field { position: relative; flex: 1; min-height: 0; border-radius: 18px; overflow: hidden; background: var(--surface); border: 1px solid var(--line); touch-action: none; user-select: none; -webkit-user-select: none; cursor: pointer; }
 .field canvas { width: 100%; height: 100%; display: block; }
 .hint { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); color: var(--muted); font-weight: 700; font-size: .85rem; pointer-events: none; white-space: nowrap; }
@@ -102,14 +103,14 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
 
   <div class="field" id="field">
     <canvas id="game" aria-label="Jogo de montar o combo"></canvas>
-    <div class="teste" id="teste-tag" hidden>MODO TESTE · SEM PRÊMIO</div>
+    <div class="teste" id="teste-tag" hidden>MODO TESTE · SEM PRÊMIO · v3</div>
     <div class="hint" id="hint" hidden></div>
 
     <div class="overlay" id="start">
       <h1>Monte o <span>combo</span></h1>
       <ol>
         <li><b>1</b>Empilhe o <strong>burger</strong> tocando na hora certa.</li>
-        <li><b>2</b>Arraste a caixinha e pegue as <strong>batatas</strong>. Fuja da pimenta!</li>
+        <li><b>2</b>Toque nos lados para mover a caixinha e pegue as <strong>batatas</strong>. Fuja da pimenta!</li>
         <li><b>3</b>Segure para encher o <strong>refri</strong> e solte na faixa.</li>
       </ol>
       <p id="regra">Complete as 3 fases na mesma partida e ganhe: <strong id="prize-txt"></strong></p>
@@ -357,16 +358,20 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
      FASE 2 — BATATA (pegar batatas, fugir da pimenta)
      ===================================================== */
   let box = { x: 0, tx: 0 }, drops = [], caught = 0, misses = 0, spawnT = 0, elapsed = 0;
-  const boxW = () => W * 0.24, boxH = () => H * 0.11, boxY = () => H - H * 0.04 - boxH();
-  function batataReset() { box.x = box.tx = W / 2; drops = []; caught = 0; misses = 0; spawnT = 0.4; elapsed = 0; }
+  // 3 faixas: esquerda, meio e direita. Tocar à esquerda/direita da tela move a caixinha uma faixa.
+  let lane = 1;
+  const laneX = i => W * (1 + 2 * i) / 6;
+  function moveLane(d) { lane = Math.max(0, Math.min(2, lane + d)); box.tx = laneX(lane); beep(330, 0.03, 'triangle'); }
+  const boxW = () => W * 0.26, boxH = () => H * 0.11, boxY = () => H - H * 0.04 - boxH();
+  function batataReset() { lane = 1; box.x = box.tx = laneX(1); drops = []; caught = 0; misses = 0; spawnT = 0.4; elapsed = 0; }
   function batataUpdate(dt) {
-    box.x += (box.tx - box.x) * Math.min(1, dt * 18);
+    box.x += (box.tx - box.x) * Math.min(1, dt * 22);
     box.x = Math.max(boxW() / 2, Math.min(W - boxW() / 2, box.x));
     if (state !== 'play' || phase !== 1) return;
     elapsed += dt; spawnT -= dt;
     if (spawnT <= 0) {
       const pimenta = caught >= 2 && Math.random() < 0.28;
-      drops.push({ x: W * (0.08 + Math.random() * 0.84), y: -30, pimenta, rot: Math.random() * 6, vr: (Math.random() - 0.5) * 4 });
+      drops.push({ x: laneX(Math.floor(Math.random() * 3)), y: -30, pimenta, rot: Math.random() * 6, vr: (Math.random() - 0.5) * 4 });
       spawnT = Math.max(0.42, 0.85 - caught * 0.035);
     }
     const v = H * (0.42 + caught * 0.035);
@@ -400,6 +405,11 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
     ctx.restore();
   }
   function batataRender() {
+    // guias das faixas e setas nos lados
+    ctx.strokeStyle = 'rgba(255,255,255,.05)'; ctx.lineWidth = 1;
+    [1, 2].forEach(i => { ctx.beginPath(); ctx.moveTo(W * i / 3, 30); ctx.lineTo(W * i / 3, H); ctx.stroke(); });
+    ctx.fillStyle = 'rgba(242,182,50,.35)'; ctx.font = '400 ' + Math.round(W * 0.09) + 'px Bungee, Impact, sans-serif'; ctx.textBaseline = 'middle';
+    ctx.textAlign = 'left'; ctx.fillText('‹', 10, H * 0.55); ctx.textAlign = 'right'; ctx.fillText('›', W - 10, H * 0.55);
     for (const d of drops) d.pimenta ? drawPepper(d.x, d.y, d.rot) : drawFry(d.x, d.y, d.rot);
     const bw = boxW(), bh = boxH(), x = box.x - bw / 2, y = boxY();
     // batatas aparecendo na caixa conforme enche
@@ -411,7 +421,7 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
     ctx.fillText('GABBA', box.x, y + bh * 0.52);
     // vidas
     ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.font = '700 14px Barlow, sans-serif'; ctx.fillStyle = '#b5a397';
-    ctx.fillText('Erros: ' + misses + ' de ' + BATATA_ERROS, 12, 12);
+    ctx.fillText('Erros: ' + misses + ' de ' + BATATA_ERROS, 12, TESTE ? 40 : 12);
     ctx.textAlign = 'right'; ctx.fillStyle = '#f2b632';
     ctx.fillText(caught + ' / ' + BATATA_META, W - 12, 12);
   }
@@ -481,7 +491,7 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
      ===================================================== */
   const PHASES = [
     { name: 'Burger', how: 'Toque para soltar cada camada em cima da outra.', hint: 'Toque para soltar a camada' },
-    { name: 'Batata', how: 'Deslize o dedo para os lados, em qualquer parte da tela, para mover a caixinha. Pegue ' + BATATA_META + ' batatas e fuja da pimenta.', hint: 'Deslize o dedo para mover a caixa' },
+    { name: 'Batata', how: 'Toque no lado esquerdo ou direito da tela para mover a caixinha. Pegue ' + BATATA_META + ' batatas e fuja da pimenta.', hint: '‹ toque à esquerda · toque à direita ›' },
     { name: 'Refri', how: 'Segure o dedo para encher. Solte quando o refri estiver dentro da faixa verde.', hint: 'Segure para encher, solte na faixa' }
   ];
   function steps() {
@@ -626,23 +636,15 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
     ev.preventDefault();
     if (state !== 'play') return;
     if (phase === 0) burgerDrop();
-    else if (phase === 1) { drag = { id: ev.pointerId, x0: fx(ev), b0: box.tx }; try { field.setPointerCapture(ev.pointerId); } catch (e) {} }
+    else if (phase === 1) moveLane(fx(ev) < W / 2 ? -1 : 1);
     else refriPress();
   });
-  // Batata: a caixinha anda junto com o deslize do dedo (em qualquer parte da tela), sem pular para onde tocou
-  let drag = null;
-  const clampBox = v => Math.max(boxW() / 2, Math.min(W - boxW() / 2, v));
-  field.addEventListener('pointermove', ev => {
-    if (state !== 'play' || phase !== 1 || !drag || ev.pointerId !== drag.id) return;
-    box.tx = clampBox(drag.b0 + (fx(ev) - drag.x0) * 1.3);
-  });
-  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(n => field.addEventListener(n, ev => { if (drag && ev.pointerId === drag.id) drag = null; }));
-  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(n => field.addEventListener(n, () => { if (phase === 2) refriRelease(); }));
+  ['pointerup', 'pointercancel'].forEach(n => field.addEventListener(n, () => { if (phase === 2) refriRelease(); }));
   window.addEventListener('pointerup', () => { if (phase === 2) refriRelease(); });
   document.addEventListener('keydown', ev => {
     if (state !== 'play') return;
     if (phase === 0 && (ev.code === 'Space' || ev.code === 'Enter')) { ev.preventDefault(); burgerDrop(); }
-    if (phase === 1 && (ev.code === 'ArrowLeft' || ev.code === 'ArrowRight')) { box.tx = clampBox(box.x + (ev.code === 'ArrowLeft' ? -1 : 1) * W * 0.12); }
+    if (phase === 1 && (ev.code === 'ArrowLeft' || ev.code === 'ArrowRight')) { moveLane(ev.code === 'ArrowLeft' ? -1 : 1); }
     if (phase === 2 && ev.code === 'Space' && !ev.repeat) { ev.preventDefault(); refriPress(); }
   });
   document.addEventListener('keyup', ev => { if (phase === 2 && ev.code === 'Space') refriRelease(); });
