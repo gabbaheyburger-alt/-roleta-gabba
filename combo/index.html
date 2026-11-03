@@ -1,0 +1,668 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Monte o Combo</title>
+<meta name="theme-color" content="#17110f">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Barlow:wght@400;600;700&display=swap">
+<style>
+/* Layout: placar e fases no topo, área de jogo ocupando o resto, telas de início/fim por cima */
+:root {
+  --bg: #17110f;
+  --surface: #221a17;
+  --line: #3b2e29;
+  --fg: #f6ece2;
+  --muted: #b5a397;
+  --red: #d7261e;
+  --red-deep: #9c1611;
+  --mustard: #f2b632;
+  --cream: #f6e7cf;
+  --ok: #6fbf73;
+  --display: 'Bungee', Impact, 'Arial Black', sans-serif;
+  --body: 'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color-scheme: dark;
+}
+* { touch-action: manipulation; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; background: var(--bg); color: var(--fg); }
+body { margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); font-family: var(--body); font-size: 16px; line-height: 1.4; overscroll-behavior: none; }
+[hidden] { display: none !important; }
+.app { height: 100%; max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; padding: 12px 16px 16px; gap: 10px; }
+
+.hud { display: flex; justify-content: space-between; align-items: flex-end; gap: 10px; }
+.hud-left { display: flex; align-items: center; gap: 10px; }
+.brand { font-family: var(--display); font-size: 1.05rem; line-height: 1; }
+.brand span { color: var(--mustard); }
+.back { color: var(--muted); border: 1px solid var(--line); border-radius: 10px; padding: 7px 10px; font: 700 .85rem var(--body); text-decoration: none; white-space: nowrap; }
+.back:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
+.score { text-align: right; }
+.score small { display: block; font-size: .65rem; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); font-weight: 600; }
+.score b { font-family: var(--display); font-weight: 400; font-size: 1.5rem; line-height: 1; color: var(--mustard); font-variant-numeric: tabular-nums; }
+
+.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.step { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 6px 4px; text-align: center; font: 700 .78rem var(--body); color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.step.now { border-color: var(--mustard); color: var(--fg); }
+.step.done { border-color: var(--ok); color: var(--ok); }
+.step.fail { border-color: var(--red); color: #ff8a80; }
+
+.meter { height: 8px; background: var(--surface); border-radius: 999px; overflow: hidden; border: 1px solid var(--line); }
+.meter i { display: block; height: 100%; width: 0; background: var(--mustard); transition: width .2s; }
+
+.field { position: relative; flex: 1; min-height: 0; border-radius: 18px; overflow: hidden; background: var(--surface); border: 1px solid var(--line); touch-action: none; user-select: none; -webkit-user-select: none; cursor: pointer; }
+.field canvas { width: 100%; height: 100%; display: block; }
+.hint { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); color: var(--muted); font-weight: 700; font-size: .85rem; pointer-events: none; white-space: nowrap; }
+.float { position: absolute; left: 50%; transform: translateX(-50%); font-family: var(--display); color: var(--mustard); font-size: 1.1rem; pointer-events: none; animation: rise .8s ease-out forwards; white-space: nowrap; }
+@keyframes rise { from { opacity: 1; margin-top: 0; } to { opacity: 0; margin-top: -40px; } }
+
+.overlay { position: absolute; inset: 0; background: rgba(23,17,15,.93); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; gap: 12px; cursor: default; overflow-y: auto; }
+.overlay h1 { font-family: var(--display); font-weight: 400; font-size: clamp(1.7rem, 8vw, 2.3rem); line-height: 1.05; margin: 0; text-wrap: balance; }
+.overlay h1 span { color: var(--mustard); }
+.overlay p { margin: 0; color: var(--muted); max-width: 32ch; }
+.overlay p strong { color: var(--fg); }
+.overlay ol { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; max-width: 32ch; text-align: left; color: var(--muted); }
+.overlay ol b { color: var(--mustard); font-family: var(--display); font-weight: 400; margin-right: 6px; }
+.btn { font-family: var(--display); font-size: 1.3rem; letter-spacing: .04em; background: var(--red); color: var(--cream); border: none; border-radius: 14px; padding: 14px 28px; cursor: pointer; box-shadow: 0 5px 0 var(--red-deep); }
+.btn:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--red-deep); }
+.link { background: transparent; border: 1px solid var(--line); color: var(--muted); font: 700 .88rem var(--body); padding: 9px 14px; border-radius: 10px; cursor: pointer; }
+button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
+.big { font-family: var(--display); font-size: 2.2rem; line-height: 1.05; color: var(--mustard); }
+.chances { font-weight: 700; color: var(--fg); }
+.teste { position: absolute; top: 10px; left: 10px; background: #2b4a8a; color: #fff; font: 700 .7rem var(--body); padding: 3px 8px; border-radius: 6px; letter-spacing: .08em; pointer-events: none; z-index: 5; }
+
+.prize { width: 100%; max-width: 320px; border: 3px solid var(--mustard); border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 6px; background: linear-gradient(135deg, #2a1f12, #3a2a12, #2a1f12); background-size: 300% 300%; animation: shine 3s linear infinite; }
+@keyframes shine { 0% { background-position: 0% 50%; } 100% { background-position: 100% 50%; } }
+.prize .tag { font-size: .7rem; text-transform: uppercase; letter-spacing: .14em; color: var(--mustard); font-weight: 700; }
+.prize .what { font-family: var(--display); font-size: 1.35rem; line-height: 1.15; color: var(--cream); }
+.prize .when { font-variant-numeric: tabular-nums; color: var(--fg); font-weight: 700; }
+.prize .clock { font-family: var(--display); font-size: 1.6rem; color: var(--mustard); font-variant-numeric: tabular-nums; }
+.prize.used { animation: none; border-color: var(--line); background: var(--surface); }
+.prize.used .what { text-decoration: line-through; color: var(--muted); }
+
+@media (prefers-reduced-motion: reduce) { .prize { animation: none; } .float { animation-duration: .01s; } }
+</style>
+<script src="../contador.js"></script>
+</head>
+<body>
+<div class="app">
+  <div class="hud">
+    <div class="hud-left">
+      <a class="back" href="../jogos/">‹ Jogos</a>
+      <div class="brand">Monte o<br><span>Combo</span></div>
+    </div>
+    <div class="score"><small id="chances-lbl">Chances hoje</small><b id="chances">3</b></div>
+  </div>
+  <div class="steps" aria-label="Fases">
+    <div class="step" id="st0">Burger</div>
+    <div class="step" id="st1">Batata</div>
+    <div class="step" id="st2">Refri</div>
+  </div>
+  <div class="meter" aria-hidden="true"><i id="meter-fill"></i></div>
+
+  <div class="field" id="field">
+    <canvas id="game" aria-label="Jogo de montar o combo"></canvas>
+    <div class="teste" id="teste-tag" hidden>MODO TESTE · SEM PRÊMIO</div>
+    <div class="hint" id="hint" hidden></div>
+
+    <div class="overlay" id="start">
+      <h1>Monte o <span>combo</span></h1>
+      <ol>
+        <li><b>1</b>Empilhe o <strong>burger</strong> tocando na hora certa.</li>
+        <li><b>2</b>Arraste a caixinha e pegue as <strong>batatas</strong>. Fuja da pimenta!</li>
+        <li><b>3</b>Segure para encher o <strong>refri</strong> e solte na faixa.</li>
+      </ol>
+      <p id="regra">Complete as 3 fases na mesma partida e ganhe: <strong id="prize-txt"></strong></p>
+      <p class="chances" id="chances-txt"></p>
+      <button class="btn" id="play" type="button">JOGAR</button>
+      <button class="link" id="see-prize" type="button" hidden>Ver meu prêmio de hoje</button>
+      <a class="link" href="../jogos/" style="text-decoration:none">Escolher outro jogo</a>
+    </div>
+
+    <div class="overlay" id="phase" hidden>
+      <p id="phase-n">Fase 2 de 3</p>
+      <div class="big" id="phase-title">Batata</div>
+      <p id="phase-how"></p>
+    </div>
+
+    <div class="overlay" id="over" hidden>
+      <div id="over-normal">
+        <div class="big" id="over-title">Quase!</div>
+        <p id="over-msg"></p>
+      </div>
+      <div class="prize" id="prize-card" hidden>
+        <span class="tag">Combo completo</span>
+        <span class="what" id="prize-what"></span>
+        <span class="when" id="prize-date"></span>
+        <span class="clock" id="prize-clock">--:--:--</span>
+        <span id="prize-note">Mostre esta tela ao atendente</span>
+      </div>
+      <p class="chances" id="over-chances"></p>
+      <button class="btn" id="again" type="button">DE NOVO</button>
+      <button class="link" id="mark-used" type="button" hidden>Atendente: marcar como entregue</button>
+      <a class="link" href="../jogos/" style="text-decoration:none">Escolher outro jogo</a>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  /* ===== Configuração do jogo =====
+     O prêmio e o liga/desliga vêm de ../desafio/config.json (o mesmo que o dono muda em /adm/).
+     A dificuldade fica aqui. Para deixar mais difícil, aumente as metas ou diminua as margens. */
+  let PRIZE = 'Molho extra por conta da casa';
+  let ATIVO = true;
+  const CHANCES = 3;            // partidas valendo prêmio por dia, por celular
+  const BURGER_META = 7;        // camadas para passar da fase 1
+  const BATATA_META = 12;       // batatas para passar da fase 2
+  const BATATA_ERROS = 3;       // deixar cair 3 batatas (ou pegar pimenta) = perdeu
+  const REFRI_FAIXA = 0.05;     // meia-largura da faixa do copo (0.05 = 10% da altura do copo)
+  /* ================================ */
+
+  const TESTE = /[?&]teste\b/.test(location.search);  // ?teste: joga sem gastar chance e sem prêmio
+  const STORE = 'monte-combo-v1';
+  const $ = id => document.getElementById(id);
+  const pad = n => String(n).padStart(2, '0');
+  const today = () => { const d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
+  const conta = (n, t) => { if (!TESTE && window.gabbaConta) gabbaConta(n, t); };
+
+  let saved = { triesDay: null, tries: 0, wonDay: null, wonPrize: null, usedDay: null, usedAt: null };
+  try { saved = Object.assign(saved, JSON.parse(localStorage.getItem(STORE) || '{}')); } catch (e) {}
+  const persist = () => { try { localStorage.setItem(STORE, JSON.stringify(saved)); } catch (e) {} };
+
+  const triesUsed = () => saved.triesDay === today() ? saved.tries : 0;
+  const chancesLeft = () => Math.max(0, CHANCES - triesUsed());
+  const wonToday = () => saved.wonDay === today();
+
+  if (TESTE) $('teste-tag').hidden = false;
+
+  function aplicarConfig() {
+    $('prize-txt').textContent = PRIZE;
+    $('regra').hidden = !ATIVO || TESTE;
+    let t = '';
+    if (TESTE) t = 'Modo teste: não gasta chance e não dá prêmio.';
+    else if (!ATIVO) t = 'Hoje o combo está sem prêmio. Jogue pela diversão!';
+    else if (wonToday()) t = 'Você já ganhou hoje! Agora é só pela diversão.';
+    else if (chancesLeft() > 0) t = 'Você tem ' + chancesLeft() + (chancesLeft() === 1 ? ' chance' : ' chances') + ' valendo prêmio hoje.';
+    else t = 'Suas chances de hoje acabaram. Jogue pela diversão e volte na próxima visita!';
+    $('chances-txt').textContent = t;
+    $('chances').textContent = TESTE ? '∞' : (ATIVO && !wonToday() ? chancesLeft() : '–');
+    $('see-prize').hidden = !wonToday() || TESTE;
+  }
+  aplicarConfig();
+  fetch('../desafio/config.json?v=' + Date.now(), { cache: 'no-store' })
+    .then(r => r.ok ? r.json() : null)
+    .then(c => {
+      if (!c) return;
+      if (typeof c.premio === 'string' && c.premio.trim()) PRIZE = c.premio.trim().slice(0, 60);
+      if (typeof c.ativo === 'boolean') ATIVO = c.ativo;
+      aplicarConfig();
+    })
+    .catch(() => {});
+
+  const canvas = $('game'), ctx = canvas.getContext('2d'), field = $('field');
+  let W = 0, H = 0, dpr = 1, last = 0;
+  let state = 'start';     // start | intro | play | over
+  let phase = 0;           // 0 burger, 1 batata, 2 refri
+  let valendo = false;     // esta partida vale prêmio?
+
+  function resize() {
+    const r = field.getBoundingClientRect();
+    dpr = window.devicePixelRatio || 1;
+    W = r.width; H = r.height;
+    canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (state === 'start') { burgerReset(); }
+  }
+
+  /* ---------- Desenho básico ---------- */
+  function rr(x, y, w, h, r) {
+    r = Math.max(0, Math.min(r, h / 2, w / 2));
+    ctx.beginPath();
+    ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y); ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r); ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y); ctx.closePath();
+  }
+  function floatText(t, top) {
+    const el = document.createElement('div'); el.className = 'float'; el.textContent = t;
+    el.style.top = Math.max(30, top) + 'px';
+    field.append(el); setTimeout(() => el.remove(), 850);
+  }
+  function meter(v) { $('meter-fill').style.width = Math.max(0, Math.min(100, v * 100)) + '%'; }
+  function hint(t) { $('hint').textContent = t || ''; $('hint').hidden = !t; }
+
+  /* =====================================================
+     FASE 1 — BURGER (empilhar camadas)
+     ===================================================== */
+  const KINDS = {
+    paoBaixo: { h: 0.075 }, carne: { h: 0.06 }, queijo: { h: 0.03 }, alface: { h: 0.035 },
+    tomate: { h: 0.035 }, bacon: { h: 0.032 }, cebola: { h: 0.03 }, paoCima: { h: 0.11 }
+  };
+  const SEQ = ['carne', 'queijo', 'alface', 'tomate', 'bacon', 'carne', 'queijo', 'cebola'];
+  let stack = [], moving = null, falling = [], camY = 0, layers = 0, dir = 1;
+  const lh = k => KINDS[k].h * W;
+  const topY = () => stack.length ? stack[stack.length - 1].y + stack[stack.length - 1].h : 0;
+  const ground = () => H * 0.1;
+  const sy = y => H - ground() - (y - camY);
+
+  function burgerReset() {
+    const w = W * 0.52;
+    stack = [{ kind: 'paoBaixo', x: (W - w) / 2, w, y: 0, h: lh('paoBaixo') }];
+    falling = []; camY = 0; layers = 0; moving = null;
+  }
+  const burgerSpeed = () => W * Math.min(1.35, 0.62 + layers * 0.08);
+  function burgerSpawn() {
+    const prev = stack[stack.length - 1];
+    const kind = SEQ[layers % SEQ.length];
+    dir = Math.random() < 0.5 ? 1 : -1;
+    moving = { kind, w: prev.w, h: lh(kind), y: topY(), x: dir > 0 ? -prev.w * 0.6 : W - prev.w * 0.4 };
+  }
+  function burgerDrop() {
+    if (!moving) return;
+    const prev = stack[stack.length - 1];
+    const m = moving; moving = null;
+    const left = Math.max(m.x, prev.x), right = Math.min(m.x + m.w, prev.x + prev.w);
+    const overlap = right - left;
+    if (overlap <= W * 0.06) {
+      falling.push({ ...m, vy: 0, vr: (m.x < prev.x ? -1 : 1) * 2.5, rot: 0 });
+      beep(140, 0.25, 'sawtooth');
+      return lose('A camada caiu do burger.');
+    }
+    let placed;
+    if (Math.abs(m.x - prev.x) < W * 0.01) {
+      placed = { kind: m.kind, x: prev.x, w: prev.w, y: m.y, h: m.h };
+      floatText('Perfeito!', sy(topY()) - 60); beep(880, 0.12, 'triangle');
+    } else {
+      placed = { kind: m.kind, x: left, w: overlap, y: m.y, h: m.h };
+      const cut = m.x < prev.x ? { kind: m.kind, x: m.x, w: left - m.x, y: m.y, h: m.h }
+                               : { kind: m.kind, x: right, w: (m.x + m.w) - right, y: m.y, h: m.h };
+      if (cut.w > 0.5) falling.push({ ...cut, vy: 0, vr: (m.x < prev.x ? -1 : 1) * 2, rot: 0 });
+      beep(520, 0.06, 'square');
+    }
+    stack.push(placed); layers++;
+    meter(layers / BURGER_META);
+    if (layers >= BURGER_META) {
+      const t = stack[stack.length - 1];
+      stack.push({ kind: 'paoCima', x: t.x, w: t.w, y: topY(), h: lh('paoCima') });
+      floatText('Burger pronto!', sy(topY()) - 60); fanfare();
+      return passPhase();
+    }
+    burgerSpawn();
+  }
+  function burgerUpdate(dt) {
+    if (state === 'play' && phase === 0 && moving) {
+      moving.x += dir * burgerSpeed() * dt;
+      if (moving.x + moving.w > W + moving.w * 0.25) { moving.x = W + moving.w * 0.25 - moving.w; dir = -1; }
+      if (moving.x < -moving.w * 0.25) { moving.x = -moving.w * 0.25; dir = 1; }
+    }
+    falling.forEach(f => { f.vy -= W * 2.2 * dt; f.y += f.vy * dt; f.rot += f.vr * dt; });
+    falling = falling.filter(f => sy(f.y) < H + 200);
+    const want = Math.max(0, topY() + (moving ? moving.h : 0) - (H - ground()) * 0.6);
+    camY += (want - camY) * Math.min(1, dt * 6);
+  }
+  function drawLayer(L, y) {
+    const { x, w, h } = L;
+    switch (L.kind) {
+      case 'paoBaixo': rr(x, y, w, h, h * 0.45); ctx.fillStyle = '#d4913f'; ctx.fill(); ctx.fillStyle = '#e9b46a'; ctx.fillRect(x + 4, y, Math.max(0, w - 8), h * 0.32); break;
+      case 'carne':
+        rr(x, y, w, h, h * 0.4); ctx.fillStyle = '#5a2e1d'; ctx.fill();
+        ctx.strokeStyle = '#3a1c11'; ctx.lineWidth = 2;
+        for (let gx = x + 10; gx < x + w - 6; gx += 18) { ctx.beginPath(); ctx.moveTo(gx, y + h * 0.3); ctx.lineTo(gx + 8, y + h * 0.7); ctx.stroke(); }
+        break;
+      case 'queijo':
+        ctx.fillStyle = '#f2b632'; ctx.fillRect(x, y, w, h);
+        for (let dx = x + 6; dx < x + w - 8; dx += 26) { ctx.beginPath(); ctx.moveTo(dx, y + h); ctx.lineTo(dx + 12, y + h); ctx.lineTo(dx + 6, y + h * 1.9); ctx.closePath(); ctx.fill(); }
+        break;
+      case 'alface':
+        ctx.fillStyle = '#6dbb45'; ctx.beginPath(); ctx.moveTo(x, y + h);
+        for (let dx = 0; dx <= w; dx += 10) ctx.lineTo(x + dx, y + (Math.floor(dx / 10) % 2 ? 0 : h * 0.45));
+        ctx.lineTo(x + w, y + h); ctx.closePath(); ctx.fill(); break;
+      case 'tomate':
+        rr(x, y, w, h, h * 0.5); ctx.fillStyle = '#d7261e'; ctx.fill(); ctx.fillStyle = '#f07a5f';
+        for (let dx = x + 12; dx < x + w - 8; dx += 22) { ctx.beginPath(); ctx.arc(dx, y + h / 2, h * 0.17, 0, Math.PI * 2); ctx.fill(); }
+        break;
+      case 'bacon':
+        ctx.fillStyle = '#a63a26'; ctx.beginPath(); ctx.moveTo(x, y + h * 0.2);
+        for (let dx = 0; dx <= w; dx += 14) ctx.lineTo(x + dx, y + (Math.floor(dx / 14) % 2 ? h * 0.05 : h * 0.3));
+        ctx.lineTo(x + w, y + h); ctx.lineTo(x, y + h); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#f1c9a5'; ctx.fillRect(x, y + h * 0.5, w, h * 0.16); break;
+      case 'cebola':
+        rr(x, y, w, h, h * 0.5); ctx.fillStyle = '#efe2f0'; ctx.fill();
+        ctx.strokeStyle = '#b77fb0'; ctx.lineWidth = 2; rr(x + 3, y + 3, Math.max(0, w - 6), Math.max(0, h - 6), h * 0.4); ctx.stroke(); break;
+      case 'paoCima': {
+        ctx.fillStyle = '#d4913f'; ctx.beginPath();
+        ctx.moveTo(x, y + h); ctx.bezierCurveTo(x, y - h * 0.15, x + w, y - h * 0.15, x + w, y + h); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#f6e7cf';
+        for (let i = 0; i < Math.max(2, Math.floor(w / 26)); i++) {
+          const sx = x + w * (0.15 + 0.7 * ((i * 0.618) % 1)), syy = y + h * (0.3 + 0.35 * ((i * 0.37) % 1));
+          ctx.beginPath(); ctx.ellipse(sx, syy, 3.5, 2, 0.4, 0, Math.PI * 2); ctx.fill();
+        }
+        break;
+      }
+    }
+  }
+  function burgerRender() {
+    ctx.fillStyle = '#3b2e29'; rr(W * 0.14, sy(0) + 2, W * 0.72, Math.max(6, H * 0.018), 6); ctx.fill();
+    stack.forEach(L => drawLayer(L, sy(L.y + L.h)));
+    if (moving) drawLayer(moving, sy(moving.y + moving.h));
+    falling.forEach(f => {
+      ctx.save(); const cx = f.x + f.w / 2, cy = sy(f.y + f.h / 2);
+      ctx.translate(cx, cy); ctx.rotate(f.rot); ctx.translate(-cx, -cy);
+      drawLayer(f, sy(f.y + f.h)); ctx.restore();
+    });
+  }
+
+  /* =====================================================
+     FASE 2 — BATATA (pegar batatas, fugir da pimenta)
+     ===================================================== */
+  let box = { x: 0, tx: 0 }, drops = [], caught = 0, misses = 0, spawnT = 0, elapsed = 0;
+  const boxW = () => W * 0.24, boxH = () => H * 0.11, boxY = () => H - H * 0.04 - boxH();
+  function batataReset() { box.x = box.tx = W / 2; drops = []; caught = 0; misses = 0; spawnT = 0.4; elapsed = 0; }
+  function batataUpdate(dt) {
+    box.x += (box.tx - box.x) * Math.min(1, dt * 18);
+    box.x = Math.max(boxW() / 2, Math.min(W - boxW() / 2, box.x));
+    if (state !== 'play' || phase !== 1) return;
+    elapsed += dt; spawnT -= dt;
+    if (spawnT <= 0) {
+      const pimenta = caught >= 2 && Math.random() < 0.28;
+      drops.push({ x: W * (0.08 + Math.random() * 0.84), y: -30, pimenta, rot: Math.random() * 6, vr: (Math.random() - 0.5) * 4 });
+      spawnT = Math.max(0.42, 0.85 - caught * 0.035);
+    }
+    const v = H * (0.42 + caught * 0.035);
+    for (const d of drops) {
+      d.y += v * dt; d.rot += d.vr * dt;
+      if (!d.done && d.y >= boxY() && d.y <= boxY() + boxH() * 0.5 && Math.abs(d.x - box.x) < boxW() / 2 + 6) {
+        d.done = true;
+        if (d.pimenta) { misses++; beep(140, 0.2, 'sawtooth'); floatText('Ai, pimenta!', boxY() - 40); }
+        else { caught++; beep(660 + caught * 20, 0.06, 'square'); meter(caught / BATATA_META); }
+      } else if (!d.done && d.y > H + 10) {
+        d.done = true;
+        if (!d.pimenta) { misses++; beep(200, 0.12, 'sawtooth'); }
+      }
+    }
+    drops = drops.filter(d => !d.done);
+    if (misses >= BATATA_ERROS) return lose(caught + ' de ' + BATATA_META + ' batatas. Caíram batatas demais.');
+    if (caught >= BATATA_META) { floatText('Batata no ponto!', boxY() - 60); fanfare(); passPhase(); }
+  }
+  function drawFry(x, y, rot) {
+    ctx.save(); ctx.translate(x, y); ctx.rotate(rot);
+    const w = Math.max(6, W * 0.022), h = W * 0.09;
+    rr(-w / 2, -h / 2, w, h, 2); ctx.fillStyle = '#f2c14e'; ctx.fill();
+    ctx.fillStyle = '#d99a2b'; ctx.fillRect(-w / 2, -h / 2, w * 0.3, h);
+    ctx.restore();
+  }
+  function drawPepper(x, y, rot) {
+    ctx.save(); ctx.translate(x, y); ctx.rotate(rot);
+    const s = W * 0.045;
+    ctx.fillStyle = '#d7261e'; ctx.beginPath(); ctx.ellipse(0, 0, s * 0.55, s, 0.3, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#6dbb45'; ctx.fillRect(-s * 0.15, -s * 1.25, s * 0.3, s * 0.4);
+    ctx.restore();
+  }
+  function batataRender() {
+    for (const d of drops) d.pimenta ? drawPepper(d.x, d.y, d.rot) : drawFry(d.x, d.y, d.rot);
+    const bw = boxW(), bh = boxH(), x = box.x - bw / 2, y = boxY();
+    // batatas aparecendo na caixa conforme enche
+    const show = Math.min(9, Math.round(caught / BATATA_META * 9));
+    for (let i = 0; i < show; i++) drawFry(x + bw * (0.15 + 0.7 * (i / 8)), y - W * 0.02, (i % 3 - 1) * 0.25);
+    ctx.fillStyle = '#d7261e';
+    ctx.beginPath(); ctx.moveTo(x - bw * 0.06, y); ctx.lineTo(x + bw * 1.06, y); ctx.lineTo(x + bw * 0.9, y + bh); ctx.lineTo(x + bw * 0.1, y + bh); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#f2b632'; ctx.font = '400 ' + Math.round(bh * 0.3) + 'px Bungee, Impact, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('GABBA', box.x, y + bh * 0.52);
+    // vidas
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.font = '700 14px Barlow, sans-serif'; ctx.fillStyle = '#b5a397';
+    ctx.fillText('Erros: ' + misses + ' de ' + BATATA_ERROS, 12, 12);
+    ctx.textAlign = 'right'; ctx.fillStyle = '#f2b632';
+    ctx.fillText(caught + ' / ' + BATATA_META, W - 12, 12);
+  }
+
+  /* =====================================================
+     FASE 3 — REFRI (segurar para encher, soltar na faixa)
+     ===================================================== */
+  let level = 0, pouring = false, poured = false, rate = 0, target = 0.8, drip = 0, settled = false;
+  const cup = () => { const w = Math.min(W * 0.42, H * 0.36), h = H * 0.58; return { w, h, x: (W - w) / 2, y: H * 0.3 }; };
+  function refriReset() { level = 0; pouring = false; poured = false; rate = 0; drip = 0; settled = false; target = 0.7 + Math.random() * 0.18; }
+  function refriUpdate(dt) {
+    if (state !== 'play' || phase !== 2) return;
+    if (pouring) {
+      rate = Math.min(0.75, rate + dt * 0.55);
+      level += (0.22 + rate) * dt;
+      meter(level);
+      if (level >= 1) { level = 1; pouring = false; return lose('Transbordou o copo!'); }
+    } else if (poured && !settled) {
+      // a última gota ainda cai um pouquinho depois de soltar
+      drip -= dt;
+      if (drip > 0) level += (0.22 + rate) * dt * 0.5;
+      else {
+        settled = true; meter(level);
+        const diff = level - target;
+        if (level >= 1) return lose('Transbordou o copo!');
+        if (Math.abs(diff) <= REFRI_FAIXA) { floatText('No ponto!', cup().y - 30); fanfare(); setTimeout(winCombo, 600); }
+        else lose(diff > 0 ? 'Passou da faixa. Encheu demais.' : 'Ficou abaixo da faixa. Faltou refri.');
+      }
+    }
+  }
+  function refriPress() { if (poured || phase !== 2 || state !== 'play') return; pouring = true; initAudio(); hint(''); }
+  function refriRelease() { if (!pouring) return; pouring = false; poured = true; drip = 0.12; }
+  function refriRender() {
+    const c = cup();
+    // jato
+    if (pouring || (poured && drip > 0)) {
+      ctx.fillStyle = '#4a1d0e';
+      ctx.fillRect(W / 2 - 5, 0, 10, c.y + c.h * (1 - level));
+    }
+    // copo (trapézio)
+    const inset = c.w * 0.1;
+    const path = () => { ctx.beginPath(); ctx.moveTo(c.x, c.y); ctx.lineTo(c.x + c.w, c.y); ctx.lineTo(c.x + c.w - inset, c.y + c.h); ctx.lineTo(c.x + inset, c.y + c.h); ctx.closePath(); };
+    ctx.save(); path(); ctx.clip();
+    ctx.fillStyle = 'rgba(255,255,255,.05)'; ctx.fillRect(c.x, c.y, c.w, c.h);
+    const ly = c.y + c.h * (1 - level);
+    ctx.fillStyle = '#5a2412'; ctx.fillRect(c.x, ly, c.w, c.h * level);
+    if (level > 0.01) { ctx.fillStyle = '#f6e7cf'; ctx.fillRect(c.x, ly - 4, c.w, 6); }
+    // bolhinhas
+    ctx.fillStyle = 'rgba(255,255,255,.25)';
+    for (let i = 0; i < 6; i++) { const bx = c.x + c.w * (0.2 + 0.6 * ((i * 0.37) % 1)), byy = c.y + c.h * (0.95 - ((i * 0.23 + last / 2600) % 1) * level); if (byy > ly) { ctx.beginPath(); ctx.arc(bx, byy, 2.5, 0, Math.PI * 2); ctx.fill(); } }
+    ctx.restore();
+    // faixa alvo
+    const t1 = c.y + c.h * (1 - target - REFRI_FAIXA), t2 = c.y + c.h * (1 - target + REFRI_FAIXA);
+    ctx.fillStyle = 'rgba(111,191,115,.22)'; ctx.fillRect(c.x - 14, t1, c.w + 28, t2 - t1);
+    ctx.strokeStyle = '#6fbf73'; ctx.lineWidth = 2; ctx.setLineDash([6, 5]);
+    ctx.beginPath(); ctx.moveTo(c.x - 14, t1); ctx.lineTo(c.x + c.w + 14, t1); ctx.moveTo(c.x - 14, t2); ctx.lineTo(c.x + c.w + 14, t2); ctx.stroke(); ctx.setLineDash([]);
+    // contorno e logo
+    path(); ctx.strokeStyle = '#f6ece2'; ctx.lineWidth = 3; ctx.stroke();
+    ctx.fillStyle = 'rgba(246,231,207,.85)'; ctx.font = '400 ' + Math.round(c.w * 0.13) + 'px Bungee, Impact, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('GABBA', W / 2, c.y + c.h * 0.88);
+    // bico da máquina
+    ctx.fillStyle = '#3b2e29'; rr(W / 2 - 22, -6, 44, 28, 6); ctx.fill();
+  }
+
+  /* =====================================================
+     Fluxo da partida
+     ===================================================== */
+  const PHASES = [
+    { name: 'Burger', how: 'Toque para soltar cada camada em cima da outra.', hint: 'Toque para soltar a camada' },
+    { name: 'Batata', how: 'Arraste o dedo para mover a caixinha. Pegue ' + BATATA_META + ' batatas e fuja da pimenta.', hint: 'Arraste para mover a caixa' },
+    { name: 'Refri', how: 'Segure o dedo para encher. Solte quando o refri estiver dentro da faixa verde.', hint: 'Segure para encher, solte na faixa' }
+  ];
+  function steps() {
+    for (let i = 0; i < 3; i++) {
+      const el = $('st' + i);
+      el.className = 'step' + (i < phase ? ' done' : i === phase ? (state === 'over' && !comboOk ? ' fail' : (state === 'over' ? ' done' : ' now')) : '');
+    }
+  }
+  let comboOk = false;
+
+  function start() {
+    initAudio();
+    valendo = !TESTE && ATIVO && !wonToday() && chancesLeft() > 0;
+    if (valendo) {
+      if (saved.triesDay !== today()) { saved.triesDay = today(); saved.tries = 0; }
+      saved.tries++; persist();
+    }
+    conta('partida-combo', 'Partida: Monte o Combo');
+    comboOk = false; phase = 0;
+    burgerReset(); batataReset(); refriReset();
+    $('start').hidden = true; $('over').hidden = true;
+    aplicarConfig();
+    intro();
+  }
+  function intro() {
+    state = 'intro'; steps(); meter(0); hint('');
+    $('phase-n').textContent = 'Fase ' + (phase + 1) + ' de 3';
+    $('phase-title').textContent = PHASES[phase].name;
+    $('phase-how').textContent = PHASES[phase].how;
+    $('phase').hidden = false;
+    setTimeout(() => {
+      $('phase').hidden = true;
+      state = 'play'; steps(); hint(PHASES[phase].hint);
+      if (phase === 0) burgerSpawn();
+      setTimeout(() => { if (state === 'play') hint(''); }, 2500);
+    }, 1900);
+  }
+  function passPhase() {
+    state = 'between';
+    conta('combo-passou-' + PHASES[phase].name.toLowerCase(), 'Monte o Combo: passou ' + PHASES[phase].name);
+    setTimeout(() => { phase++; intro(); }, 1100);
+  }
+  function lose(msg) {
+    if (state === 'over') return;
+    state = 'over'; steps(); hint('');
+    conta('combo-perdeu-' + PHASES[phase].name.toLowerCase(), 'Monte o Combo: perdeu no ' + PHASES[phase].name);
+    setTimeout(() => {
+      $('over-title').textContent = phase === 0 ? 'Desmontou!' : 'Quase!';
+      $('over-msg').textContent = 'Parou na fase ' + (phase + 1) + ' (' + PHASES[phase].name + '). ' + msg;
+      $('over-normal').hidden = false;
+      showPrize(false); overChances();
+      $('over').hidden = false;
+    }, 800);
+  }
+  function winCombo() {
+    if (state === 'over') return;
+    comboOk = true; state = 'over'; steps(); hint('');
+    if (valendo) { saved.wonDay = today(); saved.wonPrize = PRIZE; persist(); conta('combo-venceu', 'Monte o Combo: venceu'); }
+    else conta('combo-completou-sem-premio', 'Monte o Combo: completou sem prêmio');
+    $('over-title').textContent = 'Combo completo!';
+    $('over-msg').textContent = valendo ? 'Burger, batata e refri. Mandou bem!' : (TESTE ? 'Modo teste: sem prêmio.' : 'Burger, batata e refri. Mandou bem!');
+    $('over-normal').hidden = false;
+    showPrize(valendo); overChances();
+    $('over').hidden = false;
+  }
+  function overChances() {
+    aplicarConfig();
+    let t = '';
+    if (TESTE) t = 'Modo teste.';
+    else if (!ATIVO || comboOk) t = '';
+    else if (wonToday()) t = '';
+    else if (chancesLeft() > 0) t = 'Ainda tem ' + chancesLeft() + (chancesLeft() === 1 ? ' chance' : ' chances') + ' valendo prêmio hoje.';
+    else if (valendo) t = 'Essa era sua última chance de hoje. Pode continuar jogando pela diversão!';
+    $('over-chances').textContent = t; $('over-chances').hidden = !t;
+  }
+
+  /* ---------- Prêmio ---------- */
+  let clockTimer = null;
+  function showPrize(show) {
+    const card = $('prize-card');
+    card.hidden = !show; $('mark-used').hidden = !show;
+    clearInterval(clockTimer);
+    if (!show) return;
+    $('prize-what').textContent = (wonToday() && saved.wonPrize) || PRIZE;
+    const d = new Date(), dias = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
+    $('prize-date').textContent = 'Válido hoje, ' + dias[d.getDay()] + ' ' + pad(d.getDate()) + '/' + pad(d.getMonth() + 1);
+    const used = saved.usedDay === today();
+    card.classList.toggle('used', used);
+    $('prize-note').textContent = used ? 'Prêmio entregue às ' + saved.usedAt : 'Mostre esta tela ao atendente';
+    $('mark-used').hidden = used;
+    const tick = () => { const n = new Date(); $('prize-clock').textContent = pad(n.getHours()) + ':' + pad(n.getMinutes()) + ':' + pad(n.getSeconds()); };
+    tick(); clockTimer = setInterval(tick, 1000);
+  }
+  let usedArmed = false;
+  $('mark-used').addEventListener('click', () => {
+    if (!usedArmed) { usedArmed = true; $('mark-used').textContent = 'Toque de novo para confirmar a entrega'; setTimeout(() => { usedArmed = false; $('mark-used').textContent = 'Atendente: marcar como entregue'; }, 4000); return; }
+    usedArmed = false;
+    const n = new Date();
+    saved.usedDay = today(); saved.usedAt = pad(n.getHours()) + ':' + pad(n.getMinutes()); persist();
+    $('mark-used').textContent = 'Atendente: marcar como entregue';
+    showPrize(true);
+  });
+  $('see-prize').addEventListener('click', ev => {
+    ev.stopPropagation();
+    $('start').hidden = true; $('over-normal').hidden = true; $('over-chances').hidden = true;
+    showPrize(true); $('over').hidden = false;
+  });
+
+  /* ---------- Loop ---------- */
+  function render() {
+    if (!W) return;
+    ctx.clearRect(0, 0, W, H);
+    if (phase === 0) burgerRender();
+    else if (phase === 1) batataRender();
+    else refriRender();
+  }
+  function loop(t) {
+    const dt = Math.min(0.033, (t - (last || t)) / 1000); last = t;
+    if (phase === 0) burgerUpdate(dt);
+    else if (phase === 1) batataUpdate(dt);
+    else refriUpdate(dt);
+    render();
+    requestAnimationFrame(loop);
+  }
+
+  /* ---------- Som ---------- */
+  let audio = null;
+  function initAudio() { try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); if (audio.state === 'suspended') audio.resume(); } catch (e) {} }
+  function beep(f, d, type) {
+    if (!audio) return;
+    const o = audio.createOscillator(), g = audio.createGain();
+    o.type = type; o.frequency.value = f;
+    g.gain.setValueAtTime(0.07, audio.currentTime); g.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + d);
+    o.connect(g).connect(audio.destination); o.start(); o.stop(audio.currentTime + d + 0.02);
+  }
+  function fanfare() { [523, 659, 784, 1047].forEach((f, k) => setTimeout(() => beep(f, 0.25, 'triangle'), k * 110)); }
+
+  /* ---------- Controles ---------- */
+  const fx = ev => ev.clientX - field.getBoundingClientRect().left;
+  field.addEventListener('pointerdown', ev => {
+    if (ev.target.closest('.overlay')) return;
+    ev.preventDefault();
+    if (state !== 'play') return;
+    if (phase === 0) burgerDrop();
+    else if (phase === 1) { box.tx = fx(ev); try { field.setPointerCapture(ev.pointerId); } catch (e) {} }
+    else refriPress();
+  });
+  field.addEventListener('pointermove', ev => { if (state === 'play' && phase === 1) box.tx = fx(ev); });
+  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(n => field.addEventListener(n, () => { if (phase === 2) refriRelease(); }));
+  window.addEventListener('pointerup', () => { if (phase === 2) refriRelease(); });
+  document.addEventListener('keydown', ev => {
+    if (state !== 'play') return;
+    if (phase === 0 && (ev.code === 'Space' || ev.code === 'Enter')) { ev.preventDefault(); burgerDrop(); }
+    if (phase === 1 && (ev.code === 'ArrowLeft' || ev.code === 'ArrowRight')) { box.tx = box.x + (ev.code === 'ArrowLeft' ? -1 : 1) * W * 0.12; }
+    if (phase === 2 && ev.code === 'Space' && !ev.repeat) { ev.preventDefault(); refriPress(); }
+  });
+  document.addEventListener('keyup', ev => { if (phase === 2 && ev.code === 'Space') refriRelease(); });
+  $('play').addEventListener('click', ev => { ev.stopPropagation(); start(); });
+  $('again').addEventListener('click', ev => { ev.stopPropagation(); start(); });
+
+  window.addEventListener('resize', resize);
+  resize();
+  requestAnimationFrame(loop);
+})();
+</script>
+<script>
+/* Impede o zoom por toque duplo e por pinça (iPhone ignora user-scalable=no) */
+(function () {
+  let lastEnd = 0;
+  document.addEventListener('touchend', function (e) {
+    const now = Date.now();
+    const onControl = e.target && e.target.closest && e.target.closest('button, a, input, select, textarea, label');
+    if (!onControl && now - lastEnd < 350) e.preventDefault();
+    lastEnd = now;
+  }, { passive: false });
+  document.addEventListener('dblclick', function (e) { e.preventDefault(); }, { passive: false });
+  ['gesturestart', 'gesturechange', 'gestureend'].forEach(function (t) {
+    document.addEventListener(t, function (e) { e.preventDefault(); }, { passive: false });
+  });
+  document.addEventListener('touchmove', function (e) { if (e.touches && e.touches.length > 1) e.preventDefault(); }, { passive: false });
+})();
+</script>
+</body>
+</html>

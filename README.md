@@ -45,6 +45,16 @@ Os recordes ficam salvos no celular de cada cliente. As perguntas do quiz ficam 
 
 `delivery/index.html` é o Fliperama para clientes de delivery: igual ao da mesa, **sem o Desafio da Espera** (que dá prêmio na mesa) e com o texto "Seu pedido tá a caminho". O arquivo é **gerado** a partir de `jogos/index.html`; depois de mudar o Fliperama, rode `python3 scripts/gerar-delivery.py`. O bloco que só existe na mesa fica entre os marcadores `SO-MESA-INICIO` e `SO-MESA-FIM`. Dentro dos jogos, o botão "‹ Jogos" volta para a versão em que o cliente entrou.
 
+## Monte o Combo (teste)
+
+Substituto em teste do Desafio da Espera, no endereço `/combo/`, ainda fora do Fliperama. Três fases na mesma partida: **Burger** (empilhar 7 camadas), **Batata** (arrastar a caixinha e pegar 12 batatas, fugindo da pimenta; 3 erros e perde) e **Refri** (segurar para encher e soltar dentro da faixa verde). Só ganha quem completa as três.
+
+- Prêmio e liga/desliga vêm do mesmo `desafio/config.json` da área do dono.
+- Cada celular tem **3 chances por dia** valendo prêmio; depois disso joga só pela diversão.
+- A dificuldade fica no topo do script de `combo/index.html` (`CHANCES`, `BURGER_META`, `BATATA_META`, `BATATA_ERROS`, `REFRI_FAIXA`).
+- Abrir com `/combo/?teste` joga sem gastar chance, sem prêmio e sem contar no GoatCounter.
+- Eventos: `partida-combo`, `combo-passou-<fase>`, `combo-perdeu-<fase>`, `combo-venceu` e `combo-completou-sem-premio`, para ver em qual fase o pessoal para.
+
 ## Chapa do Gabba (teste)
 
 Jogo em teste, fora do Fliperama, no endereço `/chapa/`. O jogador monta os pedidos seguindo a comanda e tira a carne da chapa no ponto certo. Perdeu 3 pedidos por tempo, acaba o turno.
@@ -59,7 +69,7 @@ Jogo de corrida com o mascote do Gabba Hey Burger, dentro do Fliperama, no ender
 
 ## Contador de uso
 
-`contador.js` conta, sem cookies e sem dados pessoais, os acessos a cada página e as partidas iniciadas em cada jogo, usando o GoatCounter. Fica desligado enquanto a variável `CODIGO` estiver vazia; para ligar, coloque nela o código da conta (o `xxx` de `xxx.goatcounter.com`). O relatório por dia fica no painel do GoatCounter.
+`contador.js` conta, sem cookies e sem dados pessoais, os acessos a cada página e as partidas iniciadas em cada jogo, usando o GoatCounter. Está ligado com a conta `gabbajogos` (variável `CODIGO`); para desligar, deixe a variável vazia. O relatório por dia fica no painel do GoatCounter.
 
 Eventos registrados: `partida-memoria`, `partida-quiz`, `partida-corre`, `partida-obby`, `partida-desafio`, `partida-chapa` e `desafio-venceu`.
 
@@ -93,6 +103,7 @@ Página para o funcionário conferir o setor ao chegar, no endereço `/checklist
 - `adm/index.html`: área do dono para trocar o prêmio.
 - `jogos/index.html`: o Fliperama Gabba (versão mesa).
 - `delivery/index.html`: o Fliperama Delivery (gerado por `scripts/gerar-delivery.py`).
+- `combo/index.html`: o jogo Monte o Combo (teste).
 - `chapa/index.html`: o jogo Chapa do Gabba (teste).
 - `obby/index.html`: o Obby do Gabba em 3D.
 - `avalie/index.html`: o Termômetro da Loja.
