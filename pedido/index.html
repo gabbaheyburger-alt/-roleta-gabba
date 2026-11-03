@@ -1,0 +1,445 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Pedido Certo</title>
+<meta name="theme-color" content="#17110f">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Barlow:wght@400;600;700&display=swap">
+<style>
+/* Layout: placar e tempo no topo; comanda e prato no meio; ingredientes (botões) embaixo */
+:root {
+  --bg: #17110f; --surface: #221a17; --line: #3b2e29; --fg: #f6ece2; --muted: #b5a397;
+  --red: #d7261e; --red-deep: #9c1611; --mustard: #f2b632; --cream: #f6e7cf; --ok: #6fbf73; --paper: #f6ecd9; --ink: #2a1d16;
+  --display: 'Bungee', Impact, 'Arial Black', sans-serif;
+  --body: 'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --emoji: "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif;
+  color-scheme: dark;
+}
+* { touch-action: manipulation; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; background: var(--bg); color: var(--fg); }
+body { margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); font-family: var(--body); font-size: 16px; line-height: 1.4; overscroll-behavior: none; user-select: none; -webkit-user-select: none; }
+[hidden] { display: none !important; }
+.app { height: 100%; max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; padding: 12px 16px 14px; gap: 10px; position: relative; }
+
+.hud { display: flex; justify-content: space-between; align-items: flex-end; gap: 10px; }
+.hud-left { display: flex; align-items: center; gap: 10px; }
+.brand { font-family: var(--display); font-size: 1.05rem; line-height: 1; }
+.brand span { color: var(--mustard); }
+.back { color: var(--muted); border: 1px solid var(--line); border-radius: 10px; padding: 7px 10px; font: 700 .85rem var(--body); text-decoration: none; white-space: nowrap; }
+.back:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
+.score { text-align: right; }
+.score small { display: block; font-size: .65rem; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); font-weight: 600; }
+.score b { font-family: var(--display); font-weight: 400; font-size: 1.5rem; line-height: 1; color: var(--mustard); font-variant-numeric: tabular-nums; }
+
+.stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.stat { border: 1px solid var(--line); background: var(--surface); border-radius: 12px; padding: 6px 10px; text-align: center; }
+.stat small { display: block; font-size: .62rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); font-weight: 700; }
+.stat b { font-family: var(--display); font-weight: 400; font-size: 1.3rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.stat.low b { color: #ff8a80; }
+.timebar { height: 8px; background: var(--surface); border-radius: 999px; overflow: hidden; border: 1px solid var(--line); }
+.timebar i { display: block; height: 100%; width: 100%; background: var(--mustard); }
+.timebar.low i { background: var(--red); }
+
+.mid { flex: 1; min-height: 0; display: grid; grid-template-columns: 1.15fr 1fr; gap: 10px; }
+.ticket { background: var(--paper); color: var(--ink); border-radius: 6px 6px 14px 14px; padding: 10px 10px 12px; display: flex; flex-direction: column; gap: 4px; overflow: hidden; position: relative; box-shadow: 0 4px 0 rgba(0,0,0,.35); }
+.ticket h2 { margin: 0 0 2px; font: 400 .95rem var(--display); letter-spacing: .02em; display: flex; justify-content: space-between; }
+.ticket h2 span { color: var(--red); }
+.ticket ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
+.ticket li { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: .95rem; padding: 2px 6px; border-radius: 6px; line-height: 1.2; }
+.ticket li .e { font-family: var(--emoji); font-size: 1.15rem; width: 1.4em; text-align: center; }
+.ticket li.done { color: #8b7a6c; text-decoration: line-through; }
+.ticket li.next { background: #f2b63255; }
+.ticket .memo { position: absolute; inset: 34px 0 0; background: var(--paper); display: flex; align-items: center; justify-content: center; text-align: center; font: 700 .95rem var(--body); color: #8b7a6c; padding: 10px; }
+.plate { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; display: flex; flex-direction: column-reverse; align-items: center; justify-content: flex-start; padding: 10px 6px; gap: 0; overflow: hidden; position: relative; }
+.plate .it { font-family: var(--emoji); font-size: 1.7rem; line-height: 1.05; animation: drop .18s ease-out; }
+.plate .extras { position: absolute; top: 8px; right: 8px; font-family: var(--emoji); font-size: 1.4rem; display: flex; gap: 2px; }
+@keyframes drop { from { transform: translateY(-14px); opacity: 0; } to { transform: none; opacity: 1; } }
+.plate.bad { animation: shake .35s; border-color: var(--red); }
+.plate.good { border-color: var(--ok); }
+@keyframes shake { 0%,100% { transform: none; } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+
+.keys { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.key { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 8px 2px 6px; color: var(--fg); display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; font: 700 .72rem var(--body); text-transform: uppercase; letter-spacing: .04em; }
+.key .e { font-family: var(--emoji); font-size: 1.75rem; line-height: 1.1; }
+.key:active { transform: translateY(2px); background: #2e2420; }
+.key:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
+.key.flash-ok { border-color: var(--ok); }
+.key.flash-bad { border-color: var(--red); background: #3a1614; }
+
+.float { position: absolute; left: 50%; transform: translateX(-50%); font-family: var(--display); color: var(--mustard); font-size: 1.2rem; pointer-events: none; animation: rise .9s ease-out forwards; white-space: nowrap; text-shadow: 0 2px 0 #000; z-index: 6; }
+@keyframes rise { from { opacity: 1; margin-top: 0; } to { opacity: 0; margin-top: -40px; } }
+
+.overlay { position: absolute; inset: 0; background: rgba(23,17,15,.95); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 24px; gap: 12px; overflow-y: auto; z-index: 10; }
+.overlay h1 { font-family: var(--display); font-weight: 400; font-size: clamp(1.7rem, 8vw, 2.3rem); line-height: 1.05; margin: 0; text-wrap: balance; }
+.overlay h1 span { color: var(--mustard); }
+.overlay p { margin: 0; color: var(--muted); max-width: 32ch; }
+.overlay p strong { color: var(--fg); }
+.btn { font-family: var(--display); font-size: 1.3rem; letter-spacing: .04em; background: var(--red); color: var(--cream); border: none; border-radius: 14px; padding: 14px 28px; cursor: pointer; box-shadow: 0 5px 0 var(--red-deep); }
+.btn:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--red-deep); }
+.link { background: transparent; border: 1px solid var(--line); color: var(--muted); font: 700 .88rem var(--body); padding: 9px 14px; border-radius: 10px; cursor: pointer; }
+button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
+.big { font-family: var(--display); font-size: 2.2rem; line-height: 1.05; color: var(--mustard); }
+.chances { font-weight: 700; color: var(--fg); }
+.teste { position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); background: #2b4a8a; color: #fff; font: 700 .65rem var(--body); padding: 2px 8px; border-radius: 6px; letter-spacing: .08em; pointer-events: none; z-index: 5; white-space: nowrap; }
+
+.prize { width: 100%; max-width: 320px; border: 3px solid var(--mustard); border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 6px; background: linear-gradient(135deg, #2a1f12, #3a2a12, #2a1f12); background-size: 300% 300%; animation: shine 3s linear infinite; }
+@keyframes shine { 0% { background-position: 0% 50%; } 100% { background-position: 100% 50%; } }
+.prize .tag { font-size: .7rem; text-transform: uppercase; letter-spacing: .14em; color: var(--mustard); font-weight: 700; }
+.prize .what { font-family: var(--display); font-size: 1.35rem; line-height: 1.15; color: var(--cream); }
+.prize .when { font-variant-numeric: tabular-nums; color: var(--fg); font-weight: 700; }
+.prize .clock { font-family: var(--display); font-size: 1.6rem; color: var(--mustard); font-variant-numeric: tabular-nums; }
+.prize.used { animation: none; border-color: var(--line); background: var(--surface); }
+.prize.used .what { text-decoration: line-through; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { .prize { animation: none; } .float, .plate .it { animation-duration: .01s; } }
+</style>
+<script src="../contador.js"></script>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="hud">
+    <div class="hud-left">
+      <a class="back" href="../jogos/">‹ Jogos</a>
+      <div class="brand">Pedido<br><span>Certo</span></div>
+    </div>
+    <div class="score"><small id="top-lbl">Recorde</small><b id="top">0</b></div>
+  </div>
+  <div class="stats">
+    <div class="stat"><small>Pedidos</small><b id="done">0/8</b></div>
+    <div class="stat"><small>Tempo</small><b id="time">60</b></div>
+    <div class="stat" id="err-box"><small>Erros</small><b id="errs">0/3</b></div>
+  </div>
+  <div class="timebar" id="timebar"><i id="timefill"></i></div>
+
+  <div class="mid">
+    <div class="ticket" id="ticket">
+      <h2>Comanda <span id="tnum">#1</span></h2>
+      <ol id="tlist"></ol>
+      <div class="memo" id="memo" hidden>De cabeça agora!<br>Lembra da ordem?</div>
+    </div>
+    <div class="plate" id="plate"><div class="extras" id="extras"></div></div>
+  </div>
+
+  <div class="keys" id="keys"></div>
+  <div class="teste" id="teste-tag" hidden>MODO TESTE · SEM PRÊMIO · v1</div>
+
+  <div class="overlay" id="start">
+    <h1>Pedido <span>Certo</span></h1>
+    <p>Chegou comanda! Toque nos ingredientes <strong>na ordem da comanda</strong>, de cima para baixo. Depois de alguns pedidos os botões mudam de lugar e a comanda some: vai ter que lembrar!</p>
+    <p>Entregue <strong id="meta-txt">8</strong> pedidos em <strong id="tempo-txt">60</strong> segundos. Errou 3 vezes, acabou o turno.</p>
+    <p id="regra" hidden>Conseguiu, ganhou: <strong id="prize-txt"></strong></p>
+    <p class="chances" id="chances-txt" hidden></p>
+    <button class="btn" id="play" type="button">ABRIR A COZINHA</button>
+    <button class="link" id="see-prize" type="button" hidden>Ver meu prêmio de hoje</button>
+    <a class="link" href="../jogos/" style="text-decoration:none">Escolher outro jogo</a>
+  </div>
+
+  <div class="overlay" id="over" hidden>
+    <div id="over-normal">
+      <div class="big" id="over-title">Fim do turno!</div>
+      <p id="over-msg"></p>
+    </div>
+    <div class="prize" id="prize-card" hidden>
+      <span class="tag">Pedido Certo vencido</span>
+      <span class="what" id="prize-what"></span>
+      <span class="when" id="prize-date"></span>
+      <span class="clock" id="prize-clock">--:--:--</span>
+      <span id="prize-note">Mostre esta tela ao atendente</span>
+    </div>
+    <p class="chances" id="over-chances" hidden></p>
+    <button class="btn" id="again" type="button">DE NOVO</button>
+    <button class="link" id="mark-used" type="button" hidden>Atendente: marcar como entregue</button>
+    <a class="link" href="../jogos/" style="text-decoration:none">Escolher outro jogo</a>
+  </div>
+</div>
+
+<script>
+(function () {
+  /* ===== Configuração do jogo =====
+     Por enquanto o Pedido Certo é só um jogo de teste, sem prêmio. Para valer prêmio, mude VALE_PREMIO para true:
+     aí ele usa o prêmio e o liga/desliga de ../desafio/config.json (área do dono) e 3 chances por dia. */
+  const VALE_PREMIO = false;
+  let PRIZE = 'Molho extra por conta da casa';
+  let ATIVO = VALE_PREMIO;
+  const CHANCES = 3;          // partidas valendo prêmio por dia, por celular
+  const META = 8;             // pedidos para ganhar
+  const TEMPO = 60;           // segundos de turno
+  const BONUS = 2;            // segundos ganhos a cada pedido certo
+  const ERROS = 3;            // erros que encerram o turno
+  const EMBARALHA_DESDE = 4;  // a partir deste pedido os botões trocam de lugar a cada comanda
+  const DECORAR_DESDE = 6;    // a partir deste pedido a comanda some depois de alguns segundos
+  /* ================================ */
+
+  const ING = {
+    pao:    { e: '🍞', n: 'Pão' },
+    carne:  { e: '🥩', n: 'Carne' },
+    queijo: { e: '🧀', n: 'Queijo' },
+    bacon:  { e: '🥓', n: 'Bacon' },
+    alface: { e: '🥬', n: 'Alface' },
+    tomate: { e: '🍅', n: 'Tomate' },
+    cebola: { e: '🧅', n: 'Cebola' },
+    ovo:    { e: '🍳', n: 'Ovo' },
+    molho:  { e: '🥫', n: 'Molho' },
+    batata: { e: '🍟', n: 'Batata' },
+    refri:  { e: '🥤', n: 'Refri' },
+    chopp:  { e: '🍺', n: 'Chopp' }
+  };
+  const RECHEIOS = ['carne', 'queijo', 'bacon', 'alface', 'tomate', 'cebola', 'ovo', 'molho'];
+  const EXTRAS = ['batata', 'refri', 'chopp'];
+  let ORDEM_TECLAS = Object.keys(ING);
+
+  const TESTE = /[?&]teste\b/.test(location.search);
+  const STORE = 'pedido-certo-v1';
+  const $ = id => document.getElementById(id);
+  const pad = n => String(n).padStart(2, '0');
+  const today = () => { const d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
+  const conta = (n, t) => { if (!TESTE && window.gabbaConta) gabbaConta(n, t); };
+
+  let saved = { best: 0, triesDay: null, tries: 0, wonDay: null, wonPrize: null, usedDay: null, usedAt: null };
+  try { saved = Object.assign(saved, JSON.parse(localStorage.getItem(STORE) || '{}')); } catch (e) {}
+  const persist = () => { try { localStorage.setItem(STORE, JSON.stringify(saved)); } catch (e) {} };
+  const triesUsed = () => saved.triesDay === today() ? saved.tries : 0;
+  const chancesLeft = () => Math.max(0, CHANCES - triesUsed());
+  const wonToday = () => saved.wonDay === today();
+
+  if (TESTE) $('teste-tag').hidden = false;
+  $('meta-txt').textContent = META; $('tempo-txt').textContent = TEMPO;
+
+  function aplicarConfig() {
+    $('prize-txt').textContent = PRIZE;
+    $('regra').hidden = !ATIVO || TESTE;
+    let t = '';
+    if (VALE_PREMIO) {
+      if (TESTE) t = 'Modo teste: não gasta chance e não dá prêmio.';
+      else if (!ATIVO) t = 'Hoje o jogo está sem prêmio. Jogue pela diversão!';
+      else if (wonToday()) t = 'Você já ganhou hoje! Agora é só pela diversão.';
+      else if (chancesLeft() > 0) t = 'Você tem ' + chancesLeft() + (chancesLeft() === 1 ? ' chance' : ' chances') + ' valendo prêmio hoje.';
+      else t = 'Suas chances de hoje acabaram. Jogue pela diversão e volte na próxima visita!';
+    }
+    $('chances-txt').textContent = t; $('chances-txt').hidden = !t;
+    $('top-lbl').textContent = VALE_PREMIO && ATIVO && !TESTE ? 'Chances hoje' : 'Recorde';
+    $('top').textContent = VALE_PREMIO && ATIVO && !TESTE ? (wonToday() ? '–' : chancesLeft()) : saved.best;
+    $('see-prize').hidden = !VALE_PREMIO || !wonToday() || TESTE;
+  }
+  aplicarConfig();
+  if (VALE_PREMIO) fetch('../desafio/config.json?v=' + Date.now(), { cache: 'no-store' })
+    .then(r => r.ok ? r.json() : null)
+    .then(c => {
+      if (!c) return;
+      if (typeof c.premio === 'string' && c.premio.trim()) PRIZE = c.premio.trim().slice(0, 60);
+      if (typeof c.ativo === 'boolean') ATIVO = c.ativo;
+      aplicarConfig();
+    }).catch(() => {});
+
+  /* ---------- Teclado de ingredientes ---------- */
+  function montarTeclas() {
+    const k = $('keys'); k.innerHTML = '';
+    ORDEM_TECLAS.forEach(id => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'key'; b.dataset.id = id;
+      b.innerHTML = '<span class="e">' + ING[id].e + '</span>' + ING[id].n;
+      k.append(b);
+    });
+  }
+  function embaralhar() {
+    const a = ORDEM_TECLAS.slice();
+    for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+    ORDEM_TECLAS = a; montarTeclas();
+  }
+  montarTeclas();
+
+  /* ---------- Partida ---------- */
+  let state = 'start', valendo = false, done = 0, errs = 0, timeLeft = TEMPO, pedido = [], pos = 0, num = 0, memoTimer = null, last = 0;
+
+  function novoPedido() {
+    num++;
+    const n = Math.min(5, 2 + Math.floor((num - 1) / 2));   // recheios: 2, 2, 3, 3, 4, 4, 5...
+    const rec = [];
+    for (let i = 0; i < n; i++) rec.push(RECHEIOS[Math.floor(Math.random() * RECHEIOS.length)]);
+    pedido = ['pao', ...rec, 'pao'];
+    if (num >= 3 && Math.random() < 0.6) pedido.push(EXTRAS[Math.floor(Math.random() * EXTRAS.length)]);
+    pos = 0;
+    $('tnum').textContent = '#' + num;
+    $('plate').classList.remove('good', 'bad');
+    $('plate').innerHTML = '<div class="extras" id="extras"></div>';
+    if (num >= EMBARALHA_DESDE) embaralhar();
+    clearTimeout(memoTimer); $('memo').hidden = true;
+    if (num >= DECORAR_DESDE) memoTimer = setTimeout(() => { if (state === 'play') $('memo').hidden = false; }, 1200 + pedido.length * 350);
+    desenharComanda();
+  }
+  function desenharComanda() {
+    const ol = $('tlist'); ol.innerHTML = '';
+    pedido.forEach((id, i) => {
+      const li = document.createElement('li');
+      li.className = i < pos ? 'done' : i === pos ? 'next' : '';
+      li.innerHTML = '<span class="e">' + ING[id].e + '</span>' + ING[id].n + (EXTRAS.includes(id) ? ' <small style="font-weight:600">(junto)</small>' : '');
+      ol.append(li);
+    });
+  }
+  function toque(id, btn) {
+    if (state !== 'play') return;
+    initAudio();
+    if (id === pedido[pos]) {
+      if (EXTRAS.includes(id)) { $('extras').insertAdjacentHTML('beforeend', '<span>' + ING[id].e + '</span>'); }
+      else { const d = document.createElement('div'); d.className = 'it'; d.textContent = ING[id].e; $('plate').append(d); }
+      pos++; flash(btn, 'flash-ok'); beep(500 + pos * 40, 0.05, 'square');
+      desenharComanda();
+      if (pos >= pedido.length) entregar();
+    } else {
+      errs++; flash(btn, 'flash-bad'); beep(150, 0.25, 'sawtooth');
+      $('plate').classList.remove('bad'); void $('plate').offsetWidth; $('plate').classList.add('bad');
+      floatText('Pedido errado!');
+      hud();
+      if (errs >= ERROS) return fim('erros');
+      state = 'pause'; setTimeout(() => { if (state === 'pause') { state = 'play'; novoPedido(); } }, 650);
+    }
+  }
+  function entregar() {
+    done++; timeLeft = Math.min(TEMPO, timeLeft + BONUS);
+    $('plate').classList.add('good');
+    floatText(done >= META ? 'Último pedido!' : 'Saiu! +' + BONUS + 's');
+    beep(880, 0.12, 'triangle');
+    hud();
+    if (done >= META) return fim('venceu');
+    state = 'pause'; setTimeout(() => { if (state === 'pause') { state = 'play'; novoPedido(); } }, 450);
+  }
+  function flash(btn, c) { if (!btn) return; btn.classList.add(c); setTimeout(() => btn.classList.remove(c), 220); }
+  function hud() {
+    $('done').textContent = done + '/' + META;
+    $('errs').textContent = errs + '/' + ERROS;
+    $('err-box').classList.toggle('low', errs >= ERROS - 1);
+    $('time').textContent = Math.ceil(timeLeft);
+    $('timefill').style.width = Math.max(0, timeLeft / TEMPO * 100) + '%';
+    $('timebar').classList.toggle('low', timeLeft <= 10);
+  }
+  function floatText(t) {
+    const el = document.createElement('div'); el.className = 'float'; el.textContent = t;
+    const r = $('plate').getBoundingClientRect(), a = $('app').getBoundingClientRect();
+    el.style.top = (r.top - a.top + r.height * 0.35) + 'px';
+    $('app').append(el); setTimeout(() => el.remove(), 950);
+  }
+
+  function start() {
+    initAudio();
+    valendo = VALE_PREMIO && !TESTE && ATIVO && !wonToday() && chancesLeft() > 0;
+    if (valendo) { if (saved.triesDay !== today()) { saved.triesDay = today(); saved.tries = 0; } saved.tries++; persist(); }
+    conta('partida-pedido', 'Partida: Pedido Certo');
+    done = 0; errs = 0; timeLeft = TEMPO; num = 0;
+    ORDEM_TECLAS = Object.keys(ING); montarTeclas();
+    $('start').hidden = true; $('over').hidden = true;
+    aplicarConfig(); hud();
+    state = 'play'; novoPedido();
+  }
+  function fim(motivo) {
+    state = 'over'; clearTimeout(memoTimer);
+    const ganhou = motivo === 'venceu';
+    if (!TESTE && done > saved.best) saved.best = done;
+    if (ganhou && valendo) { saved.wonDay = today(); saved.wonPrize = PRIZE; conta('pedido-venceu', 'Pedido Certo: venceu'); }
+    else if (ganhou) conta('pedido-venceu-sem-premio', 'Pedido Certo: venceu (sem prêmio)');
+    else conta('pedido-perdeu-' + motivo, 'Pedido Certo: perdeu por ' + (motivo === 'tempo' ? 'tempo' : 'erros') + ' com ' + done + ' pedidos');
+    persist();
+    if (ganhou) fanfare(); else beep(160, 0.3, 'sawtooth');
+    setTimeout(() => {
+      $('over-title').textContent = ganhou ? 'Cozinha nota 10!' : motivo === 'tempo' ? 'Acabou o tempo!' : 'Muitos erros!';
+      $('over-msg').textContent = ganhou
+        ? META + ' pedidos entregues com ' + Math.ceil(timeLeft) + ' segundos sobrando.' + (TESTE ? ' Modo teste.' : '')
+        : 'Você entregou ' + done + (done === 1 ? ' pedido' : ' pedidos') + ' de ' + META + '.' + (saved.best && !TESTE ? ' Seu recorde: ' + saved.best + '.' : '');
+      $('over-normal').hidden = false; showPrize(ganhou && valendo); overChances(ganhou); aplicarConfig();
+      $('over').hidden = false;
+    }, 600);
+  }
+  function overChances(ganhou) {
+    let t = '';
+    if (VALE_PREMIO && !TESTE && ATIVO && !ganhou && !wonToday()) {
+      if (chancesLeft() > 0) t = 'Ainda tem ' + chancesLeft() + (chancesLeft() === 1 ? ' chance' : ' chances') + ' valendo prêmio hoje.';
+      else if (valendo) t = 'Essa era sua última chance de hoje. Pode continuar jogando pela diversão!';
+    }
+    $('over-chances').textContent = t; $('over-chances').hidden = !t;
+  }
+
+  function loop(t) {
+    const dt = Math.min(0.05, (t - (last || t)) / 1000); last = t;
+    if (state === 'play' || state === 'pause') {
+      timeLeft -= dt;
+      if (timeLeft <= 0) { timeLeft = 0; hud(); fim('tempo'); }
+      else hud();
+    }
+    requestAnimationFrame(loop);
+  }
+
+  /* ---------- Prêmio ---------- */
+  let clockTimer = null;
+  function showPrize(show) {
+    const card = $('prize-card');
+    card.hidden = !show; $('mark-used').hidden = !show;
+    clearInterval(clockTimer);
+    if (!show) return;
+    $('prize-what').textContent = (wonToday() && saved.wonPrize) || PRIZE;
+    const d = new Date(), dias = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
+    $('prize-date').textContent = 'Válido hoje, ' + dias[d.getDay()] + ' ' + pad(d.getDate()) + '/' + pad(d.getMonth() + 1);
+    const used = saved.usedDay === today();
+    card.classList.toggle('used', used);
+    $('prize-note').textContent = used ? 'Prêmio entregue às ' + saved.usedAt : 'Mostre esta tela ao atendente';
+    $('mark-used').hidden = used;
+    const tick = () => { const n = new Date(); $('prize-clock').textContent = pad(n.getHours()) + ':' + pad(n.getMinutes()) + ':' + pad(n.getSeconds()); };
+    tick(); clockTimer = setInterval(tick, 1000);
+  }
+  let usedArmed = false;
+  $('mark-used').addEventListener('click', () => {
+    if (!usedArmed) { usedArmed = true; $('mark-used').textContent = 'Toque de novo para confirmar a entrega'; setTimeout(() => { usedArmed = false; $('mark-used').textContent = 'Atendente: marcar como entregue'; }, 4000); return; }
+    usedArmed = false;
+    const n = new Date();
+    saved.usedDay = today(); saved.usedAt = pad(n.getHours()) + ':' + pad(n.getMinutes()); persist();
+    $('mark-used').textContent = 'Atendente: marcar como entregue';
+    showPrize(true);
+  });
+  $('see-prize').addEventListener('click', () => {
+    $('start').hidden = true; $('over-normal').hidden = true; $('over-chances').hidden = true;
+    showPrize(true); $('over').hidden = false;
+  });
+
+  /* ---------- Som ---------- */
+  let audio = null;
+  function initAudio() { try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); if (audio.state === 'suspended') audio.resume(); } catch (e) {} }
+  function beep(f, d, type) {
+    if (!audio) return;
+    const o = audio.createOscillator(), g = audio.createGain();
+    o.type = type; o.frequency.value = f;
+    g.gain.setValueAtTime(0.07, audio.currentTime); g.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + d);
+    o.connect(g).connect(audio.destination); o.start(); o.stop(audio.currentTime + d + 0.02);
+  }
+  function fanfare() { [523, 659, 784, 1047].forEach((f, k) => setTimeout(() => beep(f, 0.25, 'triangle'), k * 110)); }
+
+  /* ---------- Controles ---------- */
+  $('keys').addEventListener('pointerdown', ev => {
+    const b = ev.target.closest('.key'); if (!b) return;
+    ev.preventDefault(); toque(b.dataset.id, b);
+  });
+  $('play').addEventListener('click', start);
+  $('again').addEventListener('click', start);
+
+  requestAnimationFrame(loop);
+  window._pedido = { get pedido() { return pedido; }, get pos() { return pos; }, get state() { return state; } };
+})();
+</script>
+<script>
+/* Impede o zoom por toque duplo e por pinça (iPhone ignora user-scalable=no) */
+(function () {
+  let lastEnd = 0;
+  document.addEventListener('touchend', function (e) {
+    const now = Date.now();
+    const onControl = e.target && e.target.closest && e.target.closest('button, a, input, select, textarea, label');
+    if (!onControl && now - lastEnd < 350) e.preventDefault();
+    lastEnd = now;
+  }, { passive: false });
+  document.addEventListener('dblclick', function (e) { e.preventDefault(); }, { passive: false });
+  ['gesturestart', 'gesturechange', 'gestureend'].forEach(function (t) {
+    document.addEventListener(t, function (e) { e.preventDefault(); }, { passive: false });
+  });
+  document.addEventListener('touchmove', function (e) { if (e.touches && e.touches.length > 1) e.preventDefault(); }, { passive: false });
+})();
+</script>
+</body>
+</html>
