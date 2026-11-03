@@ -47,7 +47,7 @@ Os recordes ficam salvos no celular de cada cliente. As perguntas do quiz ficam 
 
 ## Monte o Combo (teste)
 
-Substituto em teste do Desafio da Espera, no endereço `/combo/`, ainda fora do Fliperama. Três fases na mesma partida: **Burger** (empilhar 7 camadas), **Batata** (arrastar a caixinha e pegar 12 batatas, fugindo da pimenta; 3 erros e perde) e **Refri** (segurar para encher e soltar dentro da faixa verde). Só ganha quem completa as três.
+Substituto em teste do Desafio da Espera, no endereço `/combo/`, ainda fora do Fliperama. Três fases na mesma partida: **Burger** (empilhar 7 camadas), **Batata** (deslizar o dedo para mover a caixinha e pegar 12 batatas, fugindo da pimenta; 3 erros e perde) e **Refri** (segurar para encher e soltar dentro da faixa verde). Só ganha quem completa as três.
 
 - Prêmio e liga/desliga vêm do mesmo `desafio/config.json` da área do dono.
 - Cada celular tem **3 chances por dia** valendo prêmio; depois disso joga só pela diversão.

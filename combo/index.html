@@ -481,7 +481,7 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
      ===================================================== */
   const PHASES = [
     { name: 'Burger', how: 'Toque para soltar cada camada em cima da outra.', hint: 'Toque para soltar a camada' },
-    { name: 'Batata', how: 'Arraste o dedo para mover a caixinha. Pegue ' + BATATA_META + ' batatas e fuja da pimenta.', hint: 'Arraste para mover a caixa' },
+    { name: 'Batata', how: 'Deslize o dedo para os lados, em qualquer parte da tela, para mover a caixinha. Pegue ' + BATATA_META + ' batatas e fuja da pimenta.', hint: 'Deslize o dedo para mover a caixa' },
     { name: 'Refri', how: 'Segure o dedo para encher. Solte quando o refri estiver dentro da faixa verde.', hint: 'Segure para encher, solte na faixa' }
   ];
   function steps() {
@@ -626,16 +626,23 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
     ev.preventDefault();
     if (state !== 'play') return;
     if (phase === 0) burgerDrop();
-    else if (phase === 1) { box.tx = fx(ev); try { field.setPointerCapture(ev.pointerId); } catch (e) {} }
+    else if (phase === 1) { drag = { id: ev.pointerId, x0: fx(ev), b0: box.tx }; try { field.setPointerCapture(ev.pointerId); } catch (e) {} }
     else refriPress();
   });
-  field.addEventListener('pointermove', ev => { if (state === 'play' && phase === 1) box.tx = fx(ev); });
+  // Batata: a caixinha anda junto com o deslize do dedo (em qualquer parte da tela), sem pular para onde tocou
+  let drag = null;
+  const clampBox = v => Math.max(boxW() / 2, Math.min(W - boxW() / 2, v));
+  field.addEventListener('pointermove', ev => {
+    if (state !== 'play' || phase !== 1 || !drag || ev.pointerId !== drag.id) return;
+    box.tx = clampBox(drag.b0 + (fx(ev) - drag.x0) * 1.3);
+  });
+  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(n => field.addEventListener(n, ev => { if (drag && ev.pointerId === drag.id) drag = null; }));
   ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(n => field.addEventListener(n, () => { if (phase === 2) refriRelease(); }));
   window.addEventListener('pointerup', () => { if (phase === 2) refriRelease(); });
   document.addEventListener('keydown', ev => {
     if (state !== 'play') return;
     if (phase === 0 && (ev.code === 'Space' || ev.code === 'Enter')) { ev.preventDefault(); burgerDrop(); }
-    if (phase === 1 && (ev.code === 'ArrowLeft' || ev.code === 'ArrowRight')) { box.tx = box.x + (ev.code === 'ArrowLeft' ? -1 : 1) * W * 0.12; }
+    if (phase === 1 && (ev.code === 'ArrowLeft' || ev.code === 'ArrowRight')) { box.tx = clampBox(box.x + (ev.code === 'ArrowLeft' ? -1 : 1) * W * 0.12); }
     if (phase === 2 && ev.code === 'Space' && !ev.repeat) { ev.preventDefault(); refriPress(); }
   });
   document.addEventListener('keyup', ev => { if (phase === 2 && ev.code === 'Space') refriRelease(); });
