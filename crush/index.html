@@ -1,0 +1,528 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Gabba Crush</title>
+<meta name="theme-color" content="#17110f">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Barlow:wght@400;600;700&display=swap">
+<style>
+/* Layout: placar no topo, tabuleiro ocupando o resto, telas de início/fim por cima */
+:root {
+  --bg: #17110f; --surface: #221a17; --line: #3b2e29; --fg: #f6ece2; --muted: #b5a397;
+  --red: #d7261e; --red-deep: #9c1611; --mustard: #f2b632; --cream: #f6e7cf; --ok: #6fbf73;
+  --display: 'Bungee', Impact, 'Arial Black', sans-serif;
+  --body: 'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color-scheme: dark;
+}
+* { touch-action: manipulation; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; background: var(--bg); color: var(--fg); }
+body { margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); font-family: var(--body); font-size: 16px; line-height: 1.4; overscroll-behavior: none; }
+[hidden] { display: none !important; }
+.app { height: 100%; max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; padding: 12px 16px 16px; gap: 10px; }
+
+.hud { display: flex; justify-content: space-between; align-items: flex-end; gap: 10px; }
+.hud-left { display: flex; align-items: center; gap: 10px; }
+.brand { font-family: var(--display); font-size: 1.05rem; line-height: 1; }
+.brand span { color: var(--mustard); }
+.back { color: var(--muted); border: 1px solid var(--line); border-radius: 10px; padding: 7px 10px; font: 700 .85rem var(--body); text-decoration: none; white-space: nowrap; }
+.back:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
+.score { text-align: right; }
+.score small { display: block; font-size: .65rem; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); font-weight: 600; }
+.score b { font-family: var(--display); font-weight: 400; font-size: 1.5rem; line-height: 1; color: var(--mustard); font-variant-numeric: tabular-nums; }
+
+.goals { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.goal { border: 1px solid var(--line); background: var(--surface); border-radius: 12px; padding: 8px 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.goal small { font-size: .68rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); font-weight: 700; }
+.goal b { font-family: var(--display); font-weight: 400; font-size: 1.45rem; line-height: 1; font-variant-numeric: tabular-nums; }
+.goal.done { border-color: var(--ok); }
+.goal.done b { color: var(--ok); }
+.goal.low b { color: #ff8a80; }
+.emo { font-size: 1.4rem; line-height: 1; }
+
+.field { position: relative; flex: 1; min-height: 0; border-radius: 18px; overflow: hidden; background: var(--surface); border: 1px solid var(--line); user-select: none; -webkit-user-select: none; }
+.field, .field * { touch-action: none; }
+.field canvas { width: 100%; height: 100%; display: block; }
+.float { position: absolute; left: 50%; transform: translateX(-50%); font-family: var(--display); color: var(--mustard); font-size: 1.2rem; pointer-events: none; animation: rise .9s ease-out forwards; white-space: nowrap; text-shadow: 0 2px 0 #000; }
+@keyframes rise { from { opacity: 1; margin-top: 0; } to { opacity: 0; margin-top: -40px; } }
+
+.overlay { position: absolute; inset: 0; background: rgba(23,17,15,.93); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; gap: 12px; cursor: default; overflow-y: auto; }
+.overlay h1 { font-family: var(--display); font-weight: 400; font-size: clamp(1.7rem, 8vw, 2.3rem); line-height: 1.05; margin: 0; text-wrap: balance; }
+.overlay h1 span { color: var(--mustard); }
+.overlay p { margin: 0; color: var(--muted); max-width: 32ch; }
+.overlay p strong { color: var(--fg); }
+.btn { font-family: var(--display); font-size: 1.3rem; letter-spacing: .04em; background: var(--red); color: var(--cream); border: none; border-radius: 14px; padding: 14px 28px; cursor: pointer; box-shadow: 0 5px 0 var(--red-deep); }
+.btn:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--red-deep); }
+.link { background: transparent; border: 1px solid var(--line); color: var(--muted); font: 700 .88rem var(--body); padding: 9px 14px; border-radius: 10px; cursor: pointer; }
+button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
+.big { font-family: var(--display); font-size: 2.2rem; line-height: 1.05; color: var(--mustard); }
+.chances { font-weight: 700; color: var(--fg); }
+.teste { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); background: #2b4a8a; color: #fff; font: 700 .7rem var(--body); padding: 3px 8px; border-radius: 6px; letter-spacing: .08em; pointer-events: none; z-index: 5; white-space: nowrap; }
+
+.prize { width: 100%; max-width: 320px; border: 3px solid var(--mustard); border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 6px; background: linear-gradient(135deg, #2a1f12, #3a2a12, #2a1f12); background-size: 300% 300%; animation: shine 3s linear infinite; }
+@keyframes shine { 0% { background-position: 0% 50%; } 100% { background-position: 100% 50%; } }
+.prize .tag { font-size: .7rem; text-transform: uppercase; letter-spacing: .14em; color: var(--mustard); font-weight: 700; }
+.prize .what { font-family: var(--display); font-size: 1.35rem; line-height: 1.15; color: var(--cream); }
+.prize .when { font-variant-numeric: tabular-nums; color: var(--fg); font-weight: 700; }
+.prize .clock { font-family: var(--display); font-size: 1.6rem; color: var(--mustard); font-variant-numeric: tabular-nums; }
+.prize.used { animation: none; border-color: var(--line); background: var(--surface); }
+.prize.used .what { text-decoration: line-through; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { .prize { animation: none; } .float { animation-duration: .01s; } }
+</style>
+<script src="../contador.js"></script>
+</head>
+<body>
+<div class="app">
+  <div class="hud">
+    <div class="hud-left">
+      <a class="back" href="../jogos/">‹ Jogos</a>
+      <div class="brand">Gabba<br><span>Crush</span></div>
+    </div>
+    <div class="score"><small>Chances hoje</small><b id="chances">3</b></div>
+  </div>
+  <div class="goals">
+    <div class="goal" id="goal-box"><span class="emo">🍟</span><small>Batatas</small><b id="goal">0/25</b></div>
+    <div class="goal" id="moves-box"><small>Jogadas</small><b id="moves">12</b></div>
+  </div>
+
+  <div class="field" id="field">
+    <canvas id="game" aria-label="Tabuleiro do Gabba Crush"></canvas>
+    <div class="teste" id="teste-tag" hidden>MODO TESTE · SEM PRÊMIO · v1</div>
+
+    <div class="overlay" id="start">
+      <h1>Gabba <span>Crush</span></h1>
+      <p><strong>Arraste</strong> um item para o lado, para cima ou para baixo e troque de lugar com o vizinho. Junte <strong>3 ou mais iguais</strong> em linha para estourar.</p>
+      <p>Estoure <strong id="meta-txt">25</strong> batatas 🍟 em <strong id="jog-txt">12</strong> jogadas.</p>
+      <p id="regra">Conseguiu, ganhou: <strong id="prize-txt"></strong></p>
+      <p class="chances" id="chances-txt"></p>
+      <button class="btn" id="play" type="button">JOGAR</button>
+      <button class="link" id="see-prize" type="button" hidden>Ver meu prêmio de hoje</button>
+      <a class="link" href="../jogos/" style="text-decoration:none">Escolher outro jogo</a>
+    </div>
+
+    <div class="overlay" id="over" hidden>
+      <div id="over-normal">
+        <div class="big" id="over-title">Quase!</div>
+        <p id="over-msg"></p>
+      </div>
+      <div class="prize" id="prize-card" hidden>
+        <span class="tag">Gabba Crush vencido</span>
+        <span class="what" id="prize-what"></span>
+        <span class="when" id="prize-date"></span>
+        <span class="clock" id="prize-clock">--:--:--</span>
+        <span id="prize-note">Mostre esta tela ao atendente</span>
+      </div>
+      <p class="chances" id="over-chances"></p>
+      <button class="btn" id="again" type="button">DE NOVO</button>
+      <button class="link" id="mark-used" type="button" hidden>Atendente: marcar como entregue</button>
+      <a class="link" href="../jogos/" style="text-decoration:none">Escolher outro jogo</a>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  /* ===== Configuração do jogo =====
+     O prêmio e o liga/desliga vêm de ../desafio/config.json (o mesmo que o dono muda em /adm/).
+     A dificuldade fica aqui: menos jogadas ou meta maior = mais difícil. */
+  let PRIZE = 'Molho extra por conta da casa';
+  let ATIVO = true;
+  const CHANCES = 3;     // partidas valendo prêmio por dia, por celular
+  const META = 25;       // batatas para estourar
+  const JOGADAS = 12;    // jogadas disponíveis (simulação: 25 em 12 ≈ 11–14% de vitória por partida)
+  const COLS = 7, ROWS = 8;
+  /* ================================ */
+
+  // Itens do tabuleiro. O índice 0 é o alvo (batata).
+  const ITEMS = ['🍟', '🍔', '🥤', '🍺', '🧀'];
+  const ALVO = 0;
+
+  const TESTE = /[?&]teste\b/.test(location.search);
+  const STORE = 'gabba-crush-v1';
+  const $ = id => document.getElementById(id);
+  const pad = n => String(n).padStart(2, '0');
+  const today = () => { const d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
+  const conta = (n, t) => { if (!TESTE && window.gabbaConta) gabbaConta(n, t); };
+
+  let saved = { triesDay: null, tries: 0, wonDay: null, wonPrize: null, usedDay: null, usedAt: null };
+  try { saved = Object.assign(saved, JSON.parse(localStorage.getItem(STORE) || '{}')); } catch (e) {}
+  const persist = () => { try { localStorage.setItem(STORE, JSON.stringify(saved)); } catch (e) {} };
+  const triesUsed = () => saved.triesDay === today() ? saved.tries : 0;
+  const chancesLeft = () => Math.max(0, CHANCES - triesUsed());
+  const wonToday = () => saved.wonDay === today();
+
+  if (TESTE) $('teste-tag').hidden = false;
+  $('meta-txt').textContent = META; $('jog-txt').textContent = JOGADAS;
+
+  function aplicarConfig() {
+    $('prize-txt').textContent = PRIZE;
+    $('regra').hidden = !ATIVO || TESTE;
+    let t = '';
+    if (TESTE) t = 'Modo teste: não gasta chance e não dá prêmio.';
+    else if (!ATIVO) t = 'Hoje o jogo está sem prêmio. Jogue pela diversão!';
+    else if (wonToday()) t = 'Você já ganhou hoje! Agora é só pela diversão.';
+    else if (chancesLeft() > 0) t = 'Você tem ' + chancesLeft() + (chancesLeft() === 1 ? ' chance' : ' chances') + ' valendo prêmio hoje.';
+    else t = 'Suas chances de hoje acabaram. Jogue pela diversão e volte na próxima visita!';
+    $('chances-txt').textContent = t;
+    $('chances').textContent = TESTE ? '∞' : (ATIVO && !wonToday() ? chancesLeft() : '–');
+    $('see-prize').hidden = !wonToday() || TESTE;
+  }
+  aplicarConfig();
+  fetch('../desafio/config.json?v=' + Date.now(), { cache: 'no-store' })
+    .then(r => r.ok ? r.json() : null)
+    .then(c => {
+      if (!c) return;
+      if (typeof c.premio === 'string' && c.premio.trim()) PRIZE = c.premio.trim().slice(0, 60);
+      if (typeof c.ativo === 'boolean') ATIVO = c.ativo;
+      aplicarConfig();
+    }).catch(() => {});
+
+  /* ---------- Tabuleiro (lógica) ---------- */
+  // grid[r][c] = { t: tipo, oy: deslocamento em linhas (para animar a queda), s: escala (para animar o estouro) }
+  let grid = [], moves = JOGADAS, got = 0, valendo = false, state = 'start', combo = 0;
+  const rnd = () => Math.floor(Math.random() * ITEMS.length);
+  const cell = (t) => ({ t, oy: 0, s: 1 });
+
+  function newBoard() {
+    do {
+      grid = [];
+      for (let r = 0; r < ROWS; r++) {
+        grid.push([]);
+        for (let c = 0; c < COLS; c++) {
+          let t;
+          do { t = rnd(); } while (
+            (c >= 2 && grid[r][c - 1].t === t && grid[r][c - 2].t === t) ||
+            (r >= 2 && grid[r - 1][c].t === t && grid[r - 2][c].t === t));
+          grid[r].push(cell(t));
+        }
+      }
+    } while (!hasMove());
+  }
+  function findMatches() {
+    const hit = new Set();
+    for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS - 2; c++) {
+      const t = grid[r][c].t;
+      if (t < 0) continue;
+      let k = c; while (k < COLS && grid[r][k].t === t) k++;
+      if (k - c >= 3) for (let i = c; i < k; i++) hit.add(r * COLS + i);
+    }
+    for (let c = 0; c < COLS; c++) for (let r = 0; r < ROWS - 2; r++) {
+      const t = grid[r][c].t;
+      if (t < 0) continue;
+      let k = r; while (k < ROWS && grid[k][c].t === t) k++;
+      if (k - r >= 3) for (let i = r; i < k; i++) hit.add(i * COLS + c);
+    }
+    return hit;
+  }
+  function swapCells(a, b) { const t = grid[a.r][a.c]; grid[a.r][a.c] = grid[b.r][b.c]; grid[b.r][b.c] = t; }
+  function hasMove() {
+    for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
+      for (const [dr, dc] of [[0, 1], [1, 0]]) {
+        const r2 = r + dr, c2 = c + dc;
+        if (r2 >= ROWS || c2 >= COLS) continue;
+        swapCells({ r, c }, { r: r2, c: c2 });
+        const ok = findMatches().size > 0;
+        swapCells({ r, c }, { r: r2, c: c2 });
+        if (ok) return true;
+      }
+    }
+    return false;
+  }
+  function gravity() {
+    for (let c = 0; c < COLS; c++) {
+      let write = ROWS - 1;
+      for (let r = ROWS - 1; r >= 0; r--) {
+        if (grid[r][c].t >= 0) {
+          const it = grid[r][c];
+          if (write !== r) { it.oy -= (write - r); grid[write][c] = it; grid[r][c] = cell(-1); }
+          write--;
+        }
+      }
+      for (let r = write, n = 1; r >= 0; r--, n++) { const it = cell(rnd()); it.oy = -(write + 1) - 0.4 * n; grid[r][c] = it; }
+    }
+  }
+
+  /* ---------- Animação e fluxo ---------- */
+  let anim = null;   // { kind: 'swap'|'back'|'pop', t, a, b, hit }
+  const SWAP_T = 0.14, POP_T = 0.2;
+
+  function trySwap(a, b) {
+    if (state !== 'play' || anim || moves <= 0) return;
+    if (b.r < 0 || b.r >= ROWS || b.c < 0 || b.c >= COLS) return;
+    sel = null;
+    anim = { kind: 'swap', t: 0, a, b };
+    beep(420, 0.04, 'triangle');
+  }
+  function afterSwap() {
+    swapCells(anim.a, anim.b);
+    const hit = findMatches();
+    if (!hit.size) { const a = anim.a, b = anim.b; swapCells(a, b); anim = { kind: 'back', t: 0, a, b }; beep(160, 0.12, 'sawtooth'); return; }
+    moves--; combo = 0; updateHud();
+    startPop(hit);
+  }
+  function startPop(hit) {
+    combo++;
+    let alvo = 0;
+    hit.forEach(i => { if (grid[Math.floor(i / COLS)][i % COLS].t === ALVO) alvo++; });
+    if (alvo) {
+      got = Math.min(META, got + alvo); updateHud();
+      const ex = [...hit].find(i => grid[Math.floor(i / COLS)][i % COLS].t === ALVO);
+      floatAt('+' + alvo + ' 🍟', ex);
+    }
+    if (combo >= 2) floatText(combo === 2 ? 'Combo!' : 'Combo x' + combo + '!');
+    beep(520 + combo * 90, 0.08, 'square');
+    anim = { kind: 'pop', t: 0, hit };
+  }
+  function afterPop() {
+    anim.hit.forEach(i => { grid[Math.floor(i / COLS)][i % COLS] = cell(-1); });
+    anim = null;
+    gravity();
+    state = 'falling';
+  }
+  function settle() {
+    const hit = findMatches();
+    if (hit.size) { state = 'play'; startPop(hit); return; }
+    state = 'play';
+    if (got >= META) return win();
+    if (moves <= 0) return lose();
+    if (!hasMove()) { floatText('Embaralhando…'); setTimeout(() => { newBoard(); }, 400); }
+  }
+
+  /* ---------- Desenho ---------- */
+  const canvas = $('game'), ctx = canvas.getContext('2d'), field = $('field');
+  let W = 0, H = 0, dpr = 1, S = 40, OX = 0, OY = 0, last = 0, sel = null;
+  function resize() {
+    const r = field.getBoundingClientRect();
+    dpr = window.devicePixelRatio || 1; W = r.width; H = r.height;
+    canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    S = Math.floor(Math.min((W - 16) / COLS, (H - 16) / ROWS));
+    OX = (W - S * COLS) / 2; OY = (H - S * ROWS) / 2;
+  }
+  function rr(x, y, w, h, r) {
+    ctx.beginPath(); ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y); ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r); ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h); ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r); ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y); ctx.closePath();
+  }
+  const ease = t => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+  function render() {
+    ctx.clearRect(0, 0, W, H);
+    // casas
+    for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
+      ctx.fillStyle = (r + c) % 2 ? '#2a201c' : '#30251f';
+      rr(OX + c * S + 2, OY + r * S + 2, S - 4, S - 4, S * 0.18); ctx.fill();
+    }
+    ctx.save(); ctx.beginPath(); ctx.rect(OX, OY, S * COLS, S * ROWS); ctx.clip();
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = Math.round(S * 0.64) + 'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+    for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
+      const it = grid[r] && grid[r][c];
+      if (!it || it.t < 0) continue;
+      let x = OX + c * S + S / 2, y = OY + (r + it.oy) * S + S / 2, sc = 1;
+      if (anim && (anim.kind === 'swap' || anim.kind === 'back')) {
+        const k = anim.kind === 'swap' ? ease(Math.min(1, anim.t / SWAP_T)) : 1 - ease(Math.min(1, anim.t / SWAP_T));
+        const { a, b } = anim;
+        // em 'back' o grid já voltou ao original; desenha indo e voltando
+        if (r === a.r && c === a.c) { x += (b.c - a.c) * S * k; y += (b.r - a.r) * S * k; }
+        else if (r === b.r && c === b.c) { x += (a.c - b.c) * S * k; y += (a.r - b.r) * S * k; }
+      }
+      if (anim && anim.kind === 'pop' && anim.hit.has(r * COLS + c)) sc = 1 + 0.25 * Math.min(1, anim.t / POP_T * 2) - 1.25 * Math.max(0, anim.t / POP_T * 2 - 1);
+      if (sc <= 0.02) continue;
+      if (sel && sel.r === r && sel.c === c) {
+        ctx.strokeStyle = '#f2b632'; ctx.lineWidth = 3; rr(OX + c * S + 3, OY + r * S + 3, S - 6, S - 6, S * 0.18); ctx.stroke();
+      }
+      if (it.t === ALVO) { ctx.fillStyle = 'rgba(242,182,50,.13)'; rr(x - S / 2 + 4, y - S / 2 + 4, S - 8, S - 8, S * 0.18); ctx.fill(); }
+      ctx.fillStyle = '#fff';  // emoji usa a transparência do fillStyle
+      ctx.save(); ctx.translate(x, y + S * 0.03); ctx.scale(sc, sc); ctx.fillText(ITEMS[it.t], 0, 0); ctx.restore();
+    }
+    ctx.restore();
+  }
+  function loop(t) {
+    const dt = Math.min(0.033, (t - (last || t)) / 1000); last = t;
+    if (anim) {
+      anim.t += dt;
+      if (anim.kind === 'swap' && anim.t >= SWAP_T) afterSwap();
+      else if (anim.kind === 'back' && anim.t >= SWAP_T) anim = null;
+      else if (anim.kind === 'pop' && anim.t >= POP_T) afterPop();
+    }
+    if (state === 'falling') {
+      let moving = false;
+      for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
+        const it = grid[r][c];
+        if (it.oy < 0) { it.v = (it.v || 0) + 40 * dt; it.oy = Math.min(0, it.oy + it.v * dt); moving = true; }
+        if (it.oy === 0) it.v = 0;
+      }
+      if (!moving) settle();
+    }
+    render();
+    requestAnimationFrame(loop);
+  }
+
+  /* ---------- HUD e textos ---------- */
+  function updateHud() {
+    $('goal').textContent = got + '/' + META;
+    $('moves').textContent = moves;
+    $('goal-box').classList.toggle('done', got >= META);
+    $('moves-box').classList.toggle('low', moves <= 3);
+  }
+  function floatText(t, top) {
+    const el = document.createElement('div'); el.className = 'float'; el.textContent = t;
+    el.style.top = (top == null ? H * 0.42 : Math.max(24, top)) + 'px';
+    field.append(el); setTimeout(() => el.remove(), 950);
+  }
+  function floatAt(t, i) { floatText(t, OY + Math.floor(i / COLS) * S - 10); }
+
+  /* ---------- Partida ---------- */
+  function start() {
+    initAudio();
+    valendo = !TESTE && ATIVO && !wonToday() && chancesLeft() > 0;
+    if (valendo) { if (saved.triesDay !== today()) { saved.triesDay = today(); saved.tries = 0; } saved.tries++; persist(); }
+    conta('partida-crush', 'Partida: Gabba Crush');
+    moves = JOGADAS; got = 0; sel = null; anim = null;
+    newBoard(); updateHud(); aplicarConfig();
+    $('start').hidden = true; $('over').hidden = true;
+    state = 'play';
+  }
+  function win() {
+    state = 'over';
+    if (valendo) { saved.wonDay = today(); saved.wonPrize = PRIZE; persist(); conta('crush-venceu', 'Gabba Crush: venceu'); }
+    else conta('crush-completou-sem-premio', 'Gabba Crush: completou sem prêmio');
+    fanfare();
+    setTimeout(() => {
+      $('over-title').textContent = 'Batatas no ponto!';
+      $('over-msg').textContent = META + ' batatas com ' + moves + (moves === 1 ? ' jogada' : ' jogadas') + ' sobrando.' + (TESTE ? ' Modo teste: sem prêmio.' : '');
+      $('over-normal').hidden = false; showPrize(valendo); overChances(true); $('over').hidden = false;
+    }, 700);
+  }
+  function lose() {
+    state = 'over';
+    const falta = META - got;
+    conta('crush-perdeu', 'Gabba Crush: perdeu');
+    conta('crush-perdeu-faltou-' + (falta <= 2 ? '1a2' : falta <= 5 ? '3a5' : 'mais5'), 'Gabba Crush: perdeu, faltaram ' + (falta <= 2 ? '1 a 2' : falta <= 5 ? '3 a 5' : 'mais de 5'));
+    beep(160, 0.3, 'sawtooth');
+    setTimeout(() => {
+      $('over-title').textContent = falta <= 2 ? 'Por pouco!' : 'Quase!';
+      $('over-msg').textContent = 'Acabaram as jogadas. Faltaram ' + falta + (falta === 1 ? ' batata.' : ' batatas.');
+      $('over-normal').hidden = false; showPrize(false); overChances(false); $('over').hidden = false;
+    }, 600);
+  }
+  function overChances(ganhou) {
+    aplicarConfig();
+    let t = '';
+    if (TESTE) t = 'Modo teste.';
+    else if (ATIVO && !ganhou && !wonToday()) {
+      if (chancesLeft() > 0) t = 'Ainda tem ' + chancesLeft() + (chancesLeft() === 1 ? ' chance' : ' chances') + ' valendo prêmio hoje.';
+      else if (valendo) t = 'Essa era sua última chance de hoje. Pode continuar jogando pela diversão!';
+    }
+    $('over-chances').textContent = t; $('over-chances').hidden = !t;
+  }
+
+  /* ---------- Prêmio ---------- */
+  let clockTimer = null;
+  function showPrize(show) {
+    const card = $('prize-card');
+    card.hidden = !show; $('mark-used').hidden = !show;
+    clearInterval(clockTimer);
+    if (!show) return;
+    $('prize-what').textContent = (wonToday() && saved.wonPrize) || PRIZE;
+    const d = new Date(), dias = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
+    $('prize-date').textContent = 'Válido hoje, ' + dias[d.getDay()] + ' ' + pad(d.getDate()) + '/' + pad(d.getMonth() + 1);
+    const used = saved.usedDay === today();
+    card.classList.toggle('used', used);
+    $('prize-note').textContent = used ? 'Prêmio entregue às ' + saved.usedAt : 'Mostre esta tela ao atendente';
+    $('mark-used').hidden = used;
+    const tick = () => { const n = new Date(); $('prize-clock').textContent = pad(n.getHours()) + ':' + pad(n.getMinutes()) + ':' + pad(n.getSeconds()); };
+    tick(); clockTimer = setInterval(tick, 1000);
+  }
+  let usedArmed = false;
+  $('mark-used').addEventListener('click', () => {
+    if (!usedArmed) { usedArmed = true; $('mark-used').textContent = 'Toque de novo para confirmar a entrega'; setTimeout(() => { usedArmed = false; $('mark-used').textContent = 'Atendente: marcar como entregue'; }, 4000); return; }
+    usedArmed = false;
+    const n = new Date();
+    saved.usedDay = today(); saved.usedAt = pad(n.getHours()) + ':' + pad(n.getMinutes()); persist();
+    $('mark-used').textContent = 'Atendente: marcar como entregue';
+    showPrize(true);
+  });
+  $('see-prize').addEventListener('click', ev => {
+    ev.stopPropagation();
+    $('start').hidden = true; $('over-normal').hidden = true; $('over-chances').hidden = true;
+    showPrize(true); $('over').hidden = false;
+  });
+
+  /* ---------- Som ---------- */
+  let audio = null;
+  function initAudio() { try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); if (audio.state === 'suspended') audio.resume(); } catch (e) {} }
+  function beep(f, d, type) {
+    if (!audio) return;
+    const o = audio.createOscillator(), g = audio.createGain();
+    o.type = type; o.frequency.value = f;
+    g.gain.setValueAtTime(0.07, audio.currentTime); g.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + d);
+    o.connect(g).connect(audio.destination); o.start(); o.stop(audio.currentTime + d + 0.02);
+  }
+  function fanfare() { [523, 659, 784, 1047].forEach((f, k) => setTimeout(() => beep(f, 0.25, 'triangle'), k * 110)); }
+
+  /* ---------- Controles: arrastar o item OU tocar num item e depois no vizinho ---------- */
+  let down = null;
+  const cellAt = ev => {
+    const b = field.getBoundingClientRect();
+    const c = Math.floor((ev.clientX - b.left - OX) / S), r = Math.floor((ev.clientY - b.top - OY) / S);
+    return (r >= 0 && r < ROWS && c >= 0 && c < COLS) ? { r, c } : null;
+  };
+  field.addEventListener('pointerdown', ev => {
+    if (ev.target.closest('.overlay')) return;
+    ev.preventDefault();
+    if (state !== 'play' || anim) return;
+    const p = cellAt(ev); if (!p) return;
+    down = { p, x: ev.clientX, y: ev.clientY, id: ev.pointerId, done: false };
+    try { field.setPointerCapture(ev.pointerId); } catch (e) {}
+  });
+  field.addEventListener('pointermove', ev => {
+    if (!down || down.done || ev.pointerId !== down.id) return;
+    const dx = ev.clientX - down.x, dy = ev.clientY - down.y;
+    if (Math.max(Math.abs(dx), Math.abs(dy)) < S * 0.35) return;
+    down.done = true;
+    const p = down.p;
+    const q = Math.abs(dx) > Math.abs(dy) ? { r: p.r, c: p.c + Math.sign(dx) } : { r: p.r + Math.sign(dy), c: p.c };
+    trySwap(p, q);
+  });
+  field.addEventListener('pointerup', ev => {
+    if (!down || ev.pointerId !== down.id) return;
+    const d = down; down = null;
+    if (d.done || state !== 'play' || anim) return;
+    const p = d.p;
+    if (sel && Math.abs(sel.r - p.r) + Math.abs(sel.c - p.c) === 1) trySwap(sel, p);
+    else if (sel && sel.r === p.r && sel.c === p.c) sel = null;
+    else { sel = p; beep(600, 0.03, 'triangle'); }
+  });
+  field.addEventListener('pointercancel', () => { down = null; });
+
+  $('play').addEventListener('click', ev => { ev.stopPropagation(); start(); });
+  $('again').addEventListener('click', ev => { ev.stopPropagation(); start(); });
+
+  window.addEventListener('resize', resize);
+  resize(); newBoard(); updateHud();
+  requestAnimationFrame(loop);
+  window._crush = { get grid() { return grid; }, get state() { return state; }, get anim() { return anim; }, findMatches, swapCells, S: () => ({ S, OX, OY }) };
+})();
+</script>
+<script>
+/* Impede o zoom por toque duplo e por pinça (iPhone ignora user-scalable=no) */
+(function () {
+  let lastEnd = 0;
+  document.addEventListener('touchend', function (e) {
+    const now = Date.now();
+    const onControl = e.target && e.target.closest && e.target.closest('button, a, input, select, textarea, label');
+    if (!onControl && now - lastEnd < 350) e.preventDefault();
+    lastEnd = now;
+  }, { passive: false });
+  document.addEventListener('dblclick', function (e) { e.preventDefault(); }, { passive: false });
+  ['gesturestart', 'gesturechange', 'gestureend'].forEach(function (t) {
+    document.addEventListener(t, function (e) { e.preventDefault(); }, { passive: false });
+  });
+  document.addEventListener('touchmove', function (e) { if (e.touches && e.touches.length > 1) e.preventDefault(); }, { passive: false });
+})();
+</script>
+</body>
+</html>

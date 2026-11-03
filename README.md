@@ -55,6 +55,14 @@ Substituto em teste do Desafio da Espera, no endereço `/combo/`, ainda fora do 
 - Abrir com `/combo/?teste` joga sem gastar chance, sem prêmio e sem contar no GoatCounter.
 - Eventos: `partida-combo`, `combo-passou-<fase>`, `combo-perdeu-<fase>`, `combo-venceu` e `combo-completou-sem-premio`, para ver em qual fase o pessoal para.
 
+## Gabba Crush (teste)
+
+Jogo de combinar 3 iguais (estilo Candy Crush), no endereço `/crush/`, ainda fora do Fliperama, para comparar com o Monte o Combo. O cliente arrasta um item (ou toca em um e depois no vizinho) para trocar de lugar e formar fileiras de 3 ou mais iguais. Meta: estourar **25 batatas em 12 jogadas** (numa simulação, um jogador razoável ganha em cerca de 11 a 14% das partidas).
+
+- Mesmo esquema do Monte o Combo: prêmio do `desafio/config.json`, 3 chances por dia por celular, `?teste` para testar.
+- Dificuldade no topo do script de `crush/index.html` (`META`, `JOGADAS`, `CHANCES`).
+- Eventos: `partida-crush`, `crush-venceu`, `crush-perdeu` e `crush-perdeu-faltou-1a2` / `3a5` / `mais5`.
+
 ## Chapa do Gabba (teste)
 
 Jogo em teste, fora do Fliperama, no endereço `/chapa/`. O jogador monta os pedidos seguindo a comanda e tira a carne da chapa no ponto certo. Perdeu 3 pedidos por tempo, acaba o turno.
@@ -104,6 +112,7 @@ Página para o funcionário conferir o setor ao chegar, no endereço `/checklist
 - `jogos/index.html`: o Fliperama Gabba (versão mesa).
 - `delivery/index.html`: o Fliperama Delivery (gerado por `scripts/gerar-delivery.py`).
 - `combo/index.html`: o jogo Monte o Combo (teste).
+- `crush/index.html`: o jogo Gabba Crush (teste).
 - `chapa/index.html`: o jogo Chapa do Gabba (teste).
 - `obby/index.html`: o Obby do Gabba em 3D.
 - `avalie/index.html`: o Termômetro da Loja.
