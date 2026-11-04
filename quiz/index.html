@@ -376,7 +376,11 @@ body { margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: en
     window.neonKind && neonKind('over', kind, kind === 'win' ? '🏆' : kind === 'time' ? '⏱️' : '❌');
     $('over-title').textContent = kind === 'win' ? 'GÊNIO DO GABBA!' : kind === 'time' ? 'ACABOU O TEMPO!' : 'RESPOSTA ERRADA!';
     const m = $('over-msg'); m.innerHTML = '';
-    if (kind === 'win') m.append('Você acertou ', hl('as ' + TOTAL + ' perguntas'), '!' + (TESTE ? ' Modo teste: sem prêmio.' : ''));
+    if (kind === 'win') {
+      m.append('Você acertou ', hl('as ' + TOTAL + ' perguntas'), '!' + (TESTE ? ' Modo teste: sem prêmio.' : ''));
+      if (premioAgora() && wonToday() && !valendo) m.append(' Você já ganhou um prêmio hoje, então essa foi só pela diversão.');
+      else if (premioAgora() && !valendo) m.append(' Mas suas 3 chances de prêmio de hoje já tinham acabado: essa foi só pela diversão. Volte na próxima visita!');
+    }
     else {
       m.append('Você chegou até a ', hl('pergunta ' + (idx + 1) + ' de ' + TOTAL), '.');
       if (saved.best && !TESTE) m.append(' Seu recorde: ' + saved.best + ' acertos.');

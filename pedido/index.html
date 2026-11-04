@@ -398,6 +398,8 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
     if (kind === 'win') {
       m.append(META + ' pedidos entregues com ', hl(Math.ceil(timeLeft) + ' segundos'), ' sobrando.');
       if (TESTE) m.append(' Modo teste: sem prêmio.');
+      else if (VALE_PREMIO && ATIVO && wonToday()) m.append(' Você já ganhou um prêmio hoje, então essa foi só pela diversão.');
+      else if (VALE_PREMIO && ATIVO && !valendo) m.append(' Mas suas 3 chances de prêmio de hoje já tinham acabado: essa foi só pela diversão. Volte na próxima visita!');
     } else {
       m.append(kind === 'err' ? 'Muitos erros! ' : '', 'Você entregou ', hl(done + ' de ' + META), ' pedidos.');
       if (saved.best && !TESTE) m.append(' Seu recorde: ' + saved.best + '.');
