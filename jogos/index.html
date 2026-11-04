@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Fliperama Gabba</title>
-<meta name="theme-color" content="#17110f">
+<meta name="theme-color" content="#070808">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Barlow:wght@400;600;700&display=swap">
@@ -96,6 +96,46 @@ h2 { font-family: var(--display); font-weight: 400; font-size: 1.4rem; line-heig
 .legend { display: flex; justify-content: center; gap: 18px; color: var(--muted); font-size: .9rem; flex-wrap: wrap; }
 
 footer { color: var(--muted); font-size: .78rem; text-align: center; }
+
+/* ===== Visual neon: fundo escuro, cores vivas e brilho ===== */
+html, body { background: #070808; }
+body { background:
+  radial-gradient(60vmax 50vmax at 0% 0%, rgba(61,220,132,.16), transparent 60%),
+  radial-gradient(60vmax 50vmax at 100% 100%, rgba(255,90,50,.16), transparent 60%),
+  #070808; background-attachment: fixed; min-height: 100vh; }
+h1 { color: #fff; text-shadow: 0 0 22px rgba(255,255,255,.18); }
+h1 span { background: linear-gradient(90deg, #ffb13d, #ff3d2e); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: none; filter: drop-shadow(0 0 12px rgba(255,90,50,.55)); }
+.sub { color: #b9b3ad; }
+.games { gap: 14px; }
+.game-card { --n: 61, 220, 132; background: #0b0c0c; border: 1.5px solid rgba(var(--n), .28); border-radius: 22px; padding: 14px 16px; box-shadow: 0 0 22px rgba(var(--n), .12), inset 0 0 22px rgba(var(--n), .04); transition: box-shadow .2s, transform .1s; }
+.game-card:active { box-shadow: 0 0 30px rgba(var(--n), .4); }
+/* uma cor neon por jogo */
+.game-card[data-open="memo"] { --n: 255, 138, 61; }
+.game-card[data-open="quiz"] { --n: 64, 196, 255; }
+.game-card[href="../hero/"] { --n: 168, 110, 255; }
+.game-card[href="../corre/"] { --n: 255, 77, 77; }
+.game-card[href="../obby/"] { --n: 255, 77, 166; }
+.game-card[href="../crush/"] { --n: 255, 214, 61; }
+.game-icon { border-radius: 50%; background: radial-gradient(circle, rgba(var(--n), .28), rgba(var(--n), .06) 70%) !important; border: 1.5px solid rgba(var(--n), .6); box-shadow: 0 0 20px rgba(var(--n), .45); }
+.game-card strong { color: #fff; }
+.game-card small { color: #a9a39d; }
+.go { color: rgb(var(--n)); text-shadow: 0 0 12px rgba(var(--n), .7); }
+.game-card.premio { --n: 61, 220, 132; border-width: 2px; border-color: rgba(61,220,132,.6); background: linear-gradient(135deg, rgba(61,220,132,.12), #0b0c0c 55%); box-shadow: 0 0 34px rgba(61,220,132,.3), inset 0 0 26px rgba(61,220,132,.08); }
+.game-card.premio .game-icon { animation: neonpulse 2.2s ease-in-out infinite; }
+@keyframes neonpulse { 0%, 100% { box-shadow: 0 0 16px rgba(var(--n), .4); } 50% { box-shadow: 0 0 34px rgba(var(--n), .8); } }
+.tag-premio { display: inline-block; margin-bottom: 4px; font: 700 .66rem var(--body); letter-spacing: .12em; text-transform: uppercase; color: #06120b; background: #3ddc84; padding: 2px 8px; border-radius: 999px; box-shadow: 0 0 12px rgba(61,220,132,.6); }
+.btn { background: linear-gradient(90deg, #ff8a3d, #ff3d2e); color: #fff; border-radius: 18px; box-shadow: 0 0 26px rgba(255,90,50,.5), 0 8px 24px rgba(255,70,40,.3); }
+.btn:active { transform: scale(.98); box-shadow: 0 0 18px rgba(255,90,50,.5); }
+.panel { background: #0a0b0b; border: 1.5px solid rgba(61,220,132,.35); border-radius: 26px; box-shadow: 0 0 40px rgba(61,220,132,.18), inset 0 0 30px rgba(61,220,132,.05); }
+.big { color: #3ddc84; text-shadow: 0 0 18px rgba(61,220,132,.6); }
+.back { border-color: rgba(255,255,255,.14); }
+.card .front { background: linear-gradient(135deg, #ff8a3d, #ff3d2e); border: 1.5px solid rgba(255,170,120,.6); box-shadow: 0 0 16px rgba(255,90,50,.35); color: #fff; }
+.card.done .back-face { background: #3ddc84; box-shadow: 0 0 18px rgba(61,220,132,.6); }
+.answer { background: #0b0c0c; border-color: rgba(255,255,255,.12); border-radius: 16px; }
+.answer.right { border-color: #3ddc84; background: rgba(61,220,132,.14); box-shadow: 0 0 18px rgba(61,220,132,.4); }
+.answer.wrong { border-color: #ff4d4d; background: rgba(255,77,77,.14); box-shadow: 0 0 18px rgba(255,77,77,.4); }
+.timer i { background: linear-gradient(90deg, #3ddc84, #ffd63d); box-shadow: 0 0 10px rgba(61,220,132,.6); }
+@media (prefers-reduced-motion: reduce) { .game-card.premio .game-icon { animation: none; } }
 @media (prefers-reduced-motion: reduce) { .card .in, .hole span { transition: none; } .hole.miss { animation: none; } }
 </style>
 <script src="../contador.js"></script>
@@ -112,6 +152,13 @@ footer { color: var(--muted); font-size: .78rem; text-align: center; }
         <p class="sub"><!-- TEXTO-SUB -->Escolha um jogo e passe o tempo até o seu lanche chegar.<!-- /TEXTO-SUB --></p>
       </div>
       <div class="games">
+        <!-- SO-MESA-INICIO -->
+        <a class="game-card premio" href="../pedido/">
+          <span class="game-icon">🎁</span>
+          <span><span class="tag-premio">Vale prêmio</span><strong>Pedido Certo</strong><small>Entregue 8 pedidos e ganhe prêmio</small></span>
+          <span class="go">›</span>
+        </a>
+        <!-- SO-MESA-FIM -->
         <button class="game-card" type="button" data-open="memo">
           <span class="game-icon" style="background:#3a2a12">🍔</span>
           <span><strong>Memória Gabba</strong><small>Ache os pares do cardápio</small><span class="best" id="best-memo"></span></span>
@@ -143,15 +190,8 @@ footer { color: var(--muted); font-size: .78rem; text-align: center; }
           <span><strong>Gabba Crush</strong><small>Junte 3 iguais e estoure o item sorteado</small></span>
           <span class="go">›</span>
         </a>
-        <!-- SO-MESA-INICIO -->
-        <a class="game-card" href="../pedido/">
-          <span class="game-icon" style="background:#1f3320">🏆</span>
-          <span><strong>Pedido Certo</strong><small>Entregue 8 pedidos e ganhe prêmio</small></span>
-          <span class="go">›</span>
-        </a>
-        <!-- SO-MESA-FIM -->
       </div>
-      <footer>Gabba Hey Burger · @gabbaheyburger</footer>
+      <footer>Gabba Hey Burger · @gabbaburger</footer>
     </div>
   </section>
 

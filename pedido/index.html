@@ -93,7 +93,30 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
 .prize .clock { font-family: var(--display); font-size: 1.6rem; color: var(--mustard); font-variant-numeric: tabular-nums; }
 .prize.used { animation: none; border-color: var(--line); background: var(--surface); }
 .prize.used .what { text-decoration: line-through; color: var(--muted); }
-@media (prefers-reduced-motion: reduce) { .prize { animation: none; } .float, .plate .it { animation-duration: .01s; } }
+/* ===== Telas de início e de fim: cartão escuro com brilho (verde = ganhou, vermelho = erros, amarelo = tempo) ===== */
+.overlay { background: radial-gradient(circle at 50% 28%, rgba(var(--g), .16), transparent 62%), rgba(6,7,7,.95); }
+.overlay, .endcard { --g: 61, 220, 132; }
+.overlay[data-kind="err"], .endcard[data-kind="err"] { --g: 255, 77, 77; }
+.overlay[data-kind="time"], .endcard[data-kind="time"] { --g: 255, 194, 61; }
+.overlay[data-kind="start"], .endcard[data-kind="start"] { --g: 255, 138, 61; }
+.endcard { width: 100%; max-width: 360px; background: #0a0b0b; border: 1.5px solid rgba(var(--g), .35); border-radius: 28px; padding: 26px 20px 22px; display: flex; flex-direction: column; align-items: center; gap: 12px; box-shadow: 0 0 46px rgba(var(--g), .2), inset 0 0 34px rgba(var(--g), .05); }
+.ring { width: 96px; height: 96px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--emoji); font-size: 46px; background: radial-gradient(circle, rgba(var(--g), .28), rgba(var(--g), .06) 70%); border: 1.5px solid rgba(var(--g), .55); box-shadow: 0 0 34px rgba(var(--g), .5); animation: pulse 2.2s ease-in-out infinite; }
+@keyframes pulse { 0%, 100% { box-shadow: 0 0 22px rgba(var(--g), .4); } 50% { box-shadow: 0 0 44px rgba(var(--g), .75); } }
+.endcard h2 { margin: 2px 0 0; font: 400 clamp(1.9rem, 9vw, 2.4rem)/1 var(--display); color: #fff; text-shadow: 0 0 18px rgba(255,255,255,.25); text-wrap: balance; }
+.endcard p { margin: 0; color: #b9b3ad; max-width: 30ch; font-size: 1.05rem; }
+.endcard p strong { color: #fff; }
+.hl { color: rgb(var(--g)); font-weight: 700; text-shadow: 0 0 14px rgba(var(--g), .45); }
+.btn-glow { width: 100%; border: none; border-radius: 18px; padding: 17px 16px; background: linear-gradient(90deg, #ff8a3d, #ff3d2e); color: #fff; font: 400 1.2rem var(--display); letter-spacing: .05em; cursor: pointer; box-shadow: 0 0 26px rgba(255, 90, 50, .55), 0 8px 26px rgba(255, 70, 40, .35); margin-top: 6px; }
+.btn-glow:active { transform: scale(.98); }
+.endcard .link { width: 100%; }
+.redeem { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 14px 12px; border-radius: 18px; border: 1.5px dashed rgba(var(--g), .55); background: rgba(var(--g), .07); }
+.redeem .when { font-weight: 700; color: #fff; }
+.redeem .clock { font: 400 2rem var(--display); color: rgb(var(--g)); text-shadow: 0 0 16px rgba(var(--g), .6); font-variant-numeric: tabular-nums; }
+.redeem .note { color: #b9b3ad; font-size: .92rem; }
+.redeem.used { border-style: solid; border-color: #3b3b3b; background: #141414; }
+.redeem.used .clock { color: #777; text-shadow: none; }
+.prize-name.used { text-decoration: line-through; opacity: .6; }
+@media (prefers-reduced-motion: reduce) { .ring { animation: none; } .float, .plate .it { animation-duration: .01s; } }
 </style>
 <script src="../contador.js"></script>
 </head>
@@ -123,35 +146,39 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
   </div>
 
   <div class="keys" id="keys"></div>
-  <div class="teste" id="teste-tag" hidden>MODO TESTE · SEM PRÊMIO · v2</div>
+  <div class="teste" id="teste-tag" hidden>MODO TESTE · SEM PRÊMIO · v3</div>
 
-  <div class="overlay" id="start">
-    <h1>Pedido <span>Certo</span></h1>
-    <p>Chegou comanda! Toque nos ingredientes <strong>na ordem da comanda</strong>, de cima para baixo. Depois de alguns pedidos os botões mudam de lugar e a comanda some: vai ter que lembrar!</p>
-    <p>Entregue <strong id="meta-txt">8</strong> pedidos em <strong id="tempo-txt">60</strong> segundos. Errou 3 vezes, acabou o turno.</p>
-    <p id="regra" hidden>Conseguiu, ganhou: <strong id="prize-txt"></strong></p>
-    <p class="chances" id="chances-txt" hidden></p>
-    <button class="btn" id="play" type="button">ABRIR A COZINHA</button>
-    <button class="link" id="see-prize" type="button" hidden>Ver meu prêmio de hoje</button>
-    <a class="link" href="../jogos/" style="text-decoration:none">Escolher outro jogo</a>
+  <div class="overlay" id="start" data-kind="start">
+    <div class="endcard" data-kind="start">
+      <div class="ring">🧾</div>
+      <h2>PEDIDO CERTO</h2>
+      <p>Chegou comanda! Toque nos ingredientes <strong>na ordem da comanda</strong>, de cima para baixo. Depois de alguns pedidos os botões mudam de lugar e a comanda some: vai ter que lembrar!</p>
+      <p>Entregue <strong id="meta-txt">8</strong> pedidos em <strong id="tempo-txt">60</strong> segundos. Errou 3 vezes, acabou o turno.</p>
+      <p id="regra" hidden>Conseguiu, ganhou: <span class="hl" id="prize-txt"></span></p>
+      <p class="chances" id="chances-txt" hidden></p>
+      <button class="btn-glow" id="play" type="button">ABRIR A COZINHA</button>
+      <button class="link" id="see-prize" type="button" hidden>Ver meu prêmio de hoje</button>
+      <a class="link" href="../jogos/" style="text-decoration:none">Escolher outro jogo</a>
+    </div>
   </div>
 
   <div class="overlay" id="over" hidden>
-    <div id="over-normal">
-      <div class="big" id="over-title">Fim do turno!</div>
+    <div class="endcard" id="endcard" data-kind="win">
+      <div class="ring" id="end-icon">🎁</div>
+      <h2 id="over-title">PARABÉNS!</h2>
       <p id="over-msg"></p>
+      <div class="redeem" id="redeem" hidden>
+        <span class="when" id="prize-date"></span>
+        <span class="clock" id="prize-clock">--:--:--</span>
+        <span class="note" id="prize-note">Mostre esta tela ao atendente</span>
+      </div>
+      <p class="chances" id="over-chances" hidden></p>
+      <button class="btn-glow" id="resgatar" type="button" hidden>RESGATAR AGORA</button>
+      <button class="btn-glow" id="again" type="button">JOGAR DE NOVO</button>
+      <button class="link" id="mark-used" type="button" hidden>Atendente: marcar como entregue</button>
+      <button class="link" id="again2" type="button" hidden>Jogar de novo</button>
+      <a class="link" href="../jogos/" style="text-decoration:none">Escolher outro jogo</a>
     </div>
-    <div class="prize" id="prize-card" hidden>
-      <span class="tag">Pedido Certo vencido</span>
-      <span class="what" id="prize-what"></span>
-      <span class="when" id="prize-date"></span>
-      <span class="clock" id="prize-clock">--:--:--</span>
-      <span id="prize-note">Mostre esta tela ao atendente</span>
-    </div>
-    <p class="chances" id="over-chances" hidden></p>
-    <button class="btn" id="again" type="button">DE NOVO</button>
-    <button class="link" id="mark-used" type="button" hidden>Atendente: marcar como entregue</button>
-    <a class="link" href="../jogos/" style="text-decoration:none">Escolher outro jogo</a>
   </div>
 </div>
 
@@ -343,14 +370,45 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
     persist();
     if (ganhou) fanfare(); else beep(160, 0.3, 'sawtooth');
     setTimeout(() => {
-      $('over-title').textContent = ganhou ? 'Cozinha nota 10!' : motivo === 'tempo' ? 'Acabou o tempo!' : 'Muitos erros!';
-      $('over-msg').textContent = ganhou
-        ? META + ' pedidos entregues com ' + Math.ceil(timeLeft) + ' segundos sobrando.' + (TESTE ? ' Modo teste.' : '')
-        : 'Você entregou ' + done + (done === 1 ? ' pedido' : ' pedidos') + ' de ' + META + '.' + (saved.best && !TESTE ? ' Seu recorde: ' + saved.best + '.' : '');
-      $('over-normal').hidden = false; showPrize(ganhou && valendo); overChances(ganhou); aplicarConfig();
+      aplicarConfig();
+      if (ganhou && valendo) telaPremio(false);
+      else telaFim(ganhou ? 'win' : motivo === 'tempo' ? 'time' : 'err');
+      overChances(ganhou);
       $('over').hidden = false;
     }, 600);
   }
+  // Tela de fim sem prêmio: venceu sem prêmio, muitos erros ou acabou o tempo
+  function telaFim(kind) {
+    clearInterval(clockTimer);
+    $('endcard').dataset.kind = kind; $('over').dataset.kind = kind;
+    $('end-icon').textContent = kind === 'win' ? '🏆' : kind === 'time' ? '⏱️' : '❌';
+    $('over-title').textContent = kind === 'win' ? 'MANDOU BEM!' : kind === 'time' ? 'ACABOU O TEMPO!' : 'QUASE!';
+    const m = $('over-msg'); m.innerHTML = '';
+    if (kind === 'win') {
+      m.append(META + ' pedidos entregues com ', hl(Math.ceil(timeLeft) + ' segundos'), ' sobrando.');
+      if (TESTE) m.append(' Modo teste: sem prêmio.');
+    } else {
+      m.append(kind === 'err' ? 'Muitos erros! ' : '', 'Você entregou ', hl(done + ' de ' + META), ' pedidos.');
+      if (saved.best && !TESTE) m.append(' Seu recorde: ' + saved.best + '.');
+    }
+    $('redeem').hidden = true; $('resgatar').hidden = true; $('mark-used').hidden = true; $('again2').hidden = true;
+    $('again').hidden = false;
+  }
+  // Tela do prêmio: "PARABÉNS! Você ganhou X" + RESGATAR AGORA, que mostra data e relógio para o atendente
+  function telaPremio(aberto) {
+    $('endcard').dataset.kind = 'win'; $('over').dataset.kind = 'win';
+    $('end-icon').textContent = '🎁';
+    $('over-title').textContent = 'PARABÉNS!';
+    const nome = (wonToday() && saved.wonPrize) || PRIZE;
+    const used = saved.usedDay === today();
+    const m = $('over-msg'); m.innerHTML = '';
+    const pn = hl(nome); pn.classList.add('prize-name'); pn.classList.toggle('used', used);
+    m.append('Você ganhou ', pn, used ? '. Prêmio já entregue.' : ' pra resgatar agora mesmo.');
+    $('again').hidden = true; $('again2').hidden = false; $('over-chances').hidden = true;
+    $('resgatar').hidden = aberto || used;
+    showPrize(aberto || used);
+  }
+  const hl = t => { const b = document.createElement('span'); b.className = 'hl'; b.textContent = t; return b; };
   function overChances(ganhou) {
     let t = '';
     if (VALE_PREMIO && !TESTE && ATIVO && !ganhou && !wonToday()) {
@@ -373,20 +431,19 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
   /* ---------- Prêmio ---------- */
   let clockTimer = null;
   function showPrize(show) {
-    const card = $('prize-card');
-    card.hidden = !show; $('mark-used').hidden = !show;
     clearInterval(clockTimer);
+    $('redeem').hidden = !show;
+    const used = saved.usedDay === today();
+    $('mark-used').hidden = !show || used;
     if (!show) return;
-    $('prize-what').textContent = (wonToday() && saved.wonPrize) || PRIZE;
     const d = new Date(), dias = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
     $('prize-date').textContent = 'Válido hoje, ' + dias[d.getDay()] + ' ' + pad(d.getDate()) + '/' + pad(d.getMonth() + 1);
-    const used = saved.usedDay === today();
-    card.classList.toggle('used', used);
+    $('redeem').classList.toggle('used', used);
     $('prize-note').textContent = used ? 'Prêmio entregue às ' + saved.usedAt : 'Mostre esta tela ao atendente';
-    $('mark-used').hidden = used;
     const tick = () => { const n = new Date(); $('prize-clock').textContent = pad(n.getHours()) + ':' + pad(n.getMinutes()) + ':' + pad(n.getSeconds()); };
     tick(); clockTimer = setInterval(tick, 1000);
   }
+  $('resgatar').addEventListener('click', () => telaPremio(true));
   let usedArmed = false;
   $('mark-used').addEventListener('click', () => {
     if (!usedArmed) { usedArmed = true; $('mark-used').textContent = 'Toque de novo para confirmar a entrega'; setTimeout(() => { usedArmed = false; $('mark-used').textContent = 'Atendente: marcar como entregue'; }, 4000); return; }
@@ -394,11 +451,11 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
     const n = new Date();
     saved.usedDay = today(); saved.usedAt = pad(n.getHours()) + ':' + pad(n.getMinutes()); persist();
     $('mark-used').textContent = 'Atendente: marcar como entregue';
-    showPrize(true);
+    telaPremio(true);
   });
   $('see-prize').addEventListener('click', () => {
-    $('start').hidden = true; $('over-normal').hidden = true; $('over-chances').hidden = true;
-    showPrize(true); $('over').hidden = false;
+    $('start').hidden = true;
+    telaPremio(false); $('over').hidden = false;
   });
 
   /* ---------- Som ---------- */
@@ -420,6 +477,7 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
   });
   $('play').addEventListener('click', start);
   $('again').addEventListener('click', start);
+  $('again2').addEventListener('click', start);
 
   requestAnimationFrame(loop);
   window._pedido = { get pedido() { return pedido; }, get pos() { return pos; }, get state() { return state; } };
