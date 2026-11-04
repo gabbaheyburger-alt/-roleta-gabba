@@ -72,6 +72,8 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { .prize { animation: none; } .float { animation-duration: .01s; } }
 </style>
 <script src="../contador.js"></script>
+<link rel="stylesheet" href="../comum/neon.css">
+<script src="../comum/neon.js" defer></script>
 </head>
 <body>
 <div class="app">
@@ -91,7 +93,7 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
     <canvas id="game" aria-label="Tabuleiro do Gabba Crush"></canvas>
     <div class="teste" id="teste-tag" hidden>MODO TESTE · SEM PRÊMIO · v2</div>
 
-    <div class="overlay" id="start">
+    <div class="overlay" id="start" data-kind="start" data-icon="🍟">
       <h1>Gabba <span>Crush</span></h1>
       <p><strong>Arraste</strong> um item para o lado, para cima ou para baixo e troque de lugar com o vizinho. Junte <strong>3 ou mais iguais</strong> em linha para estourar.</p>
       <p>A cada partida sorteamos um item. Estoure <strong id="meta-txt">25</strong> dele em <strong id="jog-txt">12</strong> jogadas.</p>
@@ -102,7 +104,7 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
       <a class="link" href="../jogos/" style="text-decoration:none">Escolher outro jogo</a>
     </div>
 
-    <div class="overlay" id="over" hidden>
+    <div class="overlay" id="over" hidden data-kind="err" data-icon="❌">
       <div id="over-normal">
         <div class="big" id="over-title">Quase!</div>
         <p id="over-msg"></p>
@@ -394,7 +396,7 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
     state = 'play';
   }
   function win() {
-    state = 'over';
+    state = 'over'; window.neonKind && neonKind('over', 'win', '🏆');
     if (!TESTE) { saved.wins = (saved.wins || 0) + 1; persist(); }
     if (valendo) { saved.wonDay = today(); saved.wonPrize = PRIZE; persist(); conta('crush-venceu', 'Gabba Crush: venceu'); }
     else conta('crush-venceu-sem-premio', 'Gabba Crush: venceu (sem prêmio)');
@@ -406,7 +408,7 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
     }, 700);
   }
   function lose() {
-    state = 'over';
+    state = 'over'; window.neonKind && neonKind('over', 'err', '❌');
     const falta = META - got;
     conta('crush-perdeu', 'Gabba Crush: perdeu');
     conta('crush-perdeu-faltou-' + (falta <= 2 ? '1a2' : falta <= 5 ? '3a5' : 'mais5'), 'Gabba Crush: perdeu, faltaram ' + (falta <= 2 ? '1 a 2' : falta <= 5 ? '3 a 5' : 'mais de 5'));

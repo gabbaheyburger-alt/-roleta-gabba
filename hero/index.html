@@ -78,6 +78,8 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--mustard); outli
 @media (prefers-reduced-motion: reduce) { .overlay img { animation: none; } }
 </style>
 <script src="../contador.js"></script>
+<link rel="stylesheet" href="../comum/neon.css">
+<script src="../comum/neon.js" defer></script>
 </head>
 <body>
 <canvas id="game" aria-label="Gabba Hero: toque nos botões quando as notas chegarem na linha"></canvas>
@@ -90,7 +92,7 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--mustard); outli
   </div>
 </div>
 
-<div class="overlay" id="start">
+<div class="overlay" id="start" data-kind="start">
   <img src="../corre/mascote.png" alt="Mascote do Gabba tocando">
   <h1>Gabba <span>Hero</span></h1>
   <p><strong>Toque no botão da cor certa</strong> quando a nota chegar na linha. Quem acerta toca o solo!</p>
@@ -104,7 +106,7 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--mustard); outli
   <a class="link" href="../jogos/">Escolher outro jogo</a>
 </div>
 
-<div class="overlay" id="over" hidden>
+<div class="overlay" id="over" hidden data-kind="win">
   <img src="../corre/mascote.png" alt="">
   <div class="song-res" id="res-song"></div>
   <div class="title-res" id="res-title">Show!</div>

@@ -111,6 +111,8 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { .layer, .msg, .served, .shake, .smoke { animation: none !important; } }
 </style>
 <script src="../contador.js"></script>
+<link rel="stylesheet" href="../comum/neon.css">
+<script src="../comum/neon.js" defer></script>
 </head>
 <body>
 <div class="app" id="app">
@@ -142,7 +144,7 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
 
   <div class="pad" id="pad"></div>
 
-  <div class="overlay" id="start">
+  <div class="overlay" id="start" data-kind="start" data-icon="🔥">
     <h1>Chapa <span>do Gabba</span></h1>
     <p>Hoje você é o chapeiro. Monte os pedidos antes que o cliente desista.</p>
     <ul class="rules">
@@ -153,7 +155,7 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
     <button class="btn" type="button" id="play">ABRIR A CHAPA</button>
   </div>
 
-  <div class="overlay" id="over" hidden>
+  <div class="overlay" id="over" hidden data-kind="time" data-icon="⏱️">
     <h1>Fim do <span>turno</span></h1>
     <p>Você fechou o caixa com</p>
     <div class="big" id="final-money">R$ 0</div>

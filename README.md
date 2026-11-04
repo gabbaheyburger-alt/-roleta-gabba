@@ -88,6 +88,15 @@ Percurso 3D no navegador, dentro do Fliperama, no endereço `/obby/`. O personag
 
 Jogo de corrida com o mascote do Gabba Hey Burger, dentro do Fliperama, no endereço `/corre/`. Toque para pular (toque de novo no ar para pulo duplo), desvie de caixas de som, pimentas e cones e pegue batatas. A velocidade aumenta com o tempo. A imagem do mascote fica em `corre/mascote.png`.
 
+## Visual padrão (neon)
+
+Todos os jogos usam `comum/neon.css` e `comum/neon.js`: fundo escuro com brilho verde e laranja, botões em degradê laranja e telas de início/fim (`.overlay`) dentro de um cartão com brilho e ícone redondo. Nas telas de início o cartão flutua, o título fica em degradê e as regras viram mini cartões coloridos.
+
+- Cor do brilho pela tela: `data-kind="start"` (laranja), `win` (verde), `err` (vermelho), `time` (amarelo), `info` (azul).
+- Ícone: `data-icon="🎁"` na `.overlay`. Para trocar na hora pelo código do jogo: `neonKind('over', 'win', '🏆')`.
+- Jogo novo: colocar `<link rel="stylesheet" href="../comum/neon.css">` e `<script src="../comum/neon.js" defer></script>` no fim do `<head>`.
+- O Fliperama (`jogos/`) e o Pedido Certo têm o mesmo visual feito direto na página.
+
 ## Contador de uso
 
 `contador.js` conta, sem cookies e sem dados pessoais, os acessos a cada página e as partidas iniciadas em cada jogo, usando o GoatCounter. Está ligado com a conta `gabbajogos` (variável `CODIGO`); para desligar, deixe a variável vazia. O relatório por dia fica no painel do GoatCounter.

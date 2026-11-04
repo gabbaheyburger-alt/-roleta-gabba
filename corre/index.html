@@ -57,6 +57,8 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--mustard); outli
 @media (prefers-reduced-motion: reduce) { .overlay img { animation: none; } .banner { animation-duration: .01s; } }
 </style>
 <script src="../contador.js"></script>
+<link rel="stylesheet" href="../comum/neon.css">
+<script src="../comum/neon.js" defer></script>
 </head>
 <body>
 <canvas id="game" aria-label="Corre, Gabba! Toque para pular"></canvas>
@@ -70,7 +72,7 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--mustard); outli
   </div>
 </div>
 
-<div class="overlay" id="start">
+<div class="overlay" id="start" data-kind="start">
   <img src="mascote.png" alt="Mascote do Gabba Hey Burger">
   <h1>Corre, <span>Gabba!</span></h1>
   <p><strong>Toque na tela para pular.</strong> Toque de novo no ar para dar um pulo duplo.</p>
@@ -79,7 +81,7 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--mustard); outli
   <a class="link" href="../jogos/">Escolher outro jogo</a>
 </div>
 
-<div class="overlay" id="over" hidden>
+<div class="overlay" id="over" hidden data-kind="err">
   <img src="mascote.png" alt="">
   <h1>Ops, <span>trombou!</span></h1>
   <div class="big" id="final">0</div>

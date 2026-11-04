@@ -84,6 +84,8 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { .prize { animation: none; } .float { animation-duration: .01s; } }
 </style>
 <script src="../contador.js"></script>
+<link rel="stylesheet" href="../comum/neon.css">
+<script src="../comum/neon.js" defer></script>
 </head>
 <body>
 <div class="app">
@@ -106,7 +108,7 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
     <div class="teste" id="teste-tag" hidden>MODO TESTE · SEM PRÊMIO · v3</div>
     <div class="hint" id="hint" hidden></div>
 
-    <div class="overlay" id="start">
+    <div class="overlay" id="start" data-kind="start" data-icon="🍔">
       <h1>Monte o <span>combo</span></h1>
       <ol>
         <li><b>1</b>Empilhe o <strong>burger</strong> tocando na hora certa.</li>
@@ -120,13 +122,13 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
       <a class="link" href="../jogos/" style="text-decoration:none">Escolher outro jogo</a>
     </div>
 
-    <div class="overlay" id="phase" hidden>
+    <div class="overlay" id="phase" hidden data-kind="info" data-icon="🍔">
       <p id="phase-n">Fase 2 de 3</p>
       <div class="big" id="phase-title">Batata</div>
       <p id="phase-how"></p>
     </div>
 
-    <div class="overlay" id="over" hidden>
+    <div class="overlay" id="over" hidden data-kind="err" data-icon="❌">
       <div id="over-normal">
         <div class="big" id="over-title">Quase!</div>
         <p id="over-msg"></p>
@@ -519,7 +521,7 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
   function intro() {
     state = 'intro'; steps(); meter(0); hint('');
     $('phase-n').textContent = 'Fase ' + (phase + 1) + ' de 3';
-    $('phase-title').textContent = PHASES[phase].name;
+    $('phase-title').textContent = PHASES[phase].name; window.neonKind && neonKind('phase', 'info', ['🍔', '🍟', '🥤'][phase]);
     $('phase-how').textContent = PHASES[phase].how;
     $('phase').hidden = false;
     setTimeout(() => {
@@ -536,6 +538,7 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
   }
   function lose(msg) {
     if (state === 'over') return;
+    window.neonKind && neonKind('over', 'err', '❌');
     state = 'over'; steps(); hint('');
     conta('combo-perdeu-' + PHASES[phase].name.toLowerCase(), 'Monte o Combo: perdeu no ' + PHASES[phase].name);
     setTimeout(() => {
@@ -548,6 +551,7 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
   }
   function winCombo() {
     if (state === 'over') return;
+    window.neonKind && neonKind('over', 'win', '🎁');
     comboOk = true; state = 'over'; steps(); hint('');
     if (valendo) { saved.wonDay = today(); saved.wonPrize = PRIZE; persist(); conta('combo-venceu', 'Monte o Combo: venceu'); }
     else conta('combo-completou-sem-premio', 'Monte o Combo: completou sem prêmio');

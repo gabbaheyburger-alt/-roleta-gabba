@@ -1,0 +1,108 @@
+/*
+ * Visual neon padrão dos jogos do Fliperama Gabba.
+ * Fundo escuro, cores vivas e brilho. As telas de início e de fim (.overlay) viram um cartão com brilho.
+ * Cor do brilho pela tela: data-kind="start" (laranja), "win" (verde), "err" (vermelho), "time" (amarelo), "info" (azul).
+ * Ícone redondo no topo do cartão: data-icon="🎁" na .overlay (opcional). Montagem feita por comum/neon.js.
+ */
+:root {
+  --bg: #070808;
+  --surface: #0e0f0f;
+  --surface-2: #151717;
+  --line: #262a29;
+  --muted: #b9b3ad;
+}
+html, body { background-color: #070808; }
+body {
+  background-image:
+    radial-gradient(60vmax 50vmax at 0% 0%, rgba(61,220,132,.13), transparent 60%),
+    radial-gradient(60vmax 50vmax at 100% 100%, rgba(255,90,50,.13), transparent 60%);
+  background-attachment: fixed;
+}
+
+/* ----- Tela por cima (início / fim) ----- */
+.overlay { --g: 255, 138, 61; }
+.overlay[data-kind="win"]  { --g: 61, 220, 132; }
+.overlay[data-kind="err"]  { --g: 255, 77, 77; }
+.overlay[data-kind="time"] { --g: 255, 194, 61; }
+.overlay[data-kind="info"] { --g: 64, 196, 255; }
+.overlay.neon {
+  background: radial-gradient(circle at 50% 30%, rgba(var(--g), .16), transparent 62%), rgba(6,7,7,.95);
+  justify-content: flex-start; /* o cartão centraliza com margin:auto e rola sem cortar o topo */
+}
+.neon-card {
+  width: 100%; max-width: 380px; margin: auto 0;
+  background: #0a0b0b;
+  border: 1.5px solid rgba(var(--g), .38);
+  border-radius: 28px;
+  padding: 24px 20px 20px;
+  display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center;
+  box-shadow: 0 0 46px rgba(var(--g), .2), inset 0 0 34px rgba(var(--g), .05);
+  flex-shrink: 0;
+}
+.neon-card > * { flex-shrink: 0; }
+.neon-ring {
+  width: 92px; height: 92px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif; font-size: 44px; line-height: 1;
+  background: radial-gradient(circle, rgba(var(--g), .28), rgba(var(--g), .06) 70%);
+  border: 1.5px solid rgba(var(--g), .55);
+  box-shadow: 0 0 34px rgba(var(--g), .5);
+  animation: neon-pulse 2.2s ease-in-out infinite;
+}
+@keyframes neon-pulse { 0%, 100% { box-shadow: 0 0 22px rgba(var(--g), .4); } 50% { box-shadow: 0 0 44px rgba(var(--g), .75); } }
+.neon-card img { filter: drop-shadow(0 0 18px rgba(var(--g), .55)) !important; }
+.neon-card h1, .neon-card h2 { color: #fff !important; text-shadow: 0 0 18px rgba(255,255,255,.22) !important; }
+.neon-card h1 span, .neon-card h2 span { color: rgb(var(--g)) !important; text-shadow: 0 0 16px rgba(var(--g), .6) !important; }
+.neon-card p { color: var(--muted); }
+.neon-card p strong, .neon-card p b { color: #fff; }
+.neon-card .big { color: rgb(var(--g)) !important; text-shadow: 0 0 18px rgba(var(--g), .6); }
+
+/* ----- Botões ----- */
+.btn {
+  background: linear-gradient(90deg, #ff8a3d, #ff3d2e) !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 18px !important;
+  box-shadow: 0 0 26px rgba(255,90,50,.5), 0 8px 24px rgba(255,70,40,.3) !important;
+}
+.btn:active { transform: scale(.98) !important; box-shadow: 0 0 18px rgba(255,90,50,.5) !important; }
+.neon-card > .btn { width: 100%; }
+.btn.alt {
+  background: rgba(var(--g, 61, 220, 132), .08) !important;
+  color: #fff !important;
+  border: 1.5px solid rgba(var(--g, 61, 220, 132), .7) !important;
+  box-shadow: 0 0 20px rgba(var(--g, 61, 220, 132), .35) !important;
+}
+.overlay .btn.alt { --g: 61, 220, 132; }
+.link { border-color: rgba(255,255,255,.14) !important; color: #c9c3bd !important; border-radius: 14px !important; }
+.neon-card > .link { width: 100%; text-align: center; box-sizing: border-box; }
+.back { border-color: rgba(255,255,255,.14) !important; }
+
+/* ----- Cartão de prêmio (quando o jogo vale prêmio) ----- */
+.neon-card .prize { border-color: rgba(var(--g), .6) !important; background: rgba(var(--g), .07) !important; animation: none !important; border-style: dashed !important; }
+.neon-card .prize .tag, .neon-card .prize .clock { color: rgb(var(--g)) !important; }
+.neon-card .prize .clock { text-shadow: 0 0 16px rgba(var(--g), .6); }
+
+/* ----- Telas de início: cartão flutuando, textos coloridos com brilho, regras em mini cartões ----- */
+.overlay[data-kind="start"] .neon-card, .endcard[data-kind="start"] { animation: neon-float 4.5s ease-in-out infinite; }
+@keyframes neon-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+.neon-card p strong, .endcard p strong { color: #ffd63d !important; text-shadow: 0 0 12px rgba(255,214,61,.55); }
+.neon-card p b, .neon-card li b, .endcard p b { color: #40c4ff !important; text-shadow: 0 0 12px rgba(64,196,255,.55); }
+.overlay[data-kind="start"] .neon-card h1, .endcard[data-kind="start"] h2 {
+  background: linear-gradient(90deg, #fff 0%, #ffd63d 45%, #ff8a3d 100%); -webkit-background-clip: text; background-clip: text; color: transparent !important;
+  filter: drop-shadow(0 0 14px rgba(255,160,60,.45)); text-shadow: none !important;
+}
+.overlay[data-kind="start"] .neon-card h1 span { background: linear-gradient(90deg, #ff8a3d, #ff3d2e); -webkit-background-clip: text; background-clip: text; color: transparent !important; text-shadow: none !important; }
+.neon-card ul, .neon-card ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; width: 100%; text-align: left; }
+.neon-card li {
+  --c: 64, 196, 255;
+  background: rgba(var(--c), .07); border: 1px solid rgba(var(--c), .35); border-radius: 14px; padding: 9px 12px;
+  color: #ddd6cf; box-shadow: 0 0 16px rgba(var(--c), .15);
+  animation: neon-float 4s ease-in-out infinite;
+}
+.neon-card li:nth-child(3n+2) { --c: 61, 220, 132; animation-delay: -1.3s; }
+.neon-card li:nth-child(3n+3) { --c: 255, 77, 166; animation-delay: -2.6s; }
+.neon-card .tip, .neon-card .label { color: #ffd63d; text-shadow: 0 0 10px rgba(255,214,61,.4); }
+.neon-card .chances { color: #3ddc84 !important; text-shadow: 0 0 12px rgba(61,220,132,.5); }
+
+@media (prefers-reduced-motion: reduce) { .neon-ring, .neon-card, .neon-card li, .endcard { animation: none !important; } }

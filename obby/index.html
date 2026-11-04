@@ -70,6 +70,8 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
 .err { color: #ff8a80; }
 </style>
 <script src="../contador.js"></script>
+<link rel="stylesheet" href="../comum/neon.css">
+<script src="../comum/neon.js" defer></script>
 </head>
 <body>
 <div id="scene"></div>
@@ -89,7 +91,7 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
 <div class="hint-stick" id="hint-stick">Arraste aqui para andar</div>
 <button class="jump" id="jump" type="button" aria-label="Pular">PULA</button>
 
-<div class="overlay" id="start">
+<div class="overlay" id="start" data-kind="start" data-icon="🏃">
   <h1>Obby <span>do Gabba</span></h1>
   <p>Atravesse o percurso até o burger gigante sem cair no mar de ketchup.</p>
   <ul class="rules">
@@ -102,7 +104,7 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
   <p id="load-err" class="err" hidden>Não consegui carregar o 3D. Verifique a internet e atualize a página.</p>
 </div>
 
-<div class="overlay" id="win" hidden>
+<div class="overlay" id="win" hidden data-kind="win" data-icon="🏆">
   <h1>Você <span>chegou!</span></h1>
   <p>Seu tempo</p>
   <div class="big" id="final-time">0:00</div>
