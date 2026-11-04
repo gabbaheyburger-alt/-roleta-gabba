@@ -71,7 +71,7 @@ A área do dono (`/adm/`) grava em `desafio/config.json`: `premio`, `ativo` (lig
 
 ## Quiz do Gabba (estilo Show do Milhão)
 
-Página `/quiz/`. São 10 perguntas que ficam mais difíceis e mais rápidas: 3 fáceis (10 s), 3 médias (9 s), 3 difíceis (8 s) e a pergunta do prêmio (9 s). Errou ou acabou o tempo, a partida termina. Dá para pular 1 pergunta por partida (menos a do prêmio). Quando o Quiz é o jogo do prêmio, quem acerta a 10ª ganha (3 chances por dia por celular, mesma tela de PARABÉNS / RESGATAR AGORA do Pedido Certo). As perguntas ficam na lista `BANCO` (uma lista por nível, a primeira opção é a certa) e os tempos em `NIVEIS`, no topo do script. Eventos: `partida-quiz`, `quiz-parou-<n>` (em qual pergunta parou), `quiz-venceu` e `quiz-venceu-sem-premio`.
+Página `/quiz/`. São 10 perguntas que ficam mais difíceis e mais rápidas: 3 fáceis (10 s), 3 médias (9 s), 3 difíceis (8 s) e a pergunta do prêmio (9 s). Errou ou acabou o tempo, a partida termina. Dá para pular 1 pergunta por partida (menos a do prêmio). Quando o Quiz é o jogo do prêmio, quem acerta a 10ª ganha (3 chances por dia por celular, mesma tela de PARABÉNS / RESGATAR AGORA do Pedido Certo). As perguntas (91, incluindo as do nome Gabba e dos Ramones) ficam na lista `BANCO` (uma lista por nível, a primeira opção é a certa) e os tempos em `NIVEIS`, no topo do script. Eventos: `partida-quiz`, `quiz-parou-<n>` (em qual pergunta parou), `quiz-venceu` e `quiz-venceu-sem-premio`.
 
 O quiz antigo de 8 perguntas, dentro de `jogos/index.html`, não é mais aberto pelo Fliperama.
 
