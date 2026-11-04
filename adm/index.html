@@ -76,23 +76,24 @@ input:focus-visible, button:focus-visible, a:focus-visible { outline: 3px solid 
   <!-- Configuração do prêmio -->
   <section class="card" id="cfg" hidden>
     <p class="current" id="current">Carregando a configuração atual…</p>
-    <div class="switch"><span>Desafio valendo prêmio hoje</span><input type="checkbox" id="ativo" checked aria-label="Desafio valendo prêmio"></div>
+    <div class="switch"><span>Pedido Certo valendo prêmio hoje</span><input type="checkbox" id="ativo" checked aria-label="Pedido Certo valendo prêmio"></div>
     <label for="premio">Prêmio <small>O que o cliente ganha ao vencer (até 60 letras)</small>
       <input type="text" id="premio" maxlength="60" autocomplete="off">
     </label>
     <div class="chips" id="sugestoes" aria-label="Sugestões de prêmio"></div>
-    <label for="camadas">Camadas para ganhar <small>Mais camadas = mais difícil. Recomendado: 12 a 20</small>
+    <!-- Camadas: era do Desafio da Espera antigo; o Pedido Certo não usa. Fica escondido para manter o config.json igual. -->
+    <label for="camadas" hidden>Camadas para ganhar <small>Mais camadas = mais difícil. Recomendado: 12 a 20</small>
       <input type="number" id="camadas" min="5" max="60" step="1" inputmode="numeric">
     </label>
     <div class="preview" aria-live="polite">
-      <div class="t">Monte o <span>burger</span></div>
+      <div class="t">Pedido <span>Certo</span></div>
       <p id="prev-txt"></p>
     </div>
     <button class="btn" id="salvar" type="button">SALVAR</button>
     <p class="msg" id="msg" aria-live="polite"></p>
     <p class="note">Depois de salvar, leva de 1 a 2 minutos para aparecer no celular dos clientes. Quem já ganhou hoje continua vendo o prêmio que ganhou.</p>
     <div class="row">
-      <a class="ghost" href="../desafio/" target="_blank" rel="noopener">Abrir o Desafio</a>
+      <a class="ghost" href="../pedido/?teste" target="_blank" rel="noopener">Abrir o Pedido Certo (teste)</a>
       <button class="ghost" id="sair" type="button">Desconectar este celular</button>
     </div>
   </section>
@@ -136,8 +137,8 @@ input:focus-visible, button:focus-visible, a:focus-visible { outline: 3px solid 
   function preview() {
     const ativo = $('ativo').checked, premio = $('premio').value.trim() || '(sem prêmio escrito)', n = $('camadas').value || '15';
     $('prev-txt').innerHTML = '';
-    if (ativo) { $('prev-txt').append('Monte '); const a = document.createElement('strong'); a.textContent = n; $('prev-txt').append(a, ' camadas e ganhe: '); const b = document.createElement('strong'); b.textContent = premio; $('prev-txt').append(b); }
-    else $('prev-txt').innerHTML = 'Hoje o desafio está <strong>sem prêmio</strong>. Jogue pela diversão e bata o seu recorde!';
+    if (ativo) { $('prev-txt').append('Entregue 8 pedidos e ganhe: '); const b = document.createElement('strong'); b.textContent = premio; $('prev-txt').append(b); }
+    else $('prev-txt').innerHTML = 'Hoje o Pedido Certo está <strong>sem prêmio</strong>. Jogue pela diversão e bata o seu recorde!';
     $('premio').disabled = !ativo;
   }
   ['ativo', 'premio', 'camadas'].forEach(id => $(id).addEventListener('input', preview));

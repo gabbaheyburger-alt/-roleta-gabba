@@ -123,7 +123,7 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
   </div>
 
   <div class="keys" id="keys"></div>
-  <div class="teste" id="teste-tag" hidden>MODO TESTE · SEM PRÊMIO · v1</div>
+  <div class="teste" id="teste-tag" hidden>MODO TESTE · SEM PRÊMIO · v2</div>
 
   <div class="overlay" id="start">
     <h1>Pedido <span>Certo</span></h1>
@@ -158,9 +158,10 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
 <script>
 (function () {
   /* ===== Configuração do jogo =====
-     Por enquanto o Pedido Certo é só um jogo de teste, sem prêmio. Para valer prêmio, mude VALE_PREMIO para true:
-     aí ele usa o prêmio e o liga/desliga de ../desafio/config.json (área do dono) e 3 chances por dia. */
-  const VALE_PREMIO = false;
+     O Pedido Certo é o jogo do prêmio no Fliperama da mesa (substituiu o Desafio da Espera).
+     Usa o prêmio e o liga/desliga de ../desafio/config.json (área do dono) e 3 chances por dia.
+     Para virar jogo sem prêmio, mude VALE_PREMIO para false. */
+  const VALE_PREMIO = true;
   let PRIZE = 'Molho extra por conta da casa';
   let ATIVO = VALE_PREMIO;
   const CHANCES = 3;          // partidas valendo prêmio por dia, por celular

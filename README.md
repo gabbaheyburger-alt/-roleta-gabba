@@ -65,11 +65,13 @@ Jogo de combinar 3 iguais (estilo Candy Crush), no Fliperama, no endereço `/cru
 - Dificuldade no topo do script de `crush/index.html` (`META`, `JOGADAS`, `CHANCES`).
 - Eventos: `partida-crush`, `crush-venceu-sem-premio` (ou `crush-venceu` quando valer prêmio), `crush-perdeu` e `crush-perdeu-faltou-1a2` / `3a5` / `mais5`.
 
-## Pedido Certo (teste)
+## Pedido Certo (jogo do prêmio)
 
-Jogo de cozinha (estilo Cooking Fever) no endereço `/pedido/`, ainda fora do Fliperama. Chega uma comanda e o cliente toca nos ingredientes na ordem certa (pão, recheios, pão e às vezes batata, refri ou chopp junto). Meta: **8 pedidos em 60 segundos**, com +2 s por pedido certo; 3 erros encerram o turno. Os pedidos crescem, a partir do 4º os botões trocam de lugar e a partir do 6º a comanda some depois de alguns segundos (tem que decorar).
+**Desde 04/11/2026 é o jogo que vale prêmio no Fliperama da mesa, no lugar do Desafio da Espera.** O endereço antigo `/desafio/` redireciona para `/pedido/`, então QRs antigos continuam funcionando. O prêmio e o liga/desliga continuam no `desafio/config.json`, alterados pela área do dono (`/adm/`); o campo de camadas ficou escondido porque o Pedido Certo não usa.
 
-- Sem prêmio por enquanto (`VALE_PREMIO = false`); o placar mostra o recorde de pedidos. Com `true`, usa o prêmio do `desafio/config.json` e 3 chances por dia.
+Jogo de cozinha (estilo Cooking Fever) no endereço `/pedido/`. Chega uma comanda e o cliente toca nos ingredientes na ordem certa (pão, recheios, pão e às vezes batata, refri ou chopp junto). Meta: **8 pedidos em 60 segundos**, com +2 s por pedido certo; 3 erros encerram o turno. Os pedidos crescem, a partir do 4º os botões trocam de lugar e a partir do 6º a comanda some depois de alguns segundos (tem que decorar).
+
+- Vale prêmio (`VALE_PREMIO = true`): 3 chances por dia por celular; depois joga pela diversão. Com `false` vira jogo sem prêmio e o placar mostra o recorde de pedidos.
 - Dificuldade no topo do script de `pedido/index.html` (`META`, `TEMPO`, `BONUS`, `ERROS`, `EMBARALHA_DESDE`, `DECORAR_DESDE`).
 - `?teste` joga sem contar no GoatCounter.
 - Eventos: `partida-pedido`, `pedido-venceu-sem-premio` (ou `pedido-venceu`), `pedido-perdeu-tempo` e `pedido-perdeu-erros`.
@@ -124,7 +126,7 @@ Página para o funcionário conferir o setor ao chegar, no endereço `/checklist
 - `delivery/index.html`: o Fliperama Delivery (gerado por `scripts/gerar-delivery.py`).
 - `combo/index.html`: o jogo Monte o Combo (teste).
 - `crush/index.html`: o jogo Gabba Crush.
-- `pedido/index.html`: o jogo Pedido Certo (teste).
+- `pedido/index.html`: o jogo Pedido Certo (jogo do prêmio).
 - `chapa/index.html`: o jogo Chapa do Gabba (teste).
 - `obby/index.html`: o Obby do Gabba em 3D.
 - `avalie/index.html`: o Termômetro da Loja.
