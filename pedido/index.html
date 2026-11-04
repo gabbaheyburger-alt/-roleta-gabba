@@ -154,7 +154,7 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
     <div class="endcard" data-kind="start">
       <div class="ring">🧾</div>
       <h2>PEDIDO CERTO</h2>
-      <p>Chegou comanda! Toque nos ingredientes <strong>na ordem da comanda</strong>, de cima para baixo. Depois de alguns pedidos os botões mudam de lugar e a comanda some: vai ter que lembrar!</p>
+      <p>Chegou comanda! Toque nos ingredientes <strong>na ordem da comanda</strong>, de cima para baixo. Depois de alguns pedidos os botões mudam de lugar e vem <strong>um pedido de memória</strong>: a comanda some e você monta de cabeça!</p>
       <p>Entregue <strong id="meta-txt">8</strong> pedidos em <strong id="tempo-txt">60</strong> segundos. Errou 3 vezes, acabou o turno.</p>
       <p id="regra" hidden>Conseguiu, ganhou: <span class="hl" id="prize-txt"></span></p>
       <p class="chances" id="chances-txt" hidden></p>
@@ -199,7 +199,7 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
   const BONUS = 2;            // segundos ganhos a cada pedido certo
   const ERROS = 3;            // erros que encerram o turno
   const EMBARALHA_DESDE = 4;  // a partir deste pedido os botões trocam de lugar a cada comanda
-  const DECORAR_DESDE = 6;    // a partir deste pedido a comanda some depois de alguns segundos
+  const DECORAR_DESDE = 6;    // neste pedido (uma vez só por partida) a comanda some depois de alguns segundos
   /* ================================ */
 
   const ING = {
@@ -281,7 +281,7 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
   montarTeclas();
 
   /* ---------- Partida ---------- */
-  let state = 'start', valendo = false, done = 0, errs = 0, timeLeft = TEMPO, pedido = [], pos = 0, num = 0, memoTimer = null, last = 0;
+  let state = 'start', valendo = false, done = 0, errs = 0, timeLeft = TEMPO, pedido = [], pos = 0, num = 0, memoTimer = null, memoUsado = false, last = 0;
 
   function novoPedido() {
     num++;
@@ -296,7 +296,12 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
     $('plate').innerHTML = '<div class="extras" id="extras"></div>';
     if (num >= EMBARALHA_DESDE) embaralhar();
     clearTimeout(memoTimer); $('memo').hidden = true;
-    if (num >= DECORAR_DESDE) memoTimer = setTimeout(() => { if (state === 'play') $('memo').hidden = false; }, 1200 + pedido.length * 350);
+    // Desafio de memória: só 1 comanda por partida. Errou ou acertou, as próximas voltam ao normal.
+    if (num >= DECORAR_DESDE && !memoUsado) {
+      memoUsado = true;
+      floatText('Pedido de memória!');
+      memoTimer = setTimeout(() => { if (state === 'play') $('memo').hidden = false; }, 1200 + pedido.length * 350);
+    }
     desenharComanda();
   }
   function desenharComanda() {
@@ -356,7 +361,7 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
     valendo = VALE_PREMIO && !TESTE && ATIVO && !wonToday() && chancesLeft() > 0;
     if (valendo) { if (saved.triesDay !== today()) { saved.triesDay = today(); saved.tries = 0; } saved.tries++; persist(); }
     conta('partida-pedido', 'Partida: Pedido Certo');
-    done = 0; errs = 0; timeLeft = TEMPO; num = 0;
+    done = 0; errs = 0; timeLeft = TEMPO; num = 0; memoUsado = false;
     ORDEM_TECLAS = Object.keys(ING); montarTeclas();
     $('start').hidden = true; $('over').hidden = true;
     aplicarConfig(); hud();
