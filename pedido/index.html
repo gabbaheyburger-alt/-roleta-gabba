@@ -187,10 +187,12 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
 <script>
 (function () {
   /* ===== Configuração do jogo =====
-     O Pedido Certo é o jogo do prêmio no Fliperama da mesa (substituiu o Desafio da Espera).
-     Usa o prêmio e o liga/desliga de ../desafio/config.json (área do dono) e 3 chances por dia.
-     Para virar jogo sem prêmio, mude VALE_PREMIO para false. */
-  const VALE_PREMIO = true;
+     Vale prêmio quando a área do dono (/adm/) escolhe o Pedido Certo como "jogo que vale prêmio"
+     (campo "jogo": "pedido" em ../desafio/config.json; sem o campo, vale o Pedido Certo). 3 chances por dia.
+     No delivery nunca vale prêmio. O pedido de memória liga/desliga pelo campo "memoria". */
+  let VALE_PREMIO = true;
+  let MEMORIA = true;
+  try { if (sessionStorage.getItem('gabba-modo') === 'delivery') VALE_PREMIO = false; } catch (e) {}
   let PRIZE = 'Molho extra por conta da casa';
   let ATIVO = VALE_PREMIO;
   const CHANCES = 3;          // partidas valendo prêmio por dia, por celular
@@ -254,12 +256,14 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
     $('see-prize').hidden = !VALE_PREMIO || !wonToday() || TESTE;
   }
   aplicarConfig();
-  if (VALE_PREMIO) fetch('../desafio/config.json?v=' + Date.now(), { cache: 'no-store' })
+  fetch('../desafio/config.json?v=' + Date.now(), { cache: 'no-store' })
     .then(r => r.ok ? r.json() : null)
     .then(c => {
       if (!c) return;
       if (typeof c.premio === 'string' && c.premio.trim()) PRIZE = c.premio.trim().slice(0, 60);
-      if (typeof c.ativo === 'boolean') ATIVO = c.ativo;
+      if ((c.jogo || 'pedido') !== 'pedido') VALE_PREMIO = false;
+      if (typeof c.memoria === 'boolean') MEMORIA = c.memoria;
+      ATIVO = VALE_PREMIO && c.ativo !== false;
       aplicarConfig();
     }).catch(() => {});
 
@@ -297,7 +301,7 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
     if (num >= EMBARALHA_DESDE) embaralhar();
     clearTimeout(memoTimer); $('memo').hidden = true;
     // Desafio de memória: só 1 comanda por partida. Errou ou acertou, as próximas voltam ao normal.
-    if (num >= DECORAR_DESDE && !memoUsado) {
+    if (MEMORIA && num >= DECORAR_DESDE && !memoUsado) {
       memoUsado = true;
       floatText('Pedido de memória!');
       memoTimer = setTimeout(() => { if (state === 'play') $('memo').hidden = false; }, 1200 + pedido.length * 350);

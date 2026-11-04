@@ -111,7 +111,8 @@ h1 span { background: linear-gradient(90deg, #ffb13d, #ff3d2e); -webkit-backgrou
 .game-card:active { box-shadow: 0 0 30px rgba(var(--n), .4); }
 /* uma cor neon por jogo */
 .game-card[data-open="memo"] { --n: 255, 138, 61; }
-.game-card[data-open="quiz"] { --n: 64, 196, 255; }
+.game-card[href="../quiz/"] { --n: 64, 196, 255; }
+.game-card[href="../pedido/"] { --n: 61, 220, 132; }
 .game-card[href="../hero/"] { --n: 168, 110, 255; }
 .game-card[href="../corre/"] { --n: 255, 77, 77; }
 .game-card[href="../obby/"] { --n: 255, 77, 166; }
@@ -153,9 +154,10 @@ h1 span { background: linear-gradient(90deg, #ffb13d, #ff3d2e); -webkit-backgrou
       </div>
       <div class="games">
         <!-- SO-MESA-INICIO -->
-        <a class="game-card premio" href="../pedido/">
+        <!-- Cartão do jogo que vale prêmio: o jogo vem da área do dono (campo "jogo" em desafio/config.json) -->
+        <a class="game-card premio" id="card-premio" href="../pedido/">
           <span class="game-icon">🎁</span>
-          <span><span class="tag-premio">Vale prêmio</span><strong>Pedido Certo</strong><small>Entregue 8 pedidos e ganhe prêmio</small></span>
+          <span><span class="tag-premio" id="premio-tag">Vale prêmio</span><strong id="premio-nome">Pedido Certo</strong><small id="premio-desc">Entregue 8 pedidos e ganhe prêmio</small></span>
           <span class="go">›</span>
         </a>
         <!-- SO-MESA-FIM -->
@@ -164,11 +166,16 @@ h1 span { background: linear-gradient(90deg, #ffb13d, #ff3d2e); -webkit-backgrou
           <span><strong>Memória Gabba</strong><small>Ache os pares do cardápio</small><span class="best" id="best-memo"></span></span>
           <span class="go">›</span>
         </button>
-        <button class="game-card" type="button" data-open="quiz">
+        <a class="game-card" href="../quiz/" id="card-quiz" data-jogo="quiz">
           <span class="game-icon" style="background:#12304a">🧠</span>
-          <span><strong>Quiz do Gabba</strong><small>Burger, rock e Ceará, contra o relógio</small><span class="best" id="best-quiz"></span></span>
+          <span><strong>Quiz do Gabba</strong><small>10 perguntas, cada vez mais difíceis</small><span class="best" id="best-quiz"></span></span>
           <span class="go">›</span>
-        </button>
+        </a>
+        <a class="game-card" href="../pedido/" id="card-pedido" data-jogo="pedido">
+          <span class="game-icon" style="background:#1f3320">🧾</span>
+          <span><strong>Pedido Certo</strong><small>Monte a comanda na ordem, contra o relógio</small></span>
+          <span class="go">›</span>
+        </a>
         <a class="game-card" href="../hero/">
           <span class="game-icon" style="background:#2b1f3a">🎸</span>
           <span><strong>Gabba Hero</strong><small>Toque o solo no ritmo: punk, baião e metal</small></span>
@@ -303,13 +310,33 @@ h1 span { background: linear-gradient(90deg, #ffb13d, #ff3d2e); -webkit-backgrou
     if (id === 'quiz') quizStart();
     if (id === 'caca') cacaReady();
   }
+  /* Jogo que vale prêmio (área do dono). Na mesa, o cartão em destaque aponta para ele e o cartão comum dele some. */
+  (function () {
+    const card = $('card-premio');
+    const JOGOS = {
+      pedido: { href: '../pedido/', nome: 'Pedido Certo', desc: 'Entregue 8 pedidos e ganhe prêmio' },
+      quiz: { href: '../quiz/', nome: 'Quiz do Gabba', desc: 'Acerte as 10 perguntas e ganhe prêmio' }
+    };
+    function aplicar(c) {
+      const jogo = c && c.jogo === 'quiz' ? 'quiz' : 'pedido', J = JOGOS[jogo];
+      document.querySelectorAll('[data-jogo]').forEach(el => { el.hidden = !!card && el.dataset.jogo === jogo; });
+      if (!card) return;
+      card.href = J.href; $('premio-nome').textContent = J.nome;
+      const ligado = !c || c.ativo !== false;
+      $('premio-desc').textContent = ligado ? J.desc : 'Hoje sem prêmio. Jogue pela diversão!';
+      $('premio-tag').hidden = !ligado;
+    }
+    aplicar(null);
+    fetch('../desafio/config.json?v=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(c => { if (c) aplicar(c); }).catch(() => {});
+  })();
   document.querySelectorAll('[data-open]').forEach(b => b.addEventListener('click', () => { initAudio(); show(b.dataset.open); }));
   document.querySelectorAll('[data-home]').forEach(b => b.addEventListener('click', () => show('home')));
   function stopAll() { memoStop(); quizStop(); cacaStop(); }
 
   function renderBest() {
     $('best-memo').textContent = best.memo ? 'Seu recorde: ' + best.memo + ' jogadas' : '';
-    $('best-quiz').textContent = best.quiz ? 'Seu recorde: ' + best.quiz + ' pontos' : '';
+    let bq = 0; try { bq = (JSON.parse(localStorage.getItem('quiz-gabba-v2') || '{}').best) || 0; } catch (e) {}
+    $('best-quiz').textContent = bq ? 'Seu recorde: ' + bq + ' de 10' : '';
     $('best-caca').textContent = best.caca ? 'Seu recorde: ' + best.caca + ' pontos' : '';
   }
 

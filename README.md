@@ -65,6 +65,16 @@ Jogo de combinar 3 iguais (estilo Candy Crush), no Fliperama, no endereço `/cru
 - Dificuldade no topo do script de `crush/index.html` (`META`, `JOGADAS`, `CHANCES`).
 - Eventos: `partida-crush`, `crush-venceu-sem-premio` (ou `crush-venceu` quando valer prêmio), `crush-perdeu` e `crush-perdeu-faltou-1a2` / `3a5` / `mais5`.
 
+## Jogo que vale prêmio (escolhido na área do dono)
+
+A área do dono (`/adm/`) grava em `desafio/config.json`: `premio`, `ativo` (liga/desliga), **`jogo`** (`pedido` ou `quiz`: qual jogo vale prêmio) e **`memoria`** (liga/desliga o pedido de memória do Pedido Certo). Sem o campo `jogo`, vale o Pedido Certo. O Fliperama da mesa mostra em destaque o jogo escolhido (selo "Vale prêmio") e esconde o cartão comum dele; no delivery nenhum jogo vale prêmio.
+
+## Quiz do Gabba (estilo Show do Milhão)
+
+Página `/quiz/`. São 10 perguntas que ficam mais difíceis e mais rápidas: 3 fáceis (10 s), 3 médias (9 s), 3 difíceis (8 s) e a pergunta do prêmio (9 s). Errou ou acabou o tempo, a partida termina. Dá para pular 1 pergunta por partida (menos a do prêmio). Quando o Quiz é o jogo do prêmio, quem acerta a 10ª ganha (3 chances por dia por celular, mesma tela de PARABÉNS / RESGATAR AGORA do Pedido Certo). As perguntas ficam na lista `BANCO` (uma lista por nível, a primeira opção é a certa) e os tempos em `NIVEIS`, no topo do script. Eventos: `partida-quiz`, `quiz-parou-<n>` (em qual pergunta parou), `quiz-venceu` e `quiz-venceu-sem-premio`.
+
+O quiz antigo de 8 perguntas, dentro de `jogos/index.html`, não é mais aberto pelo Fliperama.
+
 ## Pedido Certo (jogo do prêmio)
 
 **Desde 04/11/2026 é o jogo que vale prêmio no Fliperama da mesa, no lugar do Desafio da Espera.** O endereço antigo `/desafio/` redireciona para `/pedido/`, então QRs antigos continuam funcionando. O prêmio e o liga/desliga continuam no `desafio/config.json`, alterados pela área do dono (`/adm/`); o campo de camadas ficou escondido porque o Pedido Certo não usa.

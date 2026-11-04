@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Adm · Desafio da Espera</title>
+<title>Adm · Prêmio dos jogos</title>
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#120d0c">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -39,7 +39,7 @@ h2 { font-family: var(--display); font-weight: 400; font-size: 1rem; margin: 0; 
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
 label { display: flex; flex-direction: column; gap: 6px; font-weight: 700; }
 label small { color: var(--muted); font-weight: 600; }
-input[type=text], input[type=number], input[type=password] { font: 600 1.05rem var(--body); color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 12px; width: 100%; }
+input[type=text], input[type=number], input[type=password], select { font: 600 1.05rem var(--body); color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 12px; width: 100%; }
 input:focus-visible, button:focus-visible, a:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
 .switch { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 12px; font-weight: 700; }
 .switch input { width: 52px; height: 30px; accent-color: var(--ok); }
@@ -70,13 +70,19 @@ input:focus-visible, button:focus-visible, a:focus-visible { outline: 3px solid 
 <div class="wrap">
   <header>
     <div class="tag">Área do dono</div>
-    <h1>Prêmio do <span>Desafio</span></h1>
+    <h1>Prêmio dos <span>jogos</span></h1>
   </header>
 
   <!-- Configuração do prêmio -->
   <section class="card" id="cfg" hidden>
     <p class="current" id="current">Carregando a configuração atual…</p>
-    <div class="switch"><span>Pedido Certo valendo prêmio hoje</span><input type="checkbox" id="ativo" checked aria-label="Pedido Certo valendo prêmio"></div>
+    <label for="jogo">Jogo que vale prêmio <small>Só um jogo dá prêmio por vez. Ele aparece em destaque no Fliperama da mesa.</small>
+      <select id="jogo">
+        <option value="pedido">🧾 Pedido Certo</option>
+        <option value="quiz">🧠 Quiz do Gabba (10 perguntas)</option>
+      </select>
+    </label>
+    <div class="switch"><span>Valendo prêmio hoje</span><input type="checkbox" id="ativo" checked aria-label="Valendo prêmio hoje"></div>
     <label for="premio">Prêmio <small>O que o cliente ganha ao vencer (até 60 letras)</small>
       <input type="text" id="premio" maxlength="60" autocomplete="off">
     </label>
@@ -85,15 +91,17 @@ input:focus-visible, button:focus-visible, a:focus-visible { outline: 3px solid 
     <label for="camadas" hidden>Camadas para ganhar <small>Mais camadas = mais difícil. Recomendado: 12 a 20</small>
       <input type="number" id="camadas" min="5" max="60" step="1" inputmode="numeric">
     </label>
+    <div class="switch" id="memoria-box"><span>Pedido Certo: pedido de memória<small style="display:block;font-weight:600;opacity:.75">No 6º pedido a comanda some e o cliente monta de cabeça (1 vez por partida)</small></span><input type="checkbox" id="memoria" checked aria-label="Pedido de memória"></div>
     <div class="preview" aria-live="polite">
-      <div class="t">Pedido <span>Certo</span></div>
+      <div class="t" id="prev-t">Pedido <span>Certo</span></div>
       <p id="prev-txt"></p>
     </div>
     <button class="btn" id="salvar" type="button">SALVAR</button>
     <p class="msg" id="msg" aria-live="polite"></p>
     <p class="note">Depois de salvar, leva de 1 a 2 minutos para aparecer no celular dos clientes. Quem já ganhou hoje continua vendo o prêmio que ganhou.</p>
     <div class="row">
-      <a class="ghost" href="../pedido/?teste" target="_blank" rel="noopener">Abrir o Pedido Certo (teste)</a>
+      <a class="ghost" href="../pedido/?teste" target="_blank" rel="noopener">Testar Pedido Certo</a>
+      <a class="ghost" href="../quiz/?teste" target="_blank" rel="noopener">Testar Quiz</a>
       <button class="ghost" id="sair" type="button">Desconectar este celular</button>
     </div>
   </section>
@@ -137,11 +145,13 @@ input:focus-visible, button:focus-visible, a:focus-visible { outline: 3px solid 
   function preview() {
     const ativo = $('ativo').checked, premio = $('premio').value.trim() || '(sem prêmio escrito)', n = $('camadas').value || '15';
     $('prev-txt').innerHTML = '';
-    if (ativo) { $('prev-txt').append('Entregue 8 pedidos e ganhe: '); const b = document.createElement('strong'); b.textContent = premio; $('prev-txt').append(b); }
-    else $('prev-txt').innerHTML = 'Hoje o Pedido Certo está <strong>sem prêmio</strong>. Jogue pela diversão e bata o seu recorde!';
+    const jogo = $('jogo').value;
+    $('prev-t').innerHTML = jogo === 'quiz' ? 'Quiz <span>do Gabba</span>' : 'Pedido <span>Certo</span>';
+    if (ativo) { $('prev-txt').append(jogo === 'quiz' ? 'Acerte as 10 perguntas e ganhe: ' : 'Entregue 8 pedidos e ganhe: '); const b = document.createElement('strong'); b.textContent = premio; $('prev-txt').append(b); }
+    else $('prev-txt').innerHTML = 'Hoje o jogo está <strong>sem prêmio</strong>. Jogue pela diversão e bata o seu recorde!';
     $('premio').disabled = !ativo;
   }
-  ['ativo', 'premio', 'camadas'].forEach(id => $(id).addEventListener('input', preview));
+  ['ativo', 'premio', 'camadas', 'jogo', 'memoria'].forEach(id => { $(id).addEventListener('input', preview); $(id).addEventListener('change', preview); });
   SUGESTOES.forEach(t => { const b = document.createElement('button'); b.type = 'button'; b.textContent = t; b.addEventListener('click', () => { $('premio').value = t; preview(); }); $('sugestoes').append(b); });
 
   async function carregar() {
@@ -154,6 +164,7 @@ input:focus-visible, button:focus-visible, a:focus-visible { outline: 3px solid 
       const j = await r.json(); sha = j.sha;
       const c = JSON.parse(b64dec(j.content));
       $('premio').value = c.premio || ''; $('camadas').value = c.camadas || 15; $('ativo').checked = c.ativo !== false;
+      $('jogo').value = c.jogo === 'quiz' ? 'quiz' : 'pedido'; $('memoria').checked = c.memoria !== false;
       $('current').innerHTML = 'Configuração atual carregada.';
       preview();
     } catch (e) {
@@ -162,13 +173,13 @@ input:focus-visible, button:focus-visible, a:focus-visible { outline: 3px solid 
   }
 
   async function salvar() {
-    const premio = $('premio').value.trim(), camadas = Math.round(+$('camadas').value), ativo = $('ativo').checked;
-    if (ativo && !premio) { msg($('msg'), 'Escreva o prêmio ou desligue o desafio.', 'err'); return; }
+    const premio = $('premio').value.trim(), camadas = Math.round(+$('camadas').value), ativo = $('ativo').checked, jogo = $('jogo').value, memoria = $('memoria').checked;
+    if (ativo && !premio) { msg($('msg'), 'Escreva o prêmio ou desligue o prêmio.', 'err'); return; }
     if (!(camadas >= 5 && camadas <= 60)) { msg($('msg'), 'As camadas precisam ficar entre 5 e 60.', 'err'); return; }
-    const conteudo = JSON.stringify({ premio: premio || 'Molho extra por conta da casa', camadas, ativo }, null, 2) + '\n';
+    const conteudo = JSON.stringify({ premio: premio || 'Molho extra por conta da casa', camadas, ativo, jogo, memoria }, null, 2) + '\n';
     $('salvar').disabled = true; msg($('msg'), 'Salvando…');
     try {
-      const body = { message: (ativo ? 'Prêmio do Desafio: ' + premio + ' (' + camadas + ' camadas)' : 'Desafio sem prêmio'), content: b64enc(conteudo), branch: BRANCH };
+      const body = { message: (ativo ? 'Prêmio (' + (jogo === 'quiz' ? 'Quiz do Gabba' : 'Pedido Certo') + '): ' + premio : 'Jogos sem prêmio') + (memoria ? '' : ' · memória desligada'), content: b64enc(conteudo), branch: BRANCH };
       if (sha) body.sha = sha;
       let r = await fetch(API, { method: 'PUT', headers: Object.assign({ 'Content-Type': 'application/json' }, headers()), body: JSON.stringify(body) });
       if (r.status === 409 || r.status === 422) { const g = await fetch(API + '?ref=' + BRANCH + '&t=' + Date.now(), { headers: headers(), cache: 'no-store' }); if (g.ok) body.sha = (await g.json()).sha; r = await fetch(API, { method: 'PUT', headers: Object.assign({ 'Content-Type': 'application/json' }, headers()), body: JSON.stringify(body) }); }

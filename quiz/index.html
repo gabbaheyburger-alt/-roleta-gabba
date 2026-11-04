@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Quiz do Gabba</title>
+<meta name="theme-color" content="#070808">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Barlow:wght@400;600;700&display=swap">
+<style>
+/* Layout: placar e escada de perguntas no topo, tempo, pergunta e 4 respostas; telas de início/fim por cima */
+:root {
+  --bg: #070808; --surface: #0e0f0f; --line: #262a29; --fg: #f6ece2; --muted: #b9b3ad;
+  --mustard: #ffd63d; --ok: #3ddc84; --bad: #ff4d4d;
+  --display: 'Bungee', Impact, 'Arial Black', sans-serif;
+  --body: 'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --emoji: "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif;
+  color-scheme: dark;
+}
+* { touch-action: manipulation; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { min-height: 100%; background: var(--bg); color: var(--fg); }
+body { margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); font-family: var(--body); font-size: 16px; line-height: 1.4; user-select: none; -webkit-user-select: none; }
+[hidden] { display: none !important; }
+.app { max-width: 520px; margin: 0 auto; padding: 12px 16px 20px; display: flex; flex-direction: column; gap: 12px; min-height: 100vh; }
+
+.hud { display: flex; justify-content: space-between; align-items: flex-end; gap: 10px; }
+.hud-left { display: flex; align-items: center; gap: 10px; }
+.brand { font-family: var(--display); font-size: 1.05rem; line-height: 1; }
+.brand span { color: #40c4ff; text-shadow: 0 0 12px rgba(64,196,255,.6); }
+.back { color: var(--muted); border: 1px solid var(--line); border-radius: 10px; padding: 7px 10px; font: 700 .85rem var(--body); text-decoration: none; white-space: nowrap; }
+.score { text-align: right; }
+.score small { display: block; font-size: .65rem; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); font-weight: 600; }
+.score b { font-family: var(--display); font-weight: 400; font-size: 1.5rem; line-height: 1; color: var(--mustard); text-shadow: 0 0 12px rgba(255,214,61,.5); }
+
+/* Escada de 10 perguntas: cor por nível */
+.ladder { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; }
+.step { height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font: 400 .78rem var(--display); color: #666; background: #0e0f0f; border: 1px solid #222; --c: 61, 220, 132; }
+.step[data-l="2"] { --c: 255, 214, 61; }
+.step[data-l="3"] { --c: 255, 138, 61; }
+.step[data-l="4"] { --c: 255, 77, 166; font-family: var(--emoji); font-size: .95rem; }
+.step.done { background: rgba(var(--c), .18); border-color: rgba(var(--c), .6); color: rgb(var(--c)); }
+.step.now { background: rgba(var(--c), .3); border-color: rgb(var(--c)); color: #fff; box-shadow: 0 0 14px rgba(var(--c), .7); transform: scale(1.08); }
+
+.level { display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: .85rem; text-transform: uppercase; letter-spacing: .1em; }
+.level b { color: rgb(var(--lc, 61, 220, 132)); text-shadow: 0 0 10px rgba(var(--lc, 61, 220, 132), .6); }
+.level span { color: var(--muted); font-variant-numeric: tabular-nums; }
+.timer { height: 10px; background: #0e0f0f; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+.timer i { display: block; height: 100%; width: 100%; background: linear-gradient(90deg, #3ddc84, #ffd63d); box-shadow: 0 0 10px rgba(61,220,132,.6); }
+.timer.low i { background: linear-gradient(90deg, #ff4d4d, #ff8a3d); box-shadow: 0 0 10px rgba(255,77,77,.7); }
+
+.qcard { background: #0a0b0b; border: 1.5px solid rgba(64,196,255,.35); border-radius: 22px; padding: 18px 16px; box-shadow: 0 0 30px rgba(64,196,255,.15), inset 0 0 24px rgba(64,196,255,.04); }
+.question { margin: 0; font-weight: 700; font-size: 1.3rem; line-height: 1.25; text-wrap: balance; }
+.answers { display: flex; flex-direction: column; gap: 10px; }
+.answer { display: flex; align-items: center; gap: 12px; background: #0b0c0c; border: 1.5px solid rgba(255,255,255,.12); color: var(--fg); font: 700 1.05rem var(--body); padding: 13px 14px; border-radius: 16px; text-align: left; cursor: pointer; }
+.answer .k { flex: 0 0 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font: 400 .9rem var(--display); color: #40c4ff; border: 1.5px solid rgba(64,196,255,.6); box-shadow: 0 0 10px rgba(64,196,255,.35); }
+.answer:active { transform: scale(.99); }
+.answer.right { border-color: var(--ok); background: rgba(61,220,132,.16); box-shadow: 0 0 20px rgba(61,220,132,.45); }
+.answer.right .k { color: var(--ok); border-color: var(--ok); }
+.answer.wrong { border-color: var(--bad); background: rgba(255,77,77,.16); box-shadow: 0 0 20px rgba(255,77,77,.45); }
+.answer.wrong .k { color: var(--bad); border-color: var(--bad); }
+.answer:disabled { cursor: default; }
+.tools { display: flex; justify-content: center; }
+.skip { background: rgba(168,110,255,.1); border: 1.5px solid rgba(168,110,255,.6); color: #fff; font: 700 .9rem var(--body); padding: 9px 16px; border-radius: 999px; box-shadow: 0 0 14px rgba(168,110,255,.35); cursor: pointer; }
+.skip:disabled { opacity: .35; box-shadow: none; }
+
+.float { position: fixed; left: 50%; top: 40%; transform: translateX(-50%); font-family: var(--display); color: var(--mustard); font-size: 1.3rem; pointer-events: none; animation: rise .9s ease-out forwards; white-space: nowrap; text-shadow: 0 0 14px rgba(255,214,61,.6); z-index: 6; }
+@keyframes rise { from { opacity: 1; margin-top: 0; } to { opacity: 0; margin-top: -40px; } }
+
+.overlay { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; padding: 20px; gap: 12px; overflow-y: auto; z-index: 10; }
+.overlay h1 { font-family: var(--display); font-weight: 400; font-size: clamp(1.8rem, 8.5vw, 2.4rem); line-height: 1.05; margin: 0; text-wrap: balance; }
+.overlay p { margin: 0; max-width: 32ch; }
+.btn { font-family: var(--display); font-size: 1.25rem; letter-spacing: .04em; padding: 16px 20px; cursor: pointer; width: 100%; }
+.link { background: transparent; border: 1px solid var(--line); font: 700 .88rem var(--body); padding: 10px 14px; cursor: pointer; text-decoration: none; display: block; }
+.big { font-family: var(--display); font-size: 2.6rem; line-height: 1; }
+.chances { font-weight: 700; }
+.teste { position: fixed; bottom: 6px; left: 50%; transform: translateX(-50%); background: #2b4a8a; color: #fff; font: 700 .65rem var(--body); padding: 2px 8px; border-radius: 6px; letter-spacing: .08em; pointer-events: none; z-index: 20; white-space: nowrap; }
+.rules li b { margin-right: 4px; }
+.redeem { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 14px 12px; border-radius: 18px; border: 1.5px dashed rgba(var(--g), .55); background: rgba(var(--g), .07); }
+.redeem .when { font-weight: 700; color: #fff; }
+.redeem .clock { font: 400 2rem var(--display); color: rgb(var(--g)); text-shadow: 0 0 16px rgba(var(--g), .6); font-variant-numeric: tabular-nums; }
+.redeem .note { color: var(--muted); font-size: .92rem; }
+.redeem.used { border-style: solid; border-color: #3b3b3b; background: #141414; }
+.redeem.used .clock { color: #777; text-shadow: none; }
+.hl { color: rgb(var(--g)); font-weight: 700; text-shadow: 0 0 14px rgba(var(--g), .45); }
+.prize-name.used { text-decoration: line-through; opacity: .6; }
+</style>
+<script src="../contador.js"></script>
+<link rel="stylesheet" href="../comum/neon.css">
+<script src="../comum/neon.js" defer></script>
+</head>
+<body>
+<div class="app">
+  <div class="hud">
+    <div class="hud-left">
+      <a class="back" href="../jogos/">‹ Jogos</a>
+      <div class="brand">Quiz do<br><span>Gabba</span></div>
+    </div>
+    <div class="score"><small id="top-lbl">Recorde</small><b id="top">0</b></div>
+  </div>
+  <div class="ladder" id="ladder" aria-label="Perguntas"></div>
+  <div class="level" id="level"><b id="level-name">Fácil</b><span id="level-time">10 s</span></div>
+  <div class="timer" id="timer"><i id="timefill"></i></div>
+  <div class="qcard"><p class="question" id="q">…</p></div>
+  <div class="answers" id="answers"></div>
+  <div class="tools"><button class="skip" id="skip" type="button">⏭️ Pular pergunta (1 vez)</button></div>
+</div>
+<div class="teste" id="teste-tag" hidden>MODO TESTE · SEM PRÊMIO · v1</div>
+
+<div class="overlay" id="start" data-kind="start" data-icon="🧠">
+  <h1>Quiz <span>do Gabba</span></h1>
+  <p>São <strong>10 perguntas</strong> sobre burger, rock e Ceará. Cada uma é <strong>mais difícil</strong> e com <strong>menos tempo</strong> que a anterior.</p>
+  <ul class="rules">
+    <li><b>Errou</b> ou o tempo acabou, a partida termina.</li>
+    <li><b>Pular:</b> você pode pular 1 pergunta por partida.</li>
+    <li><b>Pergunta 10 🎁:</b> acertou, levou o prêmio!</li>
+  </ul>
+  <p id="regra" hidden>Prêmio de hoje: <span class="hl" id="prize-txt"></span></p>
+  <p class="chances" id="chances-txt" hidden></p>
+  <button class="btn" id="play" type="button">COMEÇAR</button>
+  <button class="link" id="see-prize" type="button" hidden>Ver meu prêmio de hoje</button>
+  <a class="link" href="../jogos/">Escolher outro jogo</a>
+</div>
+
+<div class="overlay" id="over" hidden data-kind="err" data-icon="❌">
+  <h1 id="over-title">QUASE!</h1>
+  <p id="over-msg"></p>
+  <div class="redeem" id="redeem" hidden>
+    <span class="when" id="prize-date"></span>
+    <span class="clock" id="prize-clock">--:--:--</span>
+    <span class="note" id="prize-note">Mostre esta tela ao atendente</span>
+  </div>
+  <p class="chances" id="over-chances" hidden></p>
+  <button class="btn" id="resgatar" type="button" hidden>RESGATAR AGORA</button>
+  <button class="btn" id="again" type="button">JOGAR DE NOVO</button>
+  <button class="link" id="mark-used" type="button" hidden>Atendente: marcar como entregue</button>
+  <button class="link" id="again2" type="button" hidden>Jogar de novo</button>
+  <a class="link" href="../jogos/">Escolher outro jogo</a>
+</div>
+
+<script>
+(function () {
+  /* ===== Configuração =====
+     Vale prêmio só quando a área do dono (/adm/) escolhe o Quiz como "jogo que vale prêmio"
+     (campo "jogo": "quiz" em ../desafio/config.json) e o prêmio está ligado. No delivery, nunca vale prêmio. */
+  let PRIZE = 'Molho extra por conta da casa';
+  let VALE_PREMIO = false;   // decidido pelo config.json
+  const CHANCES = 3;         // partidas valendo prêmio por dia, por celular
+  // Níveis: perguntas de cada nível e segundos para responder (fica mais rápido)
+  const NIVEIS = [
+    { nome: 'Fácil',   n: 3, seg: 10, cor: '61, 220, 132' },
+    { nome: 'Médio',   n: 3, seg: 9,  cor: '255, 214, 61' },
+    { nome: 'Difícil', n: 3, seg: 8,  cor: '255, 138, 61' },
+    { nome: 'Pergunta do prêmio', n: 1, seg: 9, cor: '255, 77, 166' }
+  ];
+  /* ======================== */
+
+  // Banco de perguntas por nível. A primeira opção é a certa (a ordem é embaralhada na tela).
+  const BANCO = [
+    [ // 1 · fácil
+      ['O nome "hambúrguer" vem de qual cidade?', ['Hamburgo', 'Berlim', 'Nova York', 'Londres']],
+      ['Qual é a capital do Ceará?', ['Fortaleza', 'Juazeiro do Norte', 'Sobral', 'Caucaia']],
+      ['Paracuru fica em qual estado?', ['Ceará', 'Piauí', 'Rio Grande do Norte', 'Maranhão']],
+      ['Qual banda gravou "Bohemian Rhapsody"?', ['Queen', 'The Beatles', 'Led Zeppelin', 'Pink Floyd']],
+      ['Quem é conhecido como o "Rei do Rock"?', ['Elvis Presley', 'Chuck Berry', 'Mick Jagger', 'Ozzy Osbourne']],
+      ['Quem é conhecido como o "Rei do Baião"?', ['Luiz Gonzaga', 'Dominguinhos', 'Fagner', 'Alceu Valença']],
+      ['Qual banda gravou "Back in Black"?', ['AC/DC', 'Metallica', 'Guns N\' Roses', 'Kiss']],
+      ['Quantas cordas tem uma guitarra tradicional?', ['6', '4', '5', '8']],
+      ['Qual carne é a mais usada no hambúrguer tradicional?', ['Bovina', 'Suína', 'Frango', 'Peixe']],
+      ['Qual destes pontos da carne é o mais cru?', ['Mal passado', 'Ao ponto', 'Ao ponto para bem', 'Bem passado']],
+      ['Qual fruta é a base do guacamole?', ['Abacate', 'Manga', 'Limão', 'Maracujá']],
+      ['Qual planeta é conhecido como o planeta vermelho?', ['Marte', 'Vênus', 'Júpiter', 'Saturno']],
+      ['Qual passeio é famoso nas dunas do litoral cearense?', ['Buggy', 'Teleférico', 'Trem', 'Balão']],
+      ['Qual instrumento marca o ritmo numa banda de rock?', ['Bateria', 'Teclado', 'Flauta', 'Violino']],
+      ['Jericoacoara fica em qual estado?', ['Ceará', 'Bahia', 'Pernambuco', 'Alagoas']],
+      ['O picles do burger é feito, normalmente, de qual legume?', ['Pepino', 'Abobrinha', 'Cenoura', 'Chuchu']]
+    ],
+    [ // 2 · médio
+      ['Qual banda lançou o álbum "The Dark Side of the Moon"?', ['Pink Floyd', 'The Who', 'Deep Purple', 'Yes']],
+      ['Qual banda gravou "Smells Like Teen Spirit"?', ['Nirvana', 'Pearl Jam', 'Foo Fighters', 'Soundgarden']],
+      ['Qual banda gravou "Stairway to Heaven"?', ['Led Zeppelin', 'Black Sabbath', 'Deep Purple', 'Aerosmith']],
+      ['Quem era o vocalista do Queen?', ['Freddie Mercury', 'Brian May', 'Roger Taylor', 'John Deacon']],
+      ['Qual banda brasileira gravou "Pais e Filhos"?', ['Legião Urbana', 'Titãs', 'Barão Vermelho', 'Engenheiros do Hawaii']],
+      ['Raul Seixas é chamado de "Pai do…"', ['Rock brasileiro', 'Samba-rock', 'Forró', 'Axé']],
+      ['O queijo cheddar é originário de qual país?', ['Inglaterra', 'França', 'Holanda', 'Suíça']],
+      ['Qual é o ingrediente principal do molho aioli, além do azeite?', ['Alho', 'Mostarda', 'Cebola', 'Pimenta']],
+      ['Qual molho clássico leva gema, manteiga e limão?', ['Holandês', 'Barbecue', 'Rosé', 'Tártaro']],
+      ['Qual é o rio mais extenso do Ceará?', ['Jaguaribe', 'Acaraú', 'Curu', 'Coreaú']],
+      ['Qual cidade cearense é famosa pelo Padre Cícero?', ['Juazeiro do Norte', 'Crato', 'Sobral', 'Quixadá']],
+      ['Qual país tem mais títulos de Copa do Mundo de futebol masculino?', ['Brasil', 'Alemanha', 'Itália', 'Argentina']],
+      ['Qual destas cervejas é de alta fermentação?', ['Ale', 'Pilsen', 'Lager', 'Bock']],
+      ['Dominguinhos ficou famoso tocando qual instrumento?', ['Sanfona', 'Zabumba', 'Triângulo', 'Violão']],
+      ['Quem compôs "Mucuripe" junto com Fagner?', ['Belchior', 'Ednardo', 'Rodger Rogério', 'Amelinha']],
+      ['Qual é o maior planeta do Sistema Solar?', ['Júpiter', 'Saturno', 'Netuno', 'Terra']]
+    ],
+    [ // 3 · difícil
+      ['Qual banda lançou o álbum "Master of Puppets"?', ['Metallica', 'Megadeth', 'Slayer', 'Iron Maiden']],
+      ['Qual banda lançou o álbum "Paranoid", de 1970?', ['Black Sabbath', 'Deep Purple', 'Judas Priest', 'Led Zeppelin']],
+      ['Quem tocava bateria nos Beatles antes de Ringo Starr?', ['Pete Best', 'Stuart Sutcliffe', 'Brian Epstein', 'Billy Preston']],
+      ['A banda AC/DC foi formada em qual país?', ['Austrália', 'Inglaterra', 'Estados Unidos', 'Canadá']],
+      ['Qual guitarrista é famoso pelo solo "Eruption"?', ['Eddie Van Halen', 'Slash', 'Jimmy Page', 'Steve Vai']],
+      ['Quem compôs "Como Nossos Pais", sucesso na voz de Elis Regina?', ['Belchior', 'Fagner', 'Caetano Veloso', 'Chico Buarque']],
+      ['Como se chama a reação que doura a carne na chapa?', ['Reação de Maillard', 'Caramelização', 'Oxidação', 'Fermentação']],
+      ['Qual escala mede a ardência das pimentas?', ['Scoville', 'Richter', 'Kelvin', 'Mohs']],
+      ['A Ponte dos Ingleses fica em qual praia de Fortaleza?', ['Praia de Iracema', 'Praia do Futuro', 'Meireles', 'Mucuripe']],
+      ['Em que ano o Brasil ganhou sua primeira Copa do Mundo?', ['1958', '1950', '1962', '1970']],
+      ['Em que ano o ser humano pisou na Lua pela primeira vez?', ['1969', '1965', '1972', '1959']],
+      ['O wagyu é uma raça de gado originária de qual país?', ['Japão', 'Argentina', 'Estados Unidos', 'Austrália']],
+      ['O escritor José de Alencar, autor de "Iracema", nasceu em qual estado?', ['Ceará', 'Rio de Janeiro', 'Pernambuco', 'Bahia']],
+      ['Qual elemento químico tem o símbolo "Fe"?', ['Ferro', 'Flúor', 'Fósforo', 'Frâncio']],
+      ['Quantos ossos tem o corpo humano adulto?', ['206', '186', '226', '256']],
+      ['Na cerveja, o lúpulo é usado principalmente para dar…', ['Amargor e aroma', 'Cor escura', 'Álcool', 'Espuma']]
+    ],
+    [ // 4 · pergunta do prêmio
+      ['Qual foi o primeiro estado brasileiro a abolir a escravidão?', ['Ceará', 'Bahia', 'Rio de Janeiro', 'São Paulo']],
+      ['Em que ano aconteceu o primeiro Rock in Rio?', ['1985', '1980', '1988', '1991']],
+      ['Em que ano foi lançado o álbum "Sgt. Pepper\'s Lonely Hearts Club Band", dos Beatles?', ['1967', '1963', '1970', '1965']],
+      ['Qual é o primeiro nome verdadeiro de Ozzy Osbourne?', ['John', 'Oswald', 'Thomas', 'George']],
+      ['Quem era o baterista original do Led Zeppelin?', ['John Bonham', 'Keith Moon', 'Ian Paice', 'Bill Ward']],
+      ['Freddie Mercury nasceu em qual lugar?', ['Zanzibar', 'Londres', 'Mumbai', 'Dublin']],
+      ['A reação de Maillard acontece entre açúcares e…', ['Aminoácidos', 'Gorduras', 'Vitaminas', 'Sais minerais']],
+      ['Qual destas pimentas é a mais ardida?', ['Carolina Reaper', 'Habanero', 'Malagueta', 'Jalapeño']],
+      ['Como se chama o primeiro álbum dos Ramones, de 1976?', ['Ramones', 'Rocket to Russia', 'Leave Home', 'Road to Ruin']],
+      ['Qual é a temperatura aproximada da superfície do Sol?', ['5.500 °C', '1.000 °C', '55.000 °C', '500 °C']]
+    ]
+  ];
+
+  const LETRAS = ['A', 'B', 'C', 'D'];
+  const TOTAL = NIVEIS.reduce((a, n) => a + n.n, 0);
+  const TESTE = /[?&]teste\b/.test(location.search);
+  let DELIVERY = false; try { DELIVERY = sessionStorage.getItem('gabba-modo') === 'delivery'; } catch (e) {}
+  const STORE = 'quiz-gabba-v2';
+  const $ = id => document.getElementById(id);
+  const pad = n => String(n).padStart(2, '0');
+  const today = () => { const d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
+  const conta = (n, t) => { if (!TESTE && window.gabbaConta) gabbaConta(n, t); };
+  const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+  let saved = { best: 0, triesDay: null, tries: 0, wonDay: null, wonPrize: null, usedDay: null, usedAt: null };
+  try { saved = Object.assign(saved, JSON.parse(localStorage.getItem(STORE) || '{}')); } catch (e) {}
+  const persist = () => { try { localStorage.setItem(STORE, JSON.stringify(saved)); } catch (e) {} };
+  const chancesLeft = () => Math.max(0, CHANCES - (saved.triesDay === today() ? saved.tries : 0));
+  const wonToday = () => saved.wonDay === today();
+  const premioAgora = () => VALE_PREMIO && !TESTE && !DELIVERY;
+
+  if (TESTE) $('teste-tag').hidden = false;
+
+  function aplicarConfig() {
+    $('prize-txt').textContent = PRIZE;
+    $('regra').hidden = !premioAgora();
+    let t = '';
+    if (premioAgora()) {
+      if (wonToday()) t = 'Você já ganhou hoje! Agora é só pela diversão.';
+      else if (chancesLeft() > 0) t = 'Você tem ' + chancesLeft() + (chancesLeft() === 1 ? ' chance' : ' chances') + ' valendo prêmio hoje.';
+      else t = 'Suas chances de hoje acabaram. Jogue pela diversão e volte na próxima visita!';
+    } else if (TESTE) t = 'Modo teste: não gasta chance e não dá prêmio.';
+    $('chances-txt').textContent = t; $('chances-txt').hidden = !t;
+    $('top-lbl').textContent = premioAgora() ? 'Chances hoje' : 'Recorde';
+    $('top').textContent = premioAgora() ? (wonToday() ? '–' : chancesLeft()) : saved.best + '/' + TOTAL;
+    $('see-prize').hidden = !premioAgora() || !wonToday();
+  }
+  aplicarConfig();
+  fetch('../desafio/config.json?v=' + Date.now(), { cache: 'no-store' })
+    .then(r => r.ok ? r.json() : null)
+    .then(c => {
+      if (!c) return;
+      if (typeof c.premio === 'string' && c.premio.trim()) PRIZE = c.premio.trim().slice(0, 60);
+      VALE_PREMIO = c.jogo === 'quiz' && c.ativo !== false;
+      aplicarConfig();
+    }).catch(() => {});
+
+  /* ---------- Escada ---------- */
+  const nivelDe = i => { let k = i; for (let l = 0; l < NIVEIS.length; l++) { if (k < NIVEIS[l].n) return l; k -= NIVEIS[l].n; } return NIVEIS.length - 1; };
+  function escada() {
+    const box = $('ladder'); box.innerHTML = '';
+    for (let i = 0; i < TOTAL; i++) {
+      const d = document.createElement('div');
+      d.className = 'step' + (i < idx ? ' done' : i === idx ? ' now' : '');
+      d.dataset.l = nivelDe(i) + 1;
+      d.textContent = i === TOTAL - 1 ? '🎁' : i + 1;
+      box.append(d);
+    }
+  }
+
+  /* ---------- Partida ---------- */
+  let lista = [], idx = 0, pulou = false, done = true, t0 = 0, raf = null, tmo = null, valendo = false, seg = 10;
+  function sortear() {
+    // 1 pergunta extra por nível, para o "pular"
+    lista = NIVEIS.map((n, l) => shuffle(BANCO[l].slice()).slice(0, n.n + 1));
+  }
+  function perguntaAtual() {
+    const l = nivelDe(idx);
+    let k = idx; for (let j = 0; j < l; j++) k -= NIVEIS[j].n;
+    return lista[l][k + (pularNoNivel[l] ? 1 : 0)];
+  }
+  let pularNoNivel = [];
+  function start() {
+    valendo = premioAgora() && !wonToday() && chancesLeft() > 0;
+    if (valendo) { if (saved.triesDay !== today()) { saved.triesDay = today(); saved.tries = 0; } saved.tries++; persist(); }
+    conta('partida-quiz', 'Partida: Quiz do Gabba');
+    sortear(); idx = 0; pulou = false; pularNoNivel = NIVEIS.map(() => false);
+    $('skip').disabled = false;
+    $('start').hidden = true; $('over').hidden = true;
+    aplicarConfig(); mostrar();
+  }
+  function mostrar() {
+    escada();
+    const l = nivelDe(idx), N = NIVEIS[l];
+    seg = N.seg;
+    $('level').style.setProperty('--lc', N.cor);
+    $('level-name').textContent = (idx === TOTAL - 1 ? '🎁 ' : '') + N.nome;
+    $('level-time').textContent = 'Pergunta ' + (idx + 1) + ' de ' + TOTAL + ' · ' + seg + ' s';
+    const [q, opts] = perguntaAtual();
+    const certa = opts[0];
+    $('q').textContent = q;
+    const box = $('answers'); box.innerHTML = '';
+    shuffle(opts.slice()).forEach((o, i) => {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'answer';
+      b.innerHTML = '<span class="k">' + LETRAS[i] + '</span><span></span>';
+      b.lastChild.textContent = o; b.dataset.v = o;
+      b.addEventListener('click', () => responder(b, o === certa, certa));
+      box.append(b);
+    });
+    if (idx > 0 && nivelDe(idx) !== nivelDe(idx - 1)) floatText(idx === TOTAL - 1 ? 'Pergunta do prêmio!' : 'Nível ' + N.nome + '!');
+    done = false; t0 = performance.now();
+    const tick = () => {
+      const left = Math.max(0, 1 - (performance.now() - t0) / (seg * 1000));
+      $('timefill').style.width = (left * 100) + '%';
+      $('timer').classList.toggle('low', left < 0.3);
+      if (left > 0 && !done) raf = requestAnimationFrame(tick);
+    };
+    tick();
+    tmo = setTimeout(() => { if (!done) responder(null, false, certa, true); }, seg * 1000);
+  }
+  function responder(b, ok, certa, tempo) {
+    if (done) return;
+    done = true; clearTimeout(tmo); cancelAnimationFrame(raf);
+    document.querySelectorAll('.answer').forEach(x => { x.disabled = true; if (x.dataset.v === certa) x.classList.add('right'); });
+    if (ok) {
+      beep(760, 0.08, 'triangle');
+      idx++;
+      if (idx >= TOTAL) return setTimeout(() => fim(true), 700);
+      tmo = setTimeout(mostrar, 900);
+    } else {
+      if (b) b.classList.add('wrong');
+      beep(150, 0.3, 'sawtooth');
+      setTimeout(() => fim(false, tempo), 1400);
+    }
+  }
+  $('skip').addEventListener('click', () => {
+    if (done || pulou) return;
+    if (idx === TOTAL - 1) { floatText('Na pergunta do prêmio não dá!'); return; }
+    pulou = true; $('skip').disabled = true;
+    done = true; clearTimeout(tmo); cancelAnimationFrame(raf);
+    pularNoNivel[nivelDe(idx)] = true;
+    floatText('Pulou!');
+    setTimeout(mostrar, 350);
+  });
+  function fim(ganhou, tempo) {
+    const acertos = ganhou ? TOTAL : idx;
+    if (!TESTE && acertos > saved.best) saved.best = acertos;
+    if (ganhou && valendo) { saved.wonDay = today(); saved.wonPrize = PRIZE; conta('quiz-venceu', 'Quiz do Gabba: venceu'); }
+    else if (ganhou) conta('quiz-venceu-sem-premio', 'Quiz do Gabba: venceu (sem prêmio)');
+    else conta('quiz-parou-' + (idx + 1), 'Quiz do Gabba: parou na pergunta ' + (idx + 1));
+    persist();
+    if (ganhou) fanfare();
+    aplicarConfig();
+    if (ganhou && valendo) telaPremio(false);
+    else telaFim(ganhou ? 'win' : tempo ? 'time' : 'err', acertos);
+    overChances(ganhou);
+    $('over').hidden = false;
+  }
+  const hl = t => { const s = document.createElement('span'); s.className = 'hl'; s.textContent = t; return s; };
+  function telaFim(kind, acertos) {
+    clearInterval(clockTimer);
+    window.neonKind && neonKind('over', kind, kind === 'win' ? '🏆' : kind === 'time' ? '⏱️' : '❌');
+    $('over-title').textContent = kind === 'win' ? 'GÊNIO DO GABBA!' : kind === 'time' ? 'ACABOU O TEMPO!' : 'RESPOSTA ERRADA!';
+    const m = $('over-msg'); m.innerHTML = '';
+    if (kind === 'win') m.append('Você acertou ', hl('as ' + TOTAL + ' perguntas'), '!' + (TESTE ? ' Modo teste: sem prêmio.' : ''));
+    else {
+      m.append('Você chegou até a ', hl('pergunta ' + (idx + 1) + ' de ' + TOTAL), '.');
+      if (saved.best && !TESTE) m.append(' Seu recorde: ' + saved.best + ' acertos.');
+    }
+    $('redeem').hidden = true; $('resgatar').hidden = true; $('mark-used').hidden = true; $('again2').hidden = true; $('again').hidden = false;
+  }
+  function telaPremio(aberto) {
+    window.neonKind && neonKind('over', 'win', '🎁');
+    $('over-title').textContent = 'PARABÉNS!';
+    const nome = (wonToday() && saved.wonPrize) || PRIZE;
+    const used = saved.usedDay === today();
+    const m = $('over-msg'); m.innerHTML = '';
+    const pn = hl(nome); pn.classList.add('prize-name'); pn.classList.toggle('used', used);
+    m.append('Você ganhou ', pn, used ? '. Prêmio já entregue.' : ' pra resgatar agora mesmo.');
+    $('again').hidden = true; $('again2').hidden = false; $('over-chances').hidden = true;
+    $('resgatar').hidden = aberto || used;
+    showPrize(aberto || used);
+  }
+  function overChances(ganhou) {
+    let t = '';
+    if (premioAgora() && !ganhou && !wonToday()) {
+      if (chancesLeft() > 0) t = 'Ainda tem ' + chancesLeft() + (chancesLeft() === 1 ? ' chance' : ' chances') + ' valendo prêmio hoje.';
+      else if (valendo) t = 'Essa era sua última chance de hoje. Pode continuar jogando pela diversão!';
+    }
+    $('over-chances').textContent = t; $('over-chances').hidden = !t;
+  }
+  function floatText(t) { const el = document.createElement('div'); el.className = 'float'; el.textContent = t; document.body.append(el); setTimeout(() => el.remove(), 950); }
+
+  /* ---------- Prêmio ---------- */
+  let clockTimer = null;
+  function showPrize(show) {
+    clearInterval(clockTimer);
+    $('redeem').hidden = !show;
+    const used = saved.usedDay === today();
+    $('mark-used').hidden = !show || used;
+    if (!show) return;
+    const d = new Date(), dias = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
+    $('prize-date').textContent = 'Válido hoje, ' + dias[d.getDay()] + ' ' + pad(d.getDate()) + '/' + pad(d.getMonth() + 1);
+    $('redeem').classList.toggle('used', used);
+    $('prize-note').textContent = used ? 'Prêmio entregue às ' + saved.usedAt : 'Mostre esta tela ao atendente';
+    const tick = () => { const n = new Date(); $('prize-clock').textContent = pad(n.getHours()) + ':' + pad(n.getMinutes()) + ':' + pad(n.getSeconds()); };
+    tick(); clockTimer = setInterval(tick, 1000);
+  }
+  $('resgatar').addEventListener('click', () => telaPremio(true));
+  let usedArmed = false;
+  $('mark-used').addEventListener('click', () => {
+    if (!usedArmed) { usedArmed = true; $('mark-used').textContent = 'Toque de novo para confirmar a entrega'; setTimeout(() => { usedArmed = false; $('mark-used').textContent = 'Atendente: marcar como entregue'; }, 4000); return; }
+    usedArmed = false;
+    const n = new Date();
+    saved.usedDay = today(); saved.usedAt = pad(n.getHours()) + ':' + pad(n.getMinutes()); persist();
+    $('mark-used').textContent = 'Atendente: marcar como entregue';
+    telaPremio(true);
+  });
+  $('see-prize').addEventListener('click', () => { $('start').hidden = true; telaPremio(false); $('over').hidden = false; });
+
+  /* ---------- Som ---------- */
+  let audio = null;
+  function initAudio() { try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); if (audio.state === 'suspended') audio.resume(); } catch (e) {} }
+  function beep(f, d, type) {
+    if (!audio) return;
+    const o = audio.createOscillator(), g = audio.createGain();
+    o.type = type; o.frequency.value = f;
+    g.gain.setValueAtTime(0.07, audio.currentTime); g.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + d);
+    o.connect(g).connect(audio.destination); o.start(); o.stop(audio.currentTime + d + 0.02);
+  }
+  function fanfare() { [523, 659, 784, 1047].forEach((f, k) => setTimeout(() => beep(f, 0.25, 'triangle'), k * 110)); }
+
+  $('play').addEventListener('click', () => { initAudio(); start(); });
+  $('again').addEventListener('click', () => { initAudio(); start(); });
+  $('again2').addEventListener('click', () => { initAudio(); start(); });
+  idx = 0; escada();
+  window._quiz = { get atual() { return done ? null : perguntaAtual(); }, get idx() { return idx; } };
+})();
+</script>
+</body>
+</html>
