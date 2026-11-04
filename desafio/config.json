@@ -1,7 +1,7 @@
 {
   "premio": "Batata pequena grátis",
   "camadas": 15,
-  "ativo": true,
+  "ativo": false,
   "jogo": "quiz",
   "memoria": true
 }
