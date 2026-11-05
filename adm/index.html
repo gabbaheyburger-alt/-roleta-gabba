@@ -83,6 +83,7 @@ input:focus-visible, button:focus-visible, a:focus-visible { outline: 3px solid 
       </select>
     </label>
     <div class="switch"><span>Valendo prêmio hoje</span><input type="checkbox" id="ativo" checked aria-label="Valendo prêmio hoje"></div>
+    <p class="current" style="margin:0">🎁 <b>Brindes do dia:</b> quem vence leva o próximo brinde da fila lançada pela recepção em <a href="../recepcao/" target="_blank" rel="noopener" style="color:inherit">Recepção · Brindes</a>. O prêmio abaixo só vale se o servidor dos brindes estiver fora do ar.</p>
     <label for="premio">Prêmio <small>O que o cliente ganha ao vencer (até 60 letras)</small>
       <input type="text" id="premio" maxlength="60" autocomplete="off">
     </label>
@@ -162,7 +163,7 @@ input:focus-visible, button:focus-visible, a:focus-visible { outline: 3px solid 
       if (r.status === 401 || r.status === 403) { sair('A chave não funcionou ou não tem permissão de escrita. Crie uma nova e conecte de novo.'); return; }
       if (!r.ok) throw new Error('HTTP ' + r.status);
       const j = await r.json(); sha = j.sha;
-      const c = JSON.parse(b64dec(j.content));
+      const c = JSON.parse(b64dec(j.content)); atual = c;
       $('premio').value = c.premio || ''; $('camadas').value = c.camadas || 15; $('ativo').checked = c.ativo !== false;
       $('jogo').value = c.jogo === 'quiz' ? 'quiz' : 'pedido'; $('memoria').checked = c.memoria !== false;
       $('current').innerHTML = 'Configuração atual carregada.';
@@ -172,11 +173,12 @@ input:focus-visible, button:focus-visible, a:focus-visible { outline: 3px solid 
     }
   }
 
+  var atual = {};   // configuração carregada: campos que esta tela não mostra (ex.: servidor dos brindes) são mantidos ao salvar
   async function salvar() {
     const premio = $('premio').value.trim(), camadas = Math.round(+$('camadas').value), ativo = $('ativo').checked, jogo = $('jogo').value, memoria = $('memoria').checked;
     if (ativo && !premio) { msg($('msg'), 'Escreva o prêmio ou desligue o prêmio.', 'err'); return; }
     if (!(camadas >= 5 && camadas <= 60)) { msg($('msg'), 'As camadas precisam ficar entre 5 e 60.', 'err'); return; }
-    const conteudo = JSON.stringify({ premio: premio || 'Molho extra por conta da casa', camadas, ativo, jogo, memoria }, null, 2) + '\n';
+    const conteudo = JSON.stringify(Object.assign({}, atual, { premio: premio || 'Molho extra por conta da casa', camadas, ativo, jogo, memoria }), null, 2) + '\n';
     $('salvar').disabled = true; msg($('msg'), 'Salvando…');
     try {
       const body = { message: (ativo ? 'Prêmio (' + (jogo === 'quiz' ? 'Quiz do Gabba' : 'Pedido Certo') + '): ' + premio : 'Jogos sem prêmio') + (memoria ? '' : ' · memória desligada'), content: b64enc(conteudo), branch: BRANCH };

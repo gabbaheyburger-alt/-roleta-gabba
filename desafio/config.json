@@ -3,5 +3,6 @@
   "camadas": 15,
   "ativo": false,
   "jogo": "quiz",
-  "memoria": true
+  "memoria": true,
+  "servidor": "https://gabba-brindes.gabbaheyburger.workers.dev"
 }
