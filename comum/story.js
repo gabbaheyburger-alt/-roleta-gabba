@@ -1,6 +1,6 @@
-/* Story "Hoje fui premiado no Gabba".
+/* Story "Hoje fui premiado no Gabba" — modelo Jackpot do Fliperama.
    GabbaStory.preparar(premio): assim que a tela de PARABÉNS aparece, monta a foto (1080x1920)
-   e grava um vídeo curto (6 s, 720x1280) com o prêmio pulsando e o GABBA piscando em neon.
+   e grava um vídeo curto (6 s, 720x1280): luzes correndo, roleta sorteando, JACKPOT! com confete e o prêmio.
    GabbaStory.postar(): abre o menu de compartilhar do celular (Instagram > Story).
    Vai o vídeo se ficou pronto e o celular aceita; senão vai a foto; senão mostra a foto para salvar. */
 (function () {
@@ -8,13 +8,12 @@
   var foto = null, video = null, dataUrl = '', pronto = null, geracao = 0;
   var mascote = new Image(); mascote.src = '../corre/mascote.png';
   var FONTE = 'Bungee, Impact, sans-serif';
+  var PARA = 2.3;                                   // quando a roleta para
+  var JAN = { x: 120, y: 900, w: 840, h: 400 };     // janela da roleta
+  var ITENS = ['🍔', '🍟', '🥤', '🍺', '🎁', '🌭', '🍦', '⭐'];
 
-  function tela(w, h) { var c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
-  function glow(ctx, x, y, r, cor) {
-    var g = ctx.createRadialGradient(x, y, 0, x, y, r);
-    g.addColorStop(0, cor); g.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-  }
+  function tela(w, h) { var c = document.createElement('canvas'); c.width = Math.max(1, Math.round(w)); c.height = Math.max(1, Math.round(h)); return c; }
+  function caixa(ctx, x, y, w, h, r) { ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(x, y, w, h, r); else ctx.rect(x, y, w, h); }
   function tamanho(ctx, t, max, s) {
     do { ctx.font = '400 ' + s + 'px ' + FONTE; s -= 4; } while (ctx.measureText(t).width > max && s > 30);
     return s + 4;
@@ -33,98 +32,136 @@
     ctx.fillText(t, x, y); if (blur) ctx.fillText(t, x, y);
     ctx.shadowBlur = 0;
   }
-  function caixa(ctx, x, y, w, h, r) { ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(x, y, w, h, r); else ctx.rect(x, y, w, h); }
+  function rnd(s) { return function () { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }; }
+  var R = rnd(7), CONF = [];
+  for (var i = 0; i < 140; i++) CONF.push({ a: R() * Math.PI * 2, v: 700 + R() * 1300, rot: R() * 6, vr: (R() - .5) * 14, c: ['#ffd23f', '#ff2d6f', '#3ddc84', '#29d3ff', '#b14dff', '#ff8a00'][i % 6], w: 14 + R() * 14 });
+  var LAMP = (function () {
+    var l = [], m = 46, p = 66, a, b;
+    for (a = m; a <= W - m; a += p) l.push([a, m]);
+    for (b = m + p; b <= H - m; b += p) l.push([W - m, b]);
+    for (a = W - m - p; a >= m; a -= p) l.push([a, H - m]);
+    for (b = H - m - p; b > m; b -= p) l.push([m, b]);
+    return l;
+  })();
 
-  var CARD = { x: 90, y: 1030, w: W - 180, h: 420 };
-  var PREMIO_Y = CARD.y + 100 + (CARD.h - 100) / 2;
-  var BRILHOS = [[120, 560], [960, 520], [180, 980], [930, 990], [70, 1300], [1010, 1250], [250, 1520], [840, 1560], [540, 250], [140, 760], [950, 760], [700, 1480]];
-
-  /* Camadas desenhadas uma vez (no tamanho final k = escala) */
+  /* Partes desenhadas uma vez, já no tamanho final (k = escala) */
   function camadas(premio, k) {
-    var w = Math.round(W * k), h = Math.round(H * k), L = {};
-    function nova() { var c = tela(w, h), x = c.getContext('2d'); x.scale(k, k); x.textAlign = 'center'; x.textBaseline = 'middle'; return { c: c, x: x }; }
+    var L = { k: k, w: Math.round(W * k), h: Math.round(H * k) };
+    function cheia() { var c = tela(L.w, L.h), x = c.getContext('2d'); x.scale(k, k); x.textAlign = 'center'; x.textBaseline = 'middle'; return { c: c, x: x }; }
+    function peca(w, h) { var c = tela(w * k, h * k), x = c.getContext('2d'); x.scale(k, k); x.textAlign = 'center'; x.textBaseline = 'middle'; return { c: c, x: x, w: w, h: h }; }
 
-    var b = nova(), ctx = b.x;
-    ctx.fillStyle = '#07080a'; ctx.fillRect(0, 0, W, H);
-    glow(ctx, 160, 420, 700, 'rgba(61,220,132,.28)');
-    glow(ctx, 960, 1000, 700, 'rgba(255,45,111,.26)');
-    glow(ctx, 300, 1650, 700, 'rgba(255,170,0,.24)');
-    ctx.font = '170px sans-serif'; ctx.fillStyle = '#fff'; ctx.fillText('🎁', W / 2, 380);
-    ctx.font = '400 ' + tamanho(ctx, 'HOJE FUI PREMIADO', 940, 104) + 'px ' + FONTE;
-    escrever(ctx, 'HOJE FUI PREMIADO', W / 2, 580, '#ffffff', 'rgba(255,255,255,.6)', 24);
-    ctx.font = '400 86px ' + FONTE;
-    escrever(ctx, 'NO', W / 2, 690, '#ffffff', 'rgba(255,255,255,.5)', 20);
-    caixa(ctx, CARD.x, CARD.y, CARD.w, CARD.h, 48); ctx.fillStyle = 'rgba(20,40,28,.55)'; ctx.fill();
-    ctx.font = '700 46px Barlow, sans-serif'; ctx.fillStyle = '#3ddc84';
-    ctx.fillText('G A N H E I', W / 2, CARD.y + 80);
+    // fundo: céu, sol, títulos, mascote, rodapé
+    var f = cheia(), x = f.x;
+    var g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#0b0420'); g.addColorStop(.55, '#1a0630'); g.addColorStop(1, '#05010d');
+    x.fillStyle = g; x.fillRect(0, 0, W, H);
+    var sol = x.createRadialGradient(W / 2, 1450, 0, W / 2, 1450, 700); sol.addColorStop(0, 'rgba(255,45,111,.45)'); sol.addColorStop(1, 'rgba(0,0,0,0)');
+    x.fillStyle = sol; x.fillRect(0, 0, W, H);
+    x.font = '400 ' + tamanho(x, 'HOJE FUI PREMIADO', 900, 96) + 'px ' + FONTE;
+    escrever(x, 'HOJE FUI PREMIADO', W / 2, 250, '#ffffff', '#29d3ff', 34);
+    x.font = '400 72px ' + FONTE; escrever(x, 'NO', W / 2, 350, '#29d3ff', '#29d3ff', 30);
+    L.fundo = f.c;
+    var fr = cheia(); x = fr.x;
     if (mascote.complete && mascote.naturalWidth) {
-      var mh = 230, mw = mascote.naturalWidth * mh / mascote.naturalHeight;
-      ctx.shadowColor = 'rgba(232,16,46,.8)'; ctx.shadowBlur = 40;
-      ctx.drawImage(mascote, W / 2 - mw / 2, 1500, mw, mh); ctx.shadowBlur = 0;
+      var mh = 220, mw = mascote.naturalWidth * mh / mascote.naturalHeight;
+      x.shadowColor = 'rgba(255,45,111,.9)'; x.shadowBlur = 40; x.drawImage(mascote, W / 2 - mw / 2, 1420, mw, mh); x.shadowBlur = 0;
     }
-    var d = new Date(), p = function (n) { return (n < 10 ? '0' : '') + n; };
-    ctx.font = '600 44px Barlow, sans-serif'; ctx.fillStyle = '#e9e3dd';
-    ctx.fillText('Fliperama Gabba · ' + p(d.getDate()) + '/' + p(d.getMonth() + 1) + '/' + d.getFullYear(), W / 2, 1790);
-    L.base = b.c;
+    var d = new Date(), p2 = function (n) { return (n < 10 ? '0' : '') + n; };
+    x.font = '600 44px Barlow, sans-serif'; x.fillStyle = '#efe6ff';
+    x.fillText('Fliperama Gabba · ' + p2(d.getDate()) + '/' + p2(d.getMonth() + 1) + '/' + d.getFullYear(), W / 2, 1760);
+    L.frente = fr.c;
 
-    function gabba(forte) {
-      var g = nova(), x = g.x;
-      x.font = '400 ' + tamanho(x, 'GABBA', 900, 280) + 'px ' + FONTE;
-      var gr = x.createLinearGradient(160, 0, 920, 0);
-      if (forte) { gr.addColorStop(0, '#ffc45c'); gr.addColorStop(.5, '#ff6a33'); gr.addColorStop(1, '#ff1f3d'); }
-      else { gr.addColorStop(0, '#7a5320'); gr.addColorStop(.5, '#7a3418'); gr.addColorStop(1, '#6e0a18'); }
-      escrever(x, 'GABBA', W / 2, 860, gr, forte ? 'rgba(255,100,40,.95)' : 'rgba(255,90,40,.25)', forte ? 60 : 14);
-      return g.c;
+    // GABBA aceso e apagado
+    function gabba(aceso) {
+      var c = cheia(), y = c.x;
+      y.font = '400 ' + tamanho(y, 'GABBA', 880, 270) + 'px ' + FONTE;
+      var gg = y.createLinearGradient(150, 0, 930, 0); gg.addColorStop(0, '#ffd23f'); gg.addColorStop(.5, '#ff2d6f'); gg.addColorStop(1, '#b14dff');
+      escrever(y, 'GABBA', W / 2, 530, aceso ? gg : '#40203a', '#ff2d6f', aceso ? 60 : 0);
+      return c.c;
     }
     L.gabbaOn = gabba(true); L.gabbaOff = gabba(false);
 
-    function prem(forte) {
-      var g = nova(), x = g.x, P = linhas(x, premio.toUpperCase(), W - 280, 132), lh = P.s * 1.12;
-      x.font = '400 ' + P.s + 'px ' + FONTE;
-      P.ls.forEach(function (l, i) {
-        var y = PREMIO_Y + (i - (P.ls.length - 1) / 2) * lh;
-        escrever(x, l, W / 2, y, forte ? '#ffe680' : '#f2c230', forte ? 'rgba(255,190,0,1)' : 'rgba(255,170,0,.6)', forte ? 56 : 22);
-      });
-      return g.c;
+    // lâmpadas
+    function lamp(aceso) {
+      var c = peca(80, 80), y = c.x; y.beginPath(); y.arc(40, 40, 13, 0, Math.PI * 2);
+      y.fillStyle = aceso ? '#fff3b0' : '#5a4a1a'; y.shadowColor = '#ffd23f'; y.shadowBlur = aceso ? 26 : 0; y.fill(); return c;
     }
-    L.premOn = prem(true); L.premOff = prem(false);
-    L.w = w; L.h = h; L.k = k;
+    L.lampOn = lamp(true); L.lampOff = lamp(false);
+
+    // JACKPOT!
+    var j = peca(900, 260); j.x.font = '400 120px ' + FONTE; escrever(j.x, 'JACKPOT!', 450, 130, '#ffd23f', '#ff8a00', 50); L.jackpot = j;
+
+    // moldura da janela
+    var mo = peca(JAN.w + 200, JAN.h + 200), y = mo.x;
+    caixa(y, 82, 82, JAN.w + 36, JAN.h + 36, 60);
+    var mg = y.createLinearGradient(0, 82, 0, 82 + JAN.h + 36); mg.addColorStop(0, '#ffd23f'); mg.addColorStop(1, '#ff8a00');
+    y.fillStyle = mg; y.shadowColor = '#ffb300'; y.shadowBlur = 50; y.fill(); y.shadowBlur = 0;
+    caixa(y, 100, 100, JAN.w, JAN.h, 44); y.fillStyle = '#0d0618'; y.fill();
+    L.moldura = mo;
+
+    // prêmio
+    var pr = peca(JAN.w, JAN.h + 80), P = linhas(pr.x, premio.toUpperCase(), JAN.w - 70, 150);
+    pr.x.font = '400 ' + P.s + 'px ' + FONTE;
+    P.ls.forEach(function (l, q) { escrever(pr.x, l, JAN.w / 2, (JAN.h + 80) / 2 + (q - (P.ls.length - 1) / 2) * P.s * 1.1, '#fff1a8', '#ffd23f', 45); });
+    L.premio = pr;
     return L;
+  }
+
+  function sprite(ctx, s, cx, cy, esc) { // desenha uma peça centrada em (cx, cy), em coordenadas de 1080
+    var w = s.w * esc, h = s.h * esc; ctx.drawImage(s.c, cx - w / 2, cy - h / 2, w, h);
   }
 
   /* Um quadro do vídeo no tempo t (segundos) */
   function quadro(ctx, L, t) {
-    var k = L.k, pulso = .5 + .5 * Math.sin(t * Math.PI * 2 / 1.6);
-    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1;
-    ctx.drawImage(L.base, 0, 0);
-    // GABBA: aceso, pulsando, com uma piscada de letreiro a cada 3 s
-    var c = t % 3, apagado = (c > 2.1 && c < 2.18) || (c > 2.28 && c < 2.34);
-    ctx.drawImage(L.gabbaOff, 0, 0);
-    if (!apagado) { ctx.globalAlpha = .75 + .25 * pulso; ctx.drawImage(L.gabbaOn, 0, 0); ctx.globalAlpha = 1; }
-    // moldura tracejada andando
-    ctx.setTransform(k, 0, 0, k, 0, 0);
-    ctx.save(); ctx.setLineDash([22, 16]); ctx.lineDashOffset = -t * 60; ctx.lineWidth = 6;
-    ctx.strokeStyle = 'rgba(61,220,132,' + (.65 + .35 * pulso) + ')';
-    ctx.shadowColor = 'rgba(61,220,132,.8)'; ctx.shadowBlur = 18 + 16 * pulso;
-    caixa(ctx, CARD.x, CARD.y, CARD.w, CARD.h, 48); ctx.stroke(); ctx.restore();
-    // prêmio crescendo e brilhando
-    var s = 1 + .07 * pulso, cx = W / 2 * k, cy = PREMIO_Y * k;
-    ctx.setTransform(s, 0, 0, s, cx - cx * s, cy - cy * s);
-    ctx.drawImage(L.premOff, 0, 0);
-    ctx.globalAlpha = pulso; ctx.drawImage(L.premOn, 0, 0); ctx.globalAlpha = 1;
-    // estrelinhas piscando
-    ctx.setTransform(k, 0, 0, k, 0, 0);
-    BRILHOS.forEach(function (b, i) {
-      var a = Math.max(0, Math.sin(t * 2.4 + i * 1.7));
-      if (a < .05) return;
-      var r = 10 + 8 * a;
-      ctx.globalAlpha = a; ctx.fillStyle = i % 3 ? '#ffe680' : '#ffffff';
-      ctx.shadowColor = '#ffd23f'; ctx.shadowBlur = 20;
-      ctx.beginPath(); ctx.moveTo(b[0], b[1] - r); ctx.lineTo(b[0] + r / 4, b[1] - r / 4); ctx.lineTo(b[0] + r, b[1]);
-      ctx.lineTo(b[0] + r / 4, b[1] + r / 4); ctx.lineTo(b[0], b[1] + r); ctx.lineTo(b[0] - r / 4, b[1] + r / 4);
-      ctx.lineTo(b[0] - r, b[1]); ctx.lineTo(b[0] - r / 4, b[1] - r / 4); ctx.closePath(); ctx.fill();
-    });
-    ctx.globalAlpha = 1; ctx.shadowBlur = 0; ctx.setTransform(1, 0, 0, 1, 0, 0);
+    var k = L.k, dep = t - PARA, i;
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+    ctx.drawImage(L.fundo, 0, 0);
+    ctx.setTransform(k, 0, 0, k, 0, 0); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    // chão em grade andando
+    ctx.strokeStyle = 'rgba(41,211,255,.45)'; ctx.lineWidth = 4; var hz = 1480;
+    for (i = -10; i <= 10; i++) { ctx.beginPath(); ctx.moveTo(W / 2 + i * 40, hz); ctx.lineTo(W / 2 + i * 260, H); ctx.stroke(); }
+    for (i = 0; i < 9; i++) { var pp = (i + (t * 1.2) % 1) / 9, yy = hz + (H - hz) * pp * pp; ctx.beginPath(); ctx.moveTo(0, yy); ctx.lineTo(W, yy); ctx.stroke(); }
+    // lâmpadas correndo
+    var fase = Math.floor(t * 12);
+    LAMP.forEach(function (l, n) { sprite(ctx, (n + fase) % 3 === 0 ? L.lampOn : L.lampOff, l[0], l[1], 1); });
+    // GABBA com piscada de letreiro
+    var c = t % 2.5, pis = c > 2.2 && c < 2.3;
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(pis ? L.gabbaOff : L.gabbaOn, 0, 0); ctx.setTransform(k, 0, 0, k, 0, 0);
+    // SORTEANDO... ou JACKPOT!
+    if (dep > 0) {
+      var e = Math.min(1, dep / .35), s = .4 + .6 * (1 - Math.pow(1 - e, 3)) + .05 * Math.sin(dep * 6);
+      ctx.save(); ctx.translate(W / 2, 790); ctx.rotate(-.05); sprite(ctx, L.jackpot, 0, 0, s); ctx.restore();
+    } else {
+      ctx.font = '700 54px Barlow, sans-serif'; ctx.fillStyle = 'rgba(255,255,255,' + (.5 + .5 * Math.sin(t * 10)) + ')';
+      ctx.fillText('SORTEANDO...', W / 2, 790);
+    }
+    // janela da roleta
+    ctx.globalAlpha = dep > 0 ? .85 + .15 * Math.sin(dep * 5) : .85;
+    sprite(ctx, L.moldura, JAN.x + JAN.w / 2, JAN.y + JAN.h / 2, 1); ctx.globalAlpha = 1;
+    ctx.save(); caixa(ctx, JAN.x, JAN.y, JAN.w, JAN.h, 44); ctx.clip();
+    if (dep <= 0) {
+      var pos = 26 * (1 - Math.pow(1 - t / PARA, 3)), alt = 260, of = (pos % 1) * alt;
+      ctx.font = '200px sans-serif'; ctx.fillStyle = '#fff';
+      for (var n = -1; n <= 2; n++) {
+        var idx = Math.floor(pos) + n;
+        ctx.fillText(ITENS[((idx % ITENS.length) + ITENS.length) % ITENS.length], W / 2, JAN.y + JAN.h / 2 - n * alt + of);
+      }
+      var sb = ctx.createLinearGradient(0, JAN.y, 0, JAN.y + JAN.h);
+      sb.addColorStop(0, 'rgba(13,6,24,1)'); sb.addColorStop(.3, 'rgba(13,6,24,0)'); sb.addColorStop(.7, 'rgba(13,6,24,0)'); sb.addColorStop(1, 'rgba(13,6,24,1)');
+      ctx.fillStyle = sb; ctx.fillRect(JAN.x, JAN.y, JAN.w, JAN.h);
+    } else {
+      sprite(ctx, L.premio, W / 2, JAN.y + JAN.h / 2, Math.min(1, dep / .25) * (1 + .05 * Math.sin(dep * 5)));
+    }
+    ctx.restore();
+    // clarão e confete
+    if (dep > 0 && dep < .35) { ctx.fillStyle = 'rgba(255,255,255,' + (1 - dep / .35) * .8 + ')'; ctx.fillRect(0, 0, W, H); }
+    if (dep > 0) {
+      CONF.forEach(function (q) {
+        var px = W / 2 + Math.cos(q.a) * q.v * dep * .6, py = JAN.y + JAN.h / 2 + Math.sin(q.a) * q.v * dep * .6 + 900 * dep * dep;
+        if (py > H + 40) return;
+        ctx.save(); ctx.translate(px, py); ctx.rotate(q.rot + q.vr * dep); ctx.fillStyle = q.c; ctx.fillRect(-q.w / 2, -q.w / 4, q.w, q.w / 2); ctx.restore();
+      });
+    }
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(L.frente, 0, 0);
   }
 
   function tipoVideo() {
@@ -167,7 +204,7 @@
     var img = new Promise(function (ok) { if (mascote.complete) ok(); else { mascote.onload = mascote.onerror = ok; } });
     pronto = Promise.all([fontes, img]).then(function () {
       var L = camadas(premio, 1), c = tela(L.w, L.h);
-      quadro(c.getContext('2d'), L, .4); // quadro com o brilho no alto
+      quadro(c.getContext('2d'), L, 3.3); // quadro logo depois do JACKPOT, com confete
       dataUrl = c.toDataURL('image/png');
       return new Promise(function (ok) {
         c.toBlob(function (b) {
