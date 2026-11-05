@@ -120,6 +120,14 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
 .prize-name { display: block; margin: 10px 0 8px; font: 400 clamp(1.7rem, 8.5vw, 2.4rem)/1.08 var(--display); color: #ffd23f; letter-spacing: .02em; text-shadow: 0 0 10px rgba(255,210,63,.9), 0 0 28px rgba(255,170,0,.75), 0 0 56px rgba(255,140,0,.5); animation: premiobrilho 1.6s ease-in-out infinite; }
 @keyframes premiobrilho { 0%, 100% { transform: scale(1); filter: brightness(1); } 50% { transform: scale(1.06); filter: brightness(1.3); } }
 @media (prefers-reduced-motion: reduce) { .prize-name { animation: none; } }
+.insta { display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 14px 0 4px; padding: 14px 12px; border-radius: 18px; border: 2px solid rgba(253,29,129,.7); background: linear-gradient(135deg, rgba(253,29,129,.16), rgba(255,140,0,.12)); box-shadow: 0 0 26px rgba(253,29,129,.35); text-align: center; }
+.insta .insta-tit { font: 400 1.25rem/1.15 var(--display); color: #fff; text-shadow: 0 0 14px rgba(253,29,129,.8); }
+.insta .insta-at { font: 400 clamp(1.5rem, 7.5vw, 2rem)/1 var(--display); background: linear-gradient(90deg, #ffb340, #ff3d7f, #b14dff); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 0 10px rgba(255,61,127,.6)); }
+.insta .insta-btn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 56px; border: 0; border-radius: 14px; font: 400 1.05rem var(--display); color: #fff; text-decoration: none; cursor: pointer; background: linear-gradient(90deg, #f9a825, #ff2d6f 50%, #8a3dff); box-shadow: 0 0 22px rgba(255,45,111,.6); animation: instapulse 1.6s ease-in-out infinite; }
+.insta .insta-btn span { font-size: 1.6rem; }
+.insta .insta-dica { font-size: .85rem; color: #e9dfe5; }
+@keyframes instapulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
+@media (prefers-reduced-motion: reduce) { .insta .insta-btn { animation: none; } }
 .prize-name.used { text-decoration: line-through; opacity: .6; animation: none; text-shadow: none; color: #999; }
 @media (prefers-reduced-motion: reduce) { .ring { animation: none; } .float, .plate .it { animation-duration: .01s; } }
 </style>
@@ -181,6 +189,12 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
         <span class="when" id="prize-date"></span>
         <span class="clock" id="prize-clock">--:--:--</span>
         <span class="note" id="prize-note">Mostre esta tela ao atendente</span>
+      </div>
+      <div class="insta" id="insta" hidden>
+        <span class="insta-tit">📸 Agora marque a gente no story!</span>
+        <span class="insta-at">@gabbaburger</span>
+        <button class="insta-btn" id="insta-btn" type="button"><span>📸</span> ABRIR O INSTAGRAM</button>
+        <span class="insta-dica" id="insta-dica">Tire a foto, toque em <b>Aa</b> e cole <b>@gabbaburger</b> (já copiamos pra você).</span>
       </div>
       <p class="chances" id="over-chances" hidden></p>
       <button class="btn-glow" id="resgatar" type="button" hidden>RESGATAR AGORA</button>
@@ -416,10 +430,20 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
       m.append(kind === 'err' ? 'Muitos erros! ' : '', 'Você entregou ', hl(done + ' de ' + META), ' pedidos.');
       if (saved.best && !TESTE) m.append(' Seu recorde: ' + saved.best + '.');
     }
-    $('redeem').hidden = true; $('resgatar').hidden = true; $('mark-used').hidden = true; $('again2').hidden = true;
+    $('redeem').hidden = true; $('insta').hidden = true; $('resgatar').hidden = true; $('mark-used').hidden = true; $('again2').hidden = true;
     $('again').hidden = false;
   }
   // Tela do prêmio: "PARABÉNS! Você ganhou X" + RESGATAR AGORA, que mostra data e relógio para o atendente
+  // Story no Instagram: copia o @, abre a câmera do story no app; se o app não abrir, vai para o perfil
+  $('insta-btn').addEventListener('click', () => {
+    conta('insta-story-' + 'pedido', 'Abriu o Instagram pela tela de prêmio');
+    try { navigator.clipboard && navigator.clipboard.writeText('@gabbaburger'); } catch (e) {}
+    let saiu = false; const marca = () => { saiu = true; };
+    document.addEventListener('visibilitychange', marca, { once: true });
+    location.href = 'instagram://story-camera';
+    setTimeout(() => { document.removeEventListener('visibilitychange', marca); if (!saiu && !document.hidden) location.href = 'https://www.instagram.com/gabbaburger/'; }, 1500);
+  });
+
   function telaPremio(aberto) {
     $('endcard').dataset.kind = 'win'; $('over').dataset.kind = 'win';
     $('end-icon').textContent = '🎁';
@@ -430,7 +454,7 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
     const pn = hl(nome); pn.classList.add('prize-name'); pn.classList.toggle('used', used);
     m.append('Você ganhou', pn, used ? 'Prêmio já entregue.' : SRV && saved.codigo ? 'Mostre o código abaixo na recepção.' : 'Resgate agora mesmo.');
     $('again').hidden = true; $('again2').hidden = false; $('over-chances').hidden = true;
-    $('resgatar').textContent = 'RESGATAR AGORA';
+    $('resgatar').textContent = 'RESGATAR AGORA'; $('insta').hidden = used;
     $('resgatar').hidden = aberto || used;
     showPrize(aberto || used);
   }
