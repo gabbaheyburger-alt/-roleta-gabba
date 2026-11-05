@@ -100,6 +100,7 @@ body { margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: en
 </style>
 <script src="../contador.js"></script>
 <script src="../comum/brindes.js"></script>
+<script src="../comum/story.js"></script>
 <link rel="stylesheet" href="../comum/neon.css">
 <script src="../comum/neon.js" defer></script>
 </head>
@@ -147,10 +148,10 @@ body { margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: en
     <span class="note" id="prize-note">Mostre esta tela ao atendente</span>
   </div>
   <div class="insta" id="insta" hidden>
-        <span class="insta-tit">📸 Agora marque a gente no story!</span>
+        <span class="insta-tit">📸 Poste no seu story e marque a gente!</span>
         <span class="insta-at">@gabbaburger</span>
-        <button class="insta-btn" id="insta-btn" type="button"><span>📸</span> ABRIR O INSTAGRAM</button>
-        <span class="insta-dica" id="insta-dica">Tire a foto, toque em <b>Aa</b> e cole <b>@gabbaburger</b> (já copiamos pra você).</span>
+        <button class="insta-btn" id="insta-btn" type="button"><span>📲</span> POSTAR NO MEU STORY</button>
+        <span class="insta-dica" id="insta-dica">Vai a imagem <b>"Hoje fui premiado no Gabba"</b> com o seu prêmio. Escolha <b>Instagram → Story</b> e marque <b>@gabbaburger</b>.</span>
       </div>
       <p class="chances" id="over-chances" hidden></p>
   <button class="btn" id="resgatar" type="button" hidden>RESGATAR AGORA</button>
@@ -446,14 +447,10 @@ body { margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: en
     }
     $('redeem').hidden = true; $('insta').hidden = true; $('resgatar').hidden = true; $('mark-used').hidden = true; $('again2').hidden = true; $('again').hidden = false;
   }
-  // Story no Instagram: copia o @, abre a câmera do story no app; se o app não abrir, vai para o perfil
+  // Story: imagem "Hoje fui premiado no Gabba" (comum/story.js), compartilhada pelo menu do celular
   $('insta-btn').addEventListener('click', () => {
-    conta('insta-story-' + 'quiz', 'Abriu o Instagram pela tela de prêmio');
-    try { navigator.clipboard && navigator.clipboard.writeText('@gabbaburger'); } catch (e) {}
-    let saiu = false; const marca = () => { saiu = true; };
-    document.addEventListener('visibilitychange', marca, { once: true });
-    location.href = 'instagram://story-camera';
-    setTimeout(() => { document.removeEventListener('visibilitychange', marca); if (!saiu && !document.hidden) location.href = 'https://www.instagram.com/gabbaburger/'; }, 1500);
+    conta('insta-story-quiz', 'Postar no story pela tela de prêmio');
+    window.GabbaStory && GabbaStory.postar();
   });
 
   function telaPremio(aberto) {
@@ -465,7 +462,7 @@ body { margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: en
     const pn = hl(nome); pn.classList.add('prize-name'); pn.classList.toggle('used', used);
     m.append('Você ganhou', pn, used ? 'Prêmio já entregue.' : SRV && saved.codigo ? 'Mostre o código abaixo na recepção.' : 'Resgate agora mesmo.');
     $('again').hidden = true; $('again2').hidden = false; $('over-chances').hidden = true;
-    $('resgatar').textContent = 'RESGATAR AGORA'; $('insta').hidden = used;
+    $('resgatar').textContent = 'RESGATAR AGORA'; $('insta').hidden = used; if (!used && window.GabbaStory) GabbaStory.preparar(String(nome));
     $('resgatar').hidden = aberto || used;
     showPrize(aberto || used);
   }
