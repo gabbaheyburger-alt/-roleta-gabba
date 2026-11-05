@@ -111,6 +111,8 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
 .endcard .link { width: 100%; }
 .redeem { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 14px 12px; border-radius: 18px; border: 1.5px dashed rgba(var(--g), .55); background: rgba(var(--g), .07); }
 .redeem .when { font-weight: 700; color: #fff; }
+.redeem .codigo { font: 400 2.6rem var(--display); letter-spacing: .22em; color: #fff; text-shadow: 0 0 18px rgba(var(--g), .7); line-height: 1.1; }
+.redeem .codigo-lbl { font-size: .72rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: rgb(var(--g)); }
 .redeem .clock { font: 400 2rem var(--display); color: rgb(var(--g)); text-shadow: 0 0 16px rgba(var(--g), .6); font-variant-numeric: tabular-nums; }
 .redeem .note { color: #b9b3ad; font-size: .92rem; }
 .redeem.used { border-style: solid; border-color: #3b3b3b; background: #141414; }
@@ -119,6 +121,7 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { .ring { animation: none; } .float, .plate .it { animation-duration: .01s; } }
 </style>
 <script src="../contador.js"></script>
+<script src="../comum/brindes.js"></script>
 <link rel="stylesheet" href="../comum/neon.css">
 <script src="../comum/neon.js" defer></script>
 </head>
@@ -170,6 +173,8 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
       <h2 id="over-title">PARABÉNS!</h2>
       <p id="over-msg"></p>
       <div class="redeem" id="redeem" hidden>
+        <span class="codigo-lbl" id="prize-code-lbl" hidden>Código do brinde</span>
+        <span class="codigo" id="prize-code" hidden></span>
         <span class="when" id="prize-date"></span>
         <span class="clock" id="prize-clock">--:--:--</span>
         <span class="note" id="prize-note">Mostre esta tela ao atendente</span>
@@ -240,19 +245,20 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
   $('meta-txt').textContent = META; $('tempo-txt').textContent = TEMPO;
 
   function aplicarConfig() {
-    $('prize-txt').textContent = PRIZE;
+    $('prize-txt').textContent = SRV ? 'um brinde da casa' + (RESTANTES ? ' (restam ' + RESTANTES + ' hoje)' : '') : PRIZE;
     $('regra').hidden = !ATIVO || TESTE;
     let t = '';
     if (VALE_PREMIO) {
       if (TESTE) t = 'Modo teste: não gasta chance e não dá prêmio.';
       else if (!ATIVO) t = 'Hoje o jogo está sem prêmio. Jogue pela diversão!';
       else if (wonToday()) t = 'Você já ganhou hoje! Agora é só pela diversão.';
+      else if (semBrinde()) t = 'Os brindes de hoje acabaram. Jogue pela diversão e volte na próxima visita!';
       else if (chancesLeft() > 0) t = 'Você tem ' + chancesLeft() + (chancesLeft() === 1 ? ' chance' : ' chances') + ' valendo prêmio hoje.';
       else t = 'Suas chances de hoje acabaram. Jogue pela diversão e volte na próxima visita!';
     }
     $('chances-txt').textContent = t; $('chances-txt').hidden = !t;
     $('top-lbl').textContent = VALE_PREMIO && ATIVO && !TESTE ? 'Chances hoje' : 'Recorde';
-    $('top').textContent = VALE_PREMIO && ATIVO && !TESTE ? (wonToday() ? '–' : chancesLeft()) : saved.best;
+    $('top').textContent = VALE_PREMIO && ATIVO && !TESTE ? (wonToday() || semBrinde() ? '–' : chancesLeft()) : saved.best;
     $('see-prize').hidden = !VALE_PREMIO || !wonToday() || TESTE;
   }
   aplicarConfig();
@@ -261,10 +267,11 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
     .then(c => {
       if (!c) return;
       if (typeof c.premio === 'string' && c.premio.trim()) PRIZE = c.premio.trim().slice(0, 60);
+      if (typeof c.servidor === 'string' && /^(https:\/\/|http:\/\/(localhost|127\.0\.0\.1)[:/])/.test(c.servidor)) { GabbaBrindes.usar(c.servidor); SRV = true; }
       if ((c.jogo || 'pedido') !== 'pedido') VALE_PREMIO = false;
       if (typeof c.memoria === 'boolean') MEMORIA = c.memoria;
       ATIVO = VALE_PREMIO && c.ativo !== false;
-      aplicarConfig();
+      aplicarConfig(); checarEstoque();
     }).catch(() => {});
 
   /* ---------- Teclado de ingredientes ---------- */
@@ -362,7 +369,7 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
 
   function start() {
     initAudio();
-    valendo = VALE_PREMIO && !TESTE && ATIVO && !wonToday() && chancesLeft() > 0;
+    valendo = VALE_PREMIO && !TESTE && ATIVO && !wonToday() && chancesLeft() > 0 && !semBrinde();
     if (valendo) { if (saved.triesDay !== today()) { saved.triesDay = today(); saved.tries = 0; } saved.tries++; persist(); }
     conta('partida-pedido', 'Partida: Pedido Certo');
     done = 0; errs = 0; timeLeft = TEMPO; num = 0; memoUsado = false;
@@ -375,14 +382,14 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
     state = 'over'; clearTimeout(memoTimer);
     const ganhou = motivo === 'venceu';
     if (!TESTE && done > saved.best) saved.best = done;
-    if (ganhou && valendo) { saved.wonDay = today(); saved.wonPrize = PRIZE; conta('pedido-venceu', 'Pedido Certo: venceu'); }
+    if (ganhou && valendo) { if (!SRV) { saved.wonDay = today(); saved.wonPrize = PRIZE; } conta('pedido-venceu', 'Pedido Certo: venceu'); }
     else if (ganhou) conta('pedido-venceu-sem-premio', 'Pedido Certo: venceu (sem prêmio)');
     else conta('pedido-perdeu-' + motivo, 'Pedido Certo: perdeu por ' + (motivo === 'tempo' ? 'tempo' : 'erros') + ' com ' + done + ' pedidos');
     persist();
     if (ganhou) fanfare(); else beep(160, 0.3, 'sawtooth');
     setTimeout(() => {
       aplicarConfig();
-      if (ganhou && valendo) telaPremio(false);
+      if (ganhou && valendo) { if (SRV) reservar(); else telaPremio(false); }
       else telaFim(ganhou ? 'win' : motivo === 'tempo' ? 'time' : 'err');
       overChances(ganhou);
       $('over').hidden = false;
@@ -398,7 +405,9 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
     if (kind === 'win') {
       m.append(META + ' pedidos entregues com ', hl(Math.ceil(timeLeft) + ' segundos'), ' sobrando.');
       if (TESTE) m.append(' Modo teste: sem prêmio.');
+      else if (esgotouAgora) m.append(' Mas os brindes de hoje acabaram bem agora. Volte na próxima visita!');
       else if (VALE_PREMIO && ATIVO && wonToday()) m.append(' Você já ganhou um prêmio hoje, então essa foi só pela diversão.');
+      else if (VALE_PREMIO && ATIVO && semBrinde()) m.append(' Os brindes de hoje já tinham acabado: essa foi só pela diversão.');
       else if (VALE_PREMIO && ATIVO && !valendo) m.append(' Mas suas 3 chances de prêmio de hoje já tinham acabado: essa foi só pela diversão. Volte na próxima visita!');
     } else {
       m.append(kind === 'err' ? 'Muitos erros! ' : '', 'Você entregou ', hl(done + ' de ' + META), ' pedidos.');
@@ -416,8 +425,9 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
     const used = saved.usedDay === today();
     const m = $('over-msg'); m.innerHTML = '';
     const pn = hl(nome); pn.classList.add('prize-name'); pn.classList.toggle('used', used);
-    m.append('Você ganhou ', pn, used ? '. Prêmio já entregue.' : ' pra resgatar agora mesmo.');
+    m.append('Você ganhou ', pn, used ? '. Prêmio já entregue.' : SRV && saved.codigo ? '! Mostre o código abaixo na recepção.' : ' pra resgatar agora mesmo.');
     $('again').hidden = true; $('again2').hidden = false; $('over-chances').hidden = true;
+    $('resgatar').textContent = 'RESGATAR AGORA';
     $('resgatar').hidden = aberto || used;
     showPrize(aberto || used);
   }
@@ -441,6 +451,40 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
     requestAnimationFrame(loop);
   }
 
+
+  /* ---------- Servidor dos brindes (fila do dia; reserva na hora da vitória) ---------- */
+  // var/function (e não let/const): aplicarConfig() usa isto antes desta parte do código rodar
+  var SRV = false, RESTANTES = null, esgotouAgora = false, modoRetry = false;
+  function semBrinde() { return SRV && RESTANTES === 0 && !wonToday(); }
+  function checarEstoque() {
+    if (!SRV) return;
+    GabbaBrindes.status().then(s => { RESTANTES = s.restantes; aplicarConfig(); }).catch(() => {});
+  }
+  setInterval(() => { if (!document.hidden && $('over').hidden) checarEstoque(); }, 60000);
+  function reservar() {
+    modoRetry = false;
+    window.neonKind && neonKind('over', 'win', '🎁');
+    $('endcard') && ($('endcard').dataset.kind = 'win');
+    $('over').dataset.kind = 'win';
+    $('end-icon') && ($('end-icon').textContent = '🎁');
+    $('over-title').textContent = 'PARABÉNS!';
+    $('over-msg').textContent = 'Você venceu! Reservando seu brinde…';
+    ['again', 'again2', 'resgatar', 'mark-used', 'redeem', 'over-chances'].forEach(id => { $(id).hidden = true; });
+    GabbaBrindes.ganhar('pedido').then(r => {
+      if (r.ok) {
+        saved.wonDay = today(); saved.wonPrize = r.brinde; saved.codigo = r.codigo; persist();
+        if (typeof r.restantes === 'number') RESTANTES = r.restantes;
+        telaPremio(true);
+      } else if (r.esgotado) {
+        RESTANTES = 0; esgotouAgora = true; telaFim('win'); esgotouAgora = false;
+      } else throw new Error('resposta');
+    }).catch(() => {
+      modoRetry = true;
+      $('over-msg').textContent = 'Você venceu, mas não consegui falar com o sistema de brindes. Confira a internet e toque em Tentar de novo.';
+      $('resgatar').textContent = 'TENTAR DE NOVO'; $('resgatar').hidden = false; $('again2').hidden = false;
+    });
+  }
+
   /* ---------- Prêmio ---------- */
   let clockTimer = null;
   function showPrize(show) {
@@ -452,11 +496,13 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
     const d = new Date(), dias = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
     $('prize-date').textContent = 'Válido hoje, ' + dias[d.getDay()] + ' ' + pad(d.getDate()) + '/' + pad(d.getMonth() + 1);
     $('redeem').classList.toggle('used', used);
-    $('prize-note').textContent = used ? 'Prêmio entregue às ' + saved.usedAt : 'Mostre esta tela ao atendente';
+    $('prize-note').textContent = SRV && saved.codigo ? 'Mostre este código na recepção' : used ? 'Prêmio entregue às ' + saved.usedAt : 'Mostre esta tela ao atendente';
+    $('prize-code').textContent = saved.codigo || ''; $('prize-code').hidden = $('prize-code-lbl').hidden = !(SRV && saved.codigo);
+    if (SRV) $('mark-used').hidden = true;
     const tick = () => { const n = new Date(); $('prize-clock').textContent = pad(n.getHours()) + ':' + pad(n.getMinutes()) + ':' + pad(n.getSeconds()); };
     tick(); clockTimer = setInterval(tick, 1000);
   }
-  $('resgatar').addEventListener('click', () => telaPremio(true));
+  $('resgatar').addEventListener('click', () => { if (modoRetry) reservar(); else telaPremio(true); });
   let usedArmed = false;
   $('mark-used').addEventListener('click', () => {
     if (!usedArmed) { usedArmed = true; $('mark-used').textContent = 'Toque de novo para confirmar a entrega'; setTimeout(() => { usedArmed = false; $('mark-used').textContent = 'Atendente: marcar como entregue'; }, 4000); return; }

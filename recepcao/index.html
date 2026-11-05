@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Recepção · Brindes do Fliperama</title>
+<meta name="theme-color" content="#111111">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+/* Ferramenta da equipe: fundo claro, barra preta, Inter. Celular: uma coluna. Notebook: duas colunas. */
+:root {
+  --ink: #111111; --ink-2: #2b2b2b; --cream: #f5f2dc; --page: #f3f2ee; --panel: #ffffff;
+  --line: #e4e2db; --line-2: #d3d0c6; --muted: #6e6b63; --soft: #f7f6f2;
+  --red: #c8102e; --amber: #9a6a00; --green: #2f7d45; --green-bg: #e8f3eb;
+  --font: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; background: var(--page); color: var(--ink); }
+body { font-family: var(--font); font-size: 16px; line-height: 1.45; padding-bottom: env(safe-area-inset-bottom, 0px); -webkit-font-smoothing: antialiased; }
+.topbar { background: var(--ink); color: var(--cream); padding: calc(env(safe-area-inset-top, 0px) + 16px) 16px 18px; }
+.topbar .in { max-width: 1040px; margin: 0 auto; display: flex; align-items: center; gap: 14px; }
+.topbar img { width: 42px; height: 42px; }
+.eyebrow { font-size: .68rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: rgba(245,242,220,.62); }
+.topbar h1 { margin: 2px 0 0; font-size: 1.3rem; font-weight: 700; letter-spacing: -.01em; }
+.topbar .sair { margin-left: auto; background: transparent; color: var(--cream); border: 1px solid rgba(245,242,220,.35); border-radius: 10px; padding: 8px 12px; font: 600 .85rem var(--font); cursor: pointer; }
+main { max-width: 1040px; margin: 0 auto; padding: 16px; display: grid; gap: 16px; }
+@media (min-width: 860px) { main.on { grid-template-columns: 1fr 1fr; align-items: start; } .col { display: grid; gap: 16px; } }
+.col { display: grid; gap: 16px; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+.panel h2 { margin: 0; padding: 14px 16px; font-size: .8rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 8px; }
+.panel h2 .n { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--muted); font-weight: 600; letter-spacing: 0; text-transform: none; }
+.body { padding: 16px; display: grid; gap: 12px; }
+label { font-size: .85rem; font-weight: 600; color: var(--ink-2); display: grid; gap: 6px; }
+input { width: 100%; font: 500 1.02rem var(--font); color: var(--ink); background: var(--soft); border: 1px solid var(--line-2); border-radius: 10px; padding: 13px 14px; outline: none; -webkit-appearance: none; appearance: none; }
+input:focus { border-color: var(--ink); background: #fff; }
+.code-in { font: 800 1.8rem var(--font); letter-spacing: .3em; text-transform: uppercase; text-align: center; }
+.btn { font: 700 1rem var(--font); border: none; border-radius: 10px; padding: 13px 16px; cursor: pointer; background: var(--ink); color: var(--cream); min-height: 48px; }
+.btn.green { background: var(--green); color: #fff; }
+.btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line-2); }
+.btn.small { min-height: 40px; padding: 8px 12px; font-size: .88rem; }
+.btn:disabled { opacity: .5; cursor: default; }
+button:focus-visible, input:focus-visible, a:focus-visible { outline: 3px solid #c98a00; outline-offset: 2px; }
+.msg { border-radius: 10px; padding: 12px 14px; font-size: .95rem; font-weight: 600; }
+.msg.ok { background: var(--green-bg); color: #1f5a31; border: 1px solid #bcdcc5; }
+.msg.err { background: #fbe9ec; color: #8a0f22; border: 1px solid #efc2ca; }
+.msg.info { background: #fbf5e2; color: #5b4810; border: 1px solid #ead9a6; }
+.big-ok { display: grid; gap: 2px; text-align: center; padding: 16px; border-radius: 12px; background: var(--green-bg); border: 2px solid var(--green); }
+.big-ok small { font-weight: 700; color: var(--green); letter-spacing: .1em; text-transform: uppercase; font-size: .75rem; }
+.big-ok b { font-size: 1.5rem; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.stat { background: var(--soft); border: 1px solid var(--line); border-radius: 12px; padding: 10px; text-align: center; }
+.stat b { display: block; font-size: 1.6rem; font-variant-numeric: tabular-nums; }
+.stat span { font-size: .75rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
+ul.list { list-style: none; margin: 0; padding: 0; }
+ul.list li { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-top: 1px solid var(--line); }
+ul.list li:first-child { border-top: none; }
+.pos { flex: 0 0 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: .85rem; background: var(--soft); border: 1px solid var(--line-2); }
+.li-main { flex: 1; min-width: 0; display: grid; }
+.li-main b { font-weight: 700; }
+.li-main small { color: var(--muted); }
+.tag { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; padding: 2px 8px; border-radius: 999px; background: var(--ink); color: var(--cream); margin-left: 6px; vertical-align: middle; }
+.code { font: 800 1.25rem var(--font); letter-spacing: .14em; font-variant-numeric: tabular-nums; }
+.acts { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.empty { padding: 16px; color: var(--muted); font-size: .92rem; }
+.rowadd { display: grid; grid-template-columns: 1fr 112px; gap: 8px; align-items: end; }
+.qty { display: flex; align-items: center; border: 1px solid var(--line-2); border-radius: 10px; background: var(--soft); height: 50px; }
+.qty button { width: 36px; height: 100%; border: none; background: transparent; font: 700 1.2rem var(--font); cursor: pointer; color: var(--ink); }
+.qty output { flex: 1; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { border: 1px solid var(--line-2); background: #fff; border-radius: 999px; padding: 7px 12px; font: 600 .85rem var(--font); cursor: pointer; color: var(--ink); }
+.foot { color: var(--muted); font-size: .8rem; text-align: center; }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="in">
+    <img src="../pedidos/logo-grupo-gabba.svg" alt="" aria-hidden="true">
+    <div><div class="eyebrow">Gabba Hey Burger · Recepção</div><h1>Brindes do Fliperama</h1></div>
+    <button class="sair" id="sair" type="button" hidden>Sair</button>
+  </div>
+</header>
+
+<main id="main">
+  <!-- Entrar com o PIN -->
+  <section class="panel" id="login">
+    <h2>Entrar</h2>
+    <div class="body">
+      <p style="margin:0;color:var(--muted)">Digite o PIN da recepção. Ele fica salvo neste aparelho até você tocar em Sair.</p>
+      <label>PIN da recepção<input id="pin" type="password" inputmode="numeric" autocomplete="current-password"></label>
+      <button class="btn" id="entrar" type="button">Entrar</button>
+      <div class="msg err" id="login-msg" hidden></div>
+    </div>
+  </section>
+
+  <div class="col" id="col1" hidden>
+    <!-- Dar baixa pelo código -->
+    <section class="panel">
+      <h2>Dar baixa</h2>
+      <div class="body">
+        <label>Código que o cliente mostrou<input id="codigo" class="code-in" maxlength="4" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="____"></label>
+        <button class="btn green" id="baixar" type="button">Dar baixa</button>
+        <div id="baixa-res" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <!-- Aguardando retirada -->
+    <section class="panel">
+      <h2>Aguardando retirada <span class="n" id="n-pend">0</span></h2>
+      <ul class="list" id="pend"></ul>
+    </section>
+
+    <!-- Entregues hoje -->
+    <section class="panel">
+      <h2>Entregues hoje <span class="n" id="n-entr">0</span></h2>
+      <ul class="list" id="entr"></ul>
+    </section>
+  </div>
+
+  <div class="col" id="col2" hidden>
+    <section class="panel">
+      <h2>Hoje <span class="n" id="dia"></span></h2>
+      <div class="body">
+        <div class="stats">
+          <div class="stat"><b id="s-livres">0</b><span>Na fila</span></div>
+          <div class="stat"><b id="s-pend">0</b><span>Aguardando</span></div>
+          <div class="stat"><b id="s-entr">0</b><span>Entregues</span></div>
+        </div>
+        <div class="msg info" id="aviso-vazio" hidden>A fila está vazia: os jogos não estão dando brinde agora. Lance os brindes abaixo.</div>
+      </div>
+    </section>
+
+    <!-- Fila de brindes -->
+    <section class="panel">
+      <h2>Fila de brindes <span class="n" id="n-fila">0</span></h2>
+      <ul class="list" id="fila"></ul>
+    </section>
+
+    <!-- Lançar brindes -->
+    <section class="panel">
+      <h2>Lançar brindes do dia</h2>
+      <div class="body">
+        <div class="chips" id="chips"></div>
+        <div class="rowadd">
+          <label>Brinde<input id="novo-nome" maxlength="60" placeholder="Ex.: Molho da casa"></label>
+          <div><div style="font-size:.85rem;font-weight:600;color:var(--ink-2);margin-bottom:6px">Quantidade</div>
+            <div class="qty"><button type="button" id="menos" aria-label="Diminuir">−</button><output id="qtd">1</output><button type="button" id="mais" aria-label="Aumentar">+</button></div></div>
+        </div>
+        <button class="btn" id="adicionar" type="button">Adicionar à fila</button>
+        <div id="add-msg" aria-live="polite"></div>
+        <p style="margin:0;color:var(--muted);font-size:.85rem">Os brindes saem na ordem da fila: o primeiro cliente que ganhar leva o nº 1, e assim por diante. A fila zera sozinha todo dia.</p>
+      </div>
+    </section>
+  </div>
+</main>
+<p class="foot" id="foot"></p>
+
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const SUGESTOES = ['Molho da casa', 'Batata pequena', 'Refri lata', 'Sobremesa da casa', 'Chopp 300 ml'];
+  let SRV = '', PIN = '', qtd = 1, timer = null;
+  try { PIN = localStorage.getItem('gabba-recepcao-pin') || ''; } catch (e) {}
+
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const msg = (el, t, k) => { el.innerHTML = t ? '<div class="msg ' + k + '">' + esc(t) + '</div>' : ''; };
+
+  async function api(rota, corpo) {
+    const op = { method: corpo ? 'POST' : 'GET', headers: { 'X-Pin': PIN }, cache: 'no-store' };
+    if (corpo) { op.headers['Content-Type'] = 'application/json'; op.body = JSON.stringify(corpo); }
+    let r;
+    try { r = await fetch(SRV + rota, op); } catch (e) { throw new Error('Sem conexão com o servidor dos brindes. Confira a internet.'); }
+    let d = {}; try { d = await r.json(); } catch (e) {}
+    if (r.status === 401) { sair(); throw new Error('PIN incorreto.'); }
+    if (!r.ok) throw new Error(d.erro || 'Erro ' + r.status);
+    return d;
+  }
+
+  function render(d) {
+    const itens = d.itens || [];
+    const livres = itens.filter(i => !i.codigo);
+    const pend = itens.filter(i => i.codigo && !i.entregue_em);
+    const entr = itens.filter(i => i.entregue_em);
+    const [a, m, dd] = (d.dia || '').split('-');
+    $('dia').textContent = dd ? dd + '/' + m : '';
+    $('s-livres').textContent = livres.length; $('s-pend').textContent = pend.length; $('s-entr').textContent = entr.length;
+    $('n-fila').textContent = livres.length; $('n-pend').textContent = pend.length; $('n-entr').textContent = entr.length;
+    $('aviso-vazio').hidden = livres.length > 0;
+
+    $('fila').innerHTML = livres.length ? livres.map((i, k) =>
+      '<li><span class="pos">' + (k + 1) + '</span><span class="li-main"><b>' + esc(i.nome) + (k === 0 ? '<span class="tag">Próximo</span>' : '') + '</b></span>' +
+      '<span class="acts"><button class="btn ghost small" data-rem="' + i.id + '" type="button" aria-label="Tirar ' + esc(i.nome) + ' da fila">Tirar</button></span></li>').join('')
+      : '<li class="empty">Nenhum brinde na fila.</li>';
+
+    $('pend').innerHTML = pend.length ? pend.map(i =>
+      '<li><span class="li-main"><span class="code">' + esc(i.codigo) + '</span><b>' + esc(i.nome) + '</b><small>Ganhou às ' + esc(i.reservado_em) + ' · ' + esc(nomeJogo(i.jogo)) + '</small></span>' +
+      '<span class="acts"><button class="btn green small" data-baixa="' + esc(i.codigo) + '" type="button">Dar baixa</button>' +
+      '<button class="btn ghost small" data-dev="' + esc(i.codigo) + '" type="button">Devolver</button></span></li>').join('')
+      : '<li class="empty">Ninguém esperando brinde.</li>';
+
+    $('entr').innerHTML = entr.length ? entr.slice().reverse().map(i =>
+      '<li><span class="li-main"><b>' + esc(i.nome) + '</b><small>Código ' + esc(i.codigo) + ' · entregue às ' + esc(i.entregue_em) + '</small></span></li>').join('')
+      : '<li class="empty">Nenhum brinde entregue ainda.</li>';
+    $('foot').textContent = 'Atualizado às ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' · atualiza sozinho a cada 15 segundos';
+  }
+  const nomeJogo = j => ({ pedido: 'Pedido Certo', quiz: 'Quiz do Gabba' }[j] || j || 'Jogo');
+
+  async function carregar() {
+    try { render(await api('/recepcao')); } catch (e) { $('foot').textContent = e.message; }
+  }
+  function mostrar(logado) {
+    $('login').hidden = logado; $('col1').hidden = !logado; $('col2').hidden = !logado; $('sair').hidden = !logado;
+    $('main').classList.toggle('on', logado);
+    clearInterval(timer);
+    if (logado) { carregar(); timer = setInterval(() => { if (!document.hidden) carregar(); }, 15000); }
+  }
+  function sair() { PIN = ''; try { localStorage.removeItem('gabba-recepcao-pin'); } catch (e) {} mostrar(false); }
+
+  $('entrar').addEventListener('click', async () => {
+    PIN = $('pin').value.trim(); $('login-msg').hidden = true;
+    if (!PIN) return;
+    try {
+      const d = await api('/recepcao');
+      try { localStorage.setItem('gabba-recepcao-pin', PIN); } catch (e) {}
+      mostrar(true); render(d);
+    } catch (e) { $('login-msg').textContent = e.message; $('login-msg').hidden = false; }
+  });
+  $('pin').addEventListener('keydown', e => { if (e.key === 'Enter') $('entrar').click(); });
+  $('sair').addEventListener('click', sair);
+
+  async function baixa(codigo) {
+    codigo = (codigo || '').trim().toUpperCase();
+    if (codigo.length < 4) { msg($('baixa-res'), 'Digite as 4 letras do código.', 'err'); return; }
+    $('baixar').disabled = true;
+    try {
+      const d = await api('/baixa', { codigo });
+      $('baixa-res').innerHTML = '<div class="big-ok"><small>Pode entregar</small><b>' + esc(d.brinde) + '</b><span>Código ' + esc(codigo) + ' · baixa feita</span></div>';
+      $('codigo').value = ''; render(d);
+    } catch (e) { msg($('baixa-res'), e.message, 'err'); }
+    finally { $('baixar').disabled = false; }
+  }
+  $('baixar').addEventListener('click', () => baixa($('codigo').value));
+  $('codigo').addEventListener('keydown', e => { if (e.key === 'Enter') baixa($('codigo').value); });
+  $('codigo').addEventListener('input', e => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); });
+
+  document.addEventListener('click', async e => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.baixa) baixa(b.dataset.baixa);
+    if (b.dataset.dev) {
+      if (b.dataset.armed !== '1') { b.dataset.armed = '1'; b.textContent = 'Confirmar?'; setTimeout(() => { b.dataset.armed = ''; b.textContent = 'Devolver'; }, 4000); return; }
+      try { render(await api('/devolver', { codigo: b.dataset.dev })); } catch (err) { alertar(err.message); }
+    }
+    if (b.dataset.rem) {
+      if (b.dataset.armed !== '1') { b.dataset.armed = '1'; b.textContent = 'Confirmar?'; setTimeout(() => { b.dataset.armed = ''; b.textContent = 'Tirar'; }, 4000); return; }
+      try { render(await api('/remover', { id: +b.dataset.rem })); } catch (err) { alertar(err.message); }
+    }
+  });
+  const alertar = t => { $('foot').textContent = t; };
+
+  $('chips').innerHTML = SUGESTOES.map(s => '<button class="chip" type="button" data-sug="' + esc(s) + '">' + esc(s) + '</button>').join('');
+  $('chips').addEventListener('click', e => { const c = e.target.closest('[data-sug]'); if (c) { $('novo-nome').value = c.dataset.sug; } });
+  const setQ = v => { qtd = Math.max(1, Math.min(20, v)); $('qtd').textContent = qtd; };
+  $('menos').addEventListener('click', () => setQ(qtd - 1));
+  $('mais').addEventListener('click', () => setQ(qtd + 1));
+  $('adicionar').addEventListener('click', async () => {
+    const nome = $('novo-nome').value.trim();
+    if (!nome) { msg($('add-msg'), 'Escreva o brinde ou toque numa sugestão.', 'err'); return; }
+    $('adicionar').disabled = true;
+    try {
+      const d = await api('/estoque', { itens: [{ nome, qtd }] });
+      msg($('add-msg'), d.adicionados + (d.adicionados === 1 ? ' brinde adicionado' : ' brindes adicionados') + ' à fila.', 'ok');
+      $('novo-nome').value = ''; setQ(1); render(d);
+    } catch (e) { msg($('add-msg'), e.message, 'err'); }
+    finally { $('adicionar').disabled = false; }
+  });
+
+  // Endereço do servidor: vem do config.json dos jogos (campo "servidor"). ?srv=... só para teste.
+  const q = new URLSearchParams(location.search).get('srv');
+  fetch('../desafio/config.json?v=' + Date.now(), { cache: 'no-store' }).then(r => r.json()).catch(() => ({})).then(c => {
+    SRV = (q || c.servidor || '').replace(/\/+$/, '');
+    if (!SRV) { $('login').querySelector('.body').innerHTML = '<div class="msg info">O servidor dos brindes ainda não foi ativado. Assim que ele estiver no ar, esta tela passa a funcionar.</div>'; return; }
+    mostrar(!!PIN);
+  });
+})();
+</script>
+</body>
+</html>

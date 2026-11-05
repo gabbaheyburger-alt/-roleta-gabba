@@ -318,6 +318,14 @@ h1 span { background: linear-gradient(90deg, #ffb13d, #ff3d2e); -webkit-backgrou
       const ligado = !c || c.ativo !== false;
       $('premio-desc').textContent = ligado ? J.desc : 'Hoje sem prêmio. Jogue pela diversão!';
       $('premio-tag').hidden = !ligado;
+      // Com o servidor dos brindes ligado, mostra quantos restam hoje
+      if (ligado && c && typeof c.servidor === 'string' && /^(https:\/\/|http:\/\/(localhost|127\.0\.0\.1)[:/])/.test(c.servidor)) {
+        fetch(c.servidor.replace(/\/+$/, '') + '/status', { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(st => {
+          if (!st) return;
+          if (st.restantes > 0) $('premio-desc').textContent = J.desc.replace('prêmio', 'brinde') + ' · restam ' + st.restantes + (st.restantes === 1 ? ' brinde' : ' brindes') + ' hoje';
+          else { $('premio-desc').textContent = 'Brindes de hoje esgotados. Jogue pela diversão!'; $('premio-tag').hidden = true; }
+        }).catch(() => {});
+      }
     }
     aplicar(null);
     fetch('../desafio/config.json?v=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(c => { if (c) aplicar(c); }).catch(() => {});

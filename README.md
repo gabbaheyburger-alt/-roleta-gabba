@@ -65,6 +65,16 @@ Jogo de combinar 3 iguais (estilo Candy Crush), no Fliperama, no endereço `/cru
 - Dificuldade no topo do script de `crush/index.html` (`META`, `JOGADAS`, `CHANCES`).
 - Eventos: `partida-crush`, `crush-venceu-sem-premio` (ou `crush-venceu` quando valer prêmio), `crush-perdeu` e `crush-perdeu-faltou-1a2` / `3a5` / `mais5`.
 
+## Brindes do dia (servidor + tela da recepção)
+
+Servidor próprio, separado do servidor do ponto: `servidor-brindes/` (Cloudflare Worker `gabba-brindes`, com Durable Object e SQLite). A recepção lança os brindes do dia em `/recepcao/` (PIN, funciona no celular e no notebook ao mesmo tempo). Eles formam uma fila, na ordem lançada. Quando um cliente vence o jogo do prêmio (Pedido Certo ou Quiz), o jogo reserva **o primeiro brinde da fila** e mostra um **código de 4 letras**; a recepção digita o código (ou toca em "Dar baixa" na lista) e entrega. Se o cliente não aparecer, "Devolver" põe o brinde de volta no começo da fila. Fila vazia = os jogos avisam "brindes de hoje esgotados" e não prometem prêmio; o Fliperama mostra quantos restam.
+
+- Liga quando `desafio/config.json` tem `"servidor": "https://gabba-brindes.<conta>.workers.dev"`. Sem esse campo, tudo funciona como antes (prêmio único da área do dono, baixa no celular do cliente).
+- PIN da recepção: segredo `PIN_RECEPCAO` no painel do Cloudflare (Settings › Variables & Secrets). Nunca no código.
+- Um aparelho ganha no máximo 1 brinde por dia; a reserva é feita no servidor, então dois clientes nunca levam o mesmo último brinde (testado com 10 vitórias simultâneas).
+- Publicação: Workers Builds ligado a este repositório, com *Root directory* `servidor-brindes` e *Build watch paths* `servidor-brindes/*`. Teste local: `cd servidor-brindes && npm install && npx wrangler dev` (o PIN de teste fica em `.dev.vars`, fora do git).
+- Ligação dos jogos: `comum/brindes.js`.
+
 ## Jogo que vale prêmio (escolhido na área do dono)
 
 A área do dono (`/adm/`) grava em `desafio/config.json`: `premio`, `ativo` (liga/desliga), **`jogo`** (`pedido` ou `quiz`: qual jogo vale prêmio) e **`memoria`** (liga/desliga o pedido de memória do Pedido Certo). Sem o campo `jogo`, vale o Pedido Certo. O Fliperama da mesa mostra em destaque o jogo escolhido (selo "Vale prêmio") e esconde o cartão comum dele; no delivery nenhum jogo vale prêmio.

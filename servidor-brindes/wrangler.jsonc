@@ -1,0 +1,17 @@
+{
+  // Servidor dos brindes do Fliperama Gabba. Separado do servidor do ponto (gabba-estoque-gpt).
+  // O PIN da recepção é um segredo (PIN_RECEPCAO) criado no painel do Cloudflare, nunca aqui.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "gabba-brindes",
+  "main": "src/index.js",
+  "compatibility_date": "2026-10-13",
+  "workers_dev": true,
+  "preview_urls": false,
+  "keep_vars": true,
+  "durable_objects": {
+    "bindings": [{ "name": "BRINDES", "class_name": "Brindes" }]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["Brindes"] }
+  ]
+}

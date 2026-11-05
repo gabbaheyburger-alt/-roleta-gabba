@@ -78,6 +78,8 @@ body { margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: en
 .rules li b { margin-right: 4px; }
 .redeem { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 14px 12px; border-radius: 18px; border: 1.5px dashed rgba(var(--g), .55); background: rgba(var(--g), .07); }
 .redeem .when { font-weight: 700; color: #fff; }
+.redeem .codigo { font: 400 2.6rem var(--display); letter-spacing: .22em; color: #fff; text-shadow: 0 0 18px rgba(var(--g), .7); line-height: 1.1; }
+.redeem .codigo-lbl { font-size: .72rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: rgb(var(--g)); }
 .redeem .clock { font: 400 2rem var(--display); color: rgb(var(--g)); text-shadow: 0 0 16px rgba(var(--g), .6); font-variant-numeric: tabular-nums; }
 .redeem .note { color: var(--muted); font-size: .92rem; }
 .redeem.used { border-style: solid; border-color: #3b3b3b; background: #141414; }
@@ -86,6 +88,7 @@ body { margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: en
 .prize-name.used { text-decoration: line-through; opacity: .6; }
 </style>
 <script src="../contador.js"></script>
+<script src="../comum/brindes.js"></script>
 <link rel="stylesheet" href="../comum/neon.css">
 <script src="../comum/neon.js" defer></script>
 </head>
@@ -126,7 +129,9 @@ body { margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: en
   <h1 id="over-title">QUASE!</h1>
   <p id="over-msg"></p>
   <div class="redeem" id="redeem" hidden>
-    <span class="when" id="prize-date"></span>
+    <span class="codigo-lbl" id="prize-code-lbl" hidden>Código do brinde</span>
+        <span class="codigo" id="prize-code" hidden></span>
+        <span class="when" id="prize-date"></span>
     <span class="clock" id="prize-clock">--:--:--</span>
     <span class="note" id="prize-note">Mostre esta tela ao atendente</span>
   </div>
@@ -279,17 +284,18 @@ body { margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: en
   if (TESTE) $('teste-tag').hidden = false;
 
   function aplicarConfig() {
-    $('prize-txt').textContent = PRIZE;
+    $('prize-txt').textContent = SRV ? 'um brinde da casa' + (RESTANTES ? ' (restam ' + RESTANTES + ' hoje)' : '') : PRIZE;
     $('regra').hidden = !premioAgora();
     let t = '';
     if (premioAgora()) {
       if (wonToday()) t = 'Você já ganhou hoje! Agora é só pela diversão.';
+      else if (semBrinde()) t = 'Os brindes de hoje acabaram. Jogue pela diversão e volte na próxima visita!';
       else if (chancesLeft() > 0) t = 'Você tem ' + chancesLeft() + (chancesLeft() === 1 ? ' chance' : ' chances') + ' valendo prêmio hoje.';
       else t = 'Suas chances de hoje acabaram. Jogue pela diversão e volte na próxima visita!';
     } else if (TESTE) t = 'Modo teste: não gasta chance e não dá prêmio.';
     $('chances-txt').textContent = t; $('chances-txt').hidden = !t;
     $('top-lbl').textContent = premioAgora() ? 'Chances hoje' : 'Recorde';
-    $('top').textContent = premioAgora() ? (wonToday() ? '–' : chancesLeft()) : saved.best + '/' + TOTAL;
+    $('top').textContent = premioAgora() ? (wonToday() || semBrinde() ? '–' : chancesLeft()) : saved.best + '/' + TOTAL;
     $('see-prize').hidden = !premioAgora() || !wonToday();
   }
   aplicarConfig();
@@ -298,8 +304,9 @@ body { margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: en
     .then(c => {
       if (!c) return;
       if (typeof c.premio === 'string' && c.premio.trim()) PRIZE = c.premio.trim().slice(0, 60);
+      if (typeof c.servidor === 'string' && /^(https:\/\/|http:\/\/(localhost|127\.0\.0\.1)[:/])/.test(c.servidor)) { GabbaBrindes.usar(c.servidor); SRV = true; }
       VALE_PREMIO = c.jogo === 'quiz' && c.ativo !== false;
-      aplicarConfig();
+      aplicarConfig(); checarEstoque();
     }).catch(() => {});
 
   /* ---------- Escada ---------- */
@@ -328,7 +335,7 @@ body { margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: en
   }
   let pularNoNivel = [];
   function start() {
-    valendo = premioAgora() && !wonToday() && chancesLeft() > 0;
+    valendo = premioAgora() && !wonToday() && chancesLeft() > 0 && !semBrinde();
     if (valendo) { if (saved.triesDay !== today()) { saved.triesDay = today(); saved.tries = 0; } saved.tries++; persist(); }
     conta('partida-quiz', 'Partida: Quiz do Gabba');
     sortear(); idx = 0; pulou = false; pularNoNivel = NIVEIS.map(() => false);
@@ -392,13 +399,13 @@ body { margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: en
   function fim(ganhou, tempo) {
     const acertos = ganhou ? TOTAL : idx;
     if (!TESTE && acertos > saved.best) saved.best = acertos;
-    if (ganhou && valendo) { saved.wonDay = today(); saved.wonPrize = PRIZE; conta('quiz-venceu', 'Quiz do Gabba: venceu'); }
+    if (ganhou && valendo) { if (!SRV) { saved.wonDay = today(); saved.wonPrize = PRIZE; } conta('quiz-venceu', 'Quiz do Gabba: venceu'); }
     else if (ganhou) conta('quiz-venceu-sem-premio', 'Quiz do Gabba: venceu (sem prêmio)');
     else conta('quiz-parou-' + (idx + 1), 'Quiz do Gabba: parou na pergunta ' + (idx + 1));
     persist();
     if (ganhou) fanfare();
     aplicarConfig();
-    if (ganhou && valendo) telaPremio(false);
+    if (ganhou && valendo) { if (SRV) reservar(); else telaPremio(false); }
     else telaFim(ganhou ? 'win' : tempo ? 'time' : 'err', acertos);
     overChances(ganhou);
     $('over').hidden = false;
@@ -411,7 +418,9 @@ body { margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: en
     const m = $('over-msg'); m.innerHTML = '';
     if (kind === 'win') {
       m.append('Você acertou ', hl('as ' + TOTAL + ' perguntas'), '!' + (TESTE ? ' Modo teste: sem prêmio.' : ''));
-      if (premioAgora() && wonToday() && !valendo) m.append(' Você já ganhou um prêmio hoje, então essa foi só pela diversão.');
+      if (esgotouAgora) m.append(' Mas os brindes de hoje acabaram bem agora. Volte na próxima visita!');
+      else if (premioAgora() && wonToday() && !valendo) m.append(' Você já ganhou um prêmio hoje, então essa foi só pela diversão.');
+      else if (premioAgora() && semBrinde()) m.append(' Os brindes de hoje já tinham acabado: essa foi só pela diversão.');
       else if (premioAgora() && !valendo) m.append(' Mas suas 3 chances de prêmio de hoje já tinham acabado: essa foi só pela diversão. Volte na próxima visita!');
     }
     else {
@@ -427,8 +436,9 @@ body { margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: en
     const used = saved.usedDay === today();
     const m = $('over-msg'); m.innerHTML = '';
     const pn = hl(nome); pn.classList.add('prize-name'); pn.classList.toggle('used', used);
-    m.append('Você ganhou ', pn, used ? '. Prêmio já entregue.' : ' pra resgatar agora mesmo.');
+    m.append('Você ganhou ', pn, used ? '. Prêmio já entregue.' : SRV && saved.codigo ? '! Mostre o código abaixo na recepção.' : ' pra resgatar agora mesmo.');
     $('again').hidden = true; $('again2').hidden = false; $('over-chances').hidden = true;
+    $('resgatar').textContent = 'RESGATAR AGORA';
     $('resgatar').hidden = aberto || used;
     showPrize(aberto || used);
   }
@@ -442,6 +452,40 @@ body { margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: en
   }
   function floatText(t) { const el = document.createElement('div'); el.className = 'float'; el.textContent = t; document.body.append(el); setTimeout(() => el.remove(), 950); }
 
+
+  /* ---------- Servidor dos brindes (fila do dia; reserva na hora da vitória) ---------- */
+  // var/function (e não let/const): aplicarConfig() usa isto antes desta parte do código rodar
+  var SRV = false, RESTANTES = null, esgotouAgora = false, modoRetry = false;
+  function semBrinde() { return SRV && RESTANTES === 0 && !wonToday(); }
+  function checarEstoque() {
+    if (!SRV) return;
+    GabbaBrindes.status().then(s => { RESTANTES = s.restantes; aplicarConfig(); }).catch(() => {});
+  }
+  setInterval(() => { if (!document.hidden && $('over').hidden) checarEstoque(); }, 60000);
+  function reservar() {
+    modoRetry = false;
+    window.neonKind && neonKind('over', 'win', '🎁');
+    $('endcard') && ($('endcard').dataset.kind = 'win');
+    $('over').dataset.kind = 'win';
+    $('end-icon') && ($('end-icon').textContent = '🎁');
+    $('over-title').textContent = 'PARABÉNS!';
+    $('over-msg').textContent = 'Você venceu! Reservando seu brinde…';
+    ['again', 'again2', 'resgatar', 'mark-used', 'redeem', 'over-chances'].forEach(id => { $(id).hidden = true; });
+    GabbaBrindes.ganhar('quiz').then(r => {
+      if (r.ok) {
+        saved.wonDay = today(); saved.wonPrize = r.brinde; saved.codigo = r.codigo; persist();
+        if (typeof r.restantes === 'number') RESTANTES = r.restantes;
+        telaPremio(true);
+      } else if (r.esgotado) {
+        RESTANTES = 0; esgotouAgora = true; telaFim('win'); esgotouAgora = false;
+      } else throw new Error('resposta');
+    }).catch(() => {
+      modoRetry = true;
+      $('over-msg').textContent = 'Você venceu, mas não consegui falar com o sistema de brindes. Confira a internet e toque em Tentar de novo.';
+      $('resgatar').textContent = 'TENTAR DE NOVO'; $('resgatar').hidden = false; $('again2').hidden = false;
+    });
+  }
+
   /* ---------- Prêmio ---------- */
   let clockTimer = null;
   function showPrize(show) {
@@ -453,11 +497,13 @@ body { margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: en
     const d = new Date(), dias = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
     $('prize-date').textContent = 'Válido hoje, ' + dias[d.getDay()] + ' ' + pad(d.getDate()) + '/' + pad(d.getMonth() + 1);
     $('redeem').classList.toggle('used', used);
-    $('prize-note').textContent = used ? 'Prêmio entregue às ' + saved.usedAt : 'Mostre esta tela ao atendente';
+    $('prize-note').textContent = SRV && saved.codigo ? 'Mostre este código na recepção' : used ? 'Prêmio entregue às ' + saved.usedAt : 'Mostre esta tela ao atendente';
+    $('prize-code').textContent = saved.codigo || ''; $('prize-code').hidden = $('prize-code-lbl').hidden = !(SRV && saved.codigo);
+    if (SRV) $('mark-used').hidden = true;
     const tick = () => { const n = new Date(); $('prize-clock').textContent = pad(n.getHours()) + ':' + pad(n.getMinutes()) + ':' + pad(n.getSeconds()); };
     tick(); clockTimer = setInterval(tick, 1000);
   }
-  $('resgatar').addEventListener('click', () => telaPremio(true));
+  $('resgatar').addEventListener('click', () => { if (modoRetry) reservar(); else telaPremio(true); });
   let usedArmed = false;
   $('mark-used').addEventListener('click', () => {
     if (!usedArmed) { usedArmed = true; $('mark-used').textContent = 'Toque de novo para confirmar a entrega'; setTimeout(() => { usedArmed = false; $('mark-used').textContent = 'Atendente: marcar como entregue'; }, 4000); return; }
