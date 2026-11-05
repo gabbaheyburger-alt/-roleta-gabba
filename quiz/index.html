@@ -85,7 +85,10 @@ body { margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: en
 .redeem.used { border-style: solid; border-color: #3b3b3b; background: #141414; }
 .redeem.used .clock { color: #777; text-shadow: none; }
 .hl { color: rgb(var(--g)); font-weight: 700; text-shadow: 0 0 14px rgba(var(--g), .45); }
-.prize-name.used { text-decoration: line-through; opacity: .6; }
+.prize-name { display: block; margin: 10px 0 8px; font: 400 clamp(1.7rem, 8.5vw, 2.4rem)/1.08 var(--display); color: #ffd23f; letter-spacing: .02em; text-shadow: 0 0 10px rgba(255,210,63,.9), 0 0 28px rgba(255,170,0,.75), 0 0 56px rgba(255,140,0,.5); animation: premiobrilho 1.6s ease-in-out infinite; }
+@keyframes premiobrilho { 0%, 100% { transform: scale(1); filter: brightness(1); } 50% { transform: scale(1.06); filter: brightness(1.3); } }
+@media (prefers-reduced-motion: reduce) { .prize-name { animation: none; } }
+.prize-name.used { text-decoration: line-through; opacity: .6; animation: none; text-shadow: none; color: #999; }
 </style>
 <script src="../contador.js"></script>
 <script src="../comum/brindes.js"></script>
@@ -436,7 +439,7 @@ body { margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: en
     const used = saved.usedDay === today();
     const m = $('over-msg'); m.innerHTML = '';
     const pn = hl(nome); pn.classList.add('prize-name'); pn.classList.toggle('used', used);
-    m.append('Você ganhou ', pn, used ? '. Prêmio já entregue.' : SRV && saved.codigo ? '! Mostre o código abaixo na recepção.' : ' pra resgatar agora mesmo.');
+    m.append('Você ganhou', pn, used ? 'Prêmio já entregue.' : SRV && saved.codigo ? 'Mostre o código abaixo na recepção.' : 'Resgate agora mesmo.');
     $('again').hidden = true; $('again2').hidden = false; $('over-chances').hidden = true;
     $('resgatar').textContent = 'RESGATAR AGORA';
     $('resgatar').hidden = aberto || used;
