@@ -11,8 +11,10 @@
  *  - Tudo é por dia, no horário de Fortaleza. Um aparelho ganha no máximo 1 brinde por dia.
  *
  * Rotas públicas (jogos):    GET /status · POST /ganhar
- * Rotas da recepção (PIN):   GET /recepcao · POST /estoque · POST /baixa · POST /devolver
- * O PIN fica no segredo PIN_RECEPCAO, configurado no painel do Cloudflare (nunca no código).
+ * Rotas com PIN:
+ *   recepção ou dono  GET /recepcao · POST /baixa
+ *   só o dono         POST /estoque · POST /remover · POST /devolver
+ * Os PINs ficam nos segredos PIN_RECEPCAO e PIN_DONO, configurados no painel do Cloudflare (nunca no código).
  */
 
 import { DurableObject } from 'cloudflare:workers';
@@ -60,9 +62,16 @@ export default {
     const url = new URL(req.url);
     const rota = url.pathname.replace(/\/+$/, '') || '/';
     const publica = rota === '/status' || rota === '/ganhar' || rota === '/';
-    if (!publica && !pinOk(req.headers.get('X-Pin') || '', env.PIN_RECEPCAO)) {
-      if (!env.PIN_RECEPCAO) return json(req, { erro: 'O PIN da recepção ainda não foi configurado no Cloudflare.' }, 503);
-      return json(req, { erro: 'PIN incorreto.' }, 401);
+    let papel = null;
+    if (!publica) {
+      const pin = req.headers.get('X-Pin') || '';
+      if (pinOk(pin, env.PIN_DONO)) papel = 'dono';
+      else if (pinOk(pin, env.PIN_RECEPCAO)) papel = 'recepcao';
+      if (!papel) {
+        if (!env.PIN_RECEPCAO && !env.PIN_DONO) return json(req, { erro: 'Os PINs ainda não foram configurados no Cloudflare.' }, 503);
+        return json(req, { erro: 'PIN incorreto.' }, 401);
+      }
+      if (papel !== 'dono' && ['/estoque', '/remover', '/devolver'].includes(rota)) return json(req, { erro: 'Só o dono pode mexer na fila de brindes.' }, 403);
     }
     let corpo = {};
     if (req.method === 'POST') {
@@ -71,6 +80,7 @@ export default {
     const stub = env.BRINDES.get(env.BRINDES.idFromName('gabba-hey-burger'));
     try {
       const r = await stub.acao(rota, req.method, corpo);
+      if (papel && r.data && typeof r.data === 'object') r.data.papel = papel;
       return json(req, r.data, r.status || 200);
     } catch (e) {
       return json(req, { erro: 'Erro no servidor dos brindes.' }, 500);

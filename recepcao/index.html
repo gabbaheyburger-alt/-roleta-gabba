@@ -4,82 +4,111 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Recepção · Brindes do Fliperama</title>
-<meta name="theme-color" content="#111111">
+<meta name="theme-color" content="#070808">
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Barlow:wght@500;600;700;800&display=swap">
 <style>
-/* Ferramenta da equipe: fundo claro, barra preta, Inter. Celular: uma coluna. Notebook: duas colunas. */
+/* Visual do Fliperama: fundo escuro, neon e brilho. Celular: abas flutuantes embaixo. Notebook: tudo em duas colunas. */
 :root {
-  --ink: #111111; --ink-2: #2b2b2b; --cream: #f5f2dc; --page: #f3f2ee; --panel: #ffffff;
-  --line: #e4e2db; --line-2: #d3d0c6; --muted: #6e6b63; --soft: #f7f6f2;
-  --red: #c8102e; --amber: #9a6a00; --green: #2f7d45; --green-bg: #e8f3eb;
-  --font: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --bg: #070808; --card: #0b0c0c; --line: rgba(255,255,255,.12); --fg: #f6ece2; --muted: #b9b3ad;
+  --green: 61, 220, 132; --yellow: 255, 214, 61; --orange: 255, 138, 61; --red: 255, 77, 77; --blue: 64, 196, 255; --pink: 255, 77, 166;
+  --display: 'Bungee', Impact, 'Arial Black', sans-serif;
+  --font: 'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
-* { box-sizing: border-box; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 [hidden] { display: none !important; }
-html, body { margin: 0; background: var(--page); color: var(--ink); }
-body { font-family: var(--font); font-size: 16px; line-height: 1.45; padding-bottom: env(safe-area-inset-bottom, 0px); -webkit-font-smoothing: antialiased; }
-.topbar { background: var(--ink); color: var(--cream); padding: calc(env(safe-area-inset-top, 0px) + 16px) 16px 18px; }
+html, body { margin: 0; background: var(--bg); color: var(--fg); }
+body { font-family: var(--font); font-size: 16px; line-height: 1.45; min-height: 100vh; padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 110px);
+  background-image: radial-gradient(60vmax 50vmax at 0% 0%, rgba(var(--green), .14), transparent 60%), radial-gradient(60vmax 50vmax at 100% 100%, rgba(255,90,50,.14), transparent 60%);
+  background-attachment: fixed; -webkit-font-smoothing: antialiased; }
+.topbar { padding: calc(env(safe-area-inset-top, 0px) + 18px) 16px 6px; }
 .topbar .in { max-width: 1040px; margin: 0 auto; display: flex; align-items: center; gap: 14px; }
-.topbar img { width: 42px; height: 42px; }
-.eyebrow { font-size: .68rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: rgba(245,242,220,.62); }
-.topbar h1 { margin: 2px 0 0; font-size: 1.3rem; font-weight: 700; letter-spacing: -.01em; }
-.topbar .sair { margin-left: auto; background: transparent; color: var(--cream); border: 1px solid rgba(245,242,220,.35); border-radius: 10px; padding: 8px 12px; font: 600 .85rem var(--font); cursor: pointer; }
-main { max-width: 1040px; margin: 0 auto; padding: 16px; display: grid; gap: 16px; }
-@media (min-width: 860px) { main.on { grid-template-columns: 1fr 1fr; align-items: start; } .col { display: grid; gap: 16px; } }
-.col { display: grid; gap: 16px; }
-.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
-.panel h2 { margin: 0; padding: 14px 16px; font-size: .8rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 8px; }
-.panel h2 .n { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--muted); font-weight: 600; letter-spacing: 0; text-transform: none; }
-.body { padding: 16px; display: grid; gap: 12px; }
-label { font-size: .85rem; font-weight: 600; color: var(--ink-2); display: grid; gap: 6px; }
-input { width: 100%; font: 500 1.02rem var(--font); color: var(--ink); background: var(--soft); border: 1px solid var(--line-2); border-radius: 10px; padding: 13px 14px; outline: none; -webkit-appearance: none; appearance: none; }
-input:focus { border-color: var(--ink); background: #fff; }
-.code-in { font: 800 1.8rem var(--font); letter-spacing: .3em; text-transform: uppercase; text-align: center; }
-.btn { font: 700 1rem var(--font); border: none; border-radius: 10px; padding: 13px 16px; cursor: pointer; background: var(--ink); color: var(--cream); min-height: 48px; }
-.btn.green { background: var(--green); color: #fff; }
-.btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line-2); }
-.btn.small { min-height: 40px; padding: 8px 12px; font-size: .88rem; }
+.eyebrow { font-size: .7rem; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); }
+.topbar h1 { margin: 2px 0 0; font: 400 1.45rem/1.05 var(--display); background: linear-gradient(90deg, #fff, #ffd63d 55%, #ff8a3d); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 0 12px rgba(255,160,60,.45)); }
+.topbar .sair { margin-left: auto; background: rgba(255,255,255,.05); color: var(--fg); border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; font: 700 .85rem var(--font); cursor: pointer; }
+main { max-width: 1040px; margin: 0 auto; padding: 14px 16px; display: grid; gap: 18px; }
+.col { display: grid; gap: 18px; align-content: start; }
+@media (min-width: 860px) { main.on { grid-template-columns: 1fr 1fr; align-items: start; } .tabs { display: none !important; } body { padding-bottom: 30px; } }
+@media (max-width: 859px) { main.on .panel[data-tab]:not(.show) { display: none; } }
+
+.panel { --c: var(--green); background: var(--card); border: 1.5px solid rgba(var(--c), .4); border-radius: 24px; overflow: hidden;
+  box-shadow: 0 0 30px rgba(var(--c), .16), inset 0 0 26px rgba(var(--c), .04); animation: flutua 5s ease-in-out infinite; }
+.col .panel:nth-child(2) { animation-delay: -1.6s; } .col .panel:nth-child(3) { animation-delay: -3.2s; }
+@keyframes flutua { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+.panel.c-yellow { --c: var(--yellow); } .panel.c-orange { --c: var(--orange); } .panel.c-blue { --c: var(--blue); } .panel.c-pink { --c: var(--pink); }
+.panel h2 { margin: 0; padding: 15px 18px 12px; font: 400 .95rem var(--display); letter-spacing: .03em; color: #fff; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid rgba(var(--c), .2); }
+.panel h2::before { content: ''; width: 10px; height: 10px; border-radius: 50%; background: rgb(var(--c)); box-shadow: 0 0 10px rgb(var(--c)); }
+.panel h2 .n { margin-left: auto; font: 400 1rem var(--display); color: rgb(var(--c)); text-shadow: 0 0 10px rgba(var(--c), .6); }
+.body { padding: 16px 18px 18px; display: grid; gap: 12px; }
+label { font-size: .9rem; font-weight: 700; color: var(--muted); display: grid; gap: 6px; }
+input { width: 100%; font: 600 1.05rem var(--font); color: #fff; background: #050606; border: 1.5px solid var(--line); border-radius: 14px; padding: 13px 14px; outline: none; -webkit-appearance: none; appearance: none; }
+input:focus { border-color: rgba(var(--green), .8); box-shadow: 0 0 16px rgba(var(--green), .35); }
+input::placeholder { color: #6f6a66; }
+.code-in { font: 400 2rem var(--display); letter-spacing: .35em; text-transform: uppercase; text-align: center; color: rgb(var(--green)); text-shadow: 0 0 12px rgba(var(--green), .6); }
+.btn { font: 400 1.05rem var(--display); letter-spacing: .04em; border: none; border-radius: 16px; padding: 14px 16px; cursor: pointer; min-height: 52px; color: #fff;
+  background: linear-gradient(90deg, #ff8a3d, #ff3d2e); box-shadow: 0 0 22px rgba(255,90,50,.45); }
+.btn.green { background: linear-gradient(90deg, #3ddc84, #1fa862); color: #04140b; box-shadow: 0 0 22px rgba(var(--green), .45); }
+.btn.ghost { background: rgba(255,255,255,.04); color: var(--fg); border: 1.5px solid var(--line); box-shadow: none; font-family: var(--font); font-weight: 700; }
+.btn.small { min-height: 42px; padding: 8px 14px; font-size: .85rem; border-radius: 12px; }
+.btn:active { transform: scale(.98); }
 .btn:disabled { opacity: .5; cursor: default; }
-button:focus-visible, input:focus-visible, a:focus-visible { outline: 3px solid #c98a00; outline-offset: 2px; }
-.msg { border-radius: 10px; padding: 12px 14px; font-size: .95rem; font-weight: 600; }
-.msg.ok { background: var(--green-bg); color: #1f5a31; border: 1px solid #bcdcc5; }
-.msg.err { background: #fbe9ec; color: #8a0f22; border: 1px solid #efc2ca; }
-.msg.info { background: #fbf5e2; color: #5b4810; border: 1px solid #ead9a6; }
-.big-ok { display: grid; gap: 2px; text-align: center; padding: 16px; border-radius: 12px; background: var(--green-bg); border: 2px solid var(--green); }
-.big-ok small { font-weight: 700; color: var(--green); letter-spacing: .1em; text-transform: uppercase; font-size: .75rem; }
-.big-ok b { font-size: 1.5rem; }
-.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.stat { background: var(--soft); border: 1px solid var(--line); border-radius: 12px; padding: 10px; text-align: center; }
-.stat b { display: block; font-size: 1.6rem; font-variant-numeric: tabular-nums; }
-.stat span { font-size: .75rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
-ul.list { list-style: none; margin: 0; padding: 0; }
-ul.list li { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-top: 1px solid var(--line); }
+button:focus-visible, input:focus-visible, a:focus-visible { outline: 3px solid #ffd63d; outline-offset: 2px; }
+.msg { border-radius: 14px; padding: 12px 14px; font-size: .95rem; font-weight: 700; }
+.msg.ok { background: rgba(var(--green), .1); color: #7ef0b0; border: 1px solid rgba(var(--green), .45); }
+.msg.err { background: rgba(var(--red), .1); color: #ff9a9a; border: 1px solid rgba(var(--red), .45); }
+.msg.info { background: rgba(var(--yellow), .08); color: #ffe486; border: 1px solid rgba(var(--yellow), .4); }
+.big-ok { display: grid; gap: 4px; text-align: center; padding: 18px; border-radius: 18px; background: rgba(var(--green), .1); border: 2px solid rgb(var(--green)); box-shadow: 0 0 26px rgba(var(--green), .4); }
+.big-ok small { font-weight: 800; color: rgb(var(--green)); letter-spacing: .14em; text-transform: uppercase; font-size: .75rem; }
+.big-ok b { font: 400 1.6rem var(--display); color: #fff; }
+.big-ok span { color: var(--muted); }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.stat { --c: var(--blue); background: rgba(var(--c), .07); border: 1.5px solid rgba(var(--c), .45); border-radius: 18px; padding: 12px 6px; text-align: center; box-shadow: 0 0 16px rgba(var(--c), .2); }
+.stat:nth-child(2) { --c: var(--yellow); } .stat:nth-child(3) { --c: var(--green); }
+.stat b { display: block; font: 400 1.9rem var(--display); color: rgb(var(--c)); text-shadow: 0 0 12px rgba(var(--c), .6); }
+.stat span { font-size: .72rem; color: var(--muted); font-weight: 800; text-transform: uppercase; letter-spacing: .1em; }
+ul.list { list-style: none; margin: 0; padding: 6px 0; }
+ul.list li { display: flex; align-items: center; gap: 12px; padding: 12px 18px; border-top: 1px solid rgba(255,255,255,.06); }
 ul.list li:first-child { border-top: none; }
-.pos { flex: 0 0 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: .85rem; background: var(--soft); border: 1px solid var(--line-2); }
+.pos { flex: 0 0 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font: 400 .9rem var(--display); color: rgb(var(--c)); border: 1.5px solid rgba(var(--c), .6); box-shadow: 0 0 10px rgba(var(--c), .35); }
 .li-main { flex: 1; min-width: 0; display: grid; }
-.li-main b { font-weight: 700; }
+.li-main b { font-weight: 800; font-size: 1.05rem; color: #fff; }
 .li-main small { color: var(--muted); }
-.tag { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; padding: 2px 8px; border-radius: 999px; background: var(--ink); color: var(--cream); margin-left: 6px; vertical-align: middle; }
-.code { font: 800 1.25rem var(--font); letter-spacing: .14em; font-variant-numeric: tabular-nums; }
+.tag { font-size: .66rem; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; padding: 2px 8px; border-radius: 999px; background: rgb(var(--green)); color: #04140b; margin-left: 8px; vertical-align: middle; box-shadow: 0 0 10px rgba(var(--green), .6); }
+.code { font: 400 1.35rem var(--display); letter-spacing: .16em; color: rgb(var(--yellow)); text-shadow: 0 0 10px rgba(var(--yellow), .55); }
 .acts { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
-.empty { padding: 16px; color: var(--muted); font-size: .92rem; }
-.rowadd { display: grid; grid-template-columns: 1fr 112px; gap: 8px; align-items: end; }
-.qty { display: flex; align-items: center; border: 1px solid var(--line-2); border-radius: 10px; background: var(--soft); height: 50px; }
-.qty button { width: 36px; height: 100%; border: none; background: transparent; font: 700 1.2rem var(--font); cursor: pointer; color: var(--ink); }
-.qty output { flex: 1; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; }
-.chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.chip { border: 1px solid var(--line-2); background: #fff; border-radius: 999px; padding: 7px 12px; font: 600 .85rem var(--font); cursor: pointer; color: var(--ink); }
-.foot { color: var(--muted); font-size: .8rem; text-align: center; }
+.empty { padding: 16px 18px; color: var(--muted); font-size: .95rem; }
+.rowadd { display: grid; grid-template-columns: 1fr 120px; gap: 10px; align-items: end; }
+.qlabel { font-size: .9rem; font-weight: 700; color: var(--muted); margin-bottom: 6px; }
+.qty { display: flex; align-items: center; border: 1.5px solid var(--line); border-radius: 14px; background: #050606; height: 52px; }
+.qty button { width: 38px; height: 100%; border: none; background: transparent; font: 400 1.2rem var(--display); cursor: pointer; color: rgb(var(--orange)); }
+.qty output { flex: 1; text-align: center; font: 400 1.2rem var(--display); color: #fff; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { border: 1.5px solid rgba(var(--orange), .5); background: rgba(var(--orange), .07); border-radius: 999px; padding: 8px 14px; font: 700 .9rem var(--font); cursor: pointer; color: #fff; box-shadow: 0 0 10px rgba(var(--orange), .2); }
+.chip:active { box-shadow: 0 0 18px rgba(var(--orange), .6); }
+.foot { color: #8a847f; font-size: .8rem; text-align: center; margin: 10px 16px; }
+.hint { margin: 0; color: var(--muted); font-size: .88rem; }
+
+/* Abas flutuantes (celular) */
+.tabs { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(env(safe-area-inset-bottom, 0px) + 14px); z-index: 20;
+  display: flex; gap: 4px; padding: 6px; border-radius: 999px; background: rgba(12,13,13,.88); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border: 1.5px solid rgba(255,255,255,.12); box-shadow: 0 10px 30px rgba(0,0,0,.6), 0 0 26px rgba(var(--green), .18); width: min(440px, calc(100% - 24px)); }
+.tab { --c: var(--green); flex: 1; position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 4px; border: none; border-radius: 999px; background: transparent; color: var(--muted); font: 700 .72rem var(--font); letter-spacing: .04em; cursor: pointer; }
+.tab svg { width: 22px; height: 22px; }
+.tab.on { color: #fff; background: rgba(var(--c), .16); box-shadow: inset 0 0 0 1.5px rgba(var(--c), .6), 0 0 16px rgba(var(--c), .35); }
+.tab.on svg { color: rgb(var(--c)); filter: drop-shadow(0 0 6px rgba(var(--c), .8)); }
+body.recepcao .so-dono { display: none !important; }
+@media (min-width: 860px) { body.recepcao main.on { grid-template-columns: minmax(0, 560px); justify-content: center; } }
+.tab[data-t="fila"] { --c: var(--blue); } .tab[data-t="lancar"] { --c: var(--orange); } .tab[data-t="entregues"] { --c: var(--pink); }
+.tab .badge { position: absolute; top: 2px; right: 14%; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: rgb(var(--yellow)); color: #1a1400; font: 800 .7rem/18px var(--font); text-align: center; box-shadow: 0 0 10px rgba(var(--yellow), .7); }
+@media (prefers-reduced-motion: reduce) { .panel { animation: none; } }
 </style>
 </head>
 <body>
 <header class="topbar">
   <div class="in">
-    <img src="../pedidos/logo-grupo-gabba.svg" alt="" aria-hidden="true">
-    <div><div class="eyebrow">Gabba Hey Burger · Recepção</div><h1>Brindes do Fliperama</h1></div>
+    <div><div class="eyebrow">Gabba Hey Burger · Fliperama</div><h1 id="h1">Brindes do Fliperama</h1></div>
     <button class="sair" id="sair" type="button" hidden>Sair</button>
   </div>
 </header>
@@ -89,8 +118,8 @@ ul.list li:first-child { border-top: none; }
   <section class="panel" id="login">
     <h2>Entrar</h2>
     <div class="body">
-      <p style="margin:0;color:var(--muted)">Digite o PIN da recepção. Ele fica salvo neste aparelho até você tocar em Sair.</p>
-      <label>PIN da recepção<input id="pin" type="password" inputmode="numeric" autocomplete="current-password"></label>
+      <p class="hint">Digite o PIN da recepção (ou o do dono). Ele fica salvo neste aparelho até você tocar em Sair.</p>
+      <label>PIN<input id="pin" type="password" inputmode="numeric" autocomplete="current-password"></label>
       <button class="btn" id="entrar" type="button">Entrar</button>
       <div class="msg err" id="login-msg" hidden></div>
     </div>
@@ -98,7 +127,7 @@ ul.list li:first-child { border-top: none; }
 
   <div class="col" id="col1" hidden>
     <!-- Dar baixa pelo código -->
-    <section class="panel">
+    <section class="panel" data-tab="baixa">
       <h2>Dar baixa</h2>
       <div class="body">
         <label>Código que o cliente mostrou<input id="codigo" class="code-in" maxlength="4" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="____"></label>
@@ -108,20 +137,20 @@ ul.list li:first-child { border-top: none; }
     </section>
 
     <!-- Aguardando retirada -->
-    <section class="panel">
+    <section class="panel c-yellow" data-tab="baixa">
       <h2>Aguardando retirada <span class="n" id="n-pend">0</span></h2>
       <ul class="list" id="pend"></ul>
     </section>
 
     <!-- Entregues hoje -->
-    <section class="panel">
+    <section class="panel c-pink" data-tab="entregues">
       <h2>Entregues hoje <span class="n" id="n-entr">0</span></h2>
       <ul class="list" id="entr"></ul>
     </section>
   </div>
 
   <div class="col" id="col2" hidden>
-    <section class="panel">
+    <section class="panel c-blue so-dono" data-tab="fila">
       <h2>Hoje <span class="n" id="dia"></span></h2>
       <div class="body">
         <div class="stats">
@@ -134,29 +163,36 @@ ul.list li:first-child { border-top: none; }
     </section>
 
     <!-- Fila de brindes -->
-    <section class="panel">
+    <section class="panel c-blue so-dono" data-tab="fila">
       <h2>Fila de brindes <span class="n" id="n-fila">0</span></h2>
       <ul class="list" id="fila"></ul>
     </section>
 
     <!-- Lançar brindes -->
-    <section class="panel">
+    <section class="panel c-orange so-dono" data-tab="lancar">
       <h2>Lançar brindes do dia</h2>
       <div class="body">
         <div class="chips" id="chips"></div>
         <div class="rowadd">
           <label>Brinde<input id="novo-nome" maxlength="60" placeholder="Ex.: Molho da casa"></label>
-          <div><div style="font-size:.85rem;font-weight:600;color:var(--ink-2);margin-bottom:6px">Quantidade</div>
+          <div><div class="qlabel">Quantidade</div>
             <div class="qty"><button type="button" id="menos" aria-label="Diminuir">−</button><output id="qtd">1</output><button type="button" id="mais" aria-label="Aumentar">+</button></div></div>
         </div>
         <button class="btn" id="adicionar" type="button">Adicionar à fila</button>
         <div id="add-msg" aria-live="polite"></div>
-        <p style="margin:0;color:var(--muted);font-size:.85rem">Os brindes saem na ordem da fila: o primeiro cliente que ganhar leva o nº 1, e assim por diante. A fila zera sozinha todo dia.</p>
+        <p class="hint">Os brindes saem na ordem da fila: o primeiro cliente que ganhar leva o nº 1, e assim por diante. A fila zera sozinha todo dia.</p>
       </div>
     </section>
   </div>
 </main>
 <p class="foot" id="foot"></p>
+
+<nav class="tabs" id="tabs" aria-label="Seções" hidden>
+  <button class="tab on" type="button" data-t="baixa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>Baixa<span class="badge" id="b-pend" hidden>0</span></button>
+  <button class="tab so-dono" type="button" data-t="fila"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"></path></svg>Fila</button>
+  <button class="tab so-dono" type="button" data-t="lancar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="18" height="4" rx="1"></rect><path d="M12 8v13M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5"></path></svg>Lançar</button>
+  <button class="tab" type="button" data-t="entregues"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>Entregues</button>
+</nav>
 
 <script>
 (function () {
@@ -179,7 +215,9 @@ ul.list li:first-child { border-top: none; }
     return d;
   }
 
+  let papel = 'recepcao';
   function render(d) {
+    if (d.papel) { papel = d.papel; document.body.classList.toggle('recepcao', papel !== 'dono'); $('h1').textContent = papel === 'dono' ? 'Brindes · Dono' : 'Brindes · Recepção'; if (papel !== 'dono' && (abaAtual === 'fila' || abaAtual === 'lancar')) aba('baixa'); }
     const itens = d.itens || [];
     const livres = itens.filter(i => !i.codigo);
     const pend = itens.filter(i => i.codigo && !i.entregue_em);
@@ -189,6 +227,7 @@ ul.list li:first-child { border-top: none; }
     $('s-livres').textContent = livres.length; $('s-pend').textContent = pend.length; $('s-entr').textContent = entr.length;
     $('n-fila').textContent = livres.length; $('n-pend').textContent = pend.length; $('n-entr').textContent = entr.length;
     $('aviso-vazio').hidden = livres.length > 0;
+    $('b-pend').textContent = pend.length; $('b-pend').hidden = !pend.length;
 
     $('fila').innerHTML = livres.length ? livres.map((i, k) =>
       '<li><span class="pos">' + (k + 1) + '</span><span class="li-main"><b>' + esc(i.nome) + (k === 0 ? '<span class="tag">Próximo</span>' : '') + '</b></span>' +
@@ -198,7 +237,7 @@ ul.list li:first-child { border-top: none; }
     $('pend').innerHTML = pend.length ? pend.map(i =>
       '<li><span class="li-main"><span class="code">' + esc(i.codigo) + '</span><b>' + esc(i.nome) + '</b><small>Ganhou às ' + esc(i.reservado_em) + ' · ' + esc(nomeJogo(i.jogo)) + '</small></span>' +
       '<span class="acts"><button class="btn green small" data-baixa="' + esc(i.codigo) + '" type="button">Dar baixa</button>' +
-      '<button class="btn ghost small" data-dev="' + esc(i.codigo) + '" type="button">Devolver</button></span></li>').join('')
+      (papel === 'dono' ? '<button class="btn ghost small" data-dev="' + esc(i.codigo) + '" type="button">Devolver</button>' : '') + '</span></li>').join('')
       : '<li class="empty">Ninguém esperando brinde.</li>';
 
     $('entr').innerHTML = entr.length ? entr.slice().reverse().map(i =>
@@ -212,12 +251,13 @@ ul.list li:first-child { border-top: none; }
     try { render(await api('/recepcao')); } catch (e) { $('foot').textContent = e.message; }
   }
   function mostrar(logado) {
-    $('login').hidden = logado; $('col1').hidden = !logado; $('col2').hidden = !logado; $('sair').hidden = !logado;
+    $('login').hidden = logado; $('col1').hidden = !logado; $('col2').hidden = !logado; $('sair').hidden = !logado; $('tabs').hidden = !logado;
+    if (logado) aba(abaAtual);
     $('main').classList.toggle('on', logado);
     clearInterval(timer);
     if (logado) { carregar(); timer = setInterval(() => { if (!document.hidden) carregar(); }, 15000); }
   }
-  function sair() { PIN = ''; try { localStorage.removeItem('gabba-recepcao-pin'); } catch (e) {} mostrar(false); }
+  function sair() { PIN = ''; papel = 'recepcao'; document.body.classList.remove('recepcao'); try { localStorage.removeItem('gabba-recepcao-pin'); } catch (e) {} mostrar(false); }
 
   $('entrar').addEventListener('click', async () => {
     PIN = $('pin').value.trim(); $('login-msg').hidden = true;
@@ -259,6 +299,17 @@ ul.list li:first-child { border-top: none; }
     }
   });
   const alertar = t => { $('foot').textContent = t; };
+
+  // Abas flutuantes (no celular mostram uma parte por vez; no notebook aparece tudo)
+  let abaAtual = 'baixa';
+  try { abaAtual = localStorage.getItem('gabba-recepcao-aba') || 'baixa'; } catch (e) {}
+  function aba(t) {
+    abaAtual = t; try { localStorage.setItem('gabba-recepcao-aba', t); } catch (e) {}
+    document.querySelectorAll('.panel[data-tab]').forEach(p => p.classList.toggle('show', p.dataset.tab === t));
+    document.querySelectorAll('.tab').forEach(b => { const on = b.dataset.t === t; b.classList.toggle('on', on); b.setAttribute('aria-current', on ? 'page' : 'false'); });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  $('tabs').addEventListener('click', e => { const b = e.target.closest('.tab'); if (b) aba(b.dataset.t); });
 
   $('chips').innerHTML = SUGESTOES.map(s => '<button class="chip" type="button" data-sug="' + esc(s) + '">' + esc(s) + '</button>').join('');
   $('chips').addEventListener('click', e => { const c = e.target.closest('[data-sug]'); if (c) { $('novo-nome').value = c.dataset.sug; } });
