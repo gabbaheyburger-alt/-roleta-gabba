@@ -112,7 +112,7 @@ summary {cursor:pointer;padding:12px 0;font-weight:700}
   #sem-relatorio .hint {font-size:9pt}
 }
 </style>
-</head>
+<style>.up-scroll{overflow:auto}.up-table{width:100%;border-collapse:collapse;white-space:nowrap}.up-table th,.up-table td{text-align:left;padding:12px;border-bottom:1px solid #ddd}.up-table th{background:#eeeadd}.up-dia{border-top:1px solid #ddd;padding:18px 0}.up-marcas{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px}.up-marcas small,.up-marcas b{display:block}.up-marcas small{color:#6b6d65}.up-marcas b{font-size:1.1rem}.up-filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}@media print{.up-filters,.up-controls{display:none!important}.up-pessoa{break-before:page}.up-dia{break-inside:avoid}.up-scroll{overflow:visible}.up-table{white-space:normal;font-size:10px}.up-marcas{grid-template-columns:repeat(5,1fr)}}</style></head>
 <body>
 <header class="topbar"><div class="in">
   <img src="../../pedidos/logo-grupo-gabba.svg" alt="Grupo Gabba">
@@ -134,7 +134,7 @@ summary {cursor:pointer;padding:12px 0;font-weight:700}
   <div id="app" hidden>
     <nav class="abas" role="tablist">
       <button type="button" data-aba="hoje" aria-selected="true">Hoje</button>
-      <button type="button" data-aba="semana" aria-selected="false">Semana</button>
+      <button type="button" data-aba="semana" aria-selected="false">Relatórios</button>
       <button type="button" data-aba="registros" aria-selected="false">Registros</button>
       <button type="button" data-aba="internet" aria-selected="false">Internet</button>
       <button type="button" data-aba="intervalos" aria-selected="false">Intervalos</button><button type="button" data-aba="ausencias" aria-selected="false">Ausências</button><button type="button" data-aba="equipe" aria-selected="false">Equipe</button>
@@ -147,12 +147,12 @@ summary {cursor:pointer;padding:12px 0;font-weight:700}
       <p class="hint">Atraso: entrada depois de <span id="tol"></span> min do horário. Atualiza sozinho a cada minuto.</p>
     </section>
 
-    <section id="aba-semana" hidden style="display:flex;flex-direction:column;gap:12px">
+    <section id="aba-semana" hidden style="display:flex;flex-direction:column;gap:12px"><div class="panel up-filters"><div><label for="up-func">Funcionário</label><select id="up-func"><option value="">Toda a equipe</option></select></div><div><label for="up-de">De</label><input type="date" id="up-de"></div><div><label for="up-ate">Até</label><input type="date" id="up-ate"></div><button class="btn" type="button" id="up-aplicar">Gerar relatório</button><button class="btn sec" type="button" id="up-mes">Mês até hoje</button></div><p class="hint">Escolha o funcionário e a data final para conferir o acumulado desde o início do período. Exportações em CSV abrem no Excel; para Adobe use Imprimir / salvar PDF.</p>
       <div class="row"><button class="btn sec" id="sem-ant" type="button" style="flex:0 0 auto">‹</button><div id="sem-txt" style="text-align:center;font-weight:700"></div><button class="btn sec" id="sem-prox" type="button" style="flex:0 0 auto">›</button></div>
       <div class="row"><button class="btn" id="rel-resumo" type="button" disabled>Baixar resumo por funcionário</button><button class="btn sec" id="rel-detalhe" type="button" disabled>Baixar detalhe por dia</button></div>
       <button class="btn sec" id="rel-imprimir" type="button" disabled>Imprimir / salvar PDF</button>
       <div id="sem-relatorio" aria-live="polite"></div>
-      <details><summary>Conferência técnica</summary><div class="panel"><div class="tabela"><table id="sem-tab"></table></div><p class="hint">Visão técnica das marcações. Para o relatório consolidado, use os cartões acima. Registros removidos ficam apenas no arquivo de auditoria.</p></div><button class="btn sec" id="csv" type="button">Baixar registros brutos (auditoria)</button></details>
+      <details><summary>Arquivo de auditoria</summary><div class="panel"><div class="tabela"><table id="sem-tab"></table></div><p class="hint">Visão técnica das marcações. Para o relatório consolidado, use os cartões acima. Registros removidos ficam apenas no arquivo de auditoria.</p></div><button class="btn sec" id="csv" type="button">Baixar registros brutos (auditoria)</button></details>
     </section>
 
     <section id="aba-registros" hidden style="display:flex;flex-direction:column;gap:12px">
@@ -328,6 +328,59 @@ summary {cursor:pointer;padding:12px 0;font-weight:700}
 })();
 
 </script>
+<script>(function(){
+ const original=window.GabbaRelatorio,MIN=60000,DAY=864e5;
+ const fmt=v=>v==null?'—':Math.floor(Math.round(v/MIN)/60)+'h'+String(Math.round(v/MIN)%60).padStart(2,'0');
+ const hm=t=>t==null?'—':new Date(t).toLocaleTimeString('pt-BR',{timeZone:'America/Fortaleza',hour:'2-digit',minute:'2-digit',hour12:false});
+ const date=d=>d.split('-').reverse().join('/');
+ const civil=t=>new Date(t-3*3600000).toISOString().slice(0,10);
+ function night(a,b){let total=0;for(let t=Date.parse(civil(a)+'T00:00:00-03:00')-DAY;t<=b;t+=DAY)total+=Math.max(0,Math.min(b,t+DAY+5*3600000)-Math.max(a,t+22*3600000));return total;}
+ function enrich(m,agora){
+  const accumulated=new Map();
+  for(const d of m.detalhes){
+   let start=null,pause=null,closed=0,valid=true,state='fora',nightMs=0;d.pausas=[];
+   for(const x of d.r){if(!Number.isFinite(x.ts)||x.ts>agora){valid=false;continue;}
+    if(x.acao==='entrada'&&state==='fora'){start=x.ts;state='trabalho';}
+    else if(x.acao==='saida_intervalo'&&state==='trabalho'){closed+=x.ts-start;nightMs+=night(start,x.ts);pause=x.ts;start=null;state='intervalo';}
+    else if(x.acao==='volta_intervalo'&&state==='intervalo'){d.pausas.push([pause,x.ts]);pause=null;start=x.ts;state='trabalho';}
+    else if(x.acao==='saida'&&state==='trabalho'){closed+=x.ts-start;nightMs+=night(start,x.ts);start=null;state='fora';}
+    else valid=false;
+   }
+   if(pause!==null)d.pausas.push([pause,null]);
+   d.noturno=d.trabalhado!==null&&valid?nightMs:null;
+   d.parcial=valid&&state!=='fora'&&civil(agora-5*3600000)===d.dia?closed+(start===null?0:Math.max(0,agora-start)):null;
+   const a=accumulated.get(d.nome)||0;if(d.trabalhado!==null)accumulated.set(d.nome,a+d.trabalhado);
+   d.acumulado=accumulated.get(d.nome)??null;
+  }
+  for(const p of m.resumo){const ds=m.detalhes.filter(d=>d.nome===p.nome);p.noturno=ds.some(d=>d.noturno!==null)?ds.reduce((n,d)=>n+(d.noturno||0),0):null;p.parcial=ds.some(d=>d.parcial!==null)?ds.reduce((n,d)=>n+(d.parcial||0),0):null;p.folgas=ds.filter(d=>d.escala.startsWith('Folga')).length;}
+  m.gerado=agora;return m;
+ }
+ function model(...args){return enrich(original.model(...args),args[5]??Date.now());}
+ const el=(tag,txt,cls)=>{const n=document.createElement(tag);if(txt!==undefined)n.textContent=txt;if(cls)n.className=cls;return n;};
+ function tabela(headers,rows){const wrap=el('div',undefined,'up-scroll'),t=el('table',undefined,'up-table'),head=el('thead'),hr=el('tr');for(const h of headers){const th=el('th',h);th.scope='col';hr.append(th);}head.append(hr);t.append(head);const body=el('tbody');for(const values of rows){const tr=el('tr');for(const v of values)tr.append(el('td',String(v??'')));body.append(tr);}t.append(body);wrap.append(t);return wrap;}
+ function render(box,m,loja){
+  box.replaceChildren();const title=el('section',undefined,'panel');title.append(el('div','GRUPO GABBA · CONTROLE DE FREQUÊNCIA','label'),el('h2','Relatório de horas e frequência'),el('p',loja.nome+' · '+date(m.de)+' a '+date(m.ate)),el('p','Atualizado em '+new Date(m.gerado).toLocaleString('pt-BR',{timeZone:'America/Fortaleza'}),'hint'));box.append(title);
+  const note=el('div',undefined,'notice');note.append(el('b','Acumulado confirmado no período selecionado'),el('p','O total soma jornadas encerradas e conferidas. Turnos abertos aparecem como parciais e não entram nesse total. Sem marcação não significa falta. Horas noturnas (22h–05h) já fazem parte do trabalhado. Excedentes sobre a escala são para conferência; não calculamos valores ou abonos.'));box.append(note);
+  if(!m.resumo.length){box.append(el('p','Nenhum funcionário encontrado para o filtro.'));return;}
+  box.append(tabela(['Funcionário','Confirmado','Em andamento','Excedente a conferir','Noturno 22h–05h','Ausências'],m.resumo.map(p=>[p.nome,fmt(p.trabalhado),fmt(p.parcial),fmt(p.excedente),fmt(p.noturno),p.ausencias||0])));
+  for(const p of m.resumo){
+   const ds=m.detalhes.filter(d=>d.nome===p.nome),card=el('section',undefined,'panel up-pessoa');card.append(el('h2',p.nome),el('p',p.setor,'hint'));
+   const grid=el('div',undefined,'rel-metricas');for(const [label,v]of [['Horas confirmadas',fmt(p.trabalhado)],['Parcial em andamento',fmt(p.parcial)],['Excedente sobre escala · conferir',fmt(p.excedente)],['Noturno · tempo de relógio',fmt(p.noturno)],['Atrasos na entrada',fmt(p.atraso)],['Intervalos realizados',fmt(ds.some(d=>d.intervalo!==null)?ds.reduce((n,d)=>n+(d.intervalo||0),0):null)]]){const item=el('div');item.append(el('strong',v),el('span',label));grid.append(item);}card.append(grid,el('p',p.fechados+' jornadas completas · '+p.pendentes+' com marcações a conferir · '+(p.ausencias||0)+' ausências registradas · '+p.folgas+' dias sem escala','hint'));
+   for(const d of ds){const row=el('article',undefined,'up-dia');row.append(el('h3',date(d.dia)+' · '+d.status),el('p','Escala: '+d.escala+' · Intervalo previsto: '+d.intervaloPrevisto,'hint'));
+    const marks=el('div',undefined,'up-marcas');for(const [label,v]of [['Entrada',hm(d.entrada)],['Intervalo / retorno',d.pausas.length?d.pausas.map(([a,b])=>hm(a)+' → '+(b===null?'aguardando retorno':hm(b))).join(' | '):'—'],['Saída',hm(d.saida)],['Confirmado no dia',fmt(d.trabalhado)],['Acumulado até esta data',fmt(d.acumulado)]]){const n=el('div');n.append(el('small',label),el('b',v));marks.append(n);}row.append(marks);
+    if(d.parcial!==null)row.append(el('p','Em andamento: '+fmt(d.parcial)+' até '+hm(m.gerado)+' · parcial, fora do acumulado confirmado.','notice'));
+    if(d.r.length)row.append(el('p','Atraso: '+fmt(d.atraso)+' · Entrada antecipada: '+fmt(d.antecipada)+' · Saída antecipada: '+fmt(d.saidaAntes)+' · Após escala: '+fmt(d.saidaDepois)+' · Excedente a conferir: '+fmt(d.excedente),'hint'));
+    for(const x of d.r.filter(x=>x.intervalo)){const a=x.intervalo;row.append(el('p','Intervalo: previsto '+a.inicio+' · saída real '+hm(x.ts)+' · '+(a.fora==='atrasado'?'ATRASO '+a.atraso+' min':a.fora==='antecipado'?'Antecipado '+a.antecipado+' min':'Dentro da tolerância')+' · tolerância '+a.tolerancia+' min',a.fora==='atrasado'?'flag':'hint'));}
+    if(d.r.some(x=>x.acao==='saida_intervalo'&&!x.intervalo))row.append(el('p','Intervalo sem regra de início registrada nesta marcação; pontualidade não classificada.','hint'));
+    if(d.notas.length)row.append(el('p',d.notas.join('. '),'flag'));card.append(row);
+   }box.append(card);
+  }
+ }
+ function rows(m,tipo){if(tipo==='resumo')return[['Funcionário','Setor','Início','Até','Horas confirmadas','Parcial em andamento','Excedente a conferir','Noturno 22h–05h','Atraso','Ausências','Dias completos','Dias pendentes'],...m.resumo.map(p=>[p.nome,p.setor,m.de,m.ate,fmt(p.trabalhado),fmt(p.parcial),fmt(p.excedente),fmt(p.noturno),fmt(p.atraso),p.ausencias||0,p.fechados,p.pendentes])];return[['Funcionário','Data','Situação','Escala','Intervalo previsto','Entrada','Saída intervalo e retorno','Saída','Intervalo realizado','Confirmado no dia','Acumulado no período até a data','Parcial em andamento','Excedente a conferir','Noturno 22h–05h','Observações'],...m.detalhes.map(d=>[d.nome,d.dia,d.status,d.escala,d.intervaloPrevisto,hm(d.entrada),d.pausas.map(([a,b])=>hm(a)+' → '+hm(b)).join(' | '),hm(d.saida),fmt(d.intervalo),fmt(d.trabalhado),fmt(d.acumulado),fmt(d.parcial),fmt(d.excedente),fmt(d.noturno),d.notas.concat(d.r.filter(x=>x.intervalo).map(x=>'Intervalo previsto '+x.intervalo.inicio+', '+x.intervalo.fora+', atraso '+x.intervalo.atraso+' min')).join('. ')])];}
+ function download(m,tipo,loja){const safe=v=>{let s=String(v??'');if(/^[=+@-]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"';};const url=URL.createObjectURL(new Blob(['\ufeff'+rows(m,tipo).map(r=>r.map(safe).join(';')).join('\r\n')],{type:'text/csv;charset=utf-8'})),a=el('a');a.href=url;a.download='relatorio-'+loja+'-'+tipo+'-'+m.de+'-a-'+m.ate+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+ window.GabbaRelatorio={model,render,rows,download};window.PontoUpgrade={night,enrich};
+})();
+</script>
 <script>
 (function () {
   const $ = id => document.getElementById(id);
@@ -428,28 +481,26 @@ summary {cursor:pointer;padding:12px 0;font-weight:700}
     RELATORIO = null;
     ['rel-resumo','rel-detalhe','rel-imprimir','csv'].forEach(id => $(id).disabled = true);
     $('sem-relatorio').textContent = 'Carregando os registros reais…';
-    const inicio = semIni;
-    const fim = somaDia(semIni, 6);
+    if(!$('up-de').value){$('up-de').value=hoje().slice(0,7)+'-01';$('up-ate').value=hoje();}
+    const inicio=$('up-de').value,fim=$('up-ate').value;
+    if(!inicio||!fim||fim<inicio||(Date.parse(fim+'T12:00:00Z')-Date.parse(inicio+'T12:00:00Z'))/864e5>365)throw Error('Escolha um período de até 366 dias, com início antes da data final.');
     $('sem-txt').textContent = semIni.slice(8) + '/' + semIni.slice(5, 7) + ' a ' + fim.slice(8) + '/' + fim.slice(5, 7);
-    const { registros, ausencias=[] } = await adm('registros', { de: inicio, ate: fim });
+    const [{registros,ausencias=[]},cadastro]=await Promise.all([adm('registros',{de:inicio,ate:fim}),adm('equipe')]);
     if (pedido !== relPedido) return;
-    SEMREGS = registros;
-    RELATORIO = GabbaRelatorio.model(L.equipe, registros, inicio, fim, L, Date.now(), ausencias);
+    L.equipe=cadastro.equipe;const escolhido=$('up-func').value;
+    $('up-func').replaceChildren();const todos=document.createElement('option');todos.value='';todos.textContent='Toda a equipe';$('up-func').append(todos);
+    for(const p of L.equipe){const o=document.createElement('option');o.value=p.nome;o.textContent=p.nome+(p.ativo===false?' (inativo)':'');$('up-func').append(o);}
+    $('up-func').value=escolhido;const equipe=escolhido?L.equipe.filter(p=>p.nome===escolhido).map(p=>({...p,ativo:true})):L.equipe;
+    SEMREGS=escolhido?registros.filter(x=>x.nome===escolhido):registros;
+    RELATORIO=GabbaRelatorio.model(equipe,SEMREGS,inicio,fim,L,Date.now(),ausencias.filter(a=>!escolhido||a.nome===escolhido));
     GabbaRelatorio.render($('sem-relatorio'), RELATORIO, L, CFG.tolerancia_min);
     ['rel-resumo','rel-detalhe','rel-imprimir','csv'].forEach(id => $(id).disabled = false);
-    const dias = [...Array(7)].map((_, i) => somaDia(semIni, i));
-    const t = $('sem-tab'); t.innerHTML = '';
-    const th = document.createElement('tr'); th.innerHTML = '<th>Pessoa</th>' + dias.map(d => '<th>' + SEM[new Date(d + 'T12:00:00Z').getUTCDay()] + '<br>' + d.slice(8) + '</th>').join('') + '<th>Total</th>'; t.append(th);
-    L.equipe.filter(p => p.ativo !== false || registros.some(x => x.nome === p.nome)).forEach(p => {
-      const tr = document.createElement('tr'); let tot = 0;
-      const td0 = document.createElement('td'); td0.textContent = p.nome; tr.append(td0);
-      dias.forEach(d => { const s = resumo(registros, p.nome, d); tot += s.trab; const td = document.createElement('td'); td.textContent = s.r.length ? durTxt(s.trab) + (s.flags.length ? ' !' : '') : '–'; if (s.flags.length) td.style.color = 'var(--red)'; td.title = s.flags.join('; '); tr.append(td); });
-      const tt = document.createElement('td'); tt.className = 'tot'; tt.textContent = durTxt(tot); tr.append(tt);
-      t.append(tr);
-    });
+    $('sem-tab').replaceChildren();
   }
-  $('sem-ant').onclick = () => { semIni = somaDia(semIni, -7); abaSemana(); };
-  $('sem-prox').onclick = () => { semIni = somaDia(semIni, 7); abaSemana(); };
+  $('sem-ant').onclick=()=>{$('up-de').value=somaDia($('up-de').value||semIni,-7);$('up-ate').value=somaDia($('up-ate').value||somaDia(semIni,6),-7);abaSemana().catch(e=>msg(e.message,'err'));};
+  $('sem-prox').onclick=()=>{$('up-de').value=somaDia($('up-de').value||semIni,7);$('up-ate').value=somaDia($('up-ate').value||somaDia(semIni,6),7);abaSemana().catch(e=>msg(e.message,'err'));};
+  $('up-aplicar').onclick=()=>abaSemana().catch(e=>msg(e.message,'err'));
+  $('up-mes').onclick=()=>{$('up-de').value=hoje().slice(0,7)+'-01';$('up-ate').value=hoje();abaSemana().catch(e=>msg(e.message,'err'));};
   $('rel-resumo').onclick = () => { if (RELATORIO) GabbaRelatorio.download(RELATORIO, 'resumo', LOJA); };
   $('rel-detalhe').onclick = () => { if (RELATORIO) GabbaRelatorio.download(RELATORIO, 'detalhe', LOJA); };
   let detalhesFechados = [];
@@ -753,5 +804,6 @@ summary {cursor:pointer;padding:12px 0;font-weight:700}
 </script>
 </body>
 </html>
+
 
 
