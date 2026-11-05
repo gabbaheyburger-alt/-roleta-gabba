@@ -458,7 +458,17 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
   function semBrinde() { return SRV && RESTANTES === 0 && !wonToday(); }
   function checarEstoque() {
     if (!SRV) return;
-    GabbaBrindes.status().then(s => { RESTANTES = s.restantes; aplicarConfig(); }).catch(() => {});
+    GabbaBrindes.status().then(s => {
+      RESTANTES = s.restantes;
+      // Ajustes do dono (aba Ajustes da tela de brindes) valem mais que o config.json
+      if (s.ajustes) {
+        let deliv = false; try { deliv = sessionStorage.getItem('gabba-modo') === 'delivery'; } catch (e) {}
+        VALE_PREMIO = !deliv && s.ajustes.jogo === 'pedido';
+        ATIVO = VALE_PREMIO && s.ajustes.ativo === true;
+        MEMORIA = s.ajustes.memoria !== false;
+      }
+      aplicarConfig();
+    }).catch(() => {});
   }
   setInterval(() => { if (!document.hidden && $('over').hidden) checarEstoque(); }, 60000);
   function reservar() {

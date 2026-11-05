@@ -100,6 +100,19 @@ ul.list li:first-child { border-top: none; }
 .tab.on svg { color: rgb(var(--c)); filter: drop-shadow(0 0 6px rgba(var(--c), .8)); }
 body.recepcao .so-dono { display: none !important; }
 @media (min-width: 860px) { body.recepcao main.on { grid-template-columns: minmax(0, 560px); justify-content: center; } }
+.seg { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.seg button { --c: var(--green); border: 1.5px solid var(--line); background: rgba(255,255,255,.03); color: var(--muted); border-radius: 16px; padding: 12px 8px; font: 400 .9rem var(--display); cursor: pointer; display: grid; gap: 2px; }
+.seg button small { font: 700 .75rem var(--font); }
+.seg button[aria-pressed="true"] { color: #fff; border-color: rgb(var(--c)); background: rgba(var(--c), .12); box-shadow: 0 0 18px rgba(var(--c), .4); }
+.sw { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 12px 14px; border-radius: 16px; border: 1.5px solid var(--line); background: rgba(255,255,255,.02); cursor: pointer; }
+.sw span { display: grid; font-weight: 800; color: #fff; }
+.sw small { font-weight: 600; color: var(--muted); }
+.sw input { appearance: none; -webkit-appearance: none; flex: 0 0 54px; width: 54px; height: 32px; padding: 0; border-radius: 999px; background: #2a2a2a; border: 1.5px solid var(--line); position: relative; cursor: pointer; transition: background .2s; }
+.sw input::after { content: ''; position: absolute; top: 3px; left: 3px; width: 23px; height: 23px; border-radius: 50%; background: #9a948f; transition: transform .2s, background .2s; }
+.sw input:checked { background: rgba(var(--green), .3); border-color: rgb(var(--green)); box-shadow: 0 0 14px rgba(var(--green), .5); }
+.sw input:checked::after { transform: translateX(22px); background: rgb(var(--green)); }
+.panel.c-purple { --c: 168, 110, 255; }
+.tab[data-t="ajustes"] { --c: 168, 110, 255; }
 .tab[data-t="fila"] { --c: var(--blue); } .tab[data-t="lancar"] { --c: var(--orange); } .tab[data-t="entregues"] { --c: var(--pink); }
 .tab .badge { position: absolute; top: 2px; right: 14%; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: rgb(var(--yellow)); color: #1a1400; font: 800 .7rem/18px var(--font); text-align: center; box-shadow: 0 0 10px rgba(var(--yellow), .7); }
 @media (prefers-reduced-motion: reduce) { .panel { animation: none; } }
@@ -183,6 +196,23 @@ body.recepcao .so-dono { display: none !important; }
         <p class="hint">Os brindes saem na ordem da fila: o primeiro cliente que ganhar leva o nº 1, e assim por diante. A fila zera sozinha todo dia.</p>
       </div>
     </section>
+
+    <!-- Ajustes (dono) -->
+    <section class="panel c-purple so-dono" data-tab="ajustes">
+      <h2>Ajustes dos jogos</h2>
+      <div class="body">
+        <div class="qlabel" style="margin:0">Jogo que vale prêmio</div>
+        <div class="seg" id="aj-jogo">
+          <button type="button" data-jogo="pedido" aria-pressed="false">Pedido Certo<small>8 pedidos em 60 s</small></button>
+          <button type="button" data-jogo="quiz" aria-pressed="false">Quiz do Gabba<small>10 perguntas</small></button>
+        </div>
+        <label class="sw"><span>Valendo prêmio hoje<small>Desligado: os jogos não dão brinde</small></span><input type="checkbox" id="aj-ativo"></label>
+        <label class="sw"><span>Pedido de memória<small>No Pedido Certo, a comanda some 1 vez por partida</small></span><input type="checkbox" id="aj-memoria"></label>
+        <button class="btn" id="aj-salvar" type="button">Salvar ajustes</button>
+        <div id="aj-msg" aria-live="polite"></div>
+        <p class="hint">Vale para os clientes na hora (em até 1 minuto). O cliente leva sempre o próximo brinde da fila.</p>
+      </div>
+    </section>
   </div>
 </main>
 <p class="foot" id="foot"></p>
@@ -191,6 +221,7 @@ body.recepcao .so-dono { display: none !important; }
   <button class="tab on" type="button" data-t="baixa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>Baixa<span class="badge" id="b-pend" hidden>0</span></button>
   <button class="tab so-dono" type="button" data-t="fila"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"></path></svg>Fila</button>
   <button class="tab so-dono" type="button" data-t="lancar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="18" height="4" rx="1"></rect><path d="M12 8v13M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5"></path></svg>Lançar</button>
+  <button class="tab so-dono" type="button" data-t="ajustes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"></path></svg>Ajustes</button>
   <button class="tab" type="button" data-t="entregues"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>Entregues</button>
 </nav>
 
@@ -215,9 +246,14 @@ body.recepcao .so-dono { display: none !important; }
     return d;
   }
 
-  let papel = 'recepcao';
+  let papel = 'recepcao', CFG = {}, ajSujo = false, aj = { jogo: 'pedido', ativo: false, memoria: true };
+  function mostrarAjustes() {
+    document.querySelectorAll('#aj-jogo button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.jogo === aj.jogo)));
+    $('aj-ativo').checked = !!aj.ativo; $('aj-memoria').checked = aj.memoria !== false;
+  }
   function render(d) {
-    if (d.papel) { papel = d.papel; document.body.classList.toggle('recepcao', papel !== 'dono'); $('h1').textContent = papel === 'dono' ? 'Brindes · Dono' : 'Brindes · Recepção'; if (papel !== 'dono' && (abaAtual === 'fila' || abaAtual === 'lancar')) aba('baixa'); }
+    if (!ajSujo) { const a = d.ajustes || { jogo: CFG.jogo === 'quiz' ? 'quiz' : 'pedido', ativo: CFG.ativo === true, memoria: CFG.memoria !== false }; aj = Object.assign({}, a); mostrarAjustes(); }
+    if (d.papel) { papel = d.papel; document.body.classList.toggle('recepcao', papel !== 'dono'); $('h1').textContent = papel === 'dono' ? 'Brindes · Dono' : 'Brindes · Recepção'; if (papel !== 'dono' && ['fila', 'lancar', 'ajustes'].includes(abaAtual)) aba('baixa'); }
     const itens = d.itens || [];
     const livres = itens.filter(i => !i.codigo);
     const pend = itens.filter(i => i.codigo && !i.entregue_em);
@@ -300,6 +336,20 @@ body.recepcao .so-dono { display: none !important; }
   });
   const alertar = t => { $('foot').textContent = t; };
 
+  // Ajustes do dono
+  $('aj-jogo').addEventListener('click', e => { const b = e.target.closest('[data-jogo]'); if (!b) return; aj.jogo = b.dataset.jogo; ajSujo = true; mostrarAjustes(); });
+  $('aj-ativo').addEventListener('change', e => { aj.ativo = e.target.checked; ajSujo = true; });
+  $('aj-memoria').addEventListener('change', e => { aj.memoria = e.target.checked; ajSujo = true; });
+  $('aj-salvar').addEventListener('click', async () => {
+    $('aj-salvar').disabled = true;
+    try {
+      const d = await api('/ajustes', aj);
+      ajSujo = false; aj = Object.assign({}, d.ajustes); mostrarAjustes();
+      msg($('aj-msg'), 'Salvo! ' + (aj.ativo ? (aj.jogo === 'quiz' ? 'Quiz do Gabba' : 'Pedido Certo') + ' valendo brinde.' : 'Jogos sem prêmio por enquanto.'), 'ok');
+    } catch (e) { msg($('aj-msg'), e.message, 'err'); }
+    finally { $('aj-salvar').disabled = false; }
+  });
+
   // Abas flutuantes (no celular mostram uma parte por vez; no notebook aparece tudo)
   let abaAtual = 'baixa';
   try { abaAtual = localStorage.getItem('gabba-recepcao-aba') || 'baixa'; } catch (e) {}
@@ -331,6 +381,7 @@ body.recepcao .so-dono { display: none !important; }
   // Endereço do servidor: vem do config.json dos jogos (campo "servidor"). ?srv=... só para teste.
   const q = new URLSearchParams(location.search).get('srv');
   fetch('../desafio/config.json?v=' + Date.now(), { cache: 'no-store' }).then(r => r.json()).catch(() => ({})).then(c => {
+    CFG = c || {};
     SRV = (q || c.servidor || '').replace(/\/+$/, '');
     if (!SRV) { $('login').querySelector('.body').innerHTML = '<div class="msg info">O servidor dos brindes ainda não foi ativado. Assim que ele estiver no ar, esta tela passa a funcionar.</div>'; return; }
     mostrar(!!PIN);

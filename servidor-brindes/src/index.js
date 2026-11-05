@@ -13,7 +13,8 @@
  * Rotas públicas (jogos):    GET /status · POST /ganhar
  * Rotas com PIN:
  *   recepção ou dono  GET /recepcao · POST /baixa
- *   só o dono         POST /estoque · POST /remover · POST /devolver
+ *   só o dono         POST /estoque · POST /remover · POST /devolver · POST /ajustes
+ * Ajustes (jogo do prêmio, prêmio ligado, pedido de memória) ficam aqui e vão para os jogos pelo /status.
  * Os PINs ficam nos segredos PIN_RECEPCAO e PIN_DONO, configurados no painel do Cloudflare (nunca no código).
  */
 
@@ -71,7 +72,7 @@ export default {
         if (!env.PIN_RECEPCAO && !env.PIN_DONO) return json(req, { erro: 'Os PINs ainda não foram configurados no Cloudflare.' }, 503);
         return json(req, { erro: 'PIN incorreto.' }, 401);
       }
-      if (papel !== 'dono' && ['/estoque', '/remover', '/devolver'].includes(rota)) return json(req, { erro: 'Só o dono pode mexer na fila de brindes.' }, 403);
+      if (papel !== 'dono' && ['/estoque', '/remover', '/devolver', '/ajustes'].includes(rota)) return json(req, { erro: 'Só o dono pode mexer na fila de brindes.' }, 403);
     }
     let corpo = {};
     if (req.method === 'POST') {
@@ -96,9 +97,15 @@ export class Brindes extends DurableObject {
       id INTEGER PRIMARY KEY AUTOINCREMENT, dia TEXT NOT NULL, ordem INTEGER NOT NULL, nome TEXT NOT NULL,
       codigo TEXT, reservado_em TEXT, jogo TEXT, aparelho TEXT, entregue_em TEXT)`);
     this.sql.exec(`CREATE INDEX IF NOT EXISTS estoque_dia ON estoque (dia, ordem)`);
+    this.sql.exec(`CREATE TABLE IF NOT EXISTS ajustes (id INTEGER PRIMARY KEY CHECK (id = 1), json TEXT NOT NULL, salvo_em TEXT)`);
   }
 
   linhas(q, ...p) { return this.sql.exec(q, ...p).toArray(); }
+
+  ajustes() {
+    const r = this.linhas(`SELECT json FROM ajustes WHERE id = 1`)[0];
+    try { return r ? JSON.parse(r.json) : null; } catch (e) { return null; }
+  }
 
   resumo(dia) {
     const itens = this.linhas(`SELECT id, ordem, nome, codigo, reservado_em, jogo, entregue_em FROM estoque WHERE dia = ? ORDER BY ordem`, dia);
@@ -122,7 +129,7 @@ export class Brindes extends DurableObject {
 
     if (rota === '/' || (rota === '/status' && metodo === 'GET')) {
       const { livres, itens } = this.resumo(dia);
-      return { data: { dia, restantes: livres.length, total: itens.length, proximo: livres[0] ? livres[0].nome : null } };
+      return { data: { dia, restantes: livres.length, total: itens.length, proximo: livres[0] ? livres[0].nome : null, ajustes: this.ajustes() } };
     }
 
     if (rota === '/ganhar' && metodo === 'POST') {
@@ -141,7 +148,13 @@ export class Brindes extends DurableObject {
 
     if (rota === '/recepcao' && metodo === 'GET') {
       const { itens, livres } = this.resumo(dia);
-      return { data: { dia, itens, restantes: livres.length } };
+      return { data: { dia, itens, restantes: livres.length, ajustes: this.ajustes() } };
+    }
+
+    if (rota === '/ajustes' && metodo === 'POST') {
+      const a = { jogo: corpo.jogo === 'quiz' ? 'quiz' : 'pedido', ativo: corpo.ativo === true, memoria: corpo.memoria !== false };
+      this.sql.exec(`INSERT INTO ajustes (id, json, salvo_em) VALUES (1, ?, ?) ON CONFLICT(id) DO UPDATE SET json = excluded.json, salvo_em = excluded.salvo_em`, JSON.stringify(a), dia + ' ' + horaAgora());
+      return { data: { ok: true, ajustes: a } };
     }
 
     if (rota === '/estoque' && metodo === 'POST') {

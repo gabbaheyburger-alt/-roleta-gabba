@@ -77,7 +77,7 @@ Servidor próprio, separado do servidor do ponto: `servidor-brindes/` (Cloudflar
 
 ## Jogo que vale prêmio (escolhido na área do dono)
 
-A área do dono (`/adm/`) grava em `desafio/config.json`: `premio`, `ativo` (liga/desliga), **`jogo`** (`pedido` ou `quiz`: qual jogo vale prêmio) e **`memoria`** (liga/desliga o pedido de memória do Pedido Certo). Sem o campo `jogo`, vale o Pedido Certo. O Fliperama da mesa mostra em destaque o jogo escolhido (selo "Vale prêmio") e esconde o cartão comum dele; no delivery nenhum jogo vale prêmio.
+Os ajustes ficam na aba **Ajustes** da tela `/recepcao/` com o PIN do dono (guardados no servidor dos brindes e lidos pelos jogos no `/status`; depois de salvos lá, valem mais que o `config.json`). A antiga área do dono (`/adm/`, agora reserva) grava em `desafio/config.json`: `premio`, `ativo` (liga/desliga), **`jogo`** (`pedido` ou `quiz`: qual jogo vale prêmio) e **`memoria`** (liga/desliga o pedido de memória do Pedido Certo). Sem o campo `jogo`, vale o Pedido Certo. O Fliperama da mesa mostra em destaque o jogo escolhido (selo "Vale prêmio") e esconde o cartão comum dele; no delivery nenhum jogo vale prêmio.
 
 ## Quiz do Gabba (estilo Show do Milhão)
 

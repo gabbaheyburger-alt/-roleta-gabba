@@ -459,7 +459,12 @@ body { margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: en
   function semBrinde() { return SRV && RESTANTES === 0 && !wonToday(); }
   function checarEstoque() {
     if (!SRV) return;
-    GabbaBrindes.status().then(s => { RESTANTES = s.restantes; aplicarConfig(); }).catch(() => {});
+    GabbaBrindes.status().then(s => {
+      RESTANTES = s.restantes;
+      // Ajustes do dono (aba Ajustes da tela de brindes) valem mais que o config.json
+      if (s.ajustes) VALE_PREMIO = s.ajustes.jogo === 'quiz' && s.ajustes.ativo === true;
+      aplicarConfig();
+    }).catch(() => {});
   }
   setInterval(() => { if (!document.hidden && $('over').hidden) checarEstoque(); }, 60000);
   function reservar() {
