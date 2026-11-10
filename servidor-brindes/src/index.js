@@ -12,7 +12,7 @@
  *
  * Rotas públicas (jogos):    GET /status · POST /ganhar
  * Rotas com PIN:
- *   recepção ou dono  GET /recepcao · POST /baixa
+ *   recepção ou dono  GET /recepcao · POST /baixa · GET /historico?dia=AAAA-MM-DD (dias anteriores, só leitura)
  *   só o dono         POST /estoque · POST /remover · POST /devolver · POST /ajustes
  *   só o dono         GET /programa · POST /semana · POST /data
  * Ajustes (jogo do prêmio, prêmio ligado, pedido de memória) ficam aqui e vão para os jogos pelo /status.
@@ -87,6 +87,7 @@ export default {
       if (papel !== 'dono' && ['/estoque', '/remover', '/devolver', '/ajustes', '/programa', '/semana', '/data'].includes(rota)) return json(req, { erro: 'Só o dono pode mexer na fila de brindes.' }, 403);
     }
     let corpo = {};
+    if (req.method === 'GET') corpo = { dia: url.searchParams.get('dia') || '' };
     if (req.method === 'POST') {
       try { corpo = await req.json(); } catch (e) { return json(req, { erro: 'Pedido inválido.' }, 400); }
     }
@@ -251,6 +252,16 @@ export class Brindes extends DurableObject {
     }
 
     if (rota === '/programa' && metodo === 'GET') return { data: this.programa(dia) };
+
+    if (rota === '/historico' && metodo === 'GET') {
+      // Um dia qualquer (padrão: ontem) + resumo dos últimos 30 dias
+      let d = String(corpo.dia || '');
+      if (!DATA.test(d)) { const o = new Date(Date.parse(dia + 'T12:00:00Z') - 86400000); d = o.toISOString().slice(0, 10); }
+      const desde = new Date(Date.parse(dia + 'T12:00:00Z') - 30 * 86400000).toISOString().slice(0, 10);
+      const dias = this.linhas(`SELECT dia, COUNT(*) AS total, COUNT(codigo) AS ganhos, COUNT(entregue_em) AS entregues
+        FROM estoque WHERE dia >= ? AND dia <= ? GROUP BY dia ORDER BY dia DESC`, desde, dia);
+      return { data: { hoje: dia, dia: d, itens: this.resumo(d).itens, dias } };
+    }
 
     if (rota === '/semana' && metodo === 'POST') {
       // corpo = { dia_semana: 0..6, cfg: {...} | null (apaga) }

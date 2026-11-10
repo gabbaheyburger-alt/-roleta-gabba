@@ -136,6 +136,13 @@ input[type="time"], input[type="date"] { min-height: 52px; }
 .ed-acts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .hora-hoje { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 16px; border: 1.5px solid rgba(45,212,191,.45); background: rgba(45,212,191,.07); font-weight: 700; }
 .hora-hoje b { font: 400 1rem var(--display); color: rgb(45,212,191); }
+.diabar { display: flex; align-items: center; gap: 10px; padding: 12px 18px 4px; }
+.diabar button { width: 44px; height: 44px; border-radius: 12px; border: 1.5px solid rgba(var(--pink), .5); background: rgba(var(--pink), .07); color: #fff; font: 800 1.4rem var(--font); cursor: pointer; }
+.diabar button:disabled { opacity: .3; cursor: default; }
+.diabar span { flex: 1; text-align: center; font: 400 1rem var(--display); color: rgb(var(--pink)); text-shadow: 0 0 10px rgba(var(--pink), .5); }
+.sub { padding: 14px 18px 2px; font: 400 .8rem var(--display); color: rgb(var(--yellow)); letter-spacing: .03em; border-top: 1px solid rgba(255,255,255,.08); }
+#dias-hist li.sel { background: rgba(var(--pink), .1); box-shadow: inset 3px 0 0 rgb(var(--pink)); }
+#dias-hist .dn { color: rgb(var(--pink)); text-shadow: 0 0 8px rgba(var(--pink), .5); }
 @media (prefers-reduced-motion: reduce) { .panel { animation: none; } }
 </style>
 </head>
@@ -176,10 +183,26 @@ input[type="time"], input[type="date"] { min-height: 52px; }
       <ul class="list" id="pend"></ul>
     </section>
 
-    <!-- Entregues hoje -->
+    <!-- Entregues (hoje ou um dia anterior) -->
     <section class="panel c-pink" data-tab="entregues">
-      <h2>Entregues hoje <span class="n" id="n-entr">0</span></h2>
+      <h2><span id="entr-tit">Entregues hoje</span> <span class="n" id="n-entr">0</span></h2>
+      <div class="diabar">
+        <button type="button" id="h-ant" aria-label="Dia anterior">‹</button>
+        <span id="h-dia">Hoje</span>
+        <button type="button" id="h-prox" aria-label="Próximo dia">›</button>
+      </div>
       <ul class="list" id="entr"></ul>
+      <div id="h-extra" hidden>
+        <div class="sub">Ganharam e não retiraram <span id="n-nret">0</span></div>
+        <ul class="list" id="nret"></ul>
+        <p class="hint" id="h-sobra" style="padding:0 18px 16px"></p>
+      </div>
+    </section>
+
+    <!-- Resumo dos últimos dias -->
+    <section class="panel c-pink" data-tab="entregues">
+      <h2>Últimos dias</h2>
+      <ul class="dias" id="dias-hist"><li class="empty">Carregando…</li></ul>
     </section>
   </div>
 
@@ -345,11 +368,60 @@ input[type="time"], input[type="date"] { min-height: 52px; }
       (papel === 'dono' ? '<button class="btn ghost small" data-dev="' + esc(i.codigo) + '" type="button">Devolver</button>' : '') + '</span></li>').join('')
       : '<li class="empty">Ninguém esperando brinde.</li>';
 
-    $('entr').innerHTML = entr.length ? entr.slice().reverse().map(i =>
-      '<li><span class="li-main"><b>' + esc(i.nome) + '</b><small>Código ' + esc(i.codigo) + ' · entregue às ' + esc(i.entregue_em) + '</small></span></li>').join('')
-      : '<li class="empty">Nenhum brinde entregue ainda.</li>';
+    HOJE = d.dia || HOJE;
+    if (!histDia) pintarDia(d.dia, itens, true);
     $('foot').textContent = 'Atualizado às ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' · atualiza sozinho a cada 15 segundos';
   }
+  // ---------- Histórico (Entregues de hoje ou de dias anteriores) ----------
+  let HOJE = '', histDia = null, HIST = [];
+  const DSEM = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
+  const ddmm = d => { const p = (d || '').split('-'); return p[2] + '/' + p[1]; };
+  const somaDia = (d, n) => new Date(Date.parse(d + 'T12:00:00Z') + n * 86400000).toISOString().slice(0, 10);
+  function nomeDia(d) {
+    if (d === HOJE) return 'Hoje · ' + ddmm(d);
+    if (HOJE && d === somaDia(HOJE, -1)) return 'Ontem · ' + ddmm(d);
+    return DSEM[new Date(d + 'T12:00:00Z').getUTCDay()] + ' · ' + ddmm(d);
+  }
+  function pintarDia(dia, itens, ehHoje) {
+    const entr = itens.filter(i => i.entregue_em), nret = itens.filter(i => i.codigo && !i.entregue_em), sobra = itens.filter(i => !i.codigo);
+    $('entr-tit').textContent = ehHoje ? 'Entregues hoje' : 'Entregues';
+    $('h-dia').textContent = nomeDia(dia);
+    $('h-prox').disabled = ehHoje;
+    $('n-entr').textContent = entr.length;
+    $('entr').innerHTML = entr.length ? entr.slice().reverse().map(i =>
+      '<li><span class="li-main"><b>' + esc(i.nome) + '</b><small>Código ' + esc(i.codigo) + ' · ganhou às ' + esc(i.reservado_em) + ' · entregue às ' + esc(i.entregue_em) + ' · ' + esc(nomeJogo(i.jogo)) + '</small></span></li>').join('')
+      : '<li class="empty">' + (ehHoje ? 'Nenhum brinde entregue ainda.' : 'Nenhum brinde entregue neste dia.') + '</li>';
+    $('h-extra').hidden = ehHoje;
+    if (!ehHoje) {
+      $('n-nret').textContent = nret.length;
+      $('nret').innerHTML = nret.length ? nret.map(i =>
+        '<li><span class="li-main"><span class="code">' + esc(i.codigo) + '</span><b>' + esc(i.nome) + '</b><small>Ganhou às ' + esc(i.reservado_em) + ' · ' + esc(nomeJogo(i.jogo)) + ' · não veio buscar</small></span></li>').join('')
+        : '<li class="empty">Todos que ganharam vieram buscar.</li>';
+      $('h-sobra').textContent = !itens.length ? 'Não teve brinde na fila neste dia.' : sobra.length ? 'Sobraram na fila (ninguém ganhou): ' + sobra.length + ' · ' + resumoNomes(sobra) : 'Todos os brindes da fila saíram.';
+    }
+  }
+  function resumoNomes(l) { const c = {}; l.forEach(i => { c[i.nome] = (c[i.nome] || 0) + 1; }); return Object.keys(c).map(n => c[n] + '× ' + n).join(', '); }
+  function pintarResumo() {
+    $('dias-hist').innerHTML = HIST.length ? HIST.map(r =>
+      '<li class="' + (r.dia === HOJE ? 'hoje ' : '') + (r.dia === (histDia || HOJE) ? 'sel' : '') + '"><button type="button" data-hd="' + esc(r.dia) + '"><span class="dn">' + esc(DSEM[new Date(r.dia + 'T12:00:00Z').getUTCDay()].toUpperCase()) + '<br><small style="font:700 .72rem var(--font);color:var(--muted);text-shadow:none">' + ddmm(r.dia) + '</small></span>' +
+      '<span class="ds"><b>' + r.entregues + (r.entregues === 1 ? ' entregue' : ' entregues') + '</b><small>' + r.ganhos + (r.ganhos === 1 ? ' ganhou' : ' ganharam') + ' · ' + r.total + ' na fila' + (r.ganhos > r.entregues ? ' · ' + (r.ganhos - r.entregues) + ' não retirou' : '') + '</small></span><span class="seta">›</span></button></li>').join('')
+      : '<li class="empty">Nenhum brinde nos últimos 30 dias.</li>';
+  }
+  async function verDia(d) {
+    if (!HOJE) return;
+    if (!d || d >= HOJE) { histDia = null; carregar(); }
+    else {
+      histDia = d; $('h-dia').textContent = nomeDia(d); $('entr').innerHTML = '<li class="empty">Carregando…</li>'; $('h-extra').hidden = true; $('h-prox').disabled = false;
+      try { const r = await api('/historico?dia=' + d); HIST = r.dias || HIST; if (histDia === d) pintarDia(d, r.itens || [], false); }
+      catch (e) { $('entr').innerHTML = '<li class="empty">' + esc(e.message) + '</li>'; }
+    }
+    pintarResumo();
+  }
+  async function carregarHist() { try { const r = await api('/historico'); HIST = r.dias || []; HOJE = r.hoje || HOJE; pintarResumo(); } catch (e) {} }
+  $('h-ant').addEventListener('click', () => verDia(somaDia(histDia || HOJE, -1)));
+  $('h-prox').addEventListener('click', () => verDia(somaDia(histDia || HOJE, 1)));
+  $('dias-hist').addEventListener('click', e => { const b = e.target.closest('[data-hd]'); if (b) { verDia(b.dataset.hd); window.scrollTo({ top: 0, behavior: 'smooth' }); } });
+
   const nomeJogo = j => ({ pedido: 'Pedido Certo', quiz: 'Quiz do Gabba' }[j] || j || 'Jogo');
 
   async function carregar() {
@@ -360,7 +432,7 @@ input[type="time"], input[type="date"] { min-height: 52px; }
     if (logado) aba(abaAtual);
     $('main').classList.toggle('on', logado);
     clearInterval(timer);
-    if (logado) { carregar(); timer = setInterval(() => { if (!document.hidden) carregar(); }, 15000); }
+    if (logado) { carregar(); carregarHist(); timer = setInterval(() => { if (!document.hidden) carregar(); }, 15000); }
   }
   function sair() { PIN = ''; papel = 'recepcao'; document.body.classList.remove('recepcao'); try { localStorage.removeItem('gabba-recepcao-pin'); } catch (e) {} mostrar(false); }
 
@@ -544,6 +616,7 @@ input[type="time"], input[type="date"] { min-height: 52px; }
     abaAtual = t; try { localStorage.setItem('gabba-recepcao-aba', t); } catch (e) {}
     if (t !== 'programar' && ed) fecharEditor();
     if (t === 'programar' && papel === 'dono') carregarPrograma();
+    if (t === 'entregues') carregarHist();
     document.querySelectorAll('.panel[data-tab]').forEach(p => p.classList.toggle('show', p.dataset.tab === t));
     document.querySelectorAll('.tab').forEach(b => { const on = b.dataset.t === t; b.classList.toggle('on', on); b.setAttribute('aria-current', on ? 'page' : 'false'); });
     window.scrollTo({ top: 0, behavior: 'smooth' });
