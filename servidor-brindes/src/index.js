@@ -14,7 +14,15 @@
  * Rotas com PIN:
  *   recepção ou dono  GET /recepcao · POST /baixa
  *   só o dono         POST /estoque · POST /remover · POST /devolver · POST /ajustes
+ *   só o dono         GET /programa · POST /semana · POST /data
  * Ajustes (jogo do prêmio, prêmio ligado, pedido de memória) ficam aqui e vão para os jogos pelo /status.
+ *
+ * Programação (feita antes, pelo dono):
+ *  - Semana fixa: para cada dia da semana, horário (abre/fecha) e brindes. Repete toda semana.
+ *  - Datas especiais: uma data que troca a semana fixa (feriado, evento) ou "sem brindes neste dia".
+ *  - Na hora de abrir, os brindes programados entram sozinhos na fila do dia (uma vez por dia).
+ *  - Fora do horário ninguém ganha (os jogos ficam só pela diversão). Sem programação, vale o dia todo, como antes.
+ *  - O horário vai até no máximo 23:59, porque a fila é por dia.
  * Os PINs ficam nos segredos PIN_RECEPCAO e PIN_DONO, configurados no painel do Cloudflare (nunca no código).
  */
 
@@ -30,7 +38,7 @@ function cors(req) {
   return {
     'Access-Control-Allow-Origin': ok ? o : ORIGENS[0],
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, X-Pin',
+    'Access-Control-Allow-Headers': 'Content-Type, X-Pin, X-Relogio',
     'Access-Control-Max-Age': '86400',
     'Vary': 'Origin'
   };
@@ -55,6 +63,10 @@ function pinOk(dado, certo) {
   for (let i = 0; i < Math.max(a.length, b.length); i++) diff |= (a[i] || 0) ^ (b[i] || 0);
   return diff === 0;
 }
+const HORA = /^([01]\d|2[0-3]):[0-5]\d$/;
+const DATA = /^\d{4}-\d{2}-\d{2}$/;
+// Dia da semana (0 = domingo) de uma data AAAA-MM-DD
+const diaSemana = d => new Date(d + 'T12:00:00Z').getUTCDay();
 const limpa = (s, n) => String(s == null ? '' : s).replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, n);
 
 export default {
@@ -72,7 +84,7 @@ export default {
         if (!env.PIN_RECEPCAO && !env.PIN_DONO) return json(req, { erro: 'Os PINs ainda não foram configurados no Cloudflare.' }, 503);
         return json(req, { erro: 'PIN incorreto.' }, 401);
       }
-      if (papel !== 'dono' && ['/estoque', '/remover', '/devolver', '/ajustes'].includes(rota)) return json(req, { erro: 'Só o dono pode mexer na fila de brindes.' }, 403);
+      if (papel !== 'dono' && ['/estoque', '/remover', '/devolver', '/ajustes', '/programa', '/semana', '/data'].includes(rota)) return json(req, { erro: 'Só o dono pode mexer na fila de brindes.' }, 403);
     }
     let corpo = {};
     if (req.method === 'POST') {
@@ -80,7 +92,9 @@ export default {
     }
     const stub = env.BRINDES.get(env.BRINDES.idFromName('gabba-hey-burger'));
     try {
-      const r = await stub.acao(rota, req.method, corpo);
+      // Só no teste local (.dev.vars com RELOGIO_TESTE=1): o cabeçalho X-Relogio finge outra data/hora
+      const relogio = env.RELOGIO_TESTE === '1' ? (req.headers.get('X-Relogio') || '') : '';
+      const r = await stub.acao(rota, req.method, corpo, relogio);
       if (papel && r.data && typeof r.data === 'object') r.data.papel = papel;
       return json(req, r.data, r.status || 200);
     } catch (e) {
@@ -98,6 +112,83 @@ export class Brindes extends DurableObject {
       codigo TEXT, reservado_em TEXT, jogo TEXT, aparelho TEXT, entregue_em TEXT)`);
     this.sql.exec(`CREATE INDEX IF NOT EXISTS estoque_dia ON estoque (dia, ordem)`);
     this.sql.exec(`CREATE TABLE IF NOT EXISTS ajustes (id INTEGER PRIMARY KEY CHECK (id = 1), json TEXT NOT NULL, salvo_em TEXT)`);
+    this.sql.exec(`CREATE TABLE IF NOT EXISTS semana (dia_semana INTEGER PRIMARY KEY, json TEXT NOT NULL)`);
+    this.sql.exec(`CREATE TABLE IF NOT EXISTS datas (dia TEXT PRIMARY KEY, json TEXT NOT NULL)`);
+    this.sql.exec(`CREATE TABLE IF NOT EXISTS gerado (dia TEXT PRIMARY KEY, em TEXT NOT NULL)`);
+  }
+
+  /* ---------- Programação ---------- */
+  ler(q, ...p) { const r = this.linhas(q, ...p)[0]; try { return r ? JSON.parse(r.json) : null; } catch (e) { return null; } }
+  // Plano de um dia: a data especial vale mais que a semana fixa. null = sem programação.
+  plano(dia) {
+    const d = this.ler(`SELECT json FROM datas WHERE dia = ?`, dia);
+    if (d) return Object.assign({ origem: 'data' }, d);
+    const s = this.ler(`SELECT json FROM semana WHERE dia_semana = ?`, diaSemana(dia));
+    return s ? Object.assign({ origem: 'semana' }, s) : null;
+  }
+  // Situação agora: aberto, antes (ainda não abriu), depois (já fechou) ou folga (dia sem brindes)
+  horario(dia, hora) {
+    const p = this.plano(dia);
+    const h = { estado: 'aberto', abre: '', fecha: '', origem: p ? p.origem : '' };
+    if (!p) return h;
+    if (!p.ligado) { h.estado = 'folga'; return h; }
+    if (p.abre && p.fecha) {
+      h.abre = p.abre; h.fecha = p.fecha;
+      h.estado = hora < p.abre ? 'antes' : hora > p.fecha ? 'depois' : 'aberto';
+    }
+    return h;
+  }
+  qtdPlano(p) { return p && p.ligado ? (p.itens || []).reduce((a, i) => a + i.qtd, 0) : 0; }
+  // Na hora de abrir, coloca os brindes programados na fila (uma vez por dia)
+  gerar(dia, hora) {
+    if (this.linhas(`SELECT 1 FROM gerado WHERE dia = ?`, dia).length) return;
+    const p = this.plano(dia);
+    if (!p) return;
+    const h = this.horario(dia, hora);
+    if (h.estado === 'antes') return;
+    if (h.estado === 'aberto' && p.ligado) this.adicionar(dia, p.itens || []);
+    this.sql.exec(`INSERT INTO gerado (dia, em) VALUES (?, ?)`, dia, hora);
+  }
+  adicionar(dia, lista) {
+    const atual = this.resumo(dia).itens.length;
+    let ordem = (this.linhas(`SELECT MAX(ordem) AS m FROM estoque WHERE dia = ?`, dia)[0].m || 0);
+    let n = 0;
+    for (const it of lista) {
+      const nome = limpa(it && it.nome, MAX_NOME);
+      const qtd = Math.max(0, Math.min(20, Math.floor(+(it && it.qtd) || 0)));
+      if (!nome || !qtd) continue;
+      for (let k = 0; k < qtd; k++) {
+        if (atual + n >= MAX_ITENS) break;
+        this.sql.exec(`INSERT INTO estoque (dia, ordem, nome) VALUES (?, ?, ?)`, dia, ++ordem, nome);
+        n++;
+      }
+    }
+    return n;
+  }
+  // Confere e limpa um plano vindo da tela do dono. Devolve { cfg } ou { erro }.
+  validar(c) {
+    if (!c || typeof c !== 'object') return { erro: 'Programação inválida.' };
+    const ligado = c.ligado !== false;
+    let abre = String(c.abre || ''), fecha = String(c.fecha || '');
+    if (!ligado) return { cfg: { ligado: false, abre: '', fecha: '', itens: [] } };
+    if (abre || fecha) {
+      if (!HORA.test(abre) || !HORA.test(fecha)) return { erro: 'Horário inválido. Use o formato 19:00.' };
+      if (fecha <= abre) return { erro: 'O horário de fechar precisa ser depois do de abrir (até 23:59).' };
+    }
+    const itens = [];
+    let total = 0;
+    for (const it of Array.isArray(c.itens) ? c.itens.slice(0, 20) : []) {
+      const nome = limpa(it && it.nome, MAX_NOME), qtd = Math.max(0, Math.min(20, Math.floor(+(it && it.qtd) || 0)));
+      if (!nome || !qtd) continue;
+      total += qtd; itens.push({ nome, qtd });
+    }
+    if (total > MAX_ITENS) return { erro: 'No máximo ' + MAX_ITENS + ' brindes por dia.' };
+    return { cfg: { ligado: true, abre, fecha, itens } };
+  }
+  programa(dia) {
+    const semana = [0, 1, 2, 3, 4, 5, 6].map(n => this.ler(`SELECT json FROM semana WHERE dia_semana = ?`, n));
+    const datas = this.linhas(`SELECT dia, json FROM datas WHERE dia >= ? ORDER BY dia`, dia).map(r => { try { return Object.assign({ dia: r.dia }, JSON.parse(r.json)); } catch (e) { return null; } }).filter(Boolean);
+    return { semana, datas, hoje: { dia, dia_semana: diaSemana(dia), gerado: !!this.linhas(`SELECT 1 FROM gerado WHERE dia = ?`, dia).length } };
   }
 
   linhas(q, ...p) { return this.sql.exec(q, ...p).toArray(); }
@@ -124,12 +215,18 @@ export class Brindes extends DurableObject {
     throw new Error('sem código');
   }
 
-  async acao(rota, metodo, corpo) {
-    const dia = hoje();
+  async acao(rota, metodo, corpo, relogio) {
+    const teste = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(relogio || '');
+    const dia = teste ? relogio.slice(0, 10) : hoje(), hora = teste ? relogio.slice(11) : horaAgora();
+    this.gerar(dia, hora);
+    const hor = this.horario(dia, hora);
+    const gerou = !!this.linhas(`SELECT 1 FROM gerado WHERE dia = ?`, dia).length;
 
     if (rota === '/' || (rota === '/status' && metodo === 'GET')) {
       const { livres, itens } = this.resumo(dia);
-      return { data: { dia, restantes: livres.length, total: itens.length, proximo: livres[0] ? livres[0].nome : null, ajustes: this.ajustes() } };
+      const aberto = hor.estado === 'aberto';
+      const previstos = livres.length + (gerou ? 0 : this.qtdPlano(this.plano(dia)));
+      return { data: { dia, restantes: aberto ? livres.length : 0, total: itens.length, proximo: aberto && livres[0] ? livres[0].nome : null, horario: hor, previstos, ajustes: this.ajustes() } };
     }
 
     if (rota === '/ganhar' && metodo === 'POST') {
@@ -139,16 +236,47 @@ export class Brindes extends DurableObject {
       // Um brinde por aparelho por dia: se já ganhou, devolve o mesmo
       const ja = this.linhas(`SELECT nome, codigo, entregue_em FROM estoque WHERE dia = ? AND aparelho = ?`, dia, aparelho);
       if (ja.length) return { data: { ok: true, repetido: true, brinde: ja[0].nome, codigo: ja[0].codigo, entregue: !!ja[0].entregue_em } };
+      if (hor.estado !== 'aberto') return { data: { ok: false, fechado: true, horario: hor } };
       const livre = this.linhas(`SELECT id, nome FROM estoque WHERE dia = ? AND codigo IS NULL ORDER BY ordem LIMIT 1`, dia)[0];
       if (!livre) return { data: { ok: false, esgotado: true } };
       const codigo = this.novoCodigo(dia);
-      this.sql.exec(`UPDATE estoque SET codigo = ?, reservado_em = ?, jogo = ?, aparelho = ? WHERE id = ?`, codigo, horaAgora(), jogo, aparelho, livre.id);
+      this.sql.exec(`UPDATE estoque SET codigo = ?, reservado_em = ?, jogo = ?, aparelho = ? WHERE id = ?`, codigo, hora, jogo, aparelho, livre.id);
       return { data: { ok: true, brinde: livre.nome, codigo, restantes: this.resumo(dia).livres.length } };
     }
 
     if (rota === '/recepcao' && metodo === 'GET') {
       const { itens, livres } = this.resumo(dia);
-      return { data: { dia, itens, restantes: livres.length, ajustes: this.ajustes() } };
+      const previstos = gerou ? 0 : this.qtdPlano(this.plano(dia));
+      return { data: { dia, hora, itens, restantes: livres.length, horario: hor, previstos, ajustes: this.ajustes() } };
+    }
+
+    if (rota === '/programa' && metodo === 'GET') return { data: this.programa(dia) };
+
+    if (rota === '/semana' && metodo === 'POST') {
+      // corpo = { dia_semana: 0..6, cfg: {...} | null (apaga) }
+      const n = Math.floor(+corpo.dia_semana);
+      if (!(n >= 0 && n <= 6)) return { status: 400, data: { erro: 'Dia da semana inválido.' } };
+      if (corpo.cfg == null) this.sql.exec(`DELETE FROM semana WHERE dia_semana = ?`, n);
+      else {
+        const v = this.validar(corpo.cfg);
+        if (v.erro) return { status: 400, data: { erro: v.erro } };
+        this.sql.exec(`INSERT INTO semana (dia_semana, json) VALUES (?, ?) ON CONFLICT(dia_semana) DO UPDATE SET json = excluded.json`, n, JSON.stringify(v.cfg));
+      }
+      return { data: { ok: true, ...this.programa(dia) } };
+    }
+
+    if (rota === '/data' && metodo === 'POST') {
+      // corpo = { dia: 'AAAA-MM-DD', cfg: {...} | null (apaga) }
+      const d = String(corpo.dia || '');
+      if (!DATA.test(d) || isNaN(Date.parse(d + 'T12:00:00Z'))) return { status: 400, data: { erro: 'Data inválida.' } };
+      if (d < dia) return { status: 400, data: { erro: 'Essa data já passou.' } };
+      if (corpo.cfg == null) this.sql.exec(`DELETE FROM datas WHERE dia = ?`, d);
+      else {
+        const v = this.validar(corpo.cfg);
+        if (v.erro) return { status: 400, data: { erro: v.erro } };
+        this.sql.exec(`INSERT INTO datas (dia, json) VALUES (?, ?) ON CONFLICT(dia) DO UPDATE SET json = excluded.json`, d, JSON.stringify(v.cfg));
+      }
+      return { data: { ok: true, ...this.programa(dia) } };
     }
 
     if (rota === '/ajustes' && metodo === 'POST') {
@@ -159,20 +287,7 @@ export class Brindes extends DurableObject {
 
     if (rota === '/estoque' && metodo === 'POST') {
       // Adiciona brindes ao fim da fila de hoje. corpo.itens = [{ nome, qtd }]
-      const lista = Array.isArray(corpo.itens) ? corpo.itens : [];
-      const atual = this.resumo(dia).itens.length;
-      let ordem = (this.linhas(`SELECT MAX(ordem) AS m FROM estoque WHERE dia = ?`, dia)[0].m || 0);
-      let n = 0;
-      for (const it of lista) {
-        const nome = limpa(it && it.nome, MAX_NOME);
-        const qtd = Math.max(0, Math.min(20, Math.floor(+(it && it.qtd) || 0)));
-        if (!nome || !qtd) continue;
-        for (let k = 0; k < qtd; k++) {
-          if (atual + n >= MAX_ITENS) break;
-          this.sql.exec(`INSERT INTO estoque (dia, ordem, nome) VALUES (?, ?, ?)`, dia, ++ordem, nome);
-          n++;
-        }
-      }
+      const n = this.adicionar(dia, Array.isArray(corpo.itens) ? corpo.itens : []);
       return { data: { ok: true, adicionados: n, ...this.resumo(dia) } };
     }
 
@@ -188,7 +303,7 @@ export class Brindes extends DurableObject {
       const it = this.linhas(`SELECT id, nome, entregue_em FROM estoque WHERE dia = ? AND codigo = ?`, dia, codigo)[0];
       if (!it) return { status: 404, data: { erro: 'Código não encontrado hoje. Confira as letras ou se o prêmio é de outro dia.' } };
       if (it.entregue_em) return { status: 409, data: { erro: 'Este brinde já foi entregue às ' + it.entregue_em + '.' } };
-      this.sql.exec(`UPDATE estoque SET entregue_em = ? WHERE id = ?`, horaAgora(), it.id);
+      this.sql.exec(`UPDATE estoque SET entregue_em = ? WHERE id = ?`, hora, it.id);
       return { data: { ok: true, brinde: it.nome, ...this.resumo(dia) } };
     }
 

@@ -115,6 +115,27 @@ body.recepcao .so-dono { display: none !important; }
 .tab[data-t="ajustes"] { --c: 168, 110, 255; }
 .tab[data-t="fila"] { --c: var(--blue); } .tab[data-t="lancar"] { --c: var(--orange); } .tab[data-t="entregues"] { --c: var(--pink); }
 .tab .badge { position: absolute; top: 2px; right: 14%; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: rgb(var(--yellow)); color: #1a1400; font: 800 .7rem/18px var(--font); text-align: center; box-shadow: 0 0 10px rgba(var(--yellow), .7); }
+.panel.c-teal { --c: 45, 212, 191; } .tab[data-t="programar"] { --c: 45, 212, 191; }
+.dias { list-style: none; margin: 0; padding: 4px 0; }
+.dias li { border-top: 1px solid rgba(255,255,255,.06); }
+.dias li:first-child { border-top: none; }
+.dias button { width: 100%; display: flex; align-items: center; gap: 12px; padding: 12px 18px; background: none; border: none; color: var(--fg); text-align: left; cursor: pointer; font: inherit; }
+.dias .dn { flex: 0 0 64px; font: 400 .85rem var(--display); color: rgb(45,212,191); text-shadow: 0 0 8px rgba(45,212,191,.5); }
+.dias .ds { flex: 1; display: grid; min-width: 0; }
+.dias .ds b { color: #fff; font-weight: 800; }
+.dias .ds small { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dias .ds.off b { color: var(--muted); }
+.dias .seta { color: var(--muted); font-weight: 800; }
+.dias li.hoje .dn::after { content: ' • hoje'; font: 800 .62rem var(--font); letter-spacing: .08em; color: rgb(var(--yellow)); text-shadow: none; }
+.horas { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+input[type="time"], input[type="date"] { min-height: 52px; }
+.itens-ed { display: grid; gap: 8px; }
+.item-ed { display: grid; grid-template-columns: 1fr 112px 42px; gap: 8px; align-items: center; }
+.item-ed .qty { height: 48px; }
+.item-ed .rm { height: 48px; border-radius: 12px; border: 1.5px solid var(--line); background: rgba(255,255,255,.03); color: #ff9a9a; font: 800 1.1rem var(--font); cursor: pointer; }
+.ed-acts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.hora-hoje { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 16px; border: 1.5px solid rgba(45,212,191,.45); background: rgba(45,212,191,.07); font-weight: 700; }
+.hora-hoje b { font: 400 1rem var(--display); color: rgb(45,212,191); }
 @media (prefers-reduced-motion: reduce) { .panel { animation: none; } }
 </style>
 </head>
@@ -171,6 +192,7 @@ body.recepcao .so-dono { display: none !important; }
           <div class="stat"><b id="s-pend">0</b><span>Aguardando</span></div>
           <div class="stat"><b id="s-entr">0</b><span>Entregues</span></div>
         </div>
+        <div class="hora-hoje" id="hora-hoje" hidden></div>
         <div class="msg info" id="aviso-vazio" hidden>A fila está vazia: os jogos não estão dando brinde agora. Lance os brindes abaixo.</div>
       </div>
     </section>
@@ -194,6 +216,46 @@ body.recepcao .so-dono { display: none !important; }
         <button class="btn" id="adicionar" type="button">Adicionar à fila</button>
         <div id="add-msg" aria-live="polite"></div>
         <p class="hint">Os brindes saem na ordem da fila: o primeiro cliente que ganhar leva o nº 1, e assim por diante. A fila zera sozinha todo dia.</p>
+      </div>
+    </section>
+
+    <!-- Programação (dono): semana fixa e datas especiais -->
+    <section class="panel c-teal so-dono" data-tab="programar" id="p-semana">
+      <h2>Semana fixa</h2>
+      <ul class="dias" id="dias"><li class="empty">Carregando…</li></ul>
+      <div class="body" style="padding-top:4px"><p class="hint">Repete toda semana. Na hora de abrir, os brindes do dia entram sozinhos na fila. Fora do horário, os jogos ficam só pela diversão.</p></div>
+    </section>
+    <section class="panel c-teal so-dono" data-tab="programar" id="p-datas">
+      <h2>Datas especiais <span class="n" id="n-datas">0</span></h2>
+      <ul class="dias" id="datas"></ul>
+      <div class="body" style="padding-top:4px">
+        <button class="btn ghost" id="nova-data" type="button">+ Programar uma data</button>
+        <p class="hint">Para feriado ou evento: a data troca a semana fixa só naquele dia. Também dá para marcar um dia sem brindes.</p>
+      </div>
+    </section>
+    <section class="panel c-teal so-dono" data-tab="programar" id="editor" hidden>
+      <h2 id="ed-tit">Editar</h2>
+      <div class="body">
+        <label id="ed-data-l">Data<input type="date" id="ed-data"></label>
+        <label class="sw"><span>Tem brindes neste dia<small>Desligado: ninguém ganha brinde nesse dia</small></span><input type="checkbox" id="ed-ligado"></label>
+        <div id="ed-campos">
+          <div class="qlabel">Horário dos brindes</div>
+          <div class="horas">
+            <label>Abre<input type="time" id="ed-abre"></label>
+            <label>Fecha<input type="time" id="ed-fecha"></label>
+          </div>
+          <p class="hint" style="margin:6px 0 14px">Deixe em branco para valer o dia todo. Fecha no máximo às 23:59.</p>
+          <div class="qlabel">Brindes do dia (na ordem da fila)</div>
+          <div class="itens-ed" id="ed-itens"></div>
+          <div class="chips" id="ed-chips" style="margin-top:10px"></div>
+          <button class="btn ghost small" id="ed-add" type="button" style="margin-top:10px">+ Outro brinde</button>
+        </div>
+        <div class="ed-acts">
+          <button class="btn ghost" id="ed-cancelar" type="button">Cancelar</button>
+          <button class="btn green" id="ed-salvar" type="button">Salvar</button>
+        </div>
+        <button class="btn ghost small" id="ed-apagar" type="button">Apagar esta programação</button>
+        <div id="ed-msg" aria-live="polite"></div>
       </div>
     </section>
 
@@ -221,6 +283,7 @@ body.recepcao .so-dono { display: none !important; }
   <button class="tab on" type="button" data-t="baixa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>Baixa<span class="badge" id="b-pend" hidden>0</span></button>
   <button class="tab so-dono" type="button" data-t="fila"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"></path></svg>Fila</button>
   <button class="tab so-dono" type="button" data-t="lancar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="18" height="4" rx="1"></rect><path d="M12 8v13M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5"></path></svg>Lançar</button>
+  <button class="tab so-dono" type="button" data-t="programar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"></path></svg>Programar</button>
   <button class="tab so-dono" type="button" data-t="ajustes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"></path></svg>Ajustes</button>
   <button class="tab" type="button" data-t="entregues"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>Entregues</button>
 </nav>
@@ -253,7 +316,7 @@ body.recepcao .so-dono { display: none !important; }
   }
   function render(d) {
     if (!ajSujo) { const a = d.ajustes || { jogo: CFG.jogo === 'quiz' ? 'quiz' : 'pedido', ativo: CFG.ativo === true, memoria: CFG.memoria !== false }; aj = Object.assign({}, a); mostrarAjustes(); }
-    if (d.papel) { papel = d.papel; document.body.classList.toggle('recepcao', papel !== 'dono'); $('h1').textContent = papel === 'dono' ? 'Brindes · Dono' : 'Brindes · Recepção'; if (papel !== 'dono' && ['fila', 'lancar', 'ajustes'].includes(abaAtual)) aba('baixa'); }
+    if (d.papel) { papel = d.papel; document.body.classList.toggle('recepcao', papel !== 'dono'); $('h1').textContent = papel === 'dono' ? 'Brindes · Dono' : 'Brindes · Recepção'; if (papel !== 'dono' && ['fila', 'lancar', 'ajustes', 'programar'].includes(abaAtual)) aba('baixa'); if (papel === 'dono' && !PROG) carregarPrograma(); }
     const itens = d.itens || [];
     const livres = itens.filter(i => !i.codigo);
     const pend = itens.filter(i => i.codigo && !i.entregue_em);
@@ -262,7 +325,13 @@ body.recepcao .so-dono { display: none !important; }
     $('dia').textContent = dd ? dd + '/' + m : '';
     $('s-livres').textContent = livres.length; $('s-pend').textContent = pend.length; $('s-entr').textContent = entr.length;
     $('n-fila').textContent = livres.length; $('n-pend').textContent = pend.length; $('n-entr').textContent = entr.length;
-    $('aviso-vazio').hidden = livres.length > 0;
+    const h = d.horario || {}, hh = $('hora-hoje');
+    if (h.estado === 'folga') { hh.innerHTML = '🚫 <span>Hoje: <b>sem brindes</b> (programado)</span>'; hh.hidden = false; }
+    else if (h.abre) {
+      const st = h.estado === 'antes' ? 'abre às ' + h.abre + (d.previstos ? ' · ' + d.previstos + (d.previstos === 1 ? ' brinde programado' : ' brindes programados') : '') : h.estado === 'depois' ? 'encerrado' : 'aberto agora';
+      hh.innerHTML = '🕒 <span>Hoje <b>' + esc(h.abre) + '–' + esc(h.fecha) + '</b> · ' + esc(st) + '</span>'; hh.hidden = false;
+    } else hh.hidden = true;
+    $('aviso-vazio').hidden = livres.length > 0 || h.estado === 'antes' || h.estado === 'folga';
     $('b-pend').textContent = pend.length; $('b-pend').hidden = !pend.length;
 
     $('fila').innerHTML = livres.length ? livres.map((i, k) =>
@@ -350,11 +419,131 @@ body.recepcao .so-dono { display: none !important; }
     finally { $('aj-salvar').disabled = false; }
   });
 
+  // ---------- Programação (semana fixa e datas especiais) ----------
+  const DIAS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+  const ORDEM = [1, 2, 3, 4, 5, 6, 0];
+  let PROG = null, ed = null;
+  const total = c => (c.itens || []).reduce((a, i) => a + i.qtd, 0);
+  function resumoCfg(c) {
+    if (!c) return { b: 'Sem programação', s: 'Vale o dia todo, só o que você lançar', off: true };
+    if (!c.ligado) return { b: 'Sem brindes', s: 'Ninguém ganha brinde neste dia', off: true };
+    const n = total(c), hor = c.abre ? c.abre + '–' + c.fecha : 'Dia todo';
+    return { b: hor + ' · ' + n + (n === 1 ? ' brinde' : ' brindes'), s: (c.itens || []).map(i => i.qtd + '× ' + i.nome).join(', ') || 'Nenhum brinde programado' };
+  }
+  const dataBR = d => { const p = d.split('-'); return p[2] + '/' + p[1]; };
+  function renderPrograma() {
+    if (!PROG) return;
+    const hj = PROG.hoje;
+    $('dias').innerHTML = ORDEM.map(n => {
+      const r = resumoCfg(PROG.semana[n]);
+      return '<li class="' + (n === hj.dia_semana ? 'hoje' : '') + '"><button type="button" data-sem="' + n + '"><span class="dn">' + DIAS[n].slice(0, 3).toUpperCase() + '</span>' +
+        '<span class="ds' + (r.off ? ' off' : '') + '"><b>' + esc(r.b) + '</b><small>' + esc(r.s) + '</small></span><span class="seta">›</span></button></li>';
+    }).join('');
+    $('n-datas').textContent = PROG.datas.length;
+    $('datas').innerHTML = PROG.datas.length ? PROG.datas.map(c => {
+      const r = resumoCfg(c), ds = DIAS[new Date(c.dia + 'T12:00:00Z').getUTCDay()].slice(0, 3);
+      return '<li class="' + (c.dia === hj.dia ? 'hoje' : '') + '"><button type="button" data-dt="' + esc(c.dia) + '"><span class="dn">' + dataBR(c.dia) + '<br><small style="font:700 .7rem var(--font);color:var(--muted)">' + ds + '</small></span>' +
+        '<span class="ds' + (r.off ? ' off' : '') + '"><b>' + esc(r.b) + '</b><small>' + esc(r.s) + '</small></span><span class="seta">›</span></button></li>';
+    }).join('') : '<li class="empty">Nenhuma data especial.</li>';
+  }
+  async function carregarPrograma() {
+    try { PROG = await api('/programa'); renderPrograma(); } catch (e) { $('dias').innerHTML = '<li class="empty">' + esc(e.message) + '</li>'; }
+  }
+  function abrirEditor(tipo, chave) {
+    const atual = tipo === 'semana' ? PROG.semana[chave] : (PROG.datas.find(d => d.dia === chave) || null);
+    const base = atual ? JSON.parse(JSON.stringify(atual)) : (tipo === 'data' && PROG.semana[new Date((chave || PROG.hoje.dia) + 'T12:00:00Z').getUTCDay()]
+      ? JSON.parse(JSON.stringify(PROG.semana[new Date((chave || PROG.hoje.dia) + 'T12:00:00Z').getUTCDay()])) : { ligado: true, abre: '19:00', fecha: '23:00', itens: [] });
+    ed = { tipo, chave, existe: !!atual, cfg: { ligado: base.ligado !== false, abre: base.abre || '', fecha: base.fecha || '', itens: (base.itens || []).map(i => ({ nome: i.nome, qtd: i.qtd })) } };
+    if (!ed.cfg.itens.length) ed.cfg.itens.push({ nome: '', qtd: 1 });
+    $('ed-tit').textContent = tipo === 'semana' ? 'Toda ' + DIAS[chave].toLowerCase() + (chave === 0 || chave === 6 ? '' : '-feira') : (chave ? 'Data ' + dataBR(chave) : 'Nova data especial');
+    if (tipo === 'semana' && (chave === 0 || chave === 6)) $('ed-tit').textContent = 'Todo ' + DIAS[chave].toLowerCase();
+    $('ed-data-l').hidden = tipo !== 'data'; $('ed-data').value = chave && tipo === 'data' ? chave : ''; $('ed-data').min = PROG.hoje.dia; $('ed-data').disabled = ed.existe;
+    $('ed-apagar').hidden = !ed.existe; msg($('ed-msg'), '');
+    pintarEditor();
+    $('editor').hidden = false; $('p-semana').hidden = true; $('p-datas').hidden = true;
+    $('editor').classList.add('show'); window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  function fecharEditor() { ed = null; $('editor').hidden = true; $('p-semana').hidden = false; $('p-datas').hidden = false; }
+  function pintarEditor() {
+    $('ed-ligado').checked = ed.cfg.ligado; $('ed-campos').hidden = !ed.cfg.ligado;
+    $('ed-abre').value = ed.cfg.abre; $('ed-fecha').value = ed.cfg.fecha;
+    $('ed-itens').innerHTML = ed.cfg.itens.map((it, k) =>
+      '<div class="item-ed"><input data-in="' + k + '" maxlength="60" placeholder="Ex.: Batata pequena" value="' + esc(it.nome) + '" aria-label="Brinde ' + (k + 1) + '">' +
+      '<div class="qty"><button type="button" data-q="' + k + '" data-d="-1" aria-label="Diminuir">−</button><output>' + it.qtd + '</output><button type="button" data-q="' + k + '" data-d="1" aria-label="Aumentar">+</button></div>' +
+      '<button class="rm" type="button" data-rmi="' + k + '" aria-label="Tirar este brinde">×</button></div>').join('');
+  }
+  $('ed-chips').innerHTML = SUGESTOES.map(s => '<button class="chip" type="button" data-esug="' + esc(s) + '">+ ' + esc(s) + '</button>').join('');
+  $('ed-chips').addEventListener('click', e => {
+    const c = e.target.closest('[data-esug]'); if (!c || !ed) return;
+    const vazio = ed.cfg.itens.find(i => !i.nome.trim());
+    const igual = ed.cfg.itens.find(i => i.nome === c.dataset.esug);
+    if (igual) igual.qtd = Math.min(20, igual.qtd + 1); else if (vazio) vazio.nome = c.dataset.esug; else ed.cfg.itens.push({ nome: c.dataset.esug, qtd: 1 });
+    pintarEditor();
+  });
+  $('ed-itens').addEventListener('input', e => { const k = e.target.dataset.in; if (k != null) ed.cfg.itens[+k].nome = e.target.value; });
+  $('ed-itens').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.q != null) { const it = ed.cfg.itens[+b.dataset.q]; it.qtd = Math.max(1, Math.min(20, it.qtd + +b.dataset.d)); pintarEditor(); }
+    if (b.dataset.rmi != null) { ed.cfg.itens.splice(+b.dataset.rmi, 1); if (!ed.cfg.itens.length) ed.cfg.itens.push({ nome: '', qtd: 1 }); pintarEditor(); }
+  });
+  $('ed-add').addEventListener('click', () => { ed.cfg.itens.push({ nome: '', qtd: 1 }); pintarEditor(); const ins = $('ed-itens').querySelectorAll('input'); ins[ins.length - 1].focus(); });
+  $('ed-ligado').addEventListener('change', e => { ed.cfg.ligado = e.target.checked; $('ed-campos').hidden = !ed.cfg.ligado; });
+  $('ed-abre').addEventListener('change', e => { ed.cfg.abre = e.target.value; });
+  $('ed-fecha').addEventListener('change', e => { ed.cfg.fecha = e.target.value; });
+  $('ed-cancelar').addEventListener('click', fecharEditor);
+  async function salvarProg(cfg) {
+    const dia = ed.tipo === 'data' ? $('ed-data').value : null;
+    if (ed.tipo === 'data' && !dia) { msg($('ed-msg'), 'Escolha a data.', 'err'); return; }
+    if (cfg && cfg.ligado) {
+      if (!!cfg.abre !== !!cfg.fecha) { msg($('ed-msg'), 'Preencha os dois horários (abre e fecha) ou deixe os dois em branco.', 'err'); return; }
+      if (!cfg.itens.some(i => i.nome.trim())) { msg($('ed-msg'), 'Coloque pelo menos um brinde, ou desligue "Tem brindes neste dia".', 'err'); return; }
+    }
+    $('ed-salvar').disabled = $('ed-apagar').disabled = true;
+    try {
+      const d = ed.tipo === 'semana' ? await api('/semana', { dia_semana: ed.chave, cfg }) : await api('/data', { dia, cfg });
+      PROG = d; renderPrograma();
+      const hj = d.hoje, ehHoje = ed.tipo === 'semana' ? ed.chave === hj.dia_semana && !d.datas.some(x => x.dia === hj.dia) : dia === hj.dia;
+      fecharEditor();
+      const aviso = ehHoje && hj.gerado ? ' O horário já vale para hoje. Os brindes de hoje já tinham entrado na fila: para mudar a quantidade de hoje, use Lançar ou Tirar na Fila.' : '';
+      alertarProg((cfg ? 'Programação salva!' : 'Programação apagada.') + aviso);
+      carregar();
+    } catch (e) { msg($('ed-msg'), e.message, 'err'); }
+    finally { $('ed-salvar').disabled = $('ed-apagar').disabled = false; }
+  }
+  function alertarProg(t) {
+    let el = $('prog-msg');
+    if (!el) { el = document.createElement('div'); el.id = 'prog-msg'; el.style.padding = '0 18px 14px'; $('p-semana').insertBefore(el, $('dias')); }
+    msg(el, t, 'ok'); setTimeout(() => { if (el) el.innerHTML = ''; }, 9000);
+  }
+  $('ed-salvar').addEventListener('click', () => {
+    const c = ed.cfg;
+    salvarProg(c.ligado ? { ligado: true, abre: c.abre, fecha: c.fecha, itens: c.itens.filter(i => i.nome.trim()).map(i => ({ nome: i.nome.trim(), qtd: i.qtd })) } : { ligado: false });
+  });
+  $('ed-apagar').addEventListener('click', e => {
+    const b = e.currentTarget;
+    if (b.dataset.armed !== '1') { b.dataset.armed = '1'; b.textContent = 'Toque de novo para apagar'; setTimeout(() => { b.dataset.armed = ''; b.textContent = 'Apagar esta programação'; }, 4000); return; }
+    b.dataset.armed = ''; b.textContent = 'Apagar esta programação'; salvarProg(null);
+  });
+  $('dias').addEventListener('click', e => { const b = e.target.closest('[data-sem]'); if (b && PROG) abrirEditor('semana', +b.dataset.sem); });
+  $('datas').addEventListener('click', e => { const b = e.target.closest('[data-dt]'); if (b && PROG) abrirEditor('data', b.dataset.dt); });
+  $('nova-data').addEventListener('click', () => { if (PROG) abrirEditor('data', ''); });
+  $('ed-data').addEventListener('change', e => {
+    // Data nova: começa com o que a semana fixa já teria para esse dia
+    if (!ed || ed.existe || !e.target.value) return;
+    const ja = PROG.datas.find(d => d.dia === e.target.value);
+    if (ja) { abrirEditor('data', e.target.value); return; }
+    const s = PROG.semana[new Date(e.target.value + 'T12:00:00Z').getUTCDay()];
+    if (s) { ed.cfg = { ligado: s.ligado !== false, abre: s.abre || '', fecha: s.fecha || '', itens: (s.itens || []).map(i => ({ nome: i.nome, qtd: i.qtd })) }; if (!ed.cfg.itens.length) ed.cfg.itens.push({ nome: '', qtd: 1 }); pintarEditor(); }
+    $('ed-tit').textContent = 'Data ' + dataBR(e.target.value);
+  });
+
   // Abas flutuantes (no celular mostram uma parte por vez; no notebook aparece tudo)
   let abaAtual = 'baixa';
   try { abaAtual = localStorage.getItem('gabba-recepcao-aba') || 'baixa'; } catch (e) {}
   function aba(t) {
     abaAtual = t; try { localStorage.setItem('gabba-recepcao-aba', t); } catch (e) {}
+    if (t !== 'programar' && ed) fecharEditor();
+    if (t === 'programar' && papel === 'dono') carregarPrograma();
     document.querySelectorAll('.panel[data-tab]').forEach(p => p.classList.toggle('show', p.dataset.tab === t));
     document.querySelectorAll('.tab').forEach(b => { const on = b.dataset.t === t; b.classList.toggle('on', on); b.setAttribute('aria-current', on ? 'page' : 'false'); });
     window.scrollTo({ top: 0, behavior: 'smooth' });

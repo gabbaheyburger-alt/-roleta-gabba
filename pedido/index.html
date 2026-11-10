@@ -270,7 +270,7 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
       if (TESTE) t = 'Modo teste: não gasta chance e não dá prêmio.';
       else if (!ATIVO) t = 'Hoje o jogo está sem prêmio. Jogue pela diversão!';
       else if (wonToday()) t = 'Você já ganhou hoje! Agora é só pela diversão.';
-      else if (semBrinde()) t = 'Os brindes de hoje acabaram. Jogue pela diversão e volte na próxima visita!';
+      else if (semBrinde()) t = txtSem();
       else if (chancesLeft() > 0) t = 'Você tem ' + chancesLeft() + (chancesLeft() === 1 ? ' chance' : ' chances') + ' valendo prêmio hoje.';
       else t = 'Suas chances de hoje acabaram. Jogue pela diversão e volte na próxima visita!';
     }
@@ -425,7 +425,7 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
       if (TESTE) m.append(' Modo teste: sem prêmio.');
       else if (esgotouAgora) m.append(' Mas os brindes de hoje acabaram bem agora. Volte na próxima visita!');
       else if (VALE_PREMIO && ATIVO && wonToday()) m.append(' Você já ganhou um prêmio hoje, então essa foi só pela diversão.');
-      else if (VALE_PREMIO && ATIVO && semBrinde()) m.append(' Os brindes de hoje já tinham acabado: essa foi só pela diversão.');
+      else if (VALE_PREMIO && ATIVO && semBrinde()) m.append(txtSemFim());
       else if (VALE_PREMIO && ATIVO && !valendo) m.append(' Mas suas 3 chances de prêmio de hoje já tinham acabado: essa foi só pela diversão. Volte na próxima visita!');
     } else {
       m.append(kind === 'err' ? 'Muitos erros! ' : '', 'Você entregou ', hl(done + ' de ' + META), ' pedidos.');
@@ -479,11 +479,25 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
   /* ---------- Servidor dos brindes (fila do dia; reserva na hora da vitória) ---------- */
   // var/function (e não let/const): aplicarConfig() usa isto antes desta parte do código rodar
   var SRV = false, RESTANTES = null, esgotouAgora = false, modoRetry = false;
+  var HORA = null; // horário dos brindes de hoje, vindo do servidor: { estado: aberto|antes|depois|folga, abre, fecha }
+  function hBR(h) { const p = String(h || '').split(':'); return p.length < 2 ? h : (+p[0]) + 'h' + (p[1] === '00' ? '' : p[1]); }
+  function txtSem() {
+    if (HORA && HORA.estado === 'antes') return 'Os brindes de hoje começam às ' + hBR(HORA.abre) + '. Jogue pela diversão e volte nesse horário!';
+    if (HORA && HORA.estado === 'depois') return 'Os brindes de hoje já encerraram (iam até as ' + hBR(HORA.fecha) + '). Volte na próxima visita!';
+    if (HORA && HORA.estado === 'folga') return 'Hoje não tem brinde. Jogue pela diversão e volte na próxima visita!';
+    return 'Os brindes de hoje acabaram. Jogue pela diversão e volte na próxima visita!';
+  }
+  function txtSemFim() {
+    if (HORA && HORA.estado === 'antes') return ' Os brindes de hoje só começam às ' + hBR(HORA.abre) + ': essa foi só pela diversão.';
+    if (HORA && HORA.estado === 'depois') return ' Os brindes de hoje já tinham encerrado: essa foi só pela diversão.';
+    if (HORA && HORA.estado === 'folga') return ' Hoje não tem brinde: essa foi só pela diversão.';
+    return ' Os brindes de hoje já tinham acabado: essa foi só pela diversão.';
+  }
   function semBrinde() { return SRV && RESTANTES === 0 && !wonToday(); }
   function checarEstoque() {
     if (!SRV) return;
     GabbaBrindes.status().then(s => {
-      RESTANTES = s.restantes;
+      RESTANTES = s.restantes; HORA = s.horario || null;
       // Ajustes do dono (aba Ajustes da tela de brindes) valem mais que o config.json
       if (s.ajustes) {
         let deliv = false; try { deliv = sessionStorage.getItem('gabba-modo') === 'delivery'; } catch (e) {}
@@ -509,6 +523,8 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
         saved.wonDay = today(); saved.wonPrize = r.brinde; saved.codigo = r.codigo; persist();
         if (typeof r.restantes === 'number') RESTANTES = r.restantes;
         telaPremio(true);
+      } else if (r.fechado) {
+        RESTANTES = 0; HORA = r.horario || HORA; telaFim('win');
       } else if (r.esgotado) {
         RESTANTES = 0; esgotouAgora = true; telaFim('win'); esgotouAgora = false;
       } else throw new Error('resposta');

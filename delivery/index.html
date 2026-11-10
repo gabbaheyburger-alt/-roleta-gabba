@@ -330,7 +330,11 @@ h1 span { background: linear-gradient(90deg, #ffb13d, #ff3d2e); -webkit-backgrou
           if (st.ajustes) { aplicar(Object.assign({}, c, st.ajustes), true); if (st.ajustes.ativo !== true) return; }
           else if (!ligado) return;
           const J2 = JOGOS[(st.ajustes && st.ajustes.jogo) === 'quiz' ? 'quiz' : (st.ajustes ? 'pedido' : jogo)];
-          if (st.restantes > 0) $('premio-desc').textContent = J2.desc.replace('prêmio', 'brinde') + ' · restam ' + st.restantes + (st.restantes === 1 ? ' brinde' : ' brindes') + ' hoje';
+          const H = st.horario || {}, hBR = h => { const p = String(h || '').split(':'); return (+p[0]) + 'h' + (p[1] === '00' ? '' : p[1]); };
+          if (H.estado === 'antes') $('premio-desc').textContent = J2.desc.replace('prêmio', 'brinde') + ' · brindes hoje das ' + hBR(H.abre) + ' às ' + hBR(H.fecha);
+          else if (H.estado === 'depois') { $('premio-desc').textContent = 'Brindes de hoje encerrados. Jogue pela diversão!'; $('premio-tag').hidden = true; }
+          else if (H.estado === 'folga') { $('premio-desc').textContent = 'Hoje sem brinde. Jogue pela diversão!'; $('premio-tag').hidden = true; }
+          else if (st.restantes > 0) $('premio-desc').textContent = J2.desc.replace('prêmio', 'brinde') + ' · restam ' + st.restantes + (st.restantes === 1 ? ' brinde' : ' brindes') + ' hoje' + (H.fecha ? ' · até ' + hBR(H.fecha) : '');
           else { $('premio-desc').textContent = 'Brindes de hoje esgotados. Jogue pela diversão!'; $('premio-tag').hidden = true; }
         }).catch(() => {});
       }

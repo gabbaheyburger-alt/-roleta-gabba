@@ -74,6 +74,8 @@ Servidor próprio, separado do servidor do ponto: `servidor-brindes/` (Cloudflar
 - Um aparelho ganha no máximo 1 brinde por dia; a reserva é feita no servidor, então dois clientes nunca levam o mesmo último brinde (testado com 10 vitórias simultâneas).
 - Publicação: Workers Builds ligado a este repositório, com *Root directory* `servidor-brindes` e *Build watch paths* `servidor-brindes/*`. Teste local: `cd servidor-brindes && npm install && npx wrangler dev` (o PIN de teste fica em `.dev.vars`, fora do git).
 - Ligação dos jogos: `comum/brindes.js`.
+- **Programação e horário** (aba **Programar**, só com o PIN do dono): *semana fixa* (para cada dia da semana: horário abre/fecha e brindes, repete toda semana) e *datas especiais* (trocam a semana fixa numa data, ou marcam "sem brindes"). Na hora de abrir, os brindes programados entram sozinhos na fila do dia (uma vez por dia, tabela `gerado`); o que for lançado na hora em "Lançar" soma à fila. Fora do horário, `/ganhar` responde `fechado` e os jogos ficam só pela diversão ("os brindes de hoje começam às 19h"); o Fliperama mostra "brindes hoje das 19h às 23h". Dia sem programação = vale o dia todo, como antes. O horário vai até 23:59 (a fila é por dia). Rotas: `GET /programa`, `POST /semana`, `POST /data`; o `/status` agora traz `horario` e `previstos`.
+- Teste local do horário: com `RELOGIO_TESTE=1` no `.dev.vars`, o cabeçalho `X-Relogio: 2026-11-13 19:05` finge outra data/hora (no Cloudflare essa variável não existe, então o cabeçalho é ignorado).
 
 ## Jogo que vale prêmio (escolhido na área do dono)
 
