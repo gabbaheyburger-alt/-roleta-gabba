@@ -1,0 +1,63 @@
+/* Visual Grupo Gabba — mesmo padrão dos apps Retiradas, Folgas e Perdas. Usado pelas telas do ponto. */
+:root {
+  --tinta: #0E3B43; --tinta-2: #17525C; --tinta-suave: #E3EEEC;
+  --fundo: #F3F6F5; --papel: #FFFFFF; --texto: #16262A; --suave: #5B6E71; --linha: #DAE3E1; --linha-2: #C3D2CF;
+  --ok: #1F8A66; --ok-fundo: #E2F3EC; --alerta: #B57A06; --alerta-fundo: #FBF0D6; --perigo: #BC3B34; --perigo-fundo: #FBE6E4;
+  --raio: 12px; --raio-p: 8px;
+  --sombra: 0 1px 2px rgba(14,59,67,.06), 0 4px 16px rgba(14,59,67,.06);
+  --titulo: "Familjen Grotesk", "Figtree", system-ui, sans-serif;
+  --corpo: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --listras: repeating-linear-gradient(-45deg, rgba(255,255,255,.035) 0 2px, transparent 2px 14px);
+  color-scheme: light;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; }
+body { background: var(--fundo); color: var(--texto); font: 16px/1.5 var(--corpo); -webkit-font-smoothing: antialiased; }
+button, input, select, textarea { font: inherit; color: inherit; }
+h1, h2, h3 { font-family: var(--titulo); margin: 0; letter-spacing: -.01em; line-height: 1.2; }
+[hidden] { display: none !important; }
+:focus-visible { outline: 2px solid var(--tinta-2); outline-offset: 2px; }
+button { cursor: pointer; transition: background .15s, border-color .15s, transform .1s; }
+button:active:not(:disabled) { transform: scale(.98); }
+button:disabled { cursor: not-allowed; }
+
+/* Marca */
+.marca { display: flex; align-items: center; gap: 10px; font-family: var(--titulo); font-weight: 700; font-size: 17px; color: #fff; }
+.marca-selo { width: 32px; height: 32px; flex: 0 0 32px; border-radius: 8px; display: grid; place-items: center; background: #fff; color: var(--tinta); font-size: 17px; font-weight: 700; font-family: var(--titulo); }
+.marca small { display: block; font-family: var(--corpo); font-weight: 500; font-size: 12px; color: #B9D3D0; line-height: 1.2; }
+
+/* Faixa verde-petróleo do topo */
+.faixa { background: var(--tinta); background-image: var(--listras); color: #fff; padding: calc(env(safe-area-inset-top, 0px) + 14px) 16px 16px; }
+.faixa-in { max-width: 560px; margin: 0 auto; display: flex; align-items: center; gap: 12px; }
+
+/* Blocos, textos e avisos */
+.bloco { background: var(--papel); border: 1px solid var(--linha); border-radius: var(--raio); box-shadow: var(--sombra); padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+.panel { background: var(--papel); border: 1px solid var(--linha); border-radius: var(--raio); box-shadow: var(--sombra); padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+.label { font-size: 13px; font-weight: 600; letter-spacing: .02em; color: var(--suave); }
+.hint { margin: 0; font-size: 14px; color: var(--suave); }
+.notice { border-radius: var(--raio-p); padding: 12px 14px; font-size: 15px; border: 1px solid #EBD9A8; background: var(--alerta-fundo); color: #6B4A05; }
+.notice.err { border-color: #EBC0BC; background: var(--perigo-fundo); color: #8A2721; }
+.notice.okn { border-color: #B9DDCD; background: var(--ok-fundo); color: #14624A; }
+.notice b { display: block; }
+.notice p { margin: 4px 0 0; }
+.notice button { margin-top: 8px; font-weight: 700; font-size: 14px; border-radius: var(--raio-p); border: 1px solid currentColor; background: transparent; color: inherit; padding: 8px 12px; }
+.flag { font-size: 14px; font-weight: 600; color: var(--perigo); margin: 0; }
+.flag.am { color: var(--alerta); }
+
+/* Botões e campos */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 18px; border-radius: var(--raio-p); border: 1px solid var(--tinta); background: var(--tinta); color: #fff; font-weight: 600; text-decoration: none; }
+.btn:hover:not(:disabled) { background: var(--tinta-2); border-color: var(--tinta-2); }
+.btn:disabled { background: #9DB3B1; border-color: #9DB3B1; }
+.btn.sec { background: var(--papel); color: var(--texto); border-color: var(--linha); }
+.btn.sec:hover:not(:disabled) { background: #F7FBFA; border-color: #AFC3C0; }
+.btn.sec:disabled { background: var(--papel); color: #9DB3B1; }
+.btn.mini { min-height: 34px; padding: 0 12px; font-size: 13px; }
+.btn.perigo { color: var(--perigo); }
+input, select, textarea { width: 100%; min-width: 0; min-height: 44px; padding: 10px 12px; border-radius: var(--raio-p); border: 1px solid var(--linha); background: var(--papel); font-size: 16px; }
+input:focus, select:focus, textarea:focus { border-color: var(--tinta-2); outline: none; box-shadow: 0 0 0 3px rgba(23,82,92,.14); }
+input[type=checkbox] { width: 18px; height: 18px; min-height: 0; accent-color: var(--tinta); padding: 0; flex: 0 0 auto; }
+input:disabled { background: #F4F7F6; color: #8AA09D; }
+
+/* Janela de confirmação */
+dialog { width: calc(100% - 32px); max-width: 420px; border: 0; border-radius: 16px; padding: 24px; background: var(--papel); color: var(--texto); box-shadow: 0 24px 80px rgba(14,59,67,.35); }
+dialog::backdrop { background: rgba(14,59,67,.55); backdrop-filter: blur(3px); }

@@ -1,0 +1,17 @@
+{
+  "name": "Ponto · Área do dono · Grupo Gabba",
+  "short_name": "Ponto Dono",
+  "description": "Acompanhe presença, intervalos e horas da equipe.",
+  "lang": "pt-BR",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F3F6F5",
+  "theme_color": "#0E3B43",
+  "icons": [
+    { "src": "../icone-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "../icone-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" },
+    { "src": "../icone.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}
