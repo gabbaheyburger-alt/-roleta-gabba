@@ -1,0 +1,610 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Gabba Fight</title>
+<meta name="theme-color" content="#0b0420">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Barlow:wght@400;600;700;800&display=swap">
+<style>
+/* Layout: barras de vida no topo; arena (canvas) no meio, onde ficam os gestos; botão do especial e dicas embaixo */
+:root {
+  --bg: #0b0420; --surface: #160a2b; --line: #3a2357; --fg: #f6ece2; --muted: #b9abc9;
+  --red: #d7261e; --red-deep: #9c1611; --mustard: #f2b632; --cream: #f6e7cf;
+  --pink: 255, 45, 111; --cyan: 41, 211, 255; --gold: 255, 210, 63;
+  --display: 'Bungee', Impact, 'Arial Black', sans-serif;
+  --body: 'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color-scheme: dark;
+}
+* { touch-action: manipulation; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; background: var(--bg); color: var(--fg); }
+body { margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); font-family: var(--body); font-size: 16px; line-height: 1.4; overscroll-behavior: none; }
+[hidden] { display: none !important; }
+.app { height: 100%; max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; padding: 10px 12px 12px; gap: 8px; }
+
+.top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.back { color: var(--muted); border: 1px solid var(--line); border-radius: 10px; padding: 6px 10px; font: 700 .85rem var(--body); text-decoration: none; white-space: nowrap; }
+.brand { font-family: var(--display); font-size: 1.05rem; line-height: 1; text-shadow: 0 0 12px rgba(var(--pink), .7); }
+.brand span { color: rgb(var(--gold)); }
+.round { font: 400 .8rem var(--display); color: rgb(var(--cyan)); text-shadow: 0 0 10px rgba(var(--cyan), .7); white-space: nowrap; }
+
+.bars { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: center; }
+.side { display: grid; gap: 4px; }
+.side.r { text-align: right; }
+.nome { font: 400 .78rem var(--display); letter-spacing: .02em; }
+.side.l .nome { color: rgb(var(--cyan)); }
+.side.r .nome { color: rgb(var(--pink)); }
+.hp { height: 16px; border-radius: 8px; background: #2a1840; overflow: hidden; border: 1.5px solid rgba(255,255,255,.18); position: relative; }
+.hp i { position: absolute; top: 0; bottom: 0; transition: width .15s; }
+.side.l .hp i.lag, .side.l .hp i.val { left: 0; }
+.side.r .hp i.lag, .side.r .hp i.val { right: 0; }
+.hp i.lag { background: #fff; opacity: .5; transition: width .7s .25s; }
+.side.l .hp i.val { background: linear-gradient(90deg, #29d3ff, #3ddc84); box-shadow: 0 0 10px rgba(var(--cyan), .8); }
+.side.r .hp i.val { background: linear-gradient(270deg, #ff2d6f, #ff8a00); box-shadow: 0 0 10px rgba(var(--pink), .8); }
+.sp { height: 6px; border-radius: 3px; background: #2a1840; overflow: hidden; }
+.sp i { display: block; height: 100%; width: 0; background: rgb(var(--gold)); box-shadow: 0 0 8px rgba(var(--gold), .9); transition: width .15s; }
+.side.r .sp i { margin-left: auto; }
+.pips { display: flex; gap: 4px; justify-content: inherit; }
+.pips b { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,.35); }
+.side.l .pips b.on { background: rgb(var(--cyan)); box-shadow: 0 0 8px rgba(var(--cyan), .9); border-color: transparent; }
+.side.r .pips { justify-content: flex-end; }
+.side.r .pips b.on { background: rgb(var(--pink)); box-shadow: 0 0 8px rgba(var(--pink), .9); border-color: transparent; }
+.timer { font: 400 1.5rem var(--display); color: #fff; min-width: 2.2ch; text-align: center; text-shadow: 0 0 12px rgba(var(--gold), .7); font-variant-numeric: tabular-nums; }
+
+.field { position: relative; flex: 1; min-height: 0; border-radius: 18px; overflow: hidden; background: #0d0618; border: 1.5px solid rgba(var(--cyan), .35); box-shadow: 0 0 22px rgba(var(--cyan), .18); user-select: none; -webkit-user-select: none; }
+.field, .field * { touch-action: none; }
+.field canvas { width: 100%; height: 100%; display: block; }
+.teste { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); background: #2b4a8a; color: #fff; font: 700 .7rem var(--body); padding: 3px 8px; border-radius: 6px; letter-spacing: .08em; pointer-events: none; z-index: 5; white-space: nowrap; }
+
+.ctrl { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; }
+.dicas { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 10px; font-size: .78rem; color: var(--muted); line-height: 1.25; }
+.dicas b { color: #fff; }
+.especial { font: 400 1rem var(--display); color: #2a1300; background: linear-gradient(180deg, #ffe27a, #ffb300); border: none; border-radius: 14px; padding: 14px 16px; min-height: 56px; cursor: pointer; box-shadow: 0 0 22px rgba(var(--gold), .8); animation: pulsa 1s ease-in-out infinite; }
+.especial:disabled { background: #2a1840; color: #6f5f86; box-shadow: none; animation: none; cursor: default; }
+@keyframes pulsa { 50% { transform: scale(1.06); box-shadow: 0 0 34px rgba(var(--gold), 1); } }
+
+.overlay { position: absolute; inset: 0; background: rgba(11,4,32,.93); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; gap: 12px; overflow-y: auto; }
+.overlay h1 { font-family: var(--display); font-weight: 400; font-size: clamp(1.7rem, 8vw, 2.3rem); line-height: 1.05; margin: 0; }
+.overlay h1 span { color: var(--mustard); }
+.overlay p { margin: 0; color: var(--muted); max-width: 34ch; }
+.overlay p strong { color: var(--fg); }
+.btn { font-family: var(--display); font-size: 1.3rem; letter-spacing: .04em; background: var(--red); color: var(--cream); border: none; border-radius: 14px; padding: 14px 28px; cursor: pointer; box-shadow: 0 5px 0 var(--red-deep); }
+.link { background: transparent; border: 1px solid var(--line); color: var(--muted); font: 700 .88rem var(--body); padding: 9px 14px; border-radius: 10px; cursor: pointer; }
+button:focus-visible, a:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
+.big { font-family: var(--display); font-size: 2.2rem; line-height: 1.05; color: var(--mustard); }
+
+.lutadores { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
+.lut { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 8px; border-radius: 18px; border: 2px solid rgba(var(--c), .55); background: rgba(var(--c), .07); color: var(--fg); cursor: pointer; font: inherit; box-shadow: 0 0 18px rgba(var(--c), .25); }
+.lut[data-l="gabba"] { --c: 41, 211, 255; }
+.lut[data-l="brutao"] { --c: 255, 138, 0; }
+.lut canvas { width: 110px; height: 120px; }
+.lut b { font: 400 .95rem var(--display); color: rgb(var(--c)); text-shadow: 0 0 10px rgba(var(--c), .7); }
+.lut small { color: var(--muted); font-size: .8rem; line-height: 1.25; }
+.lut .st { display: grid; gap: 3px; width: 100%; padding: 0 6px; }
+.lut .st span { display: grid; grid-template-columns: 54px 1fr; align-items: center; gap: 6px; font-size: .7rem; color: var(--muted); text-align: left; }
+.lut .st i { display: block; height: 6px; border-radius: 3px; background: rgb(var(--c)); box-shadow: 0 0 6px rgba(var(--c), .8); }
+</style>
+<link rel="stylesheet" href="../comum/neon.css">
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <a class="back" href="../jogos/">‹ Jogos</a>
+    <div class="brand">GABBA <span>FIGHT</span></div>
+    <div class="round" id="round-txt">ROUND 1</div>
+  </div>
+
+  <div class="bars">
+    <div class="side l">
+      <div class="nome" id="nome-p">MASCOTE</div>
+      <div class="hp"><i class="lag" id="lag-p" style="width:100%"></i><i class="val" id="hp-p" style="width:100%"></i></div>
+      <div class="sp"><i id="sp-p"></i></div>
+      <div class="pips" id="pips-p"><b></b><b></b></div>
+    </div>
+    <div class="timer" id="timer">45</div>
+    <div class="side r">
+      <div class="nome" id="nome-e">BRUTÃO</div>
+      <div class="hp"><i class="lag" id="lag-e" style="width:100%"></i><i class="val" id="hp-e" style="width:100%"></i></div>
+      <div class="sp"><i id="sp-e"></i></div>
+      <div class="pips" id="pips-e"><b></b><b></b></div>
+    </div>
+  </div>
+
+  <div class="field" id="field">
+    <canvas id="game" aria-label="Arena do Gabba Fight. Toque para socar, segure para defender, arraste para trás para esquivar e para a frente para o golpe forte."></canvas>
+    <div class="teste" id="teste-tag">TESTE · v1</div>
+
+    <div class="overlay" id="start" data-kind="start" data-icon="🥊">
+      <h1>Gabba <span>Fight</span></h1>
+      <p>Escolha seu lutador e vença a máquina em <strong>2 de 3 rounds</strong>.</p>
+      <div class="lutadores" id="lutadores">
+        <button class="lut" type="button" data-l="gabba">
+          <canvas width="220" height="240" data-prev="gabba" aria-hidden="true"></canvas>
+          <b>MASCOTE</b>
+          <small>Rápido e esperto. Especial: <strong>Grito Punk</strong></small>
+          <span class="st"><span>Força<i style="width:55%"></i></span><span>Rapidez<i style="width:95%"></i></span><span>Vida<i style="width:70%"></i></span></span>
+        </button>
+        <button class="lut" type="button" data-l="brutao">
+          <canvas width="220" height="240" data-prev="brutao" aria-hidden="true"></canvas>
+          <b>BRUTÃO</b>
+          <small>Lento e pesado. Especial: <strong>Esmagada</strong></small>
+          <span class="st"><span>Força<i style="width:95%"></i></span><span>Rapidez<i style="width:50%"></i></span><span>Vida<i style="width:95%"></i></span></span>
+        </button>
+      </div>
+      <a class="link" href="../jogos/" style="text-decoration:none">Escolher outro jogo</a>
+    </div>
+
+    <div class="overlay" id="como" hidden data-kind="info" data-icon="🎮">
+      <h1>Como <span>lutar</span></h1>
+      <ul>
+        <li><b>Toque</b> na arena: soco (3 seguidos = combo)</li>
+        <li><b>Segure</b> o dedo: defender</li>
+        <li><b>Arraste para trás</b>: esquivar</li>
+        <li><b>Arraste para a frente</b>: golpe forte</li>
+        <li>Golpe <strong>amarelo</strong> do inimigo: não dá para defender direito. <strong>Esquive!</strong></li>
+        <li>Barra amarela cheia: toque em <strong>ESPECIAL</strong></li>
+      </ul>
+      <button class="btn" id="lutar" type="button">LUTAR!</button>
+    </div>
+
+    <div class="overlay" id="over" hidden data-kind="err" data-icon="💥">
+      <div class="big" id="over-title">K.O.</div>
+      <p id="over-msg"></p>
+      <button class="btn" id="again" type="button">REVANCHE</button>
+      <button class="link" id="trocar" type="button">Trocar de lutador</button>
+      <a class="link" href="../jogos/" style="text-decoration:none">Escolher outro jogo</a>
+    </div>
+  </div>
+
+  <div class="ctrl">
+    <div class="dicas">
+      <span><b>Toque</b>: soco</span><span><b>Segure</b>: defender</span>
+      <span><b>← Arraste</b>: esquivar</span><span><b>Arraste →</b>: forte</span>
+    </div>
+    <button class="especial" id="especial" type="button" disabled>⚡ ESPECIAL</button>
+  </div>
+</div>
+
+<script src="../contador.js"></script>
+<script src="../comum/neon.js" defer></script>
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var TESTE = /[?&]teste\b/.test(location.search);
+  var conta = function (n, t) { if (!TESTE && window.gabbaConta) gabbaConta(n, t); };
+
+  /* ---------- Ajustes do jogo ---------- */
+  var TEMPO_ROUND = 45;          // segundos por round
+  var ROUNDS_PARA_VENCER = 2;    // melhor de 3
+  // Lutadores: vida, multiplicador de dano, de velocidade (menor = mais rápido) e de deslocamento
+  var LUTADORES = {
+    gabba:  { nome: 'MASCOTE', vida: 100, forca: 1.0,  lento: 1.0,  passo: 1.15, especial: 'GRITO PUNK!', cor: '41,211,255' },
+    brutao: { nome: 'BRUTÃO',  vida: 125, forca: 1.35, lento: 1.25, passo: 0.85, especial: 'ESMAGADA!',   cor: '255,138,0' }
+  };
+  // Golpes (ms e dano base)
+  var GOLPES = {
+    soco:     { prep: 70,  ativo: 90,  volta: 150, dano: 6,  alcance: 92, empurra: 6 },
+    combo:    { prep: 70,  ativo: 100, volta: 260, dano: 10, alcance: 96, empurra: 34 },
+    forte:    { prep: 260, ativo: 120, volta: 330, dano: 14, alcance: 104, empurra: 40 },
+    ia:       { prep: 430, ativo: 100, volta: 300, dano: 9,  alcance: 98, empurra: 18 },
+    pesado:   { prep: 760, ativo: 130, volta: 520, dano: 18, alcance: 110, empurra: 60, pesado: true },
+    especial: { prep: 520, ativo: 160, volta: 500, dano: 24, alcance: 400, empurra: 80, especial: true }
+  };
+  // A máquina fica mais rápida e esperta a cada round
+  var IA_ROUND = [
+    { prepX: 1.0,  pausa: [900, 1600], pesado: .22, defesa: .22, esquiva: .10 },
+    { prepX: .85,  pausa: [700, 1300], pesado: .28, defesa: .32, esquiva: .18 },
+    { prepX: .72,  pausa: [550, 1050], pesado: .34, defesa: .42, esquiva: .25 }
+  ];
+
+  /* ---------- Canvas ---------- */
+  var W = 330, H = 430, CHAO = 365;
+  var cv = $('game'), ctx = cv.getContext('2d'), esc = 1, dpr = 1;
+  function medir() {
+    var r = cv.getBoundingClientRect();
+    dpr = Math.min(2, window.devicePixelRatio || 1);
+    cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr);
+    esc = Math.min(r.width / W, r.height / H);
+  }
+  window.addEventListener('resize', medir);
+
+  var mascote = new Image(); mascote.src = '../corre/mascote.png';
+
+  /* ---------- Estado ---------- */
+  var p = null, e = null, round = 1, vitP = 0, vitE = 0, tempo = TEMPO_ROUND, rodando = false, pausaAte = 0;
+  var fx = [], textos = [], tremor = 0, flash = 0, lento = 0, banner = null, escolhido = 'gabba';
+
+  function lutador(tipo, lado) {
+    var L = LUTADORES[tipo];
+    return { tipo: tipo, L: L, lado: lado, x: lado < 0 ? 100 : 230, vida: L.vida, max: L.vida, esp: 0,
+      est: 'parado', t: 0, golpe: null, acertou: false, comboN: 0, ultimoSoco: 0, fila: null, vx: 0, invul: 0, defAte: 0, ia: { prox: 1200, defAte: 0 } };
+  }
+  function dir(f) { var o = f === p ? e : p; return o.x > f.x ? 1 : -1; }
+
+  /* ---------- Ações ---------- */
+  function pode(f) { return rodando && (f.est === 'parado' || f.est === 'andando' || f.est === 'defesa'); }
+  function atacar(f, nome) {
+    var g = GOLPES[nome];
+    f.est = 'prep'; f.t = 0; f.golpe = { nome: nome, g: g, prep: g.prep * (nome === 'especial' ? 1 : f.L.lento) * (f === e ? IA_ROUND[round - 1].prepX * (g.pesado || nome === 'ia' ? 1 : 1) : 1) };
+    f.acertou = false;
+    if (nome === 'especial') { f.esp = 0; flash = .7; banner = { txt: f.L.especial, t: 0, cor: f.L.cor }; tremor = 8; }
+    // a máquina reage ao golpe do jogador
+    if (f === p && e.est !== 'prep' && e.est !== 'ativo' && e.est !== 'tonto' && Math.random() < (nome === 'forte' ? IA_ROUND[round - 1].esquiva * 2 : IA_ROUND[round - 1].defesa)) {
+      if (nome === 'forte' && Math.random() < .6) esquivar(e); else { e.est = 'defesa'; e.t = 0; e.defAte = 450 + Math.random() * 250; }
+    }
+  }
+  function soco(f) {
+    var agora = performance.now();
+    if (agora - f.ultimoSoco < 520) f.comboN++; else f.comboN = 1;
+    f.ultimoSoco = agora;
+    if (f.comboN >= 3) { f.comboN = 0; atacar(f, 'combo'); } else atacar(f, 'soco');
+    // chega perto andando rápido se estiver longe
+    var o = f === p ? e : p, d = Math.abs(o.x - f.x);
+    if (d > 104) f.vx = dir(f) * 520 * f.L.passo;
+  }
+  function esquivar(f) {
+    f.est = 'esquiva'; f.t = 0; f.invul = 300; f.vx = -dir(f) * 430 * f.L.passo;
+  }
+
+  /* ---------- Gestos (só na arena) ---------- */
+  var toque = null;
+  cv.addEventListener('pointerdown', function (ev) {
+    if (!rodando) return;
+    cv.setPointerCapture(ev.pointerId);
+    toque = { x: ev.clientX, y: ev.clientY, t: performance.now(), def: false, id: ev.pointerId };
+    toque.timer = setTimeout(function () { if (toque && pode(p)) { toque.def = true; p.est = 'defesa'; p.t = 0; } }, 170);
+  });
+  cv.addEventListener('pointermove', function (ev) {
+    if (!toque || toque.id !== ev.pointerId || toque.def) return;
+    var dx = ev.clientX - toque.x;
+    if (Math.abs(dx) > 34) {
+      clearTimeout(toque.timer);
+      var frente = dx * dir(p) > 0;
+      if (pode(p) || p.est === 'volta') { if (frente) atacar(p, 'forte'); else esquivar(p); }
+      toque = null;
+    }
+  });
+  function soltar(ev) {
+    if (!toque || toque.id !== ev.pointerId) return;
+    clearTimeout(toque.timer);
+    if (toque.def) { if (p.est === 'defesa') { p.est = 'parado'; p.t = 0; } }
+    else if (performance.now() - toque.t < 260) { if (pode(p)) soco(p); else p.fila = 'soco'; }
+    toque = null;
+  }
+  cv.addEventListener('pointerup', soltar);
+  cv.addEventListener('pointercancel', soltar);
+  $('especial').addEventListener('click', function () { if (p && p.esp >= 100 && pode(p)) atacar(p, 'especial'); });
+
+  /* ---------- Golpe acertando ---------- */
+  function texto(txt, x, y, cor, tam) { textos.push({ txt: txt, x: x, y: y, cor: cor, tam: tam || 22, t: 0 }); }
+  function faiscas(x, y, cor, n) { for (var i = 0; i < n; i++) { var a = Math.random() * Math.PI * 2, v = 80 + Math.random() * 260; fx.push({ x: x, y: y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 60, t: 0, vida: .35 + Math.random() * .3, cor: cor }); } }
+  function resolver(f) {
+    var o = f === p ? e : p, g = f.golpe.g, d = Math.abs(o.x - f.x);
+    if (d > g.alcance + 10 && !g.especial) return;
+    var hx = (f.x + o.x) / 2, hy = CHAO - 88;
+    if (o.invul > 0 && !g.especial) { texto('ESQUIVOU!', o.x, CHAO - 150, '#29d3ff', 20); o.esp = Math.min(100, o.esp + 6); return; }
+    var dano = g.dano * f.L.forca, defendeu = o.est === 'defesa';
+    if (defendeu) {
+      dano *= g.pesado ? .55 : g.especial ? .5 : .15;
+      texto(g.pesado ? 'QUEBROU A DEFESA!' : 'DEFENDEU', o.x, CHAO - 150, g.pesado ? '#ffd23f' : '#9fb7ff', 18);
+      faiscas(hx, hy, '#9fb7ff', 8);
+      o.x += dir(f) * g.empurra * .4;
+      if (g.pesado) { o.est = 'tonto'; o.t = 0; }
+    } else {
+      // golpe pesado e especial têm "armadura": o soco machuca, mas não interrompe
+      if (!armadura(o) || g.especial) { o.est = 'tonto'; o.t = 0; o.x += dir(f) * g.empurra; }
+      faiscas(hx, hy, g.especial ? '#ffd23f' : '#ff2d6f', g.especial ? 30 : 12);
+      var nomes = { soco: 'POW!', combo: 'COMBO!', forte: 'BAM!', ia: 'POW!', pesado: 'CRASH!', especial: 'KABOOM!' };
+      texto(nomes[f.golpe.nome], hx, hy - 50, g.especial ? '#ffd23f' : '#ffffff', g.especial || f.golpe.nome === 'combo' ? 30 : 24);
+      tremor = Math.max(tremor, g.especial ? 14 : g.pesado || f.golpe.nome === 'forte' || f.golpe.nome === 'combo' ? 9 : 4);
+      f.esp = Math.min(100, f.esp + dano * 1.3);
+    }
+    o.vida = Math.max(0, o.vida - dano);
+    o.esp = Math.min(100, o.esp + dano * .7);
+    f.acertou = true;
+    if (o.vida <= 0) ko(o);
+  }
+  function ko(perdedor) {
+    rodando = false; lento = 1; perdedor.est = 'ko'; perdedor.t = 0;
+    var ganhouP = perdedor === e;
+    if (ganhouP) vitP++; else vitE++;
+    banner = { txt: 'K.O.!', t: 0, cor: '255,210,63', grande: true };
+    pintarPips();
+    setTimeout(fimRound, 2200);
+  }
+  function porTempo() {
+    rodando = false;
+    var ganhouP = p.vida / p.max >= e.vida / e.max;
+    if (ganhouP) vitP++; else vitE++;
+    banner = { txt: 'TEMPO!', t: 0, cor: '255,210,63', grande: true };
+    pintarPips();
+    setTimeout(fimRound, 2000);
+  }
+  function fimRound() {
+    if (vitP >= ROUNDS_PARA_VENCER || vitE >= ROUNDS_PARA_VENCER) return fimLuta(vitP > vitE);
+    round++; comecarRound();
+  }
+  function fimLuta(venceu) {
+    conta(venceu ? 'luta-venceu' : 'luta-perdeu', venceu ? 'Gabba Fight: venceu' : 'Gabba Fight: perdeu');
+    $('over-title').textContent = venceu ? 'VOCÊ VENCEU!' : 'K.O.';
+    $('over-msg').innerHTML = venceu
+      ? 'Você ganhou da máquina por <strong>' + vitP + ' a ' + vitE + '</strong> com o ' + p.L.nome + '. Campeão do Gabba!'
+      : 'A máquina venceu por <strong>' + vitE + ' a ' + vitP + '</strong>. Dica: esquive dos golpes <strong>amarelos</strong> e guarde o especial para a hora certa.';
+    window.neonKind && neonKind('over', venceu ? 'win' : 'err', venceu ? '🏆' : '💥');
+    $('over').hidden = false;
+  }
+
+  /* ---------- Rounds ---------- */
+  function pintarPips() {
+    [['pips-p', vitP], ['pips-e', vitE]].forEach(function (a) { var bs = $(a[0]).children; for (var i = 0; i < bs.length; i++) bs[i].className = i < a[1] ? 'on' : ''; });
+  }
+  function comecarLuta() {
+    round = 1; vitP = 0; vitE = 0; pintarPips();
+    var outro = escolhido === 'gabba' ? 'brutao' : 'gabba';
+    $('nome-p').textContent = LUTADORES[escolhido].nome; $('nome-e').textContent = LUTADORES[outro].nome + ' (MÁQUINA)';
+    conta('partida-luta', 'Gabba Fight: partida com ' + LUTADORES[escolhido].nome);
+    comecarRound();
+  }
+  function comecarRound() {
+    var outro = escolhido === 'gabba' ? 'brutao' : 'gabba';
+    var espP = p ? p.esp : 0, espE = e ? e.esp : 0;
+    p = lutador(escolhido, -1); e = lutador(outro, 1);
+    p.esp = espP; e.esp = espE;
+    tempo = TEMPO_ROUND; fx = []; textos = []; lento = 0;
+    $('round-txt').textContent = 'ROUND ' + round;
+    banner = { txt: 'ROUND ' + round, t: 0, cor: '41,211,255', grande: true, depois: 'LUTE!' };
+    rodando = false; pausaAte = performance.now() + 1500;
+  }
+
+  /* ---------- A máquina ---------- */
+  function pensar(dt) {
+    var cfg = IA_ROUND[round - 1], d = Math.abs(p.x - e.x);
+    if (e.est === 'defesa') { e.defAte -= dt * 1000; if (e.defAte <= 0) { e.est = 'parado'; e.t = 0; } return; }
+    if (!(e.est === 'parado' || e.est === 'andando')) return;
+    // defende quando o jogador está preparando golpe perto
+    e.ia.prox -= dt * 1000;
+    if (e.esp >= 100 && d < 150 && e.ia.prox < 400) { atacar(e, 'especial'); e.ia.prox = 1600; return; }
+    if (d > 104) { e.est = 'andando'; e.x += dir(e) * 95 * e.L.passo * dt; }
+    else if (d < 74) { e.est = 'andando'; e.x -= dir(e) * 70 * dt; }
+    else e.est = 'parado';
+    if (e.ia.prox <= 0 && d < 132) {
+      atacar(e, Math.random() < cfg.pesado ? 'pesado' : 'ia');
+      e.ia.prox = cfg.pausa[0] + Math.random() * (cfg.pausa[1] - cfg.pausa[0]);
+      if (d > 100) e.vx = dir(e) * 300 * e.L.passo;
+    }
+  }
+
+  /* ---------- Atualizar ---------- */
+  function atualizar(f, dt) {
+    f.t += dt * 1000;
+    if (f.invul > 0) f.invul -= dt * 1000;
+    if (f.vx) { f.x += f.vx * dt; f.vx *= Math.pow(.0009, dt); if (Math.abs(f.vx) < 8) f.vx = 0; }
+    if (f.est === 'prep' && f.t >= f.golpe.prep) { f.est = 'ativo'; f.t = 0; resolver(f); }
+    else if (f.est === 'ativo' && f.t >= f.golpe.g.ativo) { f.est = 'volta'; f.t = 0; }
+    else if (f.est === 'volta' && f.t >= f.golpe.g.volta * f.L.lento) { f.est = 'parado'; f.t = 0; f.golpe = null; if (f.fila && rodando) { f.fila = null; soco(f); } }
+    else if (f.est === 'tonto' && f.t >= 260) { f.est = 'parado'; f.t = 0; f.golpe = null; }
+    else if (f.est === 'esquiva' && f.t >= 300) { f.est = 'parado'; f.t = 0; }
+  }
+  // golpe pesado e especial têm "armadura": não são interrompidos por soco
+  function armadura(f) { return f.est === 'prep' && f.golpe && (f.golpe.g.pesado || f.golpe.g.especial); }
+
+  var ultimo = performance.now();
+  function quadro(agora) {
+    var dt = Math.min(.05, (agora - ultimo) / 1000); ultimo = agora;
+    if (lento > 0) { dt *= .35; lento -= dt * .8; }
+    if (p && e) {
+      if (!rodando && pausaAte && agora >= pausaAte && p.vida > 0 && e.vida > 0 && tempo > 0) { rodando = true; pausaAte = 0; }
+      if (rodando) {
+        tempo -= dt; if (tempo <= 0) { tempo = 0; porTempo(); }
+        pensar(dt);
+      }
+      atualizar(p, dt); atualizar(e, dt);
+      // limites e distância mínima
+      p.x = Math.max(36, Math.min(W - 36, p.x)); e.x = Math.max(36, Math.min(W - 36, e.x));
+      var d = e.x - p.x, s = d >= 0 ? 1 : -1;
+      if (Math.abs(d) < 72) { var falta = (72 - Math.abs(d)) / 2; p.x -= s * falta; e.x += s * falta; }
+      hud();
+    }
+    for (var i = fx.length - 1; i >= 0; i--) { var q = fx[i]; q.t += dt; q.x += q.vx * dt; q.y += q.vy * dt; q.vy += 600 * dt; if (q.t > q.vida) fx.splice(i, 1); }
+    for (i = textos.length - 1; i >= 0; i--) { textos[i].t += dt; if (textos[i].t > .8) textos.splice(i, 1); }
+    if (banner) banner.t += dt;
+    tremor *= Math.pow(.002, dt); flash = Math.max(0, flash - dt * 1.8);
+    desenhar(agora / 1000);
+    requestAnimationFrame(quadro);
+  }
+
+  var hudCache = {};
+  function hud() {
+    function set(id, prop, v) { if (hudCache[id] !== v) { hudCache[id] = v; $(id).style[prop] = v; } }
+    set('hp-p', 'width', (p.vida / p.max * 100).toFixed(1) + '%'); set('lag-p', 'width', (p.vida / p.max * 100).toFixed(1) + '%');
+    set('hp-e', 'width', (e.vida / e.max * 100).toFixed(1) + '%'); set('lag-e', 'width', (e.vida / e.max * 100).toFixed(1) + '%');
+    set('sp-p', 'width', p.esp.toFixed(0) + '%'); set('sp-e', 'width', e.esp.toFixed(0) + '%');
+    var tt = String(Math.ceil(tempo)); if (hudCache.timer !== tt) { hudCache.timer = tt; $('timer').textContent = tt; }
+    var pronto = p.esp >= 100 && rodando; if (hudCache.esp !== pronto) { hudCache.esp = pronto; $('especial').disabled = !pronto; }
+  }
+
+  /* ---------- Desenho ---------- */
+  function fundo(t) {
+    var g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#0b0420'); g.addColorStop(.7, '#1a0630'); g.addColorStop(1, '#05010d');
+    ctx.fillStyle = g; ctx.fillRect(-40, -40, W + 80, H + 80);
+    var sol = ctx.createRadialGradient(W / 2, CHAO - 30, 0, W / 2, CHAO - 30, 260); sol.addColorStop(0, 'rgba(255,45,111,.35)'); sol.addColorStop(1, 'rgba(255,45,111,0)');
+    ctx.fillStyle = sol; ctx.fillRect(0, 0, W, H);
+    // letreiro
+    ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = '400 34px Bungee, Impact, sans-serif';
+    var pis = (t % 4) > 3.75 && (t % 4) < 3.85;
+    ctx.shadowColor = '#ff2d6f'; ctx.shadowBlur = pis ? 0 : 22; ctx.fillStyle = pis ? '#40203a' : '#ffd6e4';
+    ctx.fillText('GABBA FIGHT', W / 2, 52); ctx.restore();
+    // grade do chão
+    ctx.save(); ctx.strokeStyle = 'rgba(41,211,255,.35)'; ctx.lineWidth = 1.5;
+    for (var k = -10; k <= 10; k++) { ctx.beginPath(); ctx.moveTo(W / 2 + k * 24, CHAO); ctx.lineTo(W / 2 + k * 90, H + 10); ctx.stroke(); }
+    for (var j = 0; j < 6; j++) { var pp = j / 6, y = CHAO + (H - CHAO) * pp * pp; ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+    ctx.strokeStyle = 'rgba(255,45,111,.8)'; ctx.lineWidth = 2.5; ctx.shadowColor = '#ff2d6f'; ctx.shadowBlur = 10;
+    ctx.beginPath(); ctx.moveTo(0, CHAO); ctx.lineTo(W, CHAO); ctx.stroke(); ctx.restore();
+    // cordas do ringue
+    ctx.save(); ctx.strokeStyle = 'rgba(255,210,63,.35)'; ctx.lineWidth = 3;
+    [CHAO - 150, CHAO - 105].forEach(function (y) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); });
+    ctx.restore();
+  }
+  function luva(x, y, r, cor) {
+    ctx.save(); ctx.fillStyle = cor; ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.beginPath(); ctx.arc(x - r * .3, y - r * .3, r * .35, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+  }
+  // extensão do braço de golpe (0 a 1) e inclinação do corpo
+  function pose(f) {
+    var ext = 0, incl = 0, rec = 0;
+    if (f.est === 'prep') { var q = Math.min(1, f.t / f.golpe.prep); ext = -.25 * q; incl = -.12 * q; rec = 4 * q; }
+    else if (f.est === 'ativo') { ext = 1; incl = .16; rec = -10; }
+    else if (f.est === 'volta') { ext = Math.max(0, 1 - f.t / 140); incl = .1 * ext; }
+    else if (f.est === 'tonto') { incl = -.2; rec = 8; }
+    else if (f.est === 'esquiva') { incl = -.25; }
+    else if (f.est === 'ko') { incl = -Math.min(1.4, f.t / 300); }
+    return { ext: ext, incl: incl, rec: rec };
+  }
+  function avisoGolpe(f, t) {
+    if (f.est !== 'prep' || f !== e) return;
+    var forte = f.golpe.g.pesado || f.golpe.g.especial, cor = forte ? '255,210,63' : '255,45,111';
+    var a = .5 + .5 * Math.sin(t * 30);
+    ctx.save(); ctx.globalAlpha = .55 + .45 * a;
+    var g = ctx.createRadialGradient(f.x, CHAO - 70, 10, f.x, CHAO - 70, 95); g.addColorStop(0, 'rgba(' + cor + ',.55)'); g.addColorStop(1, 'rgba(' + cor + ',0)');
+    ctx.fillStyle = g; ctx.fillRect(f.x - 100, CHAO - 170, 200, 200);
+    ctx.font = '400 30px Bungee, Impact, sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = 'rgb(' + cor + ')'; ctx.shadowColor = 'rgb(' + cor + ')'; ctx.shadowBlur = 14;
+    ctx.fillText(forte ? '!!' : '!', f.x, CHAO - 170); ctx.restore();
+  }
+  function desenharGabba(f, t, c) {
+    var po = pose(f), dd = f === p || f === e ? dir(f) : 1, h = 138, w = 167 * h / 240;
+    var bob = f.est === 'parado' || f.est === 'andando' || f.est === 'defesa' ? Math.sin(t * 6 + f.x) * 3 : 0;
+    var cx = f.x + po.rec * -dd, base = CHAO + bob * .3;
+    c.save(); c.translate(cx, base); c.rotate(po.incl * dd); c.scale(-dd, 1);
+    if (mascote.complete && mascote.naturalWidth) c.drawImage(mascote, -w / 2, -h + bob, w, h);
+    if (f.est === 'tonto') { c.globalCompositeOperation = 'lighter'; c.globalAlpha = .55; c.drawImage(mascote, -w / 2, -h + bob, w, h); }
+    c.restore();
+    // luvas
+    var mx = cx + dd * 26, my = base - 66 + bob;
+    luva(cx - dd * 6, my + 10, 11, '#b3121c');
+    luva(mx + dd * (po.ext * 52), my - po.ext * 6, 13, '#e8102e');
+  }
+  function desenharBrutao(f, t, c) {
+    var po = pose(f), dd = f === p || f === e ? dir(f) : -1;
+    var bob = f.est === 'parado' || f.est === 'andando' || f.est === 'defesa' ? Math.sin(t * 4.5 + f.x) * 3 : 0;
+    var cx = f.x + po.rec * -dd, base = CHAO;
+    c.save(); c.translate(cx, base); c.rotate(po.incl * dd);
+    // pernas
+    c.strokeStyle = '#3a1d0e'; c.lineWidth = 8; c.lineCap = 'round';
+    c.beginPath(); c.moveTo(-16, -30); c.lineTo(-20, -4); c.moveTo(16, -30); c.lineTo(20, -4); c.stroke();
+    c.fillStyle = '#ff2d6f'; c.beginPath(); c.ellipse(-22, -3, 12, 6, 0, 0, Math.PI * 2); c.ellipse(22, -3, 12, 6, 0, 0, Math.PI * 2); c.fill();
+    c.translate(0, bob);
+    // pão de baixo
+    c.fillStyle = '#d98a3a'; c.beginPath(); c.roundRect ? c.roundRect(-52, -50, 104, 22, 10) : c.rect(-52, -50, 104, 22); c.fill();
+    // carne
+    c.fillStyle = '#5a2e1a'; c.beginPath(); c.roundRect ? c.roundRect(-58, -72, 116, 24, 12) : c.rect(-58, -72, 116, 24); c.fill();
+    c.fillStyle = '#7a4128'; c.fillRect(-50, -66, 100, 3);
+    // queijo
+    c.fillStyle = '#ffc21a'; c.beginPath(); c.moveTo(-56, -74); c.lineTo(56, -74); c.lineTo(46, -64); c.lineTo(30, -74); c.lineTo(10, -60); c.lineTo(-8, -74); c.lineTo(-30, -62); c.lineTo(-44, -74); c.closePath(); c.fill();
+    // alface
+    c.fillStyle = '#3ddc84'; c.beginPath(); c.moveTo(-60, -76);
+    for (var i = 0; i <= 12; i++) c.lineTo(-60 + i * 10, -76 + (i % 2 ? 6 : -2));
+    c.lineTo(60, -82); c.lineTo(-60, -82); c.closePath(); c.fill();
+    // pão de cima
+    var g = c.createLinearGradient(0, -140, 0, -80); g.addColorStop(0, '#ffb35c'); g.addColorStop(1, '#d98a3a');
+    c.fillStyle = g; c.beginPath(); c.moveTo(-58, -80); c.bezierCurveTo(-60, -150, 60, -150, 58, -80); c.closePath(); c.fill();
+    c.fillStyle = '#fff3d6'; [[-30, -120], [-8, -132], [18, -126], [36, -108], [-40, -100], [4, -110]].forEach(function (s) { c.beginPath(); c.ellipse(s[0], s[1], 4, 2, .4, 0, Math.PI * 2); c.fill(); });
+    // rosto bravo
+    var olhoX = dd * 6;
+    c.fillStyle = '#fff'; c.beginPath(); c.ellipse(-18 + olhoX, -100, 10, 9, 0, 0, Math.PI * 2); c.ellipse(18 + olhoX, -100, 10, 9, 0, 0, Math.PI * 2); c.fill();
+    c.fillStyle = '#111'; c.beginPath(); c.arc(-15 + olhoX + dd * 3, -98, 4, 0, Math.PI * 2); c.arc(21 + olhoX + dd * 3, -98, 4, 0, Math.PI * 2); c.fill();
+    c.strokeStyle = '#3a1d0e'; c.lineWidth = 5; c.beginPath();
+    c.moveTo(-30 + olhoX, -116); c.lineTo(-8 + olhoX, -108); c.moveTo(30 + olhoX, -116); c.lineTo(8 + olhoX, -108); c.stroke();
+    if (f.est === 'tonto' || f.est === 'ko') { c.globalCompositeOperation = 'lighter'; c.fillStyle = 'rgba(255,255,255,.35)'; c.beginPath(); c.moveTo(-58, -80); c.bezierCurveTo(-60, -150, 60, -150, 58, -80); c.closePath(); c.fill(); c.globalCompositeOperation = 'source-over'; }
+    c.restore();
+    // braços e luvas
+    var sy = CHAO - 62 + bob, ombroF = cx + dd * 50, ombroT = cx - dd * 50;
+    var lx = ombroF + dd * (14 + po.ext * 58), ly = sy - po.ext * 4;
+    ctx.save(); ctx.strokeStyle = '#3a1d0e'; ctx.lineWidth = 7; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(ombroF, sy); ctx.lineTo(lx, ly); ctx.moveTo(ombroT, sy); ctx.lineTo(ombroT - dd * 8, sy + 14); ctx.stroke(); ctx.restore();
+    luva(ombroT - dd * 8, sy + 16, 13, '#b3121c');
+    luva(lx, ly, 16, '#e8102e');
+  }
+  function desenharLutador(f, t) {
+    avisoGolpe(f, t);
+    if (f.est === 'esquiva') { ctx.save(); ctx.globalAlpha = .3; ctx.translate(dir(f) * 18, 0); (f.tipo === 'gabba' ? desenharGabba : desenharBrutao)(f, t, ctx); ctx.restore(); }
+    // sombra
+    ctx.save(); ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.beginPath(); ctx.ellipse(f.x, CHAO + 4, 46, 9, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+    (f.tipo === 'gabba' ? desenharGabba : desenharBrutao)(f, t, ctx);
+    if (f.est === 'defesa') {
+      ctx.save(); ctx.strokeStyle = 'rgba(64,196,255,.95)'; ctx.lineWidth = 5; ctx.shadowColor = '#40c4ff'; ctx.shadowBlur = 16;
+      ctx.beginPath(); ctx.arc(f.x + dir(f) * 6, CHAO - 72, 70, dir(f) > 0 ? -1 : Math.PI - 1, dir(f) > 0 ? 1 : Math.PI + 1); ctx.stroke(); ctx.restore();
+    }
+    if (f.est === 'ativo' && f.golpe.g.especial) {
+      var r = 40 + f.t * 2.2;
+      ctx.save(); ctx.strokeStyle = f.tipo === 'gabba' ? '#ff2d6f' : '#ffb300'; ctx.lineWidth = 8; ctx.shadowColor = ctx.strokeStyle; ctx.shadowBlur = 24; ctx.globalAlpha = Math.max(0, 1 - f.t / 160);
+      ctx.beginPath(); ctx.arc(f.x, CHAO - 70, r, 0, Math.PI * 2); ctx.stroke(); ctx.beginPath(); ctx.arc(f.x, CHAO - 70, r * .6, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+    }
+  }
+  function desenhar(t) {
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = '#0d0618'; ctx.fillRect(0, 0, cv.width, cv.height);
+    var ox = (cv.width / dpr - W * esc) / 2, oy = (cv.height / dpr - H * esc);
+    var sx = (Math.random() - .5) * tremor, sy = (Math.random() - .5) * tremor;
+    ctx.setTransform(dpr * esc, 0, 0, dpr * esc, dpr * (ox + sx * esc), dpr * (oy + sy * esc));
+    fundo(t);
+    if (p && e) {
+      var ordem = (p.est === 'ativo' || p.est === 'prep') ? [e, p] : [p, e];
+      ordem.forEach(function (f) { desenharLutador(f, t); });
+    }
+    fx.forEach(function (q) { ctx.save(); ctx.globalAlpha = Math.max(0, 1 - q.t / q.vida); ctx.fillStyle = q.cor; ctx.shadowColor = q.cor; ctx.shadowBlur = 8; ctx.fillRect(q.x - 2.5, q.y - 2.5, 5, 5); ctx.restore(); });
+    textos.forEach(function (x) {
+      ctx.save(); ctx.globalAlpha = Math.max(0, 1 - x.t / .8); ctx.textAlign = 'center'; ctx.font = '400 ' + x.tam + 'px Bungee, Impact, sans-serif';
+      ctx.fillStyle = x.cor; ctx.shadowColor = x.cor; ctx.shadowBlur = 12; ctx.lineWidth = 4; ctx.strokeStyle = '#0b0420';
+      var y = x.y - x.t * 50, s = 1 + .3 * Math.max(0, .15 - x.t) / .15;
+      ctx.translate(x.x, y); ctx.scale(s, s); ctx.strokeText(x.txt, 0, 0); ctx.fillText(x.txt, 0, 0); ctx.restore();
+    });
+    if (flash > 0) { ctx.save(); ctx.globalAlpha = flash * .6; ctx.fillStyle = '#fff'; ctx.fillRect(-40, -40, W + 80, H + 80); ctx.restore(); }
+    if (banner) {
+      var b = banner, txt = b.depois && b.t > .9 ? b.depois : b.txt, tl = b.depois && b.t > .9 ? b.t - .9 : b.t;
+      var dur = b.grande ? 1.6 : 1.1;
+      if (b.t < (b.depois ? 1.6 : dur)) {
+        var e2 = Math.min(1, tl / .18), sc = .5 + .5 * e2 + .04 * Math.sin(tl * 12);
+        ctx.save(); ctx.translate(W / 2, b.grande ? 175 : 130); ctx.scale(sc, sc); ctx.rotate(-.05);
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = '400 ' + (b.grande ? 50 : 34) + 'px Bungee, Impact, sans-serif';
+        ctx.lineWidth = 8; ctx.strokeStyle = '#0b0420'; ctx.strokeText(txt, 0, 0);
+        ctx.fillStyle = 'rgb(' + b.cor + ')'; ctx.shadowColor = 'rgb(' + b.cor + ')'; ctx.shadowBlur = 26; ctx.fillText(txt, 0, 0); ctx.fillText(txt, 0, 0);
+        ctx.restore();
+      }
+    }
+  }
+
+  /* ---------- Prévias na escolha ---------- */
+  function previa() {
+    document.querySelectorAll('[data-prev]').forEach(function (c) {
+      var x = c.getContext('2d'), tipo = c.dataset.prev;
+      x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, c.width, c.height);
+      var salva = ctx; ctx = x; // as funções de desenho usam ctx
+      x.setTransform(1.4, 0, 0, 1.4, 0, 0);
+      var f = { tipo: tipo, x: 78, est: 'parado', t: 0, L: LUTADORES[tipo] };
+      var CH = CHAO; CHAO = 165;
+      if (tipo === 'gabba') desenharGabba(f, 0, x); else desenharBrutao(f, 0, x);
+      CHAO = CH; ctx = salva;
+    });
+  }
+  mascote.onload = previa;
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(previa);
+  previa();
+
+  /* ---------- Telas ---------- */
+  $('lutadores').addEventListener('click', function (ev) {
+    var b = ev.target.closest('[data-l]'); if (!b) return;
+    escolhido = b.dataset.l; $('start').hidden = true; $('como').hidden = false;
+  });
+  $('lutar').addEventListener('click', function () { $('como').hidden = true; medir(); comecarLuta(); });
+  $('again').addEventListener('click', function () { $('over').hidden = true; comecarLuta(); });
+  $('trocar').addEventListener('click', function () { $('over').hidden = true; p = e = null; $('start').hidden = false; });
+
+  medir();
+  requestAnimationFrame(quadro);
+})();
+</script>
+</body>
+</html>
