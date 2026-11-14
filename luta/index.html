@@ -118,7 +118,7 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--mustard); outli
 
   <div class="field" id="field">
     <canvas id="game" aria-label="Arena do Gabba Fight. Toque para socar, segure para defender, arraste para trás para esquivar e para a frente para o golpe forte."></canvas>
-    <div class="teste" id="teste-tag">TESTE · v2</div>
+    <div class="teste" id="teste-tag">TESTE · v3</div>
 
     <div class="overlay" id="start" data-kind="start" data-icon="🥊">
       <h1>Gabba <span>Fight</span></h1>
@@ -145,11 +145,11 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--mustard); outli
       <button class="btn" id="lutar" type="button">LUTAR!</button>
       <ul>
         <li><b>Toque</b>: soco (3 seguidos = combo)</li>
-        <li><b>Segure</b> o dedo: defender</li>
+        <li><b>Segure</b> o dedo: defender (na hora do golpe = <strong>PARRY</strong>)</li>
         <li><b>Arraste para trás</b>: esquivar</li>
         <li><b>Arraste para a frente</b>: golpe forte</li>
         <li><strong>"!!" amarelo</strong>: golpe pesado, <strong>esquive!</strong></li>
-        <li>Barra amarela cheia: <strong>ESPECIAL</strong></li>
+        <li>Barra amarela cheia: <strong>⚡ ESPECIAL</strong></li>
       </ul>
     </div>
 
@@ -183,25 +183,27 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--mustard); outli
   /* ---------- Ajustes do jogo ---------- */
   var TEMPO_ROUND = 45;          // segundos por round
   var ROUNDS_PARA_VENCER = 2;    // melhor de 3
-  // Lutadores: vida, multiplicador de dano, de velocidade (menor = mais rápido) e de deslocamento
+  // Lutadores: vida, multiplicador de dano, de tempo dos golpes (maior = mais lento) e de deslocamento
   var LUTADORES = {
-    gabba:  { nome: 'MASCOTE', vida: 100, forca: 1.0,  lento: 1.0,  passo: 1.15, especial: 'GRITO PUNK!', cor: '41,211,255' },
-    brutao: { nome: 'BRUTÃO',  vida: 125, forca: 1.35, lento: 1.25, passo: 0.85, especial: 'ESMAGADA!',   cor: '255,138,0' }
+    gabba:  { nome: 'MASCOTE', vida: 100, forca: 1.0,  lento: 1.0,  passo: 1.15, especial: 'GRITO PUNK', cor: '255,45,111', cor2: '41,211,255' },
+    brutao: { nome: 'BRUTÃO',  vida: 125, forca: 1.3,  lento: 1.2,  passo: 0.85, especial: 'ESMAGADA',   cor: '255,138,0',  cor2: '255,210,63' }
   };
   // Golpes (ms e dano base)
   var GOLPES = {
-    soco:     { prep: 70,  ativo: 90,  volta: 150, dano: 6,  alcance: 92, empurra: 6 },
-    combo:    { prep: 70,  ativo: 100, volta: 260, dano: 10, alcance: 96, empurra: 34 },
-    forte:    { prep: 260, ativo: 120, volta: 330, dano: 14, alcance: 104, empurra: 40 },
-    ia:       { prep: 430, ativo: 100, volta: 300, dano: 9,  alcance: 98, empurra: 18 },
-    pesado:   { prep: 760, ativo: 130, volta: 520, dano: 18, alcance: 110, empurra: 60, pesado: true },
-    especial: { prep: 520, ativo: 160, volta: 500, dano: 24, alcance: 400, empurra: 80, especial: true }
+    soco:   { prep: 70,  ativo: 90,  volta: 170, dano: 5,  alcance: 92,  empurra: 6 },
+    combo:  { prep: 80,  ativo: 100, volta: 300, dano: 9,  alcance: 96,  empurra: 34 },
+    forte:  { prep: 240, ativo: 120, volta: 360, dano: 13, alcance: 104, empurra: 44 },
+    ia:     { prep: 400, ativo: 100, volta: 280, dano: 9,  alcance: 98,  empurra: 18 },
+    ia2:    { prep: 170, ativo: 90,  volta: 260, dano: 7,  alcance: 100, empurra: 14 },
+    contra: { prep: 150, ativo: 90,  volta: 300, dano: 8,  alcance: 104, empurra: 22 },
+    pesado: { prep: 700, ativo: 130, volta: 520, dano: 17, alcance: 110, empurra: 60, pesado: true }
   };
-  // A máquina fica mais rápida e esperta a cada round
+  var DANO_ESPECIAL = 27;
+  // A máquina: mais rápida, defende mais, contra-ataca e faz combos a cada round
   var IA_ROUND = [
-    { prepX: 1.0,  pausa: [900, 1600], pesado: .22, defesa: .22, esquiva: .10 },
-    { prepX: .85,  pausa: [700, 1300], pesado: .28, defesa: .32, esquiva: .18 },
-    { prepX: .72,  pausa: [550, 1050], pesado: .34, defesa: .42, esquiva: .25 }
+    { prepX: .85, pausa: [520, 950], pesado: .28, defesa: .42, esquiva: .20, combo: .35, contra: .50 },
+    { prepX: .72, pausa: [400, 780], pesado: .32, defesa: .55, esquiva: .28, combo: .55, contra: .70 },
+    { prepX: .60, pausa: [300, 620], pesado: .36, defesa: .66, esquiva: .36, combo: .70, contra: .85 }
   ];
 
   /* ---------- Canvas ---------- */
@@ -214,30 +216,36 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--mustard); outli
     esc = Math.min(r.width / W, r.height / H);
   }
   window.addEventListener('resize', medir);
-
   var mascote = new Image(); mascote.src = '../corre/mascote.png';
 
   /* ---------- Estado ---------- */
   var p = null, e = null, round = 1, vitP = 0, vitE = 0, tempo = TEMPO_ROUND, rodando = false, pausaAte = 0;
-  var fx = [], textos = [], tremor = 0, flash = 0, lento = 0, banner = null, escolhido = 'gabba';
+  var fx = [], textos = [], tremor = 0, flash = 0, flashCor = '255,255,255', lento = 0, parada = 0, banner = null, escolhido = 'gabba';
+  var cine = null, cam = { z: 1, x: W / 2, y: CHAO - 90 }, camAlvo = { z: 1, x: W / 2, y: CHAO - 90 };
+  var PUBLICO = (function () { var l = []; for (var i = 0; i < 26; i++) l.push({ x: 6 + i * 12.8 + Math.random() * 6, r: 7 + Math.random() * 4, f: Math.random() * 6, y: 0 }); return l; })();
 
   function lutador(tipo, lado) {
     var L = LUTADORES[tipo];
-    return { tipo: tipo, L: L, lado: lado, x: lado < 0 ? 100 : 230, vida: L.vida, max: L.vida, esp: 0,
-      est: 'parado', t: 0, golpe: null, acertou: false, comboN: 0, ultimoSoco: 0, fila: null, vx: 0, invul: 0, defAte: 0, ia: { prox: 1200, defAte: 0 } };
+    return { tipo: tipo, L: L, lado: lado, x: lado < 0 ? 100 : 230, y: 0, vida: L.vida, max: L.vida, esp: 0,
+      est: 'parado', t: 0, golpe: null, comboN: 0, ultimoSoco: 0, fila: null, vx: 0, invul: 0, defAte: 0, seq: 0,
+      ia: { prox: 900, cadeia: 0, contra: false } };
   }
-  function dir(f) { var o = f === p ? e : p; return o.x > f.x ? 1 : -1; }
+  function outro(f) { return f === p ? e : p; }
+  function dir(f) { var o = outro(f); return !o || o.x > f.x ? 1 : -1; }
 
   /* ---------- Ações ---------- */
-  function pode(f) { return rodando && (f.est === 'parado' || f.est === 'andando' || f.est === 'defesa'); }
+  function livre(f) { return f.est === 'parado' || f.est === 'andando' || f.est === 'defesa'; }
+  function pode(f) { return rodando && !cine && livre(f); }
   function atacar(f, nome) {
-    var g = GOLPES[nome];
-    f.est = 'prep'; f.t = 0; f.golpe = { nome: nome, g: g, prep: g.prep * (nome === 'especial' ? 1 : f.L.lento) * (f === e ? IA_ROUND[round - 1].prepX * (g.pesado || nome === 'ia' ? 1 : 1) : 1) };
-    f.acertou = false;
-    if (nome === 'especial') { f.esp = 0; flash = .7; banner = { txt: f.L.especial, t: 0, cor: f.L.cor }; tremor = 8; }
-    // a máquina reage ao golpe do jogador
-    if (f === p && e.est !== 'prep' && e.est !== 'ativo' && e.est !== 'tonto' && Math.random() < (nome === 'forte' ? IA_ROUND[round - 1].esquiva * 2 : IA_ROUND[round - 1].defesa)) {
-      if (nome === 'forte' && Math.random() < .6) esquivar(e); else { e.est = 'defesa'; e.t = 0; e.defAte = 450 + Math.random() * 250; }
+    var g = GOLPES[nome], cfg = IA_ROUND[round - 1];
+    var prep = g.prep * (nome === 'ia2' || nome === 'contra' ? 1 : f.L.lento) * (f === e ? cfg.prepX : 1);
+    f.est = 'prep'; f.t = 0; f.golpe = { nome: nome, g: g, prep: prep };
+    // a máquina reage ao golpe do jogador: defende ou esquiva (mais ainda se está apanhando em sequência)
+    if (f === p && (e.est === 'parado' || e.est === 'andando')) {
+      var chanceDef = Math.min(.92, cfg.defesa + (p.seq >= 2 ? .3 : 0));
+      if (nome === 'forte' && Math.random() < cfg.esquiva * 1.8) esquivar(e);
+      else if (Math.random() < chanceDef) { e.est = 'defesa'; e.t = 0; e.defAte = 380 + Math.random() * 300; }
+      else if (Math.random() < cfg.esquiva * .5) esquivar(e);
     }
   }
   function soco(f) {
@@ -245,26 +253,22 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--mustard); outli
     if (agora - f.ultimoSoco < 520) f.comboN++; else f.comboN = 1;
     f.ultimoSoco = agora;
     if (f.comboN >= 3) { f.comboN = 0; atacar(f, 'combo'); } else atacar(f, 'soco');
-    // chega perto andando rápido se estiver longe
-    var o = f === p ? e : p, d = Math.abs(o.x - f.x);
-    if (d > 104) f.vx = dir(f) * 520 * f.L.passo;
+    if (Math.abs(outro(f).x - f.x) > 104) f.vx = dir(f) * 520 * f.L.passo;
   }
-  function esquivar(f) {
-    f.est = 'esquiva'; f.t = 0; f.invul = 300; f.vx = -dir(f) * 430 * f.L.passo;
-  }
+  function esquivar(f) { f.est = 'esquiva'; f.t = 0; f.invul = 320; f.vx = -dir(f) * 430 * f.L.passo; }
 
   /* ---------- Gestos (só na arena) ---------- */
   var toque = null;
   cv.addEventListener('pointerdown', function (ev) {
-    if (!rodando) return;
-    cv.setPointerCapture(ev.pointerId);
+    if (!rodando || cine) return;
+    try { cv.setPointerCapture(ev.pointerId); } catch (x) {}
     toque = { x: ev.clientX, y: ev.clientY, t: performance.now(), def: false, id: ev.pointerId };
-    toque.timer = setTimeout(function () { if (toque && pode(p)) { toque.def = true; p.est = 'defesa'; p.t = 0; } }, 170);
+    toque.timer = setTimeout(function () { if (toque && pode(p)) { toque.def = true; p.est = 'defesa'; p.t = 0; } }, 150);
   });
   cv.addEventListener('pointermove', function (ev) {
     if (!toque || toque.id !== ev.pointerId || toque.def) return;
     var dx = ev.clientX - toque.x;
-    if (Math.abs(dx) > 34) {
+    if (Math.abs(dx) > 30) {
       clearTimeout(toque.timer);
       var frente = dx * dir(p) > 0;
       if (pode(p) || p.est === 'volta') { if (frente) atacar(p, 'forte'); else esquivar(p); }
@@ -280,54 +284,145 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--mustard); outli
   }
   cv.addEventListener('pointerup', soltar);
   cv.addEventListener('pointercancel', soltar);
-  $('especial').addEventListener('click', function () { if (p && p.esp >= 100 && pode(p)) atacar(p, 'especial'); });
+  // o especial sai na hora, cancelando o que o lutador estiver fazendo
+  $('especial').addEventListener('click', function () { if (p && p.esp >= 100 && rodando && !cine && p.est !== 'ko') especial(p); });
 
-  /* ---------- Golpe acertando ---------- */
-  function texto(txt, x, y, cor, tam) { textos.push({ txt: txt, x: x, y: y, cor: cor, tam: tam || 22, t: 0 }); }
-  function faiscas(x, y, cor, n) { for (var i = 0; i < n; i++) { var a = Math.random() * Math.PI * 2, v = 80 + Math.random() * 260; fx.push({ x: x, y: y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 60, t: 0, vida: .35 + Math.random() * .3, cor: cor }); } }
-  function resolver(f) {
-    var o = f === p ? e : p, g = f.golpe.g, d = Math.abs(o.x - f.x);
-    if (d > g.alcance + 10 && !g.especial) return;
-    var hx = (f.x + o.x) / 2, hy = CHAO - 88;
-    if (o.invul > 0 && !g.especial) { texto('ESQUIVOU!', o.x, CHAO - 150, '#29d3ff', 20); o.esp = Math.min(100, o.esp + 6); return; }
-    var dano = g.dano * f.L.forca, defendeu = o.est === 'defesa';
-    if (defendeu) {
-      dano *= g.pesado ? .55 : g.especial ? .5 : .15;
-      texto(g.pesado ? 'QUEBROU A DEFESA!' : 'DEFENDEU', o.x, CHAO - 150, g.pesado ? '#ffd23f' : '#9fb7ff', 18);
-      faiscas(hx, hy, '#9fb7ff', 8);
-      o.x += dir(f) * g.empurra * .4;
-      if (g.pesado) { o.est = 'tonto'; o.t = 0; }
-    } else {
-      // golpe pesado e especial têm "armadura": o soco machuca, mas não interrompe
-      if (!armadura(o) || g.especial) { o.est = 'tonto'; o.t = 0; o.x += dir(f) * g.empurra; }
-      faiscas(hx, hy, g.especial ? '#ffd23f' : '#ff2d6f', g.especial ? 30 : 12);
-      var nomes = { soco: 'POW!', combo: 'COMBO!', forte: 'BAM!', ia: 'POW!', pesado: 'CRASH!', especial: 'KABOOM!' };
-      texto(nomes[f.golpe.nome], hx, hy - 50, g.especial ? '#ffd23f' : '#ffffff', g.especial || f.golpe.nome === 'combo' ? 30 : 24);
-      tremor = Math.max(tremor, g.especial ? 14 : g.pesado || f.golpe.nome === 'forte' || f.golpe.nome === 'combo' ? 9 : 4);
-      f.esp = Math.min(100, f.esp + dano * 1.3);
-    }
+  /* ---------- Efeitos ---------- */
+  function texto(txt, x, y, cor, tam, tipo) { textos.push({ txt: txt, x: x, y: y, cor: cor, tam: tam || 22, t: 0, tipo: tipo || '' }); }
+  function faiscas(x, y, cor, n, forca) {
+    for (var i = 0; i < n; i++) { var a = Math.random() * Math.PI * 2, v = (90 + Math.random() * 280) * (forca || 1);
+      fx.push({ k: 'f', x: x, y: y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 80, t: 0, vida: .3 + Math.random() * .35, cor: cor }); }
+  }
+  function estouro(x, y, cor, r) { fx.push({ k: 'e', x: x, y: y, t: 0, vida: .16, cor: cor, r: r || 40, rot: Math.random() * 3 }); }
+  function anel(x, y, cor, r, vida, chao) { fx.push({ k: 'a', x: x, y: y, t: 0, vida: vida || .45, cor: cor, r: r || 120, chao: !!chao }); }
+  function raio(x1, y1, x2, y2, cor) { var pts = [], n = 7; for (var i = 0; i <= n; i++) pts.push([x1 + (x2 - x1) * i / n + (i && i < n ? (Math.random() - .5) * 18 : 0), y1 + (y2 - y1) * i / n + (i && i < n ? (Math.random() - .5) * 40 : 0)]); fx.push({ k: 'r', pts: pts, t: 0, vida: .18, cor: cor }); }
+  function rachadura(x) { for (var i = 0; i < 7; i++) { var a = Math.PI + Math.random() * Math.PI, l = 30 + Math.random() * 60; fx.push({ k: 'c', x: x, y: CHAO, a: a, l: l, t: 0, vida: 1.2 }); } }
+  function sacudir(n) { tremor = Math.max(tremor, n); }
+
+  /* ---------- Dano ---------- */
+  function aplicar(f, o, dano, opt) {
+    opt = opt || {};
+    var hx = (f.x + o.x) / 2 + dir(f) * 10, hy = CHAO - 88 - (o.y || 0);
     o.vida = Math.max(0, o.vida - dano);
-    o.esp = Math.min(100, o.esp + dano * .7);
-    f.acertou = true;
+    o.esp = Math.min(100, o.esp + dano * .8);
+    f.esp = Math.min(100, f.esp + dano * 1.1);
+    texto('-' + Math.round(dano), o.x + (Math.random() - .5) * 20, CHAO - 150 - (o.y || 0), opt.cor || '#ffffff', opt.grande ? 30 : 18, 'num');
+    estouro(hx, hy, opt.corFx || '#ffffff', opt.grande ? 70 : 34);
+    faiscas(hx, hy, opt.corFx || '#ff2d6f', opt.grande ? 26 : 12, opt.grande ? 1.6 : 1);
+    sacudir(opt.grande ? 16 : opt.forte ? 9 : 4);
+    parada = Math.max(parada, opt.grande ? .14 : opt.forte ? .09 : .05);
+    o.brilho = 1;
     if (o.vida <= 0) ko(o);
   }
+  function resolver(f) {
+    var o = outro(f), g = f.golpe.g, nome = f.golpe.nome, d = Math.abs(o.x - f.x);
+    if (d > g.alcance + 10) return;
+    var hx = (f.x + o.x) / 2, hy = CHAO - 88;
+    var forte = g.pesado || nome === 'forte' || nome === 'combo';
+    // esquiva (no tempo certo = PERFEITO: câmera lenta e o atacante fica aberto)
+    if (o.invul > 0) {
+      if (o.est === 'esquiva' && o.t < 200) { texto('PERFEITO!', o.x, CHAO - 175, '#29d3ff', 26); lento = .6; o.esp = Math.min(100, o.esp + 15); f.est = 'tonto'; f.t = -250; }
+      else texto('ESQUIVOU!', o.x, CHAO - 165, '#29d3ff', 20);
+      return;
+    }
+    if (o.est === 'defesa') {
+      // defesa no tempo certo = PARRY (só o jogador): sem dano e a máquina fica tonta
+      if (o === p && o.t < 170 && !g.pesado) {
+        texto('PARRY!', o.x, CHAO - 175, '#ffd23f', 28); estouro(hx, hy, '#ffd23f', 50); faiscas(hx, hy, '#ffd23f', 18);
+        parada = .12; sacudir(6); o.esp = Math.min(100, o.esp + 15); f.est = 'tonto'; f.t = -450; return;
+      }
+      if (g.pesado) {
+        texto('QUEBROU A DEFESA!', o.x, CHAO - 170, '#ffd23f', 18);
+        o.est = 'tonto'; o.t = -200; o.x += dir(f) * g.empurra * .6;
+        aplicar(f, o, g.dano * f.L.forca * .6, { forte: true, corFx: '#ffd23f' }); return;
+      }
+      texto('DEFENDEU', o.x, CHAO - 165, '#9fb7ff', 16); faiscas(hx, hy, '#9fb7ff', 8);
+      o.x += dir(f) * g.empurra * .4;
+      o.vida = Math.max(0, o.vida - g.dano * f.L.forca * .22);
+      if (o.vida <= 0) ko(o);
+      if (f === p) p.seq = 0;
+      // a máquina contra-ataca depois de defender
+      if (o === e && Math.random() < IA_ROUND[round - 1].contra) { e.ia.contra = true; }
+      return;
+    }
+    // acertou em cheio
+    var armado = (o.est === 'prep' && o.golpe && o.golpe.g.pesado);
+    if (!armado) { o.est = 'tonto'; o.t = 0; o.x += dir(f) * g.empurra; o.golpe = null; o.ia.cadeia = 0; }
+    var nomes = { soco: 'POW!', combo: 'COMBO!', forte: 'BAM!', ia: 'POW!', ia2: 'TUM!', contra: 'CONTRA!', pesado: 'CRASH!' };
+    texto(nomes[nome], hx, hy - 54, forte ? '#ffd23f' : '#ffffff', forte ? 30 : 22);
+    if (f === p) p.seq++; else p.seq = 0;
+    aplicar(f, o, g.dano * f.L.forca, { forte: forte, corFx: f === p ? '#29d3ff' : '#ff2d6f' });
+  }
+
+  /* ---------- Especial (cena de cinema) ---------- */
+  function especial(f) {
+    var o = outro(f);
+    f.esp = 0; f.est = 'especial'; f.t = 0;
+    cine = { f: f, o: o, t: 0, defendeu: o.est === 'defesa', batidas: f.tipo === 'gabba' ? [.95, 1.07, 1.19, 1.31, 1.55] : [1.25, 1.45, 1.62], i: 0, x0: f.x, total: 0 };
+    o.est = 'parado'; o.vx = 0; f.vx = 0;
+    conta(f === p ? 'luta-especial' : 'luta-especial-maquina', 'Gabba Fight: especial');
+  }
+  function atualizarCine(dt) {
+    var c = cine, f = c.f, o = c.o, t = c.t += dt, dd = dir(f);
+    if (t < .8) { // carga: câmera fecha no lutador
+      camAlvo = { z: 1.55, x: f.x, y: CHAO - 85 };
+      if (Math.random() < .6) fx.push({ k: 'p', x: f.x + (Math.random() - .5) * 70, y: CHAO - Math.random() * 30, vy: -120 - Math.random() * 160, t: 0, vida: .7, cor: 'rgb(' + f.L.cor2 + ')' });
+      return;
+    }
+    if (t >= .8 && !c.flash) { c.flash = true; flash = 1; flashCor = f.L.cor2; sacudir(10); }
+    camAlvo = { z: 1.18, x: (f.x + o.x) / 2, y: CHAO - 90 };
+    if (f.tipo === 'gabba') {
+      // corre até o inimigo e solta ondas de som com raios
+      if (Math.abs(o.x - f.x) > 80) f.x += dd * 900 * dt;
+    } else {
+      // pula alto e cai esmagando
+      var u = Math.min(1, Math.max(0, (t - .85) / .4));
+      f.y = Math.sin(u * Math.PI) * 150; f.x += (o.x - dd * 70 - f.x) * Math.min(1, dt * 8);
+    }
+    while (c.i < c.batidas.length && t >= c.batidas[c.i]) {
+      var ultima = c.i === c.batidas.length - 1, mult = c.defendeu ? .5 : 1;
+      var parte = f.tipo === 'gabba' ? (ultima ? .44 : .14) : (c.i === 0 ? .55 : ultima ? .25 : .2);
+      var dano = DANO_ESPECIAL * f.L.forca * parte * mult;
+      var cor = 'rgb(' + (c.i % 2 ? f.L.cor : f.L.cor2) + ')';
+      if (f.tipo === 'gabba') {
+        anel(f.x + dd * 20, CHAO - 85, cor, ultima ? 230 : 140, ultima ? .6 : .35);
+        raio(f.x + dd * 30, CHAO - 95, o.x, CHAO - 80 + (Math.random() - .5) * 40, cor);
+        raio(f.x + dd * 30, CHAO - 80, o.x, CHAO - 100, 'rgb(255,255,255)');
+      } else if (c.i === 0) {
+        f.y = 0; rachadura(o.x); anel(o.x, CHAO, 'rgb(' + f.L.cor + ')', 260, .7, true); anel(o.x, CHAO, 'rgb(' + f.L.cor2 + ')', 170, .5, true);
+        faiscas(o.x, CHAO - 10, '#ffb300', 30, 1.8); flash = .6; flashCor = f.L.cor2;
+      } else { anel(o.x, CHAO - 85, cor, 140, .35); }
+      if (!c.defendeu || !ultima) { o.est = 'tonto'; o.t = -300; }
+      o.x += dd * (ultima ? 60 : 8);
+      aplicar(f, o, dano, { grande: ultima || (f.tipo === 'brutao' && c.i === 0), cor: '#ffd23f', corFx: cor });
+      if (ultima) { lento = .8; flash = .8; flashCor = '255,255,255'; texto(c.defendeu ? 'DEFENDEU METADE!' : 'ESPECIAL!', W / 2, 120, '#ffd23f', 26); }
+      c.i++;
+      if (!cine) return; // nocaute
+    }
+    if (t > 2.15) { cine = null; f.y = 0; f.est = 'volta'; f.t = 0; f.golpe = { nome: 'esp', g: { volta: 380, ativo: 0 } }; camAlvo = { z: 1, x: W / 2, y: CHAO - 90 }; }
+  }
+
+  /* ---------- Fim de round e de luta ---------- */
   function ko(perdedor) {
-    rodando = false; lento = 1; perdedor.est = 'ko'; perdedor.t = 0;
-    var ganhouP = perdedor === e;
-    if (ganhouP) vitP++; else vitE++;
+    if (perdedor.est === 'ko') return;
+    rodando = false; lento = 1.2; perdedor.est = 'ko'; perdedor.t = 0; perdedor.y = 0;
+    if (cine) { cine.f.y = 0; cine.f.est = 'parado'; cine = null; }
+    if (perdedor === e) vitP++; else vitE++;
+    flash = 1; flashCor = '255,255,255'; sacudir(18);
+    camAlvo = { z: 1.35, x: perdedor.x, y: CHAO - 80 };
     banner = { txt: 'K.O.!', t: 0, cor: '255,210,63', grande: true };
     pintarPips();
-    setTimeout(fimRound, 2200);
+    setTimeout(fimRound, 2300);
   }
   function porTempo() {
     rodando = false;
-    var ganhouP = p.vida / p.max >= e.vida / e.max;
-    if (ganhouP) vitP++; else vitE++;
+    if (p.vida / p.max >= e.vida / e.max) vitP++; else vitE++;
     banner = { txt: 'TEMPO!', t: 0, cor: '255,210,63', grande: true };
     pintarPips();
     setTimeout(fimRound, 2000);
   }
   function fimRound() {
+    camAlvo = { z: 1, x: W / 2, y: CHAO - 90 };
     if (vitP >= ROUNDS_PARA_VENCER || vitE >= ROUNDS_PARA_VENCER) return fimLuta(vitP > vitE);
     round++; comecarRound();
   }
@@ -336,7 +431,7 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--mustard); outli
     $('over-title').textContent = venceu ? 'VOCÊ VENCEU!' : 'K.O.';
     $('over-msg').innerHTML = venceu
       ? 'Você ganhou da máquina por <strong>' + vitP + ' a ' + vitE + '</strong> com o ' + p.L.nome + '. Campeão do Gabba!'
-      : 'A máquina venceu por <strong>' + vitE + ' a ' + vitP + '</strong>. Dica: esquive dos golpes <strong>amarelos</strong> e guarde o especial para a hora certa.';
+      : 'A máquina venceu por <strong>' + vitE + ' a ' + vitP + '</strong>. Dica: defenda <strong>na hora</strong> do golpe para dar PARRY, esquive do <strong>"!!" amarelo</strong> e guarde o especial.';
     window.neonKind && neonKind('over', venceu ? 'win' : 'err', venceu ? '🏆' : '💥');
     $('over').hidden = false;
   }
@@ -345,39 +440,48 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--mustard); outli
   function pintarPips() {
     [['pips-p', vitP], ['pips-e', vitE]].forEach(function (a) { var bs = $(a[0]).children; for (var i = 0; i < bs.length; i++) bs[i].className = i < a[1] ? 'on' : ''; });
   }
+  function rival() { return escolhido === 'gabba' ? 'brutao' : 'gabba'; }
   function comecarLuta() {
-    round = 1; vitP = 0; vitE = 0; pintarPips();
-    var outro = escolhido === 'gabba' ? 'brutao' : 'gabba';
-    $('nome-p').textContent = LUTADORES[escolhido].nome; $('nome-e').textContent = LUTADORES[outro].nome + ' (MÁQUINA)';
+    round = 1; vitP = 0; vitE = 0; p = e = null; pintarPips();
+    $('nome-p').textContent = LUTADORES[escolhido].nome; $('nome-e').textContent = LUTADORES[rival()].nome + ' (MÁQUINA)';
     conta('partida-luta', 'Gabba Fight: partida com ' + LUTADORES[escolhido].nome);
     comecarRound();
   }
   function comecarRound() {
-    var outro = escolhido === 'gabba' ? 'brutao' : 'gabba';
     var espP = p ? p.esp : 0, espE = e ? e.esp : 0;
-    p = lutador(escolhido, -1); e = lutador(outro, 1);
+    p = lutador(escolhido, -1); e = lutador(rival(), 1);
     p.esp = espP; e.esp = espE;
-    tempo = TEMPO_ROUND; fx = []; textos = []; lento = 0;
+    tempo = TEMPO_ROUND; fx = []; textos = []; lento = 0; cine = null;
     $('round-txt').textContent = 'ROUND ' + round;
-    banner = { txt: 'ROUND ' + round, t: 0, cor: '41,211,255', grande: true, depois: 'LUTE!' };
-    rodando = false; pausaAte = performance.now() + 1500;
+    banner = { txt: round === 3 ? 'ROUND FINAL' : 'ROUND ' + round, t: 0, cor: '41,211,255', grande: true, depois: 'LUTE!' };
+    rodando = false; pausaAte = performance.now() + 1600;
   }
 
   /* ---------- A máquina ---------- */
   function pensar(dt) {
     var cfg = IA_ROUND[round - 1], d = Math.abs(p.x - e.x);
-    if (e.est === 'defesa') { e.defAte -= dt * 1000; if (e.defAte <= 0) { e.est = 'parado'; e.t = 0; } return; }
+    if (e.est === 'defesa') {
+      e.defAte -= dt * 1000;
+      if (e.ia.contra) { e.ia.contra = false; e.est = 'parado'; atacar(e, 'contra'); return; }
+      if (e.defAte <= 0) { e.est = 'parado'; e.t = 0; }
+      return;
+    }
     if (!(e.est === 'parado' || e.est === 'andando')) return;
-    // defende quando o jogador está preparando golpe perto
+    if (e.ia.contra) { e.ia.contra = false; atacar(e, 'contra'); return; }
+    if (e.ia.cadeia > 0 && d < 130) { e.ia.cadeia--; atacar(e, 'ia2'); return; }
     e.ia.prox -= dt * 1000;
-    if (e.esp >= 100 && d < 150 && e.ia.prox < 400) { atacar(e, 'especial'); e.ia.prox = 1600; return; }
-    if (d > 104) { e.est = 'andando'; e.x += dir(e) * 95 * e.L.passo * dt; }
+    if (e.esp >= 100 && d < 170 && p.est !== 'esquiva') { especial(e); e.ia.prox = 1200; return; }
+    // castiga quando o jogador erra o golpe (está voltando de um golpe perto)
+    if (p.est === 'volta' && d < 115 && Math.random() < cfg.contra * dt * 6) { atacar(e, 'contra'); return; }
+    if (d > 104) { e.est = 'andando'; e.x += dir(e) * 110 * e.L.passo * dt; }
     else if (d < 74) { e.est = 'andando'; e.x -= dir(e) * 70 * dt; }
     else e.est = 'parado';
     if (e.ia.prox <= 0 && d < 132) {
-      atacar(e, Math.random() < cfg.pesado ? 'pesado' : 'ia');
+      var pesado = Math.random() < cfg.pesado;
+      atacar(e, pesado ? 'pesado' : 'ia');
+      if (!pesado && Math.random() < cfg.combo) e.ia.cadeia = round >= 3 && Math.random() < .5 ? 2 : 1;
       e.ia.prox = cfg.pausa[0] + Math.random() * (cfg.pausa[1] - cfg.pausa[0]);
-      if (d > 100) e.vx = dir(e) * 300 * e.L.passo;
+      if (d > 100) e.vx = dir(e) * 320 * e.L.passo;
     }
   }
 
@@ -385,71 +489,92 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--mustard); outli
   function atualizar(f, dt) {
     f.t += dt * 1000;
     if (f.invul > 0) f.invul -= dt * 1000;
+    if (f.brilho) f.brilho = Math.max(0, f.brilho - dt * 6);
     if (f.vx) { f.x += f.vx * dt; f.vx *= Math.pow(.0009, dt); if (Math.abs(f.vx) < 8) f.vx = 0; }
     if (f.est === 'prep' && f.t >= f.golpe.prep) { f.est = 'ativo'; f.t = 0; resolver(f); }
     else if (f.est === 'ativo' && f.t >= f.golpe.g.ativo) { f.est = 'volta'; f.t = 0; }
     else if (f.est === 'volta' && f.t >= f.golpe.g.volta * f.L.lento) { f.est = 'parado'; f.t = 0; f.golpe = null; if (f.fila && rodando) { f.fila = null; soco(f); } }
-    else if (f.est === 'tonto' && f.t >= 260) { f.est = 'parado'; f.t = 0; f.golpe = null; }
-    else if (f.est === 'esquiva' && f.t >= 300) { f.est = 'parado'; f.t = 0; }
+    else if (f.est === 'tonto' && f.t >= 280) { f.est = 'parado'; f.t = 0; f.golpe = null; }
+    else if (f.est === 'esquiva' && f.t >= 320) { f.est = 'parado'; f.t = 0; }
   }
-  // golpe pesado e especial têm "armadura": não são interrompidos por soco
-  function armadura(f) { return f.est === 'prep' && f.golpe && (f.golpe.g.pesado || f.golpe.g.especial); }
 
   var ultimo = performance.now();
   function quadro(agora) {
-    var dt = Math.min(.05, (agora - ultimo) / 1000); ultimo = agora;
-    if (lento > 0) { dt *= .35; lento -= dt * .8; }
+    var real = Math.min(.05, (agora - ultimo) / 1000); ultimo = agora;
+    var dt = real;
+    if (lento > 0) { dt *= .3; lento -= real; }
+    if (parada > 0) { parada -= real; dt = 0; }
     if (p && e) {
-      if (!rodando && pausaAte && agora >= pausaAte && p.vida > 0 && e.vida > 0 && tempo > 0) { rodando = true; pausaAte = 0; }
-      if (rodando) {
-        tempo -= dt; if (tempo <= 0) { tempo = 0; porTempo(); }
-        pensar(dt);
+      if (!rodando && pausaAte && agora >= pausaAte && p.vida > 0 && e.vida > 0) { rodando = true; pausaAte = 0; }
+      if (cine) atualizarCine(dt);
+      else {
+        if (rodando) { tempo -= dt; if (tempo <= 0) { tempo = 0; porTempo(); } pensar(dt); }
+        atualizar(p, dt); atualizar(e, dt);
       }
-      atualizar(p, dt); atualizar(e, dt);
-      // limites e distância mínima
+      if (p.est === 'ko' || e.est === 'ko') { p.t += dt * 1000; e.t += dt * 1000; }
       p.x = Math.max(36, Math.min(W - 36, p.x)); e.x = Math.max(36, Math.min(W - 36, e.x));
       var d = e.x - p.x, s = d >= 0 ? 1 : -1;
-      if (Math.abs(d) < 72) { var falta = (72 - Math.abs(d)) / 2; p.x -= s * falta; e.x += s * falta; }
+      if (Math.abs(d) < 72 && !(cine && cine.f.y > 20)) { var falta = (72 - Math.abs(d)) / 2; p.x -= s * falta; e.x += s * falta; }
       hud();
     }
-    for (var i = fx.length - 1; i >= 0; i--) { var q = fx[i]; q.t += dt; q.x += q.vx * dt; q.y += q.vy * dt; q.vy += 600 * dt; if (q.t > q.vida) fx.splice(i, 1); }
-    for (i = textos.length - 1; i >= 0; i--) { textos[i].t += dt; if (textos[i].t > .8) textos.splice(i, 1); }
-    if (banner) banner.t += dt;
-    tremor *= Math.pow(.002, dt); flash = Math.max(0, flash - dt * 1.8);
+    var k = Math.min(1, real * 7);
+    cam.z += (camAlvo.z - cam.z) * k; cam.x += (camAlvo.x - cam.x) * k; cam.y += (camAlvo.y - cam.y) * k;
+    var dfx = dt || real * .15;
+    for (var i = fx.length - 1; i >= 0; i--) { var q = fx[i]; q.t += dfx; if (q.k === 'f' || q.k === 'p') { q.x += (q.vx || 0) * dfx; q.y += q.vy * dfx; if (q.k === 'f') q.vy += 700 * dfx; } if (q.t > q.vida) fx.splice(i, 1); }
+    for (i = textos.length - 1; i >= 0; i--) { textos[i].t += real; if (textos[i].t > .9) textos.splice(i, 1); }
+    if (banner) banner.t += real;
+    tremor *= Math.pow(.004, real); flash = Math.max(0, flash - real * 2.2);
     desenhar(agora / 1000);
     requestAnimationFrame(quadro);
   }
 
   var hudCache = {};
   function hud() {
-    function set(id, prop, v) { if (hudCache[id] !== v) { hudCache[id] = v; $(id).style[prop] = v; } }
-    set('hp-p', 'width', (p.vida / p.max * 100).toFixed(1) + '%'); set('lag-p', 'width', (p.vida / p.max * 100).toFixed(1) + '%');
-    set('hp-e', 'width', (e.vida / e.max * 100).toFixed(1) + '%'); set('lag-e', 'width', (e.vida / e.max * 100).toFixed(1) + '%');
-    set('sp-p', 'width', p.esp.toFixed(0) + '%'); set('sp-e', 'width', e.esp.toFixed(0) + '%');
+    function set(id, v) { if (hudCache[id] !== v) { hudCache[id] = v; $(id).style.width = v; } }
+    var vp = (p.vida / p.max * 100).toFixed(1) + '%', ve = (e.vida / e.max * 100).toFixed(1) + '%';
+    set('hp-p', vp); set('lag-p', vp); set('hp-e', ve); set('lag-e', ve);
+    set('sp-p', p.esp.toFixed(0) + '%'); set('sp-e', e.esp.toFixed(0) + '%');
     var tt = String(Math.ceil(tempo)); if (hudCache.timer !== tt) { hudCache.timer = tt; $('timer').textContent = tt; }
-    var pronto = p.esp >= 100 && rodando; if (hudCache.esp !== pronto) { hudCache.esp = pronto; $('especial').disabled = !pronto; }
+    var pronto = p.esp >= 100 && rodando && !cine; if (hudCache.esp !== pronto) { hudCache.esp = pronto; $('especial').disabled = !pronto; }
   }
 
   /* ---------- Desenho ---------- */
   function fundo(t) {
     var g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#0b0420'); g.addColorStop(.7, '#1a0630'); g.addColorStop(1, '#05010d');
-    ctx.fillStyle = g; ctx.fillRect(-40, -40, W + 80, H + 80);
-    var sol = ctx.createRadialGradient(W / 2, CHAO - 30, 0, W / 2, CHAO - 30, 260); sol.addColorStop(0, 'rgba(255,45,111,.35)'); sol.addColorStop(1, 'rgba(255,45,111,0)');
-    ctx.fillStyle = sol; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = g; ctx.fillRect(-200, -200, W + 400, H + 400);
+    var sol = ctx.createRadialGradient(W / 2, CHAO - 40, 0, W / 2, CHAO - 40, 240); sol.addColorStop(0, 'rgba(255,45,111,.32)'); sol.addColorStop(1, 'rgba(255,45,111,0)');
+    ctx.fillStyle = sol; ctx.fillRect(-200, -200, W + 400, H + 400);
+    // holofotes
+    [[60, '41,211,255', 0], [W - 60, '255,45,111', 2]].forEach(function (h) {
+      var a = Math.sin(t * .9 + h[2]) * .35;
+      ctx.save(); ctx.translate(h[0], -10); ctx.rotate(a + (h[0] < W / 2 ? -.25 : .25));
+      var lg = ctx.createLinearGradient(0, 0, 0, CHAO); lg.addColorStop(0, 'rgba(' + h[1] + ',.35)'); lg.addColorStop(1, 'rgba(' + h[1] + ',0)');
+      ctx.fillStyle = lg; ctx.beginPath(); ctx.moveTo(-8, 0); ctx.lineTo(8, 0); ctx.lineTo(70, CHAO); ctx.lineTo(-70, CHAO); ctx.closePath(); ctx.fill(); ctx.restore();
+    });
     // letreiro
-    ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = '400 34px Bungee, Impact, sans-serif';
+    ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = '400 32px Bungee, Impact, sans-serif';
     var pis = (t % 4) > 3.75 && (t % 4) < 3.85;
     ctx.shadowColor = '#ff2d6f'; ctx.shadowBlur = pis ? 0 : 22; ctx.fillStyle = pis ? '#40203a' : '#ffd6e4';
-    ctx.fillText('GABBA FIGHT', W / 2, 52); ctx.restore();
+    ctx.fillText('GABBA FIGHT', W / 2, 48); ctx.restore();
+    // público
+    var animado = cine || (banner && banner.t < 1.6);
+    ctx.save(); ctx.fillStyle = '#12061f';
+    PUBLICO.forEach(function (q, i) {
+      var pulo = Math.max(0, Math.sin(t * (animado ? 10 : 3) + q.f)) * (animado ? 7 : 2.5), y = CHAO - 150 - pulo;
+      ctx.beginPath(); ctx.arc(q.x, y, q.r, 0, Math.PI * 2); ctx.fill(); ctx.fillRect(q.x - q.r * 1.1, y + q.r * .6, q.r * 2.2, 26);
+      if (animado && i % 4 === 0) { ctx.strokeStyle = '#12061f'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(q.x - 6, y + 6); ctx.lineTo(q.x - 10, y - 14 - pulo); ctx.stroke(); }
+    });
+    for (var i = 0; i < 8; i++) { var fl = Math.sin(t * 7 + i * 13.7); if (fl > .97) { ctx.fillStyle = 'rgba(255,255,255,.9)'; ctx.beginPath(); ctx.arc(20 + i * 40, CHAO - 158, 3, 0, Math.PI * 2); ctx.fill(); } }
+    ctx.restore();
     // grade do chão
     ctx.save(); ctx.strokeStyle = 'rgba(41,211,255,.35)'; ctx.lineWidth = 1.5;
-    for (var k = -10; k <= 10; k++) { ctx.beginPath(); ctx.moveTo(W / 2 + k * 24, CHAO); ctx.lineTo(W / 2 + k * 90, H + 10); ctx.stroke(); }
-    for (var j = 0; j < 6; j++) { var pp = j / 6, y = CHAO + (H - CHAO) * pp * pp; ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
-    ctx.strokeStyle = 'rgba(255,45,111,.8)'; ctx.lineWidth = 2.5; ctx.shadowColor = '#ff2d6f'; ctx.shadowBlur = 10;
-    ctx.beginPath(); ctx.moveTo(0, CHAO); ctx.lineTo(W, CHAO); ctx.stroke(); ctx.restore();
+    for (var k = -12; k <= 12; k++) { ctx.beginPath(); ctx.moveTo(W / 2 + k * 22, CHAO); ctx.lineTo(W / 2 + k * 80, H + 60); ctx.stroke(); }
+    for (var j = 0; j < 6; j++) { var pp = (j + (t * .6) % 1) / 6, y = CHAO + (H + 60 - CHAO) * pp * pp; ctx.beginPath(); ctx.moveTo(-200, y); ctx.lineTo(W + 200, y); ctx.stroke(); }
+    ctx.strokeStyle = 'rgba(255,45,111,.85)'; ctx.lineWidth = 2.5; ctx.shadowColor = '#ff2d6f'; ctx.shadowBlur = 10;
+    ctx.beginPath(); ctx.moveTo(-200, CHAO); ctx.lineTo(W + 200, CHAO); ctx.stroke(); ctx.restore();
     // cordas do ringue
-    ctx.save(); ctx.strokeStyle = 'rgba(255,210,63,.35)'; ctx.lineWidth = 3;
-    [CHAO - 150, CHAO - 105].forEach(function (y) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); });
+    ctx.save(); ctx.lineWidth = 3; ctx.shadowBlur = 8;
+    [[CHAO - 120, '255,210,63'], [CHAO - 80, '41,211,255']].forEach(function (c) { ctx.strokeStyle = 'rgba(' + c[1] + ',.45)'; ctx.shadowColor = 'rgb(' + c[1] + ')'; ctx.beginPath(); ctx.moveTo(-200, c[0]); ctx.lineTo(W + 200, c[0]); ctx.stroke(); });
     ctx.restore();
   }
   function luva(x, y, r, cor) {
@@ -457,124 +582,201 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--mustard); outli
     ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
     ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.beginPath(); ctx.arc(x - r * .3, y - r * .3, r * .35, 0, Math.PI * 2); ctx.fill(); ctx.restore();
   }
-  // extensão do braço de golpe (0 a 1) e inclinação do corpo
   function pose(f) {
-    var ext = 0, incl = 0, rec = 0;
-    if (f.est === 'prep') { var q = Math.min(1, f.t / f.golpe.prep); ext = -.25 * q; incl = -.12 * q; rec = 4 * q; }
-    else if (f.est === 'ativo') { ext = 1; incl = .16; rec = -10; }
+    var ext = 0, incl = 0, rec = 0, sq = 1;
+    if (f.est === 'prep') { var q = Math.min(1, f.t / f.golpe.prep); ext = -.3 * q; incl = -.14 * q; rec = 6 * q; sq = 1 - .06 * q; }
+    else if (f.est === 'ativo') { ext = 1; incl = .18; rec = -12; sq = 1.05; }
     else if (f.est === 'volta') { ext = Math.max(0, 1 - f.t / 140); incl = .1 * ext; }
-    else if (f.est === 'tonto') { incl = -.2; rec = 8; }
-    else if (f.est === 'esquiva') { incl = -.25; }
-    else if (f.est === 'ko') { incl = -Math.min(1.4, f.t / 300); }
-    return { ext: ext, incl: incl, rec: rec };
+    else if (f.est === 'tonto') { incl = -.22; rec = 9; }
+    else if (f.est === 'esquiva') { incl = -.3; }
+    else if (f.est === 'especial') { ext = cine && cine.t > .8 ? 1 : -.2; incl = cine && cine.t > .8 ? .2 : -.1; sq = cine && cine.t < .8 ? 1 + .05 * Math.sin(cine.t * 40) : 1; }
+    else if (f.est === 'ko') { incl = -Math.min(1.45, f.t / 260); }
+    return { ext: ext, incl: incl, rec: rec, sq: sq };
   }
   function avisoGolpe(f, t) {
     if (f.est !== 'prep' || f !== e) return;
-    var forte = f.golpe.g.pesado || f.golpe.g.especial, cor = forte ? '255,210,63' : '255,45,111';
-    var a = .5 + .5 * Math.sin(t * 30);
+    var forte = f.golpe.g.pesado, cor = forte ? '255,210,63' : '255,45,111';
+    var a = .5 + .5 * Math.sin(t * 34);
     ctx.save(); ctx.globalAlpha = .55 + .45 * a;
-    var g = ctx.createRadialGradient(f.x, CHAO - 70, 10, f.x, CHAO - 70, 95); g.addColorStop(0, 'rgba(' + cor + ',.55)'); g.addColorStop(1, 'rgba(' + cor + ',0)');
-    ctx.fillStyle = g; ctx.fillRect(f.x - 100, CHAO - 170, 200, 200);
-    ctx.font = '400 30px Bungee, Impact, sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = 'rgb(' + cor + ')'; ctx.shadowColor = 'rgb(' + cor + ')'; ctx.shadowBlur = 14;
-    ctx.fillText(forte ? '!!' : '!', f.x, CHAO - 170); ctx.restore();
+    var g = ctx.createRadialGradient(f.x, CHAO - 70, 10, f.x, CHAO - 70, 100); g.addColorStop(0, 'rgba(' + cor + ',.6)'); g.addColorStop(1, 'rgba(' + cor + ',0)');
+    ctx.fillStyle = g; ctx.fillRect(f.x - 110, CHAO - 180, 220, 210);
+    ctx.font = '400 30px Bungee, Impact, sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = 'rgb(' + cor + ')'; ctx.shadowColor = 'rgb(' + cor + ')'; ctx.shadowBlur = 16;
+    ctx.fillText(forte ? '!!' : '!', f.x, CHAO - 172); ctx.restore();
+  }
+  function aura(f, t, forte) {
+    var g = ctx.createRadialGradient(f.x, CHAO - 70 - f.y, 10, f.x, CHAO - 70 - f.y, forte ? 120 : 85);
+    g.addColorStop(0, 'rgba(' + f.L.cor2 + ',' + (forte ? .55 : .25 + .12 * Math.sin(t * 8)) + ')'); g.addColorStop(1, 'rgba(' + f.L.cor2 + ',0)');
+    ctx.fillStyle = g; ctx.fillRect(f.x - 130, CHAO - 200 - f.y, 260, 260);
   }
   function desenharGabba(f, t, c) {
-    var po = pose(f), dd = f === p || f === e ? dir(f) : 1, h = 138, w = 167 * h / 240;
+    var po = pose(f), dd = (f === p || f === e) ? dir(f) : 1, h = 138, w = 167 * h / 240;
     var bob = f.est === 'parado' || f.est === 'andando' || f.est === 'defesa' ? Math.sin(t * 6 + f.x) * 3 : 0;
-    var cx = f.x + po.rec * -dd, base = CHAO + bob * .3;
-    c.save(); c.translate(cx, base); c.rotate(po.incl * dd); c.scale(-dd, 1);
-    if (mascote.complete && mascote.naturalWidth) c.drawImage(mascote, -w / 2, -h + bob, w, h);
-    if (f.est === 'tonto') { c.globalCompositeOperation = 'lighter'; c.globalAlpha = .55; c.drawImage(mascote, -w / 2, -h + bob, w, h); }
+    var cx = f.x + po.rec * -dd, base = CHAO - (f.y || 0);
+    c.save(); c.translate(cx, base); c.rotate(po.incl * dd); c.scale(-dd * (2 - po.sq), po.sq);
+    if (mascote.complete && mascote.naturalWidth) {
+      c.drawImage(mascote, -w / 2, -h + bob, w, h);
+      if (f.brilho) { c.globalCompositeOperation = 'lighter'; c.globalAlpha = f.brilho; c.drawImage(mascote, -w / 2, -h + bob, w, h); c.drawImage(mascote, -w / 2, -h + bob, w, h); }
+    }
     c.restore();
-    // luvas
     var mx = cx + dd * 26, my = base - 66 + bob;
     luva(cx - dd * 6, my + 10, 11, '#b3121c');
-    luva(mx + dd * (po.ext * 52), my - po.ext * 6, 13, '#e8102e');
+    luva(mx + dd * (po.ext * 54), my - po.ext * 6, 13, '#e8102e');
   }
   function desenharBrutao(f, t, c) {
-    var po = pose(f), dd = f === p || f === e ? dir(f) : -1;
+    var po = pose(f), dd = (f === p || f === e) ? dir(f) : -1;
     var bob = f.est === 'parado' || f.est === 'andando' || f.est === 'defesa' ? Math.sin(t * 4.5 + f.x) * 3 : 0;
-    var cx = f.x + po.rec * -dd, base = CHAO;
-    c.save(); c.translate(cx, base); c.rotate(po.incl * dd);
-    // pernas
+    var cx = f.x + po.rec * -dd, base = CHAO - (f.y || 0);
+    c.save(); c.translate(cx, base); c.rotate(po.incl * dd); c.scale(2 - po.sq, po.sq);
     c.strokeStyle = '#3a1d0e'; c.lineWidth = 8; c.lineCap = 'round';
     c.beginPath(); c.moveTo(-16, -30); c.lineTo(-20, -4); c.moveTo(16, -30); c.lineTo(20, -4); c.stroke();
     c.fillStyle = '#ff2d6f'; c.beginPath(); c.ellipse(-22, -3, 12, 6, 0, 0, Math.PI * 2); c.ellipse(22, -3, 12, 6, 0, 0, Math.PI * 2); c.fill();
     c.translate(0, bob);
-    // pão de baixo
-    c.fillStyle = '#d98a3a'; c.beginPath(); c.roundRect ? c.roundRect(-52, -50, 104, 22, 10) : c.rect(-52, -50, 104, 22); c.fill();
-    // carne
-    c.fillStyle = '#5a2e1a'; c.beginPath(); c.roundRect ? c.roundRect(-58, -72, 116, 24, 12) : c.rect(-58, -72, 116, 24); c.fill();
+    function rr(x, y, w2, h2, r) { c.beginPath(); if (c.roundRect) c.roundRect(x, y, w2, h2, r); else c.rect(x, y, w2, h2); c.fill(); }
+    c.fillStyle = '#d98a3a'; rr(-52, -50, 104, 22, 10);
+    c.fillStyle = '#5a2e1a'; rr(-58, -72, 116, 24, 12);
     c.fillStyle = '#7a4128'; c.fillRect(-50, -66, 100, 3);
-    // queijo
     c.fillStyle = '#ffc21a'; c.beginPath(); c.moveTo(-56, -74); c.lineTo(56, -74); c.lineTo(46, -64); c.lineTo(30, -74); c.lineTo(10, -60); c.lineTo(-8, -74); c.lineTo(-30, -62); c.lineTo(-44, -74); c.closePath(); c.fill();
-    // alface
     c.fillStyle = '#3ddc84'; c.beginPath(); c.moveTo(-60, -76);
     for (var i = 0; i <= 12; i++) c.lineTo(-60 + i * 10, -76 + (i % 2 ? 6 : -2));
     c.lineTo(60, -82); c.lineTo(-60, -82); c.closePath(); c.fill();
-    // pão de cima
     var g = c.createLinearGradient(0, -140, 0, -80); g.addColorStop(0, '#ffb35c'); g.addColorStop(1, '#d98a3a');
     c.fillStyle = g; c.beginPath(); c.moveTo(-58, -80); c.bezierCurveTo(-60, -150, 60, -150, 58, -80); c.closePath(); c.fill();
     c.fillStyle = '#fff3d6'; [[-30, -120], [-8, -132], [18, -126], [36, -108], [-40, -100], [4, -110]].forEach(function (s) { c.beginPath(); c.ellipse(s[0], s[1], 4, 2, .4, 0, Math.PI * 2); c.fill(); });
-    // rosto bravo
-    var olhoX = dd * 6;
-    c.fillStyle = '#fff'; c.beginPath(); c.ellipse(-18 + olhoX, -100, 10, 9, 0, 0, Math.PI * 2); c.ellipse(18 + olhoX, -100, 10, 9, 0, 0, Math.PI * 2); c.fill();
-    c.fillStyle = '#111'; c.beginPath(); c.arc(-15 + olhoX + dd * 3, -98, 4, 0, Math.PI * 2); c.arc(21 + olhoX + dd * 3, -98, 4, 0, Math.PI * 2); c.fill();
+    var ox = dd * 6;
+    c.fillStyle = '#fff'; c.beginPath(); c.ellipse(-18 + ox, -100, 10, 9, 0, 0, Math.PI * 2); c.ellipse(18 + ox, -100, 10, 9, 0, 0, Math.PI * 2); c.fill();
+    c.fillStyle = f.est === 'especial' ? '#ff3d00' : '#111'; c.beginPath(); c.arc(-15 + ox + dd * 3, -98, 4, 0, Math.PI * 2); c.arc(21 + ox + dd * 3, -98, 4, 0, Math.PI * 2); c.fill();
     c.strokeStyle = '#3a1d0e'; c.lineWidth = 5; c.beginPath();
-    c.moveTo(-30 + olhoX, -116); c.lineTo(-8 + olhoX, -108); c.moveTo(30 + olhoX, -116); c.lineTo(8 + olhoX, -108); c.stroke();
-    if (f.est === 'tonto' || f.est === 'ko') { c.globalCompositeOperation = 'lighter'; c.fillStyle = 'rgba(255,255,255,.35)'; c.beginPath(); c.moveTo(-58, -80); c.bezierCurveTo(-60, -150, 60, -150, 58, -80); c.closePath(); c.fill(); c.globalCompositeOperation = 'source-over'; }
+    c.moveTo(-30 + ox, -116); c.lineTo(-8 + ox, -108); c.moveTo(30 + ox, -116); c.lineTo(8 + ox, -108); c.stroke();
+    if (f.brilho) { c.globalCompositeOperation = 'lighter'; c.fillStyle = 'rgba(255,255,255,' + (.6 * f.brilho) + ')'; c.beginPath(); c.moveTo(-60, -28); c.lineTo(60, -28); c.lineTo(58, -80); c.bezierCurveTo(60, -150, -60, -150, -58, -80); c.closePath(); c.fill(); c.globalCompositeOperation = 'source-over'; }
     c.restore();
-    // braços e luvas
-    var sy = CHAO - 62 + bob, ombroF = cx + dd * 50, ombroT = cx - dd * 50;
-    var lx = ombroF + dd * (14 + po.ext * 58), ly = sy - po.ext * 4;
+    var sy = base - 62 + bob, ombroF = cx + dd * 50, ombroT = cx - dd * 50;
+    var lx = ombroF + dd * (14 + po.ext * 60), ly = sy - po.ext * 4;
     ctx.save(); ctx.strokeStyle = '#3a1d0e'; ctx.lineWidth = 7; ctx.lineCap = 'round';
     ctx.beginPath(); ctx.moveTo(ombroF, sy); ctx.lineTo(lx, ly); ctx.moveTo(ombroT, sy); ctx.lineTo(ombroT - dd * 8, sy + 14); ctx.stroke(); ctx.restore();
     luva(ombroT - dd * 8, sy + 16, 13, '#b3121c');
     luva(lx, ly, 16, '#e8102e');
   }
   function desenharLutador(f, t) {
+    var cheio = f.esp >= 100 && rodando;
+    if (cheio || f.est === 'especial') aura(f, t, f.est === 'especial');
     avisoGolpe(f, t);
-    if (f.est === 'esquiva') { ctx.save(); ctx.globalAlpha = .3; ctx.translate(dir(f) * 18, 0); (f.tipo === 'gabba' ? desenharGabba : desenharBrutao)(f, t, ctx); ctx.restore(); }
-    // sombra
-    ctx.save(); ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.beginPath(); ctx.ellipse(f.x, CHAO + 4, 46, 9, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
-    (f.tipo === 'gabba' ? desenharGabba : desenharBrutao)(f, t, ctx);
+    var fn = f.tipo === 'gabba' ? desenharGabba : desenharBrutao;
+    if (f.est === 'esquiva' || (f.est === 'especial' && cine && cine.t > .8)) { ctx.save(); ctx.globalAlpha = .28; var x0 = f.x; f.x -= dir(f) * 22; fn(f, t, ctx); f.x -= dir(f) * 18; ctx.globalAlpha = .14; fn(f, t, ctx); f.x = x0; ctx.restore(); }
+    ctx.save(); ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.beginPath(); ctx.ellipse(f.x, CHAO + 4, 46 - Math.min(30, (f.y || 0) / 5), 9, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+    fn(f, t, ctx);
+    // rastro do soco
+    if (f.est === 'ativo') {
+      var dd = dir(f), cor = f === p ? '41,211,255' : '255,45,111';
+      ctx.save(); ctx.strokeStyle = 'rgba(' + cor + ',' + (1 - f.t / f.golpe.g.ativo) + ')'; ctx.lineWidth = 6; ctx.lineCap = 'round'; ctx.shadowColor = 'rgb(' + cor + ')'; ctx.shadowBlur = 12;
+      ctx.beginPath(); ctx.arc(f.x + dd * 20, CHAO - 72, 62, dd > 0 ? -.9 : Math.PI - .2, dd > 0 ? .2 : Math.PI + .9); ctx.stroke(); ctx.restore();
+    }
     if (f.est === 'defesa') {
       ctx.save(); ctx.strokeStyle = 'rgba(64,196,255,.95)'; ctx.lineWidth = 5; ctx.shadowColor = '#40c4ff'; ctx.shadowBlur = 16;
       ctx.beginPath(); ctx.arc(f.x + dir(f) * 6, CHAO - 72, 70, dir(f) > 0 ? -1 : Math.PI - 1, dir(f) > 0 ? 1 : Math.PI + 1); ctx.stroke(); ctx.restore();
     }
-    if (f.est === 'ativo' && f.golpe.g.especial) {
-      var r = 40 + f.t * 2.2;
-      ctx.save(); ctx.strokeStyle = f.tipo === 'gabba' ? '#ff2d6f' : '#ffb300'; ctx.lineWidth = 8; ctx.shadowColor = ctx.strokeStyle; ctx.shadowBlur = 24; ctx.globalAlpha = Math.max(0, 1 - f.t / 160);
-      ctx.beginPath(); ctx.arc(f.x, CHAO - 70, r, 0, Math.PI * 2); ctx.stroke(); ctx.beginPath(); ctx.arc(f.x, CHAO - 70, r * .6, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+    if (f.est === 'tonto' && f.t < 0) {
+      ctx.save(); ctx.fillStyle = '#ffd23f'; ctx.font = '400 16px Bungee, sans-serif'; ctx.textAlign = 'center';
+      for (var i = 0; i < 3; i++) { var a = t * 6 + i * 2.1; ctx.fillText('★', f.x + Math.cos(a) * 24, CHAO - 150 + Math.sin(a) * 6); }
+      ctx.restore();
+    }
+  }
+  function desenharFx() {
+    fx.forEach(function (q) {
+      var v = Math.max(0, 1 - q.t / q.vida);
+      ctx.save();
+      if (q.k === 'f') { ctx.globalAlpha = v; ctx.strokeStyle = q.cor; ctx.lineWidth = 3; ctx.shadowColor = q.cor; ctx.shadowBlur = 8; ctx.beginPath(); ctx.moveTo(q.x, q.y); ctx.lineTo(q.x - q.vx * .03, q.y - q.vy * .03); ctx.stroke(); }
+      else if (q.k === 'p') { ctx.globalAlpha = v; ctx.fillStyle = q.cor; ctx.shadowColor = q.cor; ctx.shadowBlur = 10; ctx.fillRect(q.x - 2, q.y - 6, 4, 12); }
+      else if (q.k === 'e') {
+        var r = q.r * (.4 + .6 * (1 - v)); ctx.globalAlpha = v; ctx.translate(q.x, q.y); ctx.rotate(q.rot);
+        ctx.fillStyle = '#fff'; ctx.strokeStyle = q.cor; ctx.lineWidth = 4; ctx.shadowColor = q.cor; ctx.shadowBlur = 20; ctx.beginPath();
+        for (var i = 0; i < 16; i++) { var a = i / 16 * Math.PI * 2, rr = i % 2 ? r * .45 : r; ctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); }
+        ctx.closePath(); ctx.fill(); ctx.stroke();
+      }
+      else if (q.k === 'a') {
+        var ra = q.r * (1 - v * v); ctx.globalAlpha = v; ctx.strokeStyle = q.cor; ctx.lineWidth = 10 * v + 2; ctx.shadowColor = q.cor; ctx.shadowBlur = 24;
+        ctx.beginPath(); if (q.chao) ctx.ellipse(q.x, q.y, ra, ra * .18, 0, 0, Math.PI * 2); else ctx.arc(q.x, q.y, ra, 0, Math.PI * 2); ctx.stroke();
+      }
+      else if (q.k === 'r') {
+        ctx.globalAlpha = v; ctx.strokeStyle = q.cor; ctx.lineWidth = 5; ctx.shadowColor = q.cor; ctx.shadowBlur = 22; ctx.lineJoin = 'round';
+        ctx.beginPath(); q.pts.forEach(function (pt, i) { if (i) ctx.lineTo(pt[0], pt[1]); else ctx.moveTo(pt[0], pt[1]); }); ctx.stroke();
+        ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+      }
+      else if (q.k === 'c') {
+        ctx.globalAlpha = Math.min(1, v * 2); ctx.strokeStyle = '#ffb300'; ctx.lineWidth = 3; ctx.shadowColor = '#ff6a00'; ctx.shadowBlur = 12;
+        ctx.beginPath(); ctx.moveTo(q.x, q.y); ctx.lineTo(q.x + Math.cos(q.a) * q.l, q.y + Math.sin(q.a) * q.l * .25 + 2); ctx.stroke();
+      }
+      ctx.restore();
+    });
+  }
+  function desenharTextos() {
+    textos.forEach(function (x) {
+      ctx.save(); ctx.globalAlpha = Math.max(0, 1 - x.t / .9); ctx.textAlign = 'center'; ctx.font = '400 ' + x.tam + 'px Bungee, Impact, sans-serif';
+      var y = x.y - x.t * (x.tipo === 'num' ? 70 : 45), s = 1 + .5 * Math.max(0, .12 - x.t) / .12;
+      ctx.translate(x.x, y); ctx.scale(s, s); ctx.lineWidth = 5; ctx.strokeStyle = '#0b0420'; ctx.strokeText(x.txt, 0, 0);
+      ctx.fillStyle = x.cor; ctx.shadowColor = x.cor; ctx.shadowBlur = 14; ctx.fillText(x.txt, 0, 0); ctx.restore();
+    });
+  }
+  // por cima de tudo, na tela: escurecer, linhas de velocidade e o nome do especial
+  function desenharCineTela(t) {
+    var c = cine, f = c.f, cor = f.L.cor, cor2 = f.L.cor2;
+    var escuro = c.t < .8 ? Math.min(.78, c.t * 2.2) : Math.max(0, .78 - (c.t - .8) * 1.6);
+    if (escuro > 0) {
+      ctx.save(); ctx.globalAlpha = escuro; ctx.fillStyle = '#05010d'; ctx.fillRect(0, 0, W, H);
+      // linhas de velocidade saindo do lutador
+      var sx = W / 2, sy = H * .55;
+      ctx.translate(sx, sy); ctx.rotate(t * .8);
+      for (var i = 0; i < 26; i++) { var a = i / 26 * Math.PI * 2; ctx.strokeStyle = 'rgba(' + (i % 2 ? cor : cor2) + ',.9)'; ctx.lineWidth = i % 3 ? 2 : 5;
+        ctx.beginPath(); ctx.moveTo(Math.cos(a) * 70, Math.sin(a) * 70); ctx.lineTo(Math.cos(a) * 420, Math.sin(a) * 420); ctx.stroke(); }
+      ctx.restore();
+    }
+    // cartão com o nome do especial entrando de lado
+    if (c.t < 1.5) {
+      var entra = Math.min(1, c.t / .22), sai = c.t > 1.2 ? (c.t - 1.2) / .3 : 0;
+      var x = (f === p ? -1 : 1) * (1 - entra) * W + (f === p ? 1 : -1) * sai * W;
+      ctx.save(); ctx.translate(W / 2 + x, 118); ctx.rotate(-.06);
+      ctx.fillStyle = 'rgba(' + cor + ',.92)'; ctx.shadowColor = 'rgb(' + cor + ')'; ctx.shadowBlur = 30;
+      ctx.beginPath(); ctx.moveTo(-190, -34); ctx.lineTo(200, -44); ctx.lineTo(190, 40); ctx.lineTo(-200, 46); ctx.closePath(); ctx.fill();
+      ctx.shadowBlur = 0; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.font = '700 13px Barlow, sans-serif'; ctx.fillStyle = 'rgba(255,255,255,.9)'; ctx.fillText('⚡ ESPECIAL DO ' + f.L.nome + ' ⚡', 0, -20);
+      var tr = Math.sin(c.t * 60) * (c.t < .8 ? 2 : 0);
+      ctx.font = '400 40px Bungee, Impact, sans-serif';
+      var g = ctx.createLinearGradient(0, -10, 0, 30); g.addColorStop(0, '#ffffff'); g.addColorStop(.5, 'rgb(' + cor2 + ')'); g.addColorStop(1, '#ffffff');
+      ctx.lineWidth = 7; ctx.strokeStyle = '#0b0420'; ctx.strokeText(f.L.especial + '!', tr, 12);
+      ctx.fillStyle = g; ctx.shadowColor = '#fff'; ctx.shadowBlur = 18; ctx.fillText(f.L.especial + '!', tr, 12);
+      ctx.restore();
     }
   }
   function desenhar(t) {
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = '#0d0618'; ctx.fillRect(0, 0, cv.width, cv.height);
     var ox = (cv.width / dpr - W * esc) / 2, oy = (cv.height / dpr - H * esc);
     var sx = (Math.random() - .5) * tremor, sy = (Math.random() - .5) * tremor;
-    ctx.setTransform(dpr * esc, 0, 0, dpr * esc, dpr * (ox + sx * esc), dpr * (oy + sy * esc));
+    var base = function () { ctx.setTransform(dpr * esc, 0, 0, dpr * esc, dpr * (ox + sx * esc), dpr * (oy + sy * esc)); };
+    base();
+    // câmera
+    ctx.translate(W / 2, CHAO - 90); ctx.scale(cam.z, cam.z); ctx.translate(-cam.x, -cam.y);
     fundo(t);
     if (p && e) {
-      var ordem = (p.est === 'ativo' || p.est === 'prep') ? [e, p] : [p, e];
+      var ordem = (p.est === 'ativo' || p.est === 'prep' || p.est === 'especial') ? [e, p] : [p, e];
       ordem.forEach(function (f) { desenharLutador(f, t); });
     }
-    fx.forEach(function (q) { ctx.save(); ctx.globalAlpha = Math.max(0, 1 - q.t / q.vida); ctx.fillStyle = q.cor; ctx.shadowColor = q.cor; ctx.shadowBlur = 8; ctx.fillRect(q.x - 2.5, q.y - 2.5, 5, 5); ctx.restore(); });
-    textos.forEach(function (x) {
-      ctx.save(); ctx.globalAlpha = Math.max(0, 1 - x.t / .8); ctx.textAlign = 'center'; ctx.font = '400 ' + x.tam + 'px Bungee, Impact, sans-serif';
-      ctx.fillStyle = x.cor; ctx.shadowColor = x.cor; ctx.shadowBlur = 12; ctx.lineWidth = 4; ctx.strokeStyle = '#0b0420';
-      var y = x.y - x.t * 50, s = 1 + .3 * Math.max(0, .15 - x.t) / .15;
-      ctx.translate(x.x, y); ctx.scale(s, s); ctx.strokeText(x.txt, 0, 0); ctx.fillText(x.txt, 0, 0); ctx.restore();
-    });
-    if (flash > 0) { ctx.save(); ctx.globalAlpha = flash * .6; ctx.fillStyle = '#fff'; ctx.fillRect(-40, -40, W + 80, H + 80); ctx.restore(); }
+    desenharFx();
+    desenharTextos();
+    base();
+    if (cine) desenharCineTela(t);
+    if (flash > 0) { ctx.save(); ctx.globalAlpha = flash * .75; ctx.fillStyle = 'rgb(' + flashCor + ')'; ctx.fillRect(-60, -60, W + 120, H + 120); ctx.restore(); }
+    if (p && p.esp >= 100 && rodando && !cine) {
+      ctx.save(); ctx.globalAlpha = .6 + .4 * Math.sin(t * 9); ctx.textAlign = 'center'; ctx.font = '400 15px Bungee, sans-serif';
+      ctx.fillStyle = '#ffd23f'; ctx.shadowColor = '#ffd23f'; ctx.shadowBlur = 14; ctx.fillText('⚡ ESPECIAL PRONTO ⚡', W / 2, H - 14); ctx.restore();
+    }
     if (banner) {
-      var b = banner, txt = b.depois && b.t > .9 ? b.depois : b.txt, tl = b.depois && b.t > .9 ? b.t - .9 : b.t;
-      var dur = b.grande ? 1.6 : 1.1;
-      if (b.t < (b.depois ? 1.6 : dur)) {
-        var e2 = Math.min(1, tl / .18), sc = .5 + .5 * e2 + .04 * Math.sin(tl * 12);
-        ctx.save(); ctx.translate(W / 2, b.grande ? 175 : 130); ctx.scale(sc, sc); ctx.rotate(-.05);
-        ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = '400 ' + (b.grande ? 50 : 34) + 'px Bungee, Impact, sans-serif';
-        ctx.lineWidth = 8; ctx.strokeStyle = '#0b0420'; ctx.strokeText(txt, 0, 0);
-        ctx.fillStyle = 'rgb(' + b.cor + ')'; ctx.shadowColor = 'rgb(' + b.cor + ')'; ctx.shadowBlur = 26; ctx.fillText(txt, 0, 0); ctx.fillText(txt, 0, 0);
+      var b = banner, txt = b.depois && b.t > .95 ? b.depois : b.txt, tl = b.depois && b.t > .95 ? b.t - .95 : b.t;
+      if (b.t < (b.depois ? 1.65 : 1.7)) {
+        var e2 = Math.min(1, tl / .16), sc = 2.2 - 1.2 * e2 + .04 * Math.sin(tl * 12);
+        ctx.save(); ctx.translate(W / 2, 175); ctx.scale(sc, sc); ctx.rotate(-.05); ctx.globalAlpha = Math.min(1, tl / .1);
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = '400 ' + (b.grande ? 46 : 34) + 'px Bungee, Impact, sans-serif';
+        ctx.lineWidth = 9; ctx.strokeStyle = '#0b0420'; ctx.strokeText(txt, 0, 0);
+        var g = ctx.createLinearGradient(0, -22, 0, 22); g.addColorStop(0, '#ffffff'); g.addColorStop(.55, 'rgb(' + b.cor + ')'); g.addColorStop(1, '#ffffff');
+        ctx.fillStyle = g; ctx.shadowColor = 'rgb(' + b.cor + ')'; ctx.shadowBlur = 30; ctx.fillText(txt, 0, 0); ctx.fillText(txt, 0, 0);
         ctx.restore();
       }
     }
@@ -585,9 +787,9 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--mustard); outli
     document.querySelectorAll('[data-prev]').forEach(function (c) {
       var x = c.getContext('2d'), tipo = c.dataset.prev;
       x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, c.width, c.height);
-      var salva = ctx; ctx = x; // as funções de desenho usam ctx
+      var salva = ctx; ctx = x;
       x.setTransform(1.4, 0, 0, 1.4, 0, 0);
-      var f = { tipo: tipo, x: 78, est: 'parado', t: 0, L: LUTADORES[tipo] };
+      var f = { tipo: tipo, x: 78, y: 0, est: 'parado', t: 0, L: LUTADORES[tipo] };
       var CH = CHAO; CHAO = 165;
       if (tipo === 'gabba') desenharGabba(f, 0, x); else desenharBrutao(f, 0, x);
       CHAO = CH; ctx = salva;
@@ -605,6 +807,9 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--mustard); outli
   $('lutar').addEventListener('click', function () { $('como').hidden = true; medir(); comecarLuta(); });
   $('again').addEventListener('click', function () { $('over').hidden = true; comecarLuta(); });
   $('trocar').addEventListener('click', function () { $('over').hidden = true; p = e = null; $('start').hidden = false; });
+
+  // só para testes automáticos
+  window.__luta = { estado: function () { return { p: p, e: e, cine: cine, round: round }; }, cheio: function () { if (p) p.esp = 100; if (e) e.esp = 0; }, cheioE: function () { if (e) e.esp = 100; } };
 
   medir();
   requestAnimationFrame(quadro);

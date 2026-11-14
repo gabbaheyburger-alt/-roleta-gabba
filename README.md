@@ -101,7 +101,7 @@ Jogo de cozinha (estilo Cooking Fever) no endereço `/pedido/`. Chega uma comand
 
 ## Gabba Fight (teste)
 
-Jogo de luta em teste, fora do Fliperama, no endereço `/luta/`. O jogador escolhe o lutador (Mascote: rápido; Brutão, o hambúrguer: forte e lento) e luta contra a máquina, melhor de 3 rounds de 45 s. Gestos na arena: toque = soco (3 seguidos = combo), segurar = defender, arrastar para trás = esquivar, arrastar para a frente = golpe forte; barra amarela cheia libera o ESPECIAL. O golpe amarelo da máquina (pesado) quebra a defesa: tem que esquivar. A máquina fica mais rápida a cada round (`IA_ROUND`); danos e tempos em `GOLPES` e `LUTADORES`, no topo do script. Eventos: `partida-luta`, `luta-venceu`, `luta-perdeu`. Ainda sem prêmio.
+Jogo de luta em teste, fora do Fliperama, no endereço `/luta/`. O jogador escolhe o lutador (Mascote: rápido; Brutão, o hambúrguer: forte e lento) e luta contra a máquina, melhor de 3 rounds de 45 s. Gestos na arena: toque = soco (3 seguidos = combo), segurar = defender, arrastar para trás = esquivar, arrastar para a frente = golpe forte; barra amarela cheia libera o ESPECIAL. O golpe amarelo da máquina (pesado) quebra a defesa: tem que esquivar. Defender na hora do golpe = PARRY (máquina fica tonta); esquivar na hora = PERFEITO (câmera lenta). O especial é uma cena de cinema (câmera fecha, tela escurece, cartão com o nome, golpes em sequência com raios/ondas ou pulo com rachaduras no chão). A máquina defende mais quando apanha em sequência, contra-ataca, faz combos e castiga golpe errado; fica mais rápida a cada round (`IA_ROUND`); danos e tempos em `GOLPES` e `LUTADORES`, no topo do script. Eventos: `partida-luta`, `luta-venceu`, `luta-perdeu`. Ainda sem prêmio.
 
 ## Chapa do Gabba (teste)
 
