@@ -55,6 +55,10 @@ body { margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: en
 
 .field { position: relative; flex: 1; min-height: 0; border-radius: 18px; overflow: hidden; background: #0d0618; border: 1.5px solid rgba(var(--cyan), .35); box-shadow: 0 0 22px rgba(var(--cyan), .18); user-select: none; -webkit-user-select: none; }
 .field, .field * { touch-action: none; }
+.field .overlay, .field .overlay * { touch-action: pan-y; }
+#como .neon-card { gap: 10px; padding-top: 18px; padding-bottom: 18px; }
+#como li { padding: 7px 12px !important; font-size: .9rem; line-height: 1.25; }
+#como h1 { font-size: 1.6rem; }
 .field canvas { width: 100%; height: 100%; display: block; }
 .teste { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); background: #2b4a8a; color: #fff; font: 700 .7rem var(--body); padding: 3px 8px; border-radius: 6px; letter-spacing: .08em; pointer-events: none; z-index: 5; white-space: nowrap; }
 
@@ -114,7 +118,7 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--mustard); outli
 
   <div class="field" id="field">
     <canvas id="game" aria-label="Arena do Gabba Fight. Toque para socar, segure para defender, arraste para trás para esquivar e para a frente para o golpe forte."></canvas>
-    <div class="teste" id="teste-tag">TESTE · v1</div>
+    <div class="teste" id="teste-tag">TESTE · v2</div>
 
     <div class="overlay" id="start" data-kind="start" data-icon="🥊">
       <h1>Gabba <span>Fight</span></h1>
@@ -136,17 +140,17 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--mustard); outli
       <a class="link" href="../jogos/" style="text-decoration:none">Escolher outro jogo</a>
     </div>
 
-    <div class="overlay" id="como" hidden data-kind="info" data-icon="🎮">
+    <div class="overlay" id="como" hidden data-kind="info">
       <h1>Como <span>lutar</span></h1>
+      <button class="btn" id="lutar" type="button">LUTAR!</button>
       <ul>
-        <li><b>Toque</b> na arena: soco (3 seguidos = combo)</li>
+        <li><b>Toque</b>: soco (3 seguidos = combo)</li>
         <li><b>Segure</b> o dedo: defender</li>
         <li><b>Arraste para trás</b>: esquivar</li>
         <li><b>Arraste para a frente</b>: golpe forte</li>
-        <li>Golpe <strong>amarelo</strong> do inimigo: não dá para defender direito. <strong>Esquive!</strong></li>
-        <li>Barra amarela cheia: toque em <strong>ESPECIAL</strong></li>
+        <li><strong>"!!" amarelo</strong>: golpe pesado, <strong>esquive!</strong></li>
+        <li>Barra amarela cheia: <strong>ESPECIAL</strong></li>
       </ul>
-      <button class="btn" id="lutar" type="button">LUTAR!</button>
     </div>
 
     <div class="overlay" id="over" hidden data-kind="err" data-icon="💥">
