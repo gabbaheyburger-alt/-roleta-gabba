@@ -99,9 +99,9 @@ Jogo de cozinha (estilo Cooking Fever) no endereço `/pedido/`. Chega uma comand
 - `?teste` joga sem contar no GoatCounter.
 - Eventos: `partida-pedido`, `pedido-venceu-sem-premio` (ou `pedido-venceu`), `pedido-perdeu-tempo` e `pedido-perdeu-erros`.
 
-## Obby do Gabba 2 (teste: gráficos novos)
+## Obby do Gabba (gráficos novos, Paracuru ao pôr do sol)
 
-Versão de teste em `/obby2/`, sem mexer no `/obby/` do Fliperama. Mesmo jogo (joystick + PULA, 3 bandeiras, moedas, mesmo recorde), com cenário novo **Paracuru ao pôr do sol**: ilhas de areia com coqueiros, pranchas de surf, jangada e bugues que se mexem, píer, chopes, burgers e batatas, mar azul com ondas e espuma, farol com facho girando, dunas, pipas de kitesurf e o letreiro neon GABBA na chegada. Gráficos: three.js r147 (jsDelivr) com sombras, luz de pôr do sol, céu em degradê com sol e estrelas, nuvens, brilho neon (bloom), poeira dourada e faíscas. O personagem é o mascote em 3D (estica no pulo, achata no pouso). Qualidade automática: se o celular ficar abaixo de ~40 quadros por segundo, desliga o brilho e depois as sombras; `?baixo` já abre no modo leve.
+**Desde 14/11/2026 é a versão do Fliperama, em `/obby/`** (o endereço de teste `/obby2/` agora leva para lá). Mesmo jogo (joystick + PULA, 3 bandeiras, moedas, mesmo recorde), com cenário novo **Paracuru ao pôr do sol**: ilhas de areia com coqueiros, pranchas de surf, jangada e bugues que se mexem, píer, chopes, burgers e batatas, mar azul com ondas e espuma, farol com facho girando, dunas, pipas de kitesurf e o letreiro neon GABBA na chegada. Gráficos: three.js r147 (jsDelivr) com sombras, luz de pôr do sol, céu em degradê com sol e estrelas, nuvens, brilho neon (bloom), poeira dourada e faíscas. O personagem é o mascote em 3D (estica no pulo, achata no pouso). Qualidade automática: se o celular ficar abaixo de ~40 quadros por segundo, desliga o brilho e depois as sombras; `?baixo` já abre no modo leve.
 
 ## Gabba Fight (teste)
 
