@@ -99,6 +99,10 @@ Jogo de cozinha (estilo Cooking Fever) no endereço `/pedido/`. Chega uma comand
 - `?teste` joga sem contar no GoatCounter.
 - Eventos: `partida-pedido`, `pedido-venceu-sem-premio` (ou `pedido-venceu`), `pedido-perdeu-tempo` e `pedido-perdeu-erros`.
 
+## Obby do Gabba 2 (teste: gráficos novos)
+
+Versão de teste em `/obby2/`, sem mexer no `/obby/` do Fliperama. Mesmo jogo (joystick + PULA, 3 bandeiras, moedas, mesmo recorde), com cenário novo **Paracuru ao pôr do sol**: ilhas de areia com coqueiros, pranchas de surf, jangada e bugues que se mexem, píer, chopes, burgers e batatas, mar azul com ondas e espuma, farol com facho girando, dunas, pipas de kitesurf e o letreiro neon GABBA na chegada. Gráficos: three.js r147 (jsDelivr) com sombras, luz de pôr do sol, céu em degradê com sol e estrelas, nuvens, brilho neon (bloom), poeira dourada e faíscas. O personagem é o mascote em 3D (estica no pulo, achata no pouso). Qualidade automática: se o celular ficar abaixo de ~40 quadros por segundo, desliga o brilho e depois as sombras; `?baixo` já abre no modo leve.
+
 ## Gabba Fight (teste)
 
 Jogo de luta em teste, fora do Fliperama, no endereço `/luta/`. O jogador escolhe o lutador (Mascote: rápido; Brutão, o hambúrguer: forte e lento) e luta contra a máquina, melhor de 3 rounds de 45 s. Gestos na arena: toque = soco (3 seguidos = combo), segurar = defender, arrastar para trás = esquivar, arrastar para a frente = golpe forte; barra amarela cheia libera o ESPECIAL. O golpe amarelo da máquina (pesado) quebra a defesa: tem que esquivar. Defender na hora do golpe = PARRY (máquina fica tonta); esquivar na hora = PERFEITO (câmera lenta). O especial é uma cena de cinema (câmera fecha, tela escurece, cartão com o nome, golpes em sequência com raios/ondas ou pulo com rachaduras no chão). A máquina defende mais quando apanha em sequência, contra-ataca, faz combos e castiga golpe errado; fica mais rápida a cada round (`IA_ROUND`); danos e tempos em `GOLPES` e `LUTADORES`, no topo do script. Eventos: `partida-luta`, `luta-venceu`, `luta-perdeu`. Ainda sem prêmio.
