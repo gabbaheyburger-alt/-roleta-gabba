@@ -228,3 +228,7 @@ Controle interno de horário da equipe, **não é ponto eletrônico legal**.
 - `ponto/config.json`: equipe, setores, dias (ex.: Jandira só seg e ter no Gabba), horários e tolerância de atraso.
 - Serviço: `assistente/ponto.js`, dentro do mesmo Worker da Cloudflare (`gabba-assistente`), com os dados num Durable Object (SQLite). Publicado automaticamente quando há mudança na pasta `assistente/` do GitHub.
 - Registros até 05:00 contam para o dia anterior (turno que passa da meia-noite).
+
+## Buggy do Gabba (teste)
+
+Jogo em `/buggy/`, fora do Fliperama. Passeio de buggy 3D (three.js r147) por uma Paracuru inventada ao pôr do sol: cidade com casas coloridas e ruas de calçamento, Igreja Matriz com praça, loja do Gabba com letreiro neon e hambúrguer gigante no telhado, praia com barracas, jangadas e coqueiros, píer (dá para andar nele), farol com facho girando, lagoa nas dunas e mirante com bandeira. Volante à esquerda (arrastar ◀ ▶), ACELERA e FREIO/RÉ à direita (no computador: setas ou WASD). Seta e luz amarela levam ao turista; parou perto, ele embarca. Luz verde = destino, com tempo. Turista 🤘 aventureiro dá gorjeta por salto, 😰 medroso perde estrela com salto. Saltos nas dunas (mais de 0,45 s no ar) e batatas douradas valem dinheiro. Água funda = atolou (volta para a areia). 3 bugues da cidade rodando nas ruas. Partida de 3 minutos, recorde em `localStorage` (`buggy-gabba-v1`), minimapa redondo, som de motor com botão 🔊. Qualidade automática (desliga sombras se ficar lento; `?baixo` = modo leve). Eventos: `partida-buggy`, `buggy-entrega`, `buggy-fim`.
