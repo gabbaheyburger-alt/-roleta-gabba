@@ -787,105 +787,125 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--mustard); outli
   var MAT = {
     cromo: new THREE.MeshStandardMaterial({ color: '#e8e8ec', metalness: 1, roughness: 0.18 }),
     preto: new THREE.MeshStandardMaterial({ color: '#1a1a1a', roughness: 0.6, metalness: 0.2 }),
-    pneu: new THREE.MeshStandardMaterial({ color: '#1c1c1c', roughness: 0.95 }),
+    pneu: new THREE.MeshStandardMaterial({ color: '#141414', roughness: 0.9, envMapIntensity: 0.3 }),
     vidro: new THREE.MeshPhysicalMaterial({ color: '#cfe8ff', metalness: 0, roughness: 0.02, transparent: true, opacity: 0.28, envMapIntensity: 1.5 }),
     farol: new THREE.MeshStandardMaterial({ color: '#fffbe8', emissive: '#fff2c8', emissiveIntensity: 2.4 }),
     lanterna: new THREE.MeshStandardMaterial({ color: '#ff3030', emissive: '#ff1a1a', emissiveIntensity: 1.6 }),
     banco: new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.55 })
   };
-  var lonaTex = tela(128, 128, function (x, w, h) { for (var k = 0; k < 8; k++) { x.fillStyle = k % 2 ? '#ffffff' : '#d7261e'; x.fillRect(k * 16, 0, 16, h); } }, true);
-  var decalTex = tela(256, 64, function (x, w, h) { x.clearRect(0, 0, w, h); x.font = '900 46px Bungee, Impact, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.lineWidth = 6; x.strokeStyle = '#ffffff'; x.strokeText('GABBA', w / 2, h / 2 + 3); x.fillStyle = '#d7261e'; x.fillText('GABBA', w / 2, h / 2 + 3); });
-  var CORPO_GEO = (function () {
+  MAT.prata = new THREE.MeshStandardMaterial({ color: '#d9dde2', metalness: 0.9, roughness: 0.25 });
+  MAT.seta = new THREE.MeshStandardMaterial({ color: '#ff9a1a', emissive: '#ff7a00', emissiveIntensity: 1.2 });
+  var decalTex = tela(256, 64, function (x, w, h) { x.clearRect(0, 0, w, h); x.font = 'italic 900 44px "Barlow Condensed", Impact, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillStyle = '#1b1b1b'; x.fillText('Gabba Star ★', w / 2, h / 2 + 2); });
+  // carroceria estilo Fyber: perfil lateral com caixas de roda, capô comprido e traseira alta
+  function perfilBuggy(cockY) {
     var s = new THREE.Shape();
-    s.moveTo(-2.12, 0.66); s.lineTo(-2.0, 0.62); s.absarc(-1.15, 0.62, 0.86, Math.PI, 0, true);
-    s.lineTo(0.5, 0.62); s.absarc(1.3, 0.62, 0.8, Math.PI, 0, true);
-    s.lineTo(2.22, 0.7); s.quadraticCurveTo(2.5, 0.95, 2.28, 1.24); s.lineTo(1.1, 1.42); s.lineTo(0.78, 1.47);
-    s.lineTo(0.58, 1.08); s.lineTo(-1.32, 1.08); s.lineTo(-1.55, 1.36); s.lineTo(-2.02, 1.34); s.quadraticCurveTo(-2.28, 1.0, -2.12, 0.66);
-    var g = new THREE.ExtrudeGeometry(s, { depth: 1.66, bevelEnabled: true, bevelThickness: 0.14, bevelSize: 0.1, bevelSegments: 4, curveSegments: 18 });
-    g.rotateY(-Math.PI / 2); g.translate(0.83, 0, 0); g.computeVertexNormals(); return g;
-  })();
-  function rodaGeos(r) {
-    var pts = [[0.55, -0.26], [0.9, -0.27], [0.98, -0.21], [1.0, -0.1], [1.0, 0.1], [0.98, 0.21], [0.9, 0.27], [0.55, 0.26]].map(function (p) { return new THREE.Vector2(p[0] * r, p[1] * 1.0); });
-    var pneu = new THREE.LatheGeometry(pts, 26); pneu.rotateZ(Math.PI / 2);
-    var cravos = []; for (var k = 0; k < 18; k++) { var b = new THREE.BoxGeometry(0.46, 0.07, r * 0.2); b.translate(0, r + 0.02, 0); b.rotateX(k / 18 * Math.PI * 2); cravos.push(b.toNonIndexed()); }
-    var pg = juntar([pneu.toNonIndexed()].concat(cravos));
-    var aro = new THREE.CylinderGeometry(r * 0.56, r * 0.56, 0.44, 18); aro.rotateZ(Math.PI / 2);
-    var cubo = new THREE.CylinderGeometry(r * 0.16, r * 0.2, 0.52, 10); cubo.rotateZ(Math.PI / 2);
-    var raios = []; for (k = 0; k < 6; k++) { var rb = new THREE.BoxGeometry(0.06, r * 0.5, 0.09); rb.translate(0.24, r * 0.25, 0); rb.rotateX(k / 6 * Math.PI * 2); raios.push(rb.toNonIndexed()); rb = rb.clone(); rb.translate(-0.48, 0, 0); raios.push(rb.toNonIndexed()); }
-    var ag = juntar([aro.toNonIndexed(), cubo.toNonIndexed()].concat(raios));
-    return { pneu: pg, aro: ag };
+    s.moveTo(-2.18, 0.68); s.lineTo(-2.14, 0.68); s.absarc(-1.3, 0.68, 0.84, Math.PI, 0, true);
+    s.lineTo(0.63, 0.68); s.absarc(1.45, 0.68, 0.82, Math.PI, 0, true);
+    s.lineTo(2.36, 0.74); s.quadraticCurveTo(2.52, 0.98, 2.34, 1.2); s.lineTo(1.6, 1.36); s.lineTo(0.92, 1.46); s.lineTo(0.8, 1.47);
+    s.lineTo(0.62, cockY + 0.08); s.quadraticCurveTo(0.5, cockY, 0.35, cockY); s.lineTo(-0.9, cockY); s.quadraticCurveTo(-1.1, cockY, -1.18, cockY + 0.15);
+    s.lineTo(-1.35, 1.5); s.lineTo(-2.05, 1.52); s.quadraticCurveTo(-2.3, 1.45, -2.25, 1.1); s.quadraticCurveTo(-2.22, 0.8, -2.18, 0.68);
+    return s;
   }
-  var RODA_F = rodaGeos(0.62), RODA_T = rodaGeos(0.7);
+  function extrudar(shape, prof, chanfro, desloc) { var g = new THREE.ExtrudeGeometry(shape, { depth: prof, bevelEnabled: true, bevelThickness: chanfro, bevelSize: chanfro, bevelSegments: 3, curveSegments: 18 }); g.rotateY(-Math.PI / 2); g.translate(desloc, 0, 0); g.computeVertexNormals(); return g; }
+  function rodaGeos(r) {
+    var pts = [[0.6, -0.25], [0.9, -0.26], [0.97, -0.21], [1.0, -0.12], [1.0, 0.12], [0.97, 0.21], [0.9, 0.26], [0.6, 0.25]].map(function (p) { return new THREE.Vector2(p[0] * r, p[1]); });
+    var pneu = new THREE.LatheGeometry(pts, 30); pneu.rotateZ(Math.PI / 2);
+    var sulcos = []; for (var k = 0; k < 24; k++) { var b = new THREE.BoxGeometry(0.42, 0.025, 0.06); b.translate(0, r + 0.005, 0); b.rotateX(k / 24 * Math.PI * 2); sulcos.push(b.toNonIndexed()); }
+    var aro = new THREE.CylinderGeometry(r * 0.6, r * 0.6, 0.4, 24); aro.rotateZ(Math.PI / 2);
+    var prata = [];
+    [-1, 1].forEach(function (l) {
+      var bordo = new THREE.TorusGeometry(r * 0.6, 0.035, 6, 28); bordo.rotateY(Math.PI / 2); bordo.translate(l * 0.2, 0, 0); prata.push(bordo.toNonIndexed());
+      var cubo = new THREE.CylinderGeometry(r * 0.13, r * 0.15, 0.06, 12); cubo.rotateZ(Math.PI / 2); cubo.translate(l * 0.22, 0, 0); prata.push(cubo.toNonIndexed());
+      for (var k = 0; k < 5; k++) { var rb = new THREE.BoxGeometry(0.05, r * 0.46, 0.17); rb.translate(l * 0.21, r * 0.32, 0); rb.rotateX(k / 5 * Math.PI * 2 + 0.3); prata.push(rb.toNonIndexed()); }
+    });
+    return { pneu: juntar([pneu.toNonIndexed()].concat(sulcos)), aro: juntar([aro.toNonIndexed()]), raios: juntar(prata) };
+  }
+  var RODA_F = rodaGeos(0.64), RODA_T = rodaGeos(0.68);
   function tuboGeo(pts, r) { return new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts.map(function (p) { return new THREE.Vector3(p[0], p[1], p[2]); }), false, 'catmullrom', 0.2), pts.length * 10, r || 0.045, 8, false); }
   var BUGGY_PECAS = (function () {
     var I = new THREE.Matrix4();
-    var cromo = new Lote(), preto = new Lote(), banco = new Lote(), farol = new Lote(), lant = new Lote(), lona = new Lote();
-    // santo-antônio e quadro do para-brisa
-    cromo.add(tuboGeo([[-0.86, 1.15, -1.32], [-0.84, 1.9, -1.26], [-0.76, 2.32, -1.18], [-0.5, 2.4, -1.16], [0.5, 2.4, -1.16], [0.76, 2.32, -1.18], [0.84, 1.9, -1.26], [0.86, 1.15, -1.32]]), I);
-    cromo.add(tuboGeo([[-0.84, 1.4, 0.66], [-0.8, 1.8, 0.5], [-0.72, 2.12, 0.36], [-0.4, 2.18, 0.34], [0.4, 2.18, 0.34], [0.72, 2.12, 0.36], [0.8, 1.8, 0.5], [0.84, 1.4, 0.66]]), I);
-    cromo.add(tuboGeo([[-0.66, 2.37, -1.17], [-0.62, 2.3, -0.4], [-0.6, 2.18, 0.34]], 0.04), I).add(tuboGeo([[0.66, 2.37, -1.17], [0.62, 2.3, -0.4], [0.6, 2.18, 0.34]], 0.04), I);
-    cromo.add(tuboGeo([[-0.84, 1.9, -1.26], [-0.86, 1.4, -2.02]], 0.04), I).add(tuboGeo([[0.84, 1.9, -1.26], [0.86, 1.4, -2.02]], 0.04), I);
-    // para-choques
-    cromo.add(tuboGeo([[-0.92, 0.82, 2.18], [-0.85, 0.78, 2.5], [0, 0.78, 2.58], [0.85, 0.78, 2.5], [0.92, 0.82, 2.18]], 0.055), I);
-    cromo.add(tuboGeo([[-0.9, 0.8, -2.12], [-0.85, 0.75, -2.38], [0.85, 0.75, -2.38], [0.9, 0.8, -2.12]], 0.055), I);
-    // estribos laterais
-    [-1, 1].forEach(function (l) { cromo.add(tuboGeo([[l * 0.98, 0.72, -0.3], [l * 1.04, 0.68, 0.1], [l * 0.98, 0.72, 0.45]], 0.04), I); });
-    // carcaças dos faróis
-    [-0.55, 0.55].forEach(function (x) { var c = new THREE.CylinderGeometry(0.17, 0.2, 0.22, 16); c.rotateX(Math.PI / 2); cromo.add(c, mtx(x, 1.36, 2.12, 0, 1, 1, 1, -0.3)); var l = new THREE.CircleGeometry(0.15, 16); farol.add(l, mtx(x, 1.395, 2.235, 0, 1, 1, 1, -0.3)); });
-    [-0.62, 0.62].forEach(function (x) { lant.add(new THREE.BoxGeometry(0.28, 0.14, 0.05), mtx(x, 1.15, -2.28)); });
-    // retrovisores
-    [-1, 1].forEach(function (l) { cromo.add(new THREE.CylinderGeometry(0.02, 0.02, 0.3, 5), mtx(l * 0.92, 1.75, 0.55, 0, 1, 1, 1, 0, l * 0.8)); preto.add(new THREE.BoxGeometry(0.22, 0.14, 0.05), mtx(l * 1.05, 1.88, 0.55)); });
-    // assoalho, chassi, painel, volante
-    preto.add(new THREE.BoxGeometry(1.62, 0.04, 1.9), mtx(0, 1.2, -0.38)).add(new THREE.BoxGeometry(1.5, 0.14, 3.7), mtx(0, 0.55, 0)).add(new THREE.BoxGeometry(1.5, 0.28, 0.2), mtx(0, 1.36, 0.58, 0, 1, 1, 1, -0.4));
-    preto.add(new THREE.TorusGeometry(0.17, 0.025, 6, 20), mtx(0.42, 1.68, 0.42, 0, 1, 1, 1, -0.5)).add(new THREE.CylinderGeometry(0.025, 0.025, 0.4, 6), mtx(0.42, 1.55, 0.55, 0, 1, 1, 1, 1.05));
-    // motor traseiro
-    preto.add(new THREE.BoxGeometry(1.2, 0.3, 0.6), mtx(0, 1.3, -1.75)).add(new THREE.CylinderGeometry(0.06, 0.06, 0.4, 8), mtx(0.4, 0.95, -2.3, 0, 1, 1, 1, Math.PI / 2));
-    // estepe em pé atrás dos bancos
-    var est = new THREE.TorusGeometry(0.4, 0.15, 10, 22); preto.add(est, mtx(0, 1.6, -1.78, 0, 1, 1, 1, Math.PI / 2));
-    cromo.add(new THREE.CylinderGeometry(0.24, 0.24, 0.18, 14), mtx(0, 1.6, -1.78));
-    // bancos (creme com vermelho)
-    [[-0.42, -0.02], [0.42, -0.02], [-0.42, -0.92], [0.42, -0.92]].forEach(function (p) {
-      var assento = new THREE.CapsuleGeometry(0.12, 0.42, 4, 8); assento.rotateZ(Math.PI / 2); assento.scale(1, 1, 2.3);
-      banco.add(assento, mtx(p[0], 1.33, p[1]), '#f1e3c8');
-      var enc = new THREE.CapsuleGeometry(0.1, 0.5, 4, 8); enc.scale(2.6, 1, 1); banco.add(enc, mtx(p[0], 1.72, p[1] - 0.32, 0, 1, 1, 1, -0.22), '#f1e3c8');
-      banco.add(new THREE.BoxGeometry(0.5, 0.09, 0.4), mtx(p[0], 2.07, p[1] - 0.38, 0, 1, 1, 1, -0.22), '#b3261e');
+    var pint = new Lote(), preto = new Lote(), prata = new Lote(), farol = new Lote(), lant = new Lote(), seta = new Lote();
+    // casco: miolo (com piso baixo) + duas laterais mais altas
+    pint.add(extrudar(perfilBuggy(0.98), 1.62, 0.04, 0.81), I);
+    pint.add(extrudar(perfilBuggy(1.3), 0.12, 0.04, 0.95), I).add(extrudar(perfilBuggy(1.3), 0.12, 0.04, -0.83), I);
+    // para-lamas arredondados por cima das rodas
+    [[1.45, 0.82], [-1.3, 0.84]].forEach(function (r) { [-1, 1].forEach(function (l) {
+      var pl = new THREE.CylinderGeometry(r[1] + 0.06, r[1] + 0.06, 0.34, 22, 1, true, -0.05, Math.PI + 0.1); pl.rotateZ(Math.PI / 2);
+      pint.add(pl, mtx(l * 1.02, 0.68, r[0]));
+    }); });
+    // capota de fibra com nervuras
+    pint.add(new THREE.BoxGeometry(1.86, 0.07, 1.98), mtx(0, 2.3, -0.3));
+    for (var k = 0; k < 6; k++) pint.add(new THREE.BoxGeometry(0.06, 0.05, 1.82), mtx(-0.7 + k * 0.28, 2.355, -0.32));
+    pint.add(new THREE.BoxGeometry(1.86, 0.14, 0.08), mtx(0, 2.26, 0.68)).add(new THREE.BoxGeometry(1.86, 0.1, 0.06), mtx(0, 2.27, -1.28));
+    // colunas, santo-antônio e quadro do para-brisa (pretos)
+    [-1, 1].forEach(function (l) {
+      preto.add(tuboGeo([[l * 0.84, 1.47, 0.8], [l * 0.84, 2.27, 0.62]], 0.045), I);
+      preto.add(tuboGeo([[l * 0.86, 1.26, -1.05], [l * 0.84, 2.0, -1.05], [l * 0.84, 2.27, -1.05]], 0.05), I);
+      preto.add(tuboGeo([[l * 0.84, 2.0, -1.05], [l * 0.8, 1.53, -1.85]], 0.04), I);
+      preto.add(new THREE.BoxGeometry(0.06, 0.16, 0.24), mtx(l * 1.0, 1.75, 0.68)).add(new THREE.CylinderGeometry(0.02, 0.02, 0.2, 5), mtx(l * 0.92, 1.72, 0.7, 0, 1, 1, 1, 0, l * 1.2));
+      // faixa preta e faixa prata na lateral
+      preto.add(new THREE.BoxGeometry(0.02, 0.07, 3.3), mtx(l * 1.0, 1.2, -0.45, 0, 1, 1, 1, 0.075));
+      prata.add(new THREE.BoxGeometry(0.02, 0.26, 1.04), mtx(l * 1.0, 0.88, 0.08));
     });
-    // toldo listrado
-    var tg = new THREE.BoxGeometry(1.6, 0.05, 1.62, 1, 1, 1), tp2 = tg.attributes.position; for (var k = 0; k < tp2.count; k++) tp2.setY(k, tp2.getY(k) - Math.pow(tp2.getX(k) / 0.8, 2) * 0.06);
-    lona.add(tg, mtx(0, 2.45, -0.41));
-    return { cromo: cromo, preto: preto, banco: banco, farol: farol, lant: lant, lona: lona };
+    preto.add(tuboGeo([[-0.84, 2.25, -1.05], [0.84, 2.25, -1.05]], 0.045), I);
+    preto.add(tuboGeo([[-0.84, 2.24, 0.63], [0.84, 2.24, 0.63]], 0.04), I).add(tuboGeo([[-0.84, 1.48, 0.8], [0.84, 1.48, 0.8]], 0.035), I);
+    // assoalho, painel, volante
+    preto.add(new THREE.BoxGeometry(1.6, 0.02, 1.6), mtx(0, 1.025, -0.3)).add(new THREE.BoxGeometry(1.55, 0.22, 0.16), mtx(0, 1.36, 0.66, 0, 1, 1, 1, -0.5));
+    preto.add(new THREE.TorusGeometry(0.17, 0.028, 6, 22), mtx(0.42, 1.62, 0.42, 0, 1, 1, 1, -0.55)).add(new THREE.CylinderGeometry(0.025, 0.025, 0.45, 6), mtx(0.42, 1.48, 0.56, 0, 1, 1, 1, 1.0));
+    // bancos pretos (concha na frente, assento alto atrás)
+    [-0.42, 0.42].forEach(function (x) {
+      var assento = new THREE.CapsuleGeometry(0.11, 0.36, 4, 10); assento.rotateZ(Math.PI / 2); assento.scale(1, 0.9, 2.2);
+      preto.add(assento, mtx(x, 1.13, -0.04));
+      var enc = new THREE.CapsuleGeometry(0.13, 0.5, 4, 10); enc.scale(2.1, 1, 0.8); preto.add(enc, mtx(x, 1.55, -0.33, 0, 1, 1, 1, -0.18));
+      var cab = new THREE.CapsuleGeometry(0.1, 0.12, 3, 8); cab.rotateZ(Math.PI / 2); cab.scale(1, 1, 0.8); preto.add(cab, mtx(x, 1.98, -0.42, 0, 1, 1, 1, -0.18));
+    });
+    var traseiro = new THREE.CapsuleGeometry(0.12, 1.25, 4, 10); traseiro.rotateZ(Math.PI / 2); traseiro.scale(1, 1, 2.6); preto.add(traseiro, mtx(0, 1.64, -1.68));
+    // faróis quadrados, piscas laranja, lanternas
+    [-0.62, 0.62].forEach(function (x) {
+      preto.add(new THREE.BoxGeometry(0.36, 0.26, 0.12), mtx(x, 1.07, 2.43, 0, 1, 1, 1, -0.7));
+      farol.add(new THREE.PlaneGeometry(0.3, 0.2), mtx(x, 1.11, 2.48, 0, 1, 1, 1, -0.7));
+      seta.add(new THREE.BoxGeometry(0.14, 0.08, 0.06), mtx(x * 1.05, 0.86, 2.5, 0, 1, 1, 1, -0.2));
+      lant.add(new THREE.CylinderGeometry(0.09, 0.09, 0.05, 14), mtx(x, 1.2, -2.26, 0, 1, 1, 1, Math.PI / 2));
+    });
+    // placa e para-choque de impulsão com gancho
+    prata.add(new THREE.BoxGeometry(0.42, 0.14, 0.03), mtx(0, 0.86, 2.53, 0, 1, 1, 1, -0.15));
+    preto.add(tuboGeo([[-0.72, 0.8, 2.3], [-0.74, 0.68, 2.58], [-0.4, 0.66, 2.66], [0.4, 0.66, 2.66], [0.74, 0.68, 2.58], [0.72, 0.8, 2.3]], 0.05), I);
+    preto.add(tuboGeo([[-0.72, 0.8, -2.2], [-0.7, 0.75, -2.42], [0.7, 0.75, -2.42], [0.72, 0.8, -2.2]], 0.045), I);
+    lant.add(new THREE.BoxGeometry(0.12, 0.14, 0.1), mtx(0.2, 0.62, 2.68));
+    prata.add(new THREE.CylinderGeometry(0.05, 0.05, 0.5, 8), mtx(0.45, 0.78, -2.3, 0, 1, 1, 1, Math.PI / 2));
+    // motor por baixo da traseira
+    preto.add(new THREE.BoxGeometry(1.1, 0.45, 0.8), mtx(0, 0.92, -1.75)).add(new THREE.BoxGeometry(1.4, 0.12, 3.9), mtx(0, 0.62, 0));
+    return { pint: pint, preto: preto, prata: prata, farol: farol, lant: lant, seta: seta };
   })();
-  var BUGGY_GEOS = {}; Object.keys(BUGGY_PECAS).forEach(function (n) { var m = BUGGY_PECAS[n].mesh(new THREE.MeshBasicMaterial()); BUGGY_GEOS[n] = m.geometry; });
+  var BUGGY_GEOS = {}; Object.keys(BUGGY_PECAS).forEach(function (n) { BUGGY_GEOS[n] = BUGGY_PECAS[n].mesh(new THREE.MeshBasicMaterial()).geometry; });
   function fazerBuggy(corPintura) {
     var g = new THREE.Group();
-    var pintura = new THREE.MeshPhysicalMaterial({ color: corPintura, metalness: 0.35, roughness: 0.28, clearcoat: 1, clearcoatRoughness: 0.08 });
+    var pintura = new THREE.MeshPhysicalMaterial({ color: corPintura, metalness: 0.45, roughness: 0.3, clearcoat: 1, clearcoatRoughness: 0.06, side: THREE.DoubleSide });
     var add = function (geo, m, sombra) { var me = new THREE.Mesh(geo, m); me.castShadow = sombra !== false; me.receiveShadow = true; g.add(me); return me; };
-    add(CORPO_GEO, pintura);
-    add(BUGGY_GEOS.cromo, MAT.cromo); add(BUGGY_GEOS.preto, MAT.preto);
-    var bm = MAT.banco.clone(); bm.vertexColors = true; add(BUGGY_GEOS.banco, bm);
-    add(BUGGY_GEOS.farol, MAT.farol, false); add(BUGGY_GEOS.lant, MAT.lanterna, false);
-    var lm = new THREE.MeshStandardMaterial({ map: lonaTex, roughness: 0.8, side: THREE.DoubleSide }); add(BUGGY_GEOS.lona, lm);
-    var vidro = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 0.62), MAT.vidro); vidro.position.set(0, 1.8, 0.5); vidro.rotation.x = -0.42; g.add(vidro);
-    [-1, 1].forEach(function (l) { var d = new THREE.Mesh(new THREE.PlaneGeometry(0.95, 0.24), new THREE.MeshStandardMaterial({ map: decalTex, transparent: true, roughness: 0.4 })); d.position.set(l * 0.985, 0.98, 0.08); d.rotation.y = l * Math.PI / 2; g.add(d); });
+    add(BUGGY_GEOS.pint, pintura);
+    add(BUGGY_GEOS.preto, MAT.preto); add(BUGGY_GEOS.prata, MAT.prata);
+    add(BUGGY_GEOS.farol, MAT.farol, false); add(BUGGY_GEOS.lant, MAT.lanterna, false); add(BUGGY_GEOS.seta, MAT.seta, false);
+    var vidro = new THREE.Mesh(new THREE.PlaneGeometry(1.64, 0.8), MAT.vidro); vidro.position.set(0, 1.86, 0.71); vidro.rotation.x = -0.22; g.add(vidro);
+    [-1, 1].forEach(function (l) { var d = new THREE.Mesh(new THREE.PlaneGeometry(0.98, 0.24), new THREE.MeshStandardMaterial({ map: decalTex, transparent: true, roughness: 0.4 })); d.position.set(l * 1.013, 0.88, 0.08); d.rotation.y = l * Math.PI / 2; g.add(d); });
     var rodas = [];
-    [[-1.0, 1.3, 0.62, true, RODA_F], [1.0, 1.3, 0.62, true, RODA_F], [-1.02, -1.15, 0.7, false, RODA_T], [1.02, -1.15, 0.7, false, RODA_T]].forEach(function (r) {
+    [[-1.02, 1.45, 0.64, true, RODA_F], [1.02, 1.45, 0.64, true, RODA_F], [-1.02, -1.3, 0.68, false, RODA_T], [1.02, -1.3, 0.68, false, RODA_T]].forEach(function (r) {
       var piv = new THREE.Group(); piv.position.set(r[0], r[2], r[1]); g.add(piv);
       var gira = new THREE.Group(); piv.add(gira);
       var p = new THREE.Mesh(r[4].pneu, MAT.pneu); p.castShadow = true; gira.add(p);
-      var a = new THREE.Mesh(r[4].aro, MAT.cromo); gira.add(a);
+      gira.add(new THREE.Mesh(r[4].aro, MAT.preto)); gira.add(new THREE.Mesh(r[4].raios, MAT.prata));
       rodas.push({ piv: piv, gira: gira, frente: r[3], r: r[2] });
     });
     g.userData.rodas = rodas;
     return g;
   }
-  var buggy = fazerBuggy('#ffb000'); scene.add(buggy);
-  var motorista = pessoa('#d7261e', true); motorista.position.set(0.42, 0.42, -0.02); motorista.userData.bE.rotation.x = motorista.userData.bD.rotation.x = -1.0; buggy.add(motorista);
+  var buggy = fazerBuggy('#8a1526'); scene.add(buggy);
+  var motorista = pessoa('#d7261e', true); motorista.position.set(0.42, 0.3, -0.04); motorista.userData.bE.rotation.x = motorista.userData.bD.rotation.x = -1.0; buggy.add(motorista);
   var passageiro = null;
 
   /* ================= Trânsito: bugues e carros ================= */
   var npcs = [];
   [[[-125, -25], [125, -25], [125, 75], [-125, 75]], [[-75, 125], [-75, -75], [75, -75], [75, 125]]].forEach(function (rota, k) {
-    var b = fazerBuggy(['#1e88e5', '#2ecc71'][k]); var p = pessoa('#ffffff', true); p.position.set(0.42, 0.42, -0.02); p.userData.bE.rotation.x = p.userData.bD.rotation.x = -1.0; b.add(p); scene.add(b);
+    var b = fazerBuggy(['#1e5fa8', '#e8b10e'][k]); var p = pessoa('#ffffff', true); p.position.set(0.42, 0.3, -0.04); p.userData.bE.rotation.x = p.userData.bD.rotation.x = -1.0; b.add(p); scene.add(b);
     npcs.push({ g: b, rota: rota, i: 0, x: rota[0][0], z: rota[0][1], v: 9 + k * 2, ang: 0, r: 3.6 });
   });
   [[[-250, 152.5], [250, 152.5], [250, 147.5], [-250, 147.5]], [[250, 147.5], [-250, 147.5], [-250, 152.5], [250, 152.5]], [[0, 147.5], [-250, 147.5], [-250, 152.5], [250, 152.5], [250, 147.5]]].forEach(function (rota, k) {
@@ -990,7 +1010,7 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--mustard); outli
   }
   function embarcar() {
     M.fase = 'levar'; scene.remove(turistaEsperando); turistaEsperando = null;
-    passageiro = pessoa(M.camisa, true); passageiro.position.set(-0.42, 0.42, -0.02); passageiro.userData.bE.rotation.x = -0.4; passageiro.userData.bD.rotation.z = 2.6; buggy.add(passageiro);
+    passageiro = pessoa(M.camisa, true); passageiro.position.set(-0.42, 0.3, -0.04); passageiro.userData.bE.rotation.x = -0.4; passageiro.userData.bD.rotation.z = 2.6; buggy.add(passageiro);
     var d = dist(M.origem, M.destino); M.tempoMax = Math.round(16 + d / 9); M.tempo = M.tempoMax; M.saltos = 0;
     feixeBusca.visible = false; feixeDestino.position.set(M.destino.x, chao(M.destino.x, M.destino.z), M.destino.z); feixeDestino.visible = true;
     aviso('EMBARCOU!', M.perfil.em + ' ' + M.nome.split(',')[0] + ' → ' + M.destino.nome, '#ffd23f'); som('embarca');
