@@ -109,7 +109,9 @@ Versão de teste em `/corre3d/`, sem mexer no `/corre/` do Fliperama. Corrida 3D
 
 ## Surf do Gabba (teste)
 
-Jogo de surf em `/surf/`, fora do Fliperama, inspirado no surf do California Games (arte própria, pixel art desenhada no código). Tela de 180×320 pixels ampliada; a onda quebra da esquerda (tubo andando a 44 px/s) e o surfista (pessoa comum) anda pela parede. Arrastar ↑ ↓ sobe e desce; descer dá velocidade, subir gasta; perto demais da espuma = caixote. Manobras: cavada, batida, aéreo (subir rápido até a crista), 360°/720° (arrastar ← → no ar e cair de pé), entubado (ficar perto da espuma no meio da parede). Combo sobe só com manobras diferentes (até x5). Bateria de 1:30, 3 pranchas, 3 juízes dão nota no fim (melhor nota salva em `surf-gabba-v1`). Eventos: `partida-surf`, `surf-fim`.
+Jogo de surf em `/surf/`, fora do Fliperama. **Desde 15/11/2026 é 3D** (three.js r147): onda turquesa que quebra da esquerda e forma um tubo de verdade (malha que se deforma a cada quadro), espuma, spray, céu nublado e surfista 3D (pessoa comum). Dedo esquerdo ↑ ↓ sobe e desce na parede; à direita, a roda de manobras: PUMP (velocidade, melhor no ritmo), TUBE (segurar: agacha e conta tempo no tubo), SNAP (no alto), CUT (volta para o tubo), FLOAT (na crista) e AIR (no alto e rápido; no ar, arrastar ← → gira 360°/720°, cair torto = caixote). Longe do tubo a onda perde força. Bateria de 1:30, 3 pranchas, 3 juízes (melhor nota em `surf3d-gabba-v1`). Eventos: `partida-surf3d`, `surf3d-fim`.
+
+A versão pixel (estilo California Games) ficou guardada em `/surf-retro/`, com os eventos antigos `partida-surf` e `surf-fim`.
 
 ## Ilha do Gabba (teste: jogo de blocos)
 
