@@ -108,6 +108,9 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
 .overlay[data-kind="info"], .endcard[data-kind="info"] { --g: 64, 196, 255; }
 .sem-premio { display: block; box-sizing: border-box; margin-bottom: 4px; width: 100%; border: 2px dashed rgba(255,214,61,.75); background: rgba(255,214,61,.08); border-radius: 16px; padding: 10px 12px; color: #ffd63d; font-weight: 800; font-size: 1.05rem; text-align: center; text-shadow: 0 0 12px rgba(255,214,61,.45); line-height: 1.25; }
 .sem-premio small { display: block; color: #e9e3dc; font-weight: 600; font-size: .86rem; text-shadow: none; margin-top: 3px; }
+.so-div { position: fixed; left: 50%; top: 42%; transform: translate(-50%, -50%); z-index: 40; pointer-events: none; text-align: center; width: max-content; max-width: 86vw; background: rgba(14,12,4,.94); border: 2px dashed rgba(255,214,61,.85); color: #ffd63d; font-weight: 800; font-size: 1.05rem; padding: 14px 18px; border-radius: 18px; box-shadow: 0 0 30px rgba(255,214,61,.35); animation: soDiv 2.2s ease forwards; }
+.so-div small { display: block; color: #e9e3dc; font-weight: 600; font-size: .85rem; margin-top: 3px; }
+@keyframes soDiv { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.85); } 10%, 80% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(.95); } }
 .hl { color: rgb(var(--g)); font-weight: 700; text-shadow: 0 0 14px rgba(var(--g), .45); }
 .btn-glow { width: 100%; border: none; border-radius: 18px; padding: 17px 16px; background: linear-gradient(90deg, #ff8a3d, #ff3d2e); color: #fff; font: 400 1.2rem var(--display); letter-spacing: .05em; cursor: pointer; box-shadow: 0 0 26px rgba(255, 90, 50, .55), 0 8px 26px rgba(255, 70, 40, .35); margin-top: 6px; }
 .btn-glow:active { transform: scale(.98); }
@@ -278,8 +281,12 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
       else t = 'Suas chances de hoje acabaram. Jogue pela diversão e volte na próxima visita!';
     }
     $('chances-txt').textContent = t; $('chances-txt').hidden = !t;
+    const soDiversao = (VALE_PREMIO && ATIVO && !TESTE) && !(VALE_PREMIO && !TESTE && ATIVO && !wonToday() && chancesLeft() > 0 && !semBrinde());
+    $('play').textContent = soDiversao ? 'JOGAR PELA DIVERSÃO' : 'ABRIR A COZINHA';
+    $('again').textContent = soDiversao ? 'JOGAR PELA DIVERSÃO' : 'JOGAR DE NOVO';
     $('top-lbl').textContent = VALE_PREMIO && ATIVO && !TESTE ? 'Chances hoje' : 'Recorde';
     $('top').textContent = VALE_PREMIO && ATIVO && !TESTE ? (wonToday() || semBrinde() ? '–' : chancesLeft()) : saved.best;
+    if (soDiversao) { $('top-lbl').textContent = 'Só diversão'; $('top').textContent = '🎮'; }
     $('see-prize').hidden = !VALE_PREMIO || !wonToday() || TESTE;
   }
   aplicarConfig();
@@ -388,9 +395,12 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
     $('app').append(el); setTimeout(() => el.remove(), 950);
   }
 
+  let soDivT = null;
+  function mostrarSoDiv(sim) { const el = $('so-div'); clearTimeout(soDivT); el.hidden = true; if (!sim) return; void el.offsetWidth; el.hidden = false; soDivT = setTimeout(() => { el.hidden = true; }, 2300); }
   function start() {
     initAudio();
     valendo = VALE_PREMIO && !TESTE && ATIVO && !wonToday() && chancesLeft() > 0 && !semBrinde();
+    mostrarSoDiv(!valendo && VALE_PREMIO && ATIVO && !TESTE);
     if (valendo) { if (saved.triesDay !== today()) { saved.triesDay = today(); saved.tries = 0; } saved.tries++; persist(); }
     conta('partida-pedido', 'Partida: Pedido Certo');
     done = 0; errs = 0; timeLeft = TEMPO; num = 0; memoUsado = false;
@@ -400,7 +410,7 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
     state = 'play'; novoPedido();
   }
   function fim(motivo) {
-    state = 'over'; clearTimeout(memoTimer);
+    state = 'over'; clearTimeout(memoTimer); $('so-div').hidden = true;
     const ganhou = motivo === 'venceu';
     if (!TESTE && done > saved.best) saved.best = done;
     if (ganhou && valendo) { if (!SRV) { saved.wonDay = today(); saved.wonPrize = PRIZE; } conta('pedido-venceu', 'Pedido Certo: venceu'); }
@@ -434,8 +444,8 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
       }
       if (porque) {
         $('endcard').dataset.kind = 'info'; $('over').dataset.kind = 'info'; $('end-icon').textContent = '🎮'; $('over-title').textContent = 'VENCEU, SEM PRÊMIO';
-        const av = document.createElement('span'); av.className = 'sem-premio'; av.innerHTML = '🚫 Esta partida não vale prêmio<small></small>'; av.querySelector('small').textContent = porque + ' Não precisa ir à recepção.';
-        m.append(av, document.createElement('br'), META + ' pedidos entregues com ', hl(Math.ceil(timeLeft) + ' segundos'), ' sobrando. Foi só pela diversão: volte na próxima visita para jogar valendo!');
+        const av = document.createElement('span'); av.className = 'sem-premio'; av.innerHTML = '🚫 Esta partida não valeu prêmio<small></small>'; av.querySelector('small').textContent = porque;
+        m.append(av, document.createElement('br'), META + ' pedidos entregues com ', hl(Math.ceil(timeLeft) + ' segundos'), ' sobrando. Mandou muito bem! Na próxima visita você tem novas chances valendo prêmio.');
       } else {
         m.append(META + ' pedidos entregues com ', hl(Math.ceil(timeLeft) + ' segundos'), ' sobrando.');
         if (TESTE) m.append(' Modo teste: sem prêmio.');
@@ -623,5 +633,6 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
   document.addEventListener('touchmove', function (e) { if (e.touches && e.touches.length > 1) e.preventDefault(); }, { passive: false });
 })();
 </script>
+<div class="so-div" id="so-div" hidden>🎮 Partida só pela diversão<small>Esta partida não vale prêmio</small></div>
 </body>
 </html>

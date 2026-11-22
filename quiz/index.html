@@ -87,6 +87,9 @@ body { margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: en
 .overlay[data-kind="info"], .endcard[data-kind="info"] { --g: 64, 196, 255; }
 .sem-premio { display: block; box-sizing: border-box; margin-bottom: 4px; width: 100%; border: 2px dashed rgba(255,214,61,.75); background: rgba(255,214,61,.08); border-radius: 16px; padding: 10px 12px; color: #ffd63d; font-weight: 800; font-size: 1.05rem; text-align: center; text-shadow: 0 0 12px rgba(255,214,61,.45); line-height: 1.25; }
 .sem-premio small { display: block; color: #e9e3dc; font-weight: 600; font-size: .86rem; text-shadow: none; margin-top: 3px; }
+.so-div { position: fixed; left: 50%; top: 42%; transform: translate(-50%, -50%); z-index: 40; pointer-events: none; text-align: center; width: max-content; max-width: 86vw; background: rgba(14,12,4,.94); border: 2px dashed rgba(255,214,61,.85); color: #ffd63d; font-weight: 800; font-size: 1.05rem; padding: 14px 18px; border-radius: 18px; box-shadow: 0 0 30px rgba(255,214,61,.35); animation: soDiv 2.2s ease forwards; }
+.so-div small { display: block; color: #e9e3dc; font-weight: 600; font-size: .85rem; margin-top: 3px; }
+@keyframes soDiv { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.85); } 10%, 80% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(.95); } }
 .hl { color: rgb(var(--g)); font-weight: 700; text-shadow: 0 0 14px rgba(var(--g), .45); }
 .prize-name { display: block; margin: 10px 0 8px; font: 400 clamp(1.7rem, 8.5vw, 2.4rem)/1.08 var(--display); color: #ffd23f; letter-spacing: .02em; text-shadow: 0 0 10px rgba(255,210,63,.9), 0 0 28px rgba(255,170,0,.75), 0 0 56px rgba(255,140,0,.5); animation: premiobrilho 1.6s ease-in-out infinite; }
 @keyframes premiobrilho { 0%, 100% { transform: scale(1); filter: brightness(1); } 50% { transform: scale(1.06); filter: brightness(1.3); } }
@@ -315,8 +318,12 @@ body { margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: en
       else t = 'Suas chances de hoje acabaram. Jogue pela diversão e volte na próxima visita!';
     } else if (TESTE) t = 'Modo teste: não gasta chance e não dá prêmio.';
     $('chances-txt').textContent = t; $('chances-txt').hidden = !t;
+    const soDiversao = (premioAgora()) && !(premioAgora() && !wonToday() && chancesLeft() > 0 && !semBrinde());
+    $('play').textContent = soDiversao ? 'JOGAR PELA DIVERSÃO' : 'COMEÇAR';
+    $('again').textContent = soDiversao ? 'JOGAR PELA DIVERSÃO' : 'JOGAR DE NOVO';
     $('top-lbl').textContent = premioAgora() ? 'Chances hoje' : 'Recorde';
     $('top').textContent = premioAgora() ? (wonToday() || semBrinde() ? '–' : chancesLeft()) : saved.best + '/' + TOTAL;
+    if (soDiversao) { $('top-lbl').textContent = 'Só diversão'; $('top').textContent = '🎮'; }
     $('see-prize').hidden = !premioAgora() || !wonToday();
   }
   aplicarConfig();
@@ -355,8 +362,11 @@ body { margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: en
     return lista[l][k + (pularNoNivel[l] ? 1 : 0)];
   }
   let pularNoNivel = [];
+  let soDivT = null;
+  function mostrarSoDiv(sim) { const el = $('so-div'); clearTimeout(soDivT); el.hidden = true; if (!sim) return; void el.offsetWidth; el.hidden = false; soDivT = setTimeout(() => { el.hidden = true; }, 2300); }
   function start() {
     valendo = premioAgora() && !wonToday() && chancesLeft() > 0 && !semBrinde();
+    mostrarSoDiv(!valendo && premioAgora());
     if (valendo) { if (saved.triesDay !== today()) { saved.triesDay = today(); saved.tries = 0; } saved.tries++; persist(); }
     conta('partida-quiz', 'Partida: Quiz do Gabba');
     sortear(); idx = 0; pulou = false; pularNoNivel = NIVEIS.map(() => false);
@@ -418,6 +428,7 @@ body { margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: en
     setTimeout(mostrar, 350);
   });
   function fim(ganhou, tempo) {
+    $('so-div').hidden = true;
     const acertos = ganhou ? TOTAL : idx;
     if (!TESTE && acertos > saved.best) saved.best = acertos;
     if (ganhou && valendo) { if (!SRV) { saved.wonDay = today(); saved.wonPrize = PRIZE; } conta('quiz-venceu', 'Quiz do Gabba: venceu'); }
@@ -446,8 +457,8 @@ body { margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: en
     $('over-title').textContent = porque ? 'VENCEU, SEM PRÊMIO' : kind === 'win' ? 'GÊNIO DO GABBA!' : kind === 'time' ? 'ACABOU O TEMPO!' : 'RESPOSTA ERRADA!';
     const m = $('over-msg'); m.innerHTML = '';
     if (kind === 'win' && porque) {
-      const av = document.createElement('span'); av.className = 'sem-premio'; av.innerHTML = '🚫 Esta partida não vale prêmio<small></small>'; av.querySelector('small').textContent = porque + ' Não precisa ir à recepção.';
-      m.append(av, document.createElement('br'), 'Você acertou ', hl('as ' + TOTAL + ' perguntas'), '! Foi só pela diversão: volte na próxima visita para jogar valendo!');
+      const av = document.createElement('span'); av.className = 'sem-premio'; av.innerHTML = '🚫 Esta partida não valeu prêmio<small></small>'; av.querySelector('small').textContent = porque;
+      m.append(av, document.createElement('br'), 'Você acertou ', hl('as ' + TOTAL + ' perguntas'), '! Mandou muito bem! Na próxima visita você tem novas chances valendo prêmio.');
     } else if (kind === 'win') {
       m.append('Você acertou ', hl('as ' + TOTAL + ' perguntas'), '!' + (TESTE ? ' Modo teste: sem prêmio.' : ''));
     }
@@ -589,5 +600,6 @@ body { margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: en
   window._quiz = { get atual() { return done ? null : perguntaAtual(); }, get idx() { return idx; } };
 })();
 </script>
+<div class="so-div" id="so-div" hidden>🎮 Partida só pela diversão<small>Esta partida não vale prêmio</small></div>
 </body>
 </html>
