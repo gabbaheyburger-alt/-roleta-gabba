@@ -244,3 +244,5 @@ Música (22/11/2026): trilha 8-bit de fliperama composta para a roleta e gerada 
 ## Chances por dia (22/11/2026)
 
 Na tela de Brindes · Dono, aba **Ajustes**, tem o campo **Chances por dia** (− / +, de 1 a 10, padrão 3). É quantas partidas valem prêmio por dia em cada celular, no jogo escolhido (Pedido Certo ou Quiz). O servidor guarda em `ajustes.chances` e os jogos leem pelo `/status` (vale em até 1 minuto). A contagem continua no próprio celular.
+
+Vitória sem prêmio (22/11/2026): quando o cliente vence mas a partida não valia (chances acabaram, já ganhou hoje, brindes esgotados ou fora do horário), o Pedido Certo e o Quiz mostram uma tela azul com 🎮 e o título "VENCEU, SEM PRÊMIO", com um aviso tracejado amarelo "🚫 Esta partida não vale prêmio", o motivo e "Não precisa ir à recepção". Antes era a tela verde com troféu, que confundia.

@@ -84,6 +84,9 @@ body { margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: en
 .redeem .note { color: var(--muted); font-size: .92rem; }
 .redeem.used { border-style: solid; border-color: #3b3b3b; background: #141414; }
 .redeem.used .clock { color: #777; text-shadow: none; }
+.overlay[data-kind="info"], .endcard[data-kind="info"] { --g: 64, 196, 255; }
+.sem-premio { display: block; box-sizing: border-box; margin-bottom: 4px; width: 100%; border: 2px dashed rgba(255,214,61,.75); background: rgba(255,214,61,.08); border-radius: 16px; padding: 10px 12px; color: #ffd63d; font-weight: 800; font-size: 1.05rem; text-align: center; text-shadow: 0 0 12px rgba(255,214,61,.45); line-height: 1.25; }
+.sem-premio small { display: block; color: #e9e3dc; font-weight: 600; font-size: .86rem; text-shadow: none; margin-top: 3px; }
 .hl { color: rgb(var(--g)); font-weight: 700; text-shadow: 0 0 14px rgba(var(--g), .45); }
 .prize-name { display: block; margin: 10px 0 8px; font: 400 clamp(1.7rem, 8.5vw, 2.4rem)/1.08 var(--display); color: #ffd23f; letter-spacing: .02em; text-shadow: 0 0 10px rgba(255,210,63,.9), 0 0 28px rgba(255,170,0,.75), 0 0 56px rgba(255,140,0,.5); animation: premiobrilho 1.6s ease-in-out infinite; }
 @keyframes premiobrilho { 0%, 100% { transform: scale(1); filter: brightness(1); } 50% { transform: scale(1.06); filter: brightness(1.3); } }
@@ -431,15 +434,22 @@ body { margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: en
   const hl = t => { const s = document.createElement('span'); s.className = 'hl'; s.textContent = t; return s; };
   function telaFim(kind, acertos) {
     clearInterval(clockTimer);
-    window.neonKind && neonKind('over', kind, kind === 'win' ? '🏆' : kind === 'time' ? '⏱️' : '❌');
-    $('over-title').textContent = kind === 'win' ? 'GÊNIO DO GABBA!' : kind === 'time' ? 'ACABOU O TEMPO!' : 'RESPOSTA ERRADA!';
+    // venceu, mas a partida não valia prêmio: tela azul, sem troféu, com aviso grande
+    let porque = '';
+    if (kind === 'win' && !TESTE) {
+      if (esgotouAgora) porque = 'Os brindes de hoje acabaram bem agora.';
+      else if (premioAgora() && wonToday() && !valendo) porque = 'Você já ganhou um prêmio hoje.';
+      else if (premioAgora() && semBrinde()) porque = txtSemFim().trim().replace(/:.*$/, '.');
+      else if (premioAgora() && !valendo) porque = 'Suas ' + CHANCES + (CHANCES === 1 ? ' chance' : ' chances') + ' valendo prêmio de hoje já tinham acabado.';
+    }
+    window.neonKind && neonKind('over', porque ? 'info' : kind, porque ? '🎮' : kind === 'win' ? '🏆' : kind === 'time' ? '⏱️' : '❌');
+    $('over-title').textContent = porque ? 'VENCEU, SEM PRÊMIO' : kind === 'win' ? 'GÊNIO DO GABBA!' : kind === 'time' ? 'ACABOU O TEMPO!' : 'RESPOSTA ERRADA!';
     const m = $('over-msg'); m.innerHTML = '';
-    if (kind === 'win') {
+    if (kind === 'win' && porque) {
+      const av = document.createElement('span'); av.className = 'sem-premio'; av.innerHTML = '🚫 Esta partida não vale prêmio<small></small>'; av.querySelector('small').textContent = porque + ' Não precisa ir à recepção.';
+      m.append(av, document.createElement('br'), 'Você acertou ', hl('as ' + TOTAL + ' perguntas'), '! Foi só pela diversão: volte na próxima visita para jogar valendo!');
+    } else if (kind === 'win') {
       m.append('Você acertou ', hl('as ' + TOTAL + ' perguntas'), '!' + (TESTE ? ' Modo teste: sem prêmio.' : ''));
-      if (esgotouAgora) m.append(' Mas os brindes de hoje acabaram bem agora. Volte na próxima visita!');
-      else if (premioAgora() && wonToday() && !valendo) m.append(' Você já ganhou um prêmio hoje, então essa foi só pela diversão.');
-      else if (premioAgora() && semBrinde()) m.append(txtSemFim());
-      else if (premioAgora() && !valendo) m.append(' Mas suas ' + CHANCES + (CHANCES === 1 ? ' chance' : ' chances') + ' de prêmio de hoje já tinham acabado: essa foi só pela diversão. Volte na próxima visita!');
     }
     else {
       m.append('Você chegou até a ', hl('pergunta ' + (idx + 1) + ' de ' + TOTAL), '.');

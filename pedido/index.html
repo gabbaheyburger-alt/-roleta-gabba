@@ -105,6 +105,9 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
 .endcard h2 { margin: 2px 0 0; font: 400 clamp(1.9rem, 9vw, 2.4rem)/1 var(--display); color: #fff; text-shadow: 0 0 18px rgba(255,255,255,.25); text-wrap: balance; }
 .endcard p { margin: 0; color: #b9b3ad; max-width: 30ch; font-size: 1.05rem; }
 .endcard p strong { color: #fff; }
+.overlay[data-kind="info"], .endcard[data-kind="info"] { --g: 64, 196, 255; }
+.sem-premio { display: block; box-sizing: border-box; margin-bottom: 4px; width: 100%; border: 2px dashed rgba(255,214,61,.75); background: rgba(255,214,61,.08); border-radius: 16px; padding: 10px 12px; color: #ffd63d; font-weight: 800; font-size: 1.05rem; text-align: center; text-shadow: 0 0 12px rgba(255,214,61,.45); line-height: 1.25; }
+.sem-premio small { display: block; color: #e9e3dc; font-weight: 600; font-size: .86rem; text-shadow: none; margin-top: 3px; }
 .hl { color: rgb(var(--g)); font-weight: 700; text-shadow: 0 0 14px rgba(var(--g), .45); }
 .btn-glow { width: 100%; border: none; border-radius: 18px; padding: 17px 16px; background: linear-gradient(90deg, #ff8a3d, #ff3d2e); color: #fff; font: 400 1.2rem var(--display); letter-spacing: .05em; cursor: pointer; box-shadow: 0 0 26px rgba(255, 90, 50, .55), 0 8px 26px rgba(255, 70, 40, .35); margin-top: 6px; }
 .btn-glow:active { transform: scale(.98); }
@@ -421,12 +424,22 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
     $('over-title').textContent = kind === 'win' ? 'MANDOU BEM!' : kind === 'time' ? 'ACABOU O TEMPO!' : 'QUASE!';
     const m = $('over-msg'); m.innerHTML = '';
     if (kind === 'win') {
-      m.append(META + ' pedidos entregues com ', hl(Math.ceil(timeLeft) + ' segundos'), ' sobrando.');
-      if (TESTE) m.append(' Modo teste: sem prêmio.');
-      else if (esgotouAgora) m.append(' Mas os brindes de hoje acabaram bem agora. Volte na próxima visita!');
-      else if (VALE_PREMIO && ATIVO && wonToday()) m.append(' Você já ganhou um prêmio hoje, então essa foi só pela diversão.');
-      else if (VALE_PREMIO && ATIVO && semBrinde()) m.append(txtSemFim());
-      else if (VALE_PREMIO && ATIVO && !valendo) m.append(' Mas suas ' + CHANCES + (CHANCES === 1 ? ' chance' : ' chances') + ' de prêmio de hoje já tinham acabado: essa foi só pela diversão. Volte na próxima visita!');
+      // venceu, mas a partida não valia prêmio: tela azul, sem troféu, com aviso grande
+      let porque = '';
+      if (!TESTE) {
+        if (esgotouAgora) porque = 'Os brindes de hoje acabaram bem agora.';
+        else if (VALE_PREMIO && ATIVO && wonToday()) porque = 'Você já ganhou um prêmio hoje.';
+        else if (VALE_PREMIO && ATIVO && semBrinde()) porque = txtSemFim().trim().replace(/:.*$/, '.');
+        else if (VALE_PREMIO && ATIVO && !valendo) porque = 'Suas ' + CHANCES + (CHANCES === 1 ? ' chance' : ' chances') + ' valendo prêmio de hoje já tinham acabado.';
+      }
+      if (porque) {
+        $('endcard').dataset.kind = 'info'; $('over').dataset.kind = 'info'; $('end-icon').textContent = '🎮'; $('over-title').textContent = 'VENCEU, SEM PRÊMIO';
+        const av = document.createElement('span'); av.className = 'sem-premio'; av.innerHTML = '🚫 Esta partida não vale prêmio<small></small>'; av.querySelector('small').textContent = porque + ' Não precisa ir à recepção.';
+        m.append(av, document.createElement('br'), META + ' pedidos entregues com ', hl(Math.ceil(timeLeft) + ' segundos'), ' sobrando. Foi só pela diversão: volte na próxima visita para jogar valendo!');
+      } else {
+        m.append(META + ' pedidos entregues com ', hl(Math.ceil(timeLeft) + ' segundos'), ' sobrando.');
+        if (TESTE) m.append(' Modo teste: sem prêmio.');
+      }
     } else {
       m.append(kind === 'err' ? 'Muitos erros! ' : '', 'Você entregou ', hl(done + ' de ' + META), ' pedidos.');
       if (saved.best && !TESTE) m.append(' Seu recorde: ' + saved.best + '.');
