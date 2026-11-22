@@ -218,7 +218,7 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
   try { if (sessionStorage.getItem('gabba-modo') === 'delivery') VALE_PREMIO = false; } catch (e) {}
   let PRIZE = 'Molho extra por conta da casa';
   let ATIVO = VALE_PREMIO;
-  const CHANCES = 3;          // partidas valendo prêmio por dia, por celular
+  let CHANCES = 3;             // partidas valendo prêmio por dia, por celular
   const META = 8;             // pedidos para ganhar
   const TEMPO = 60;           // segundos de turno
   const BONUS = 2;            // segundos ganhos a cada pedido certo
@@ -426,7 +426,7 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
       else if (esgotouAgora) m.append(' Mas os brindes de hoje acabaram bem agora. Volte na próxima visita!');
       else if (VALE_PREMIO && ATIVO && wonToday()) m.append(' Você já ganhou um prêmio hoje, então essa foi só pela diversão.');
       else if (VALE_PREMIO && ATIVO && semBrinde()) m.append(txtSemFim());
-      else if (VALE_PREMIO && ATIVO && !valendo) m.append(' Mas suas 3 chances de prêmio de hoje já tinham acabado: essa foi só pela diversão. Volte na próxima visita!');
+      else if (VALE_PREMIO && ATIVO && !valendo) m.append(' Mas suas ' + CHANCES + (CHANCES === 1 ? ' chance' : ' chances') + ' de prêmio de hoje já tinham acabado: essa foi só pela diversão. Volte na próxima visita!');
     } else {
       m.append(kind === 'err' ? 'Muitos erros! ' : '', 'Você entregou ', hl(done + ' de ' + META), ' pedidos.');
       if (saved.best && !TESTE) m.append(' Seu recorde: ' + saved.best + '.');
@@ -504,6 +504,7 @@ button:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
         VALE_PREMIO = !deliv && s.ajustes.jogo === 'pedido';
         ATIVO = VALE_PREMIO && s.ajustes.ativo === true;
         MEMORIA = s.ajustes.memoria !== false;
+        if (s.ajustes.chances >= 1) CHANCES = s.ajustes.chances;
       }
       aplicarConfig();
     }).catch(() => {});

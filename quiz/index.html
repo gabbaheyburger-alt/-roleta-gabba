@@ -168,7 +168,7 @@ body { margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: en
      (campo "jogo": "quiz" em ../desafio/config.json) e o prêmio está ligado. No delivery, nunca vale prêmio. */
   let PRIZE = 'Molho extra por conta da casa';
   let VALE_PREMIO = false;   // decidido pelo config.json
-  const CHANCES = 3;         // partidas valendo prêmio por dia, por celular
+  let CHANCES = 3;            // partidas valendo prêmio por dia, por celular
   // Níveis: perguntas de cada nível e segundos para responder (fica mais rápido)
   const NIVEIS = [
     { nome: 'Fácil',   n: 3, seg: 10, cor: '61, 220, 132' },
@@ -439,7 +439,7 @@ body { margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: en
       if (esgotouAgora) m.append(' Mas os brindes de hoje acabaram bem agora. Volte na próxima visita!');
       else if (premioAgora() && wonToday() && !valendo) m.append(' Você já ganhou um prêmio hoje, então essa foi só pela diversão.');
       else if (premioAgora() && semBrinde()) m.append(txtSemFim());
-      else if (premioAgora() && !valendo) m.append(' Mas suas 3 chances de prêmio de hoje já tinham acabado: essa foi só pela diversão. Volte na próxima visita!');
+      else if (premioAgora() && !valendo) m.append(' Mas suas ' + CHANCES + (CHANCES === 1 ? ' chance' : ' chances') + ' de prêmio de hoje já tinham acabado: essa foi só pela diversão. Volte na próxima visita!');
     }
     else {
       m.append('Você chegou até a ', hl('pergunta ' + (idx + 1) + ' de ' + TOTAL), '.');
@@ -500,7 +500,7 @@ body { margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: en
     GabbaBrindes.status().then(s => {
       RESTANTES = s.restantes; HORA = s.horario || null;
       // Ajustes do dono (aba Ajustes da tela de brindes) valem mais que o config.json
-      if (s.ajustes) VALE_PREMIO = s.ajustes.jogo === 'quiz' && s.ajustes.ativo === true;
+      if (s.ajustes) { VALE_PREMIO = s.ajustes.jogo === 'quiz' && s.ajustes.ativo === true; if (s.ajustes.chances >= 1) CHANCES = s.ajustes.chances; }
       aplicarConfig();
     }).catch(() => {});
   }

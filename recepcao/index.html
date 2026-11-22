@@ -293,6 +293,8 @@ input[type="time"], input[type="date"] { min-height: 52px; }
         </div>
         <label class="sw"><span>Valendo prêmio hoje<small>Desligado: os jogos não dão brinde</small></span><input type="checkbox" id="aj-ativo"></label>
         <label class="sw"><span>Pedido de memória<small>No Pedido Certo, a comanda some 1 vez por partida</small></span><input type="checkbox" id="aj-memoria"></label>
+        <div class="sw" style="cursor:default"><span>Chances por dia<small>Partidas valendo prêmio, por celular (1 a 10)</small></span>
+          <div class="qty" style="flex:0 0 136px;height:46px"><button type="button" id="aj-menos" aria-label="Menos chances">−</button><output id="aj-chances">3</output><button type="button" id="aj-mais" aria-label="Mais chances">+</button></div></div>
         <button class="btn" id="aj-salvar" type="button">Salvar ajustes</button>
         <div id="aj-msg" aria-live="polite"></div>
         <p class="hint">Vale para os clientes na hora (em até 1 minuto). O cliente leva sempre o próximo brinde da fila.</p>
@@ -332,13 +334,14 @@ input[type="time"], input[type="date"] { min-height: 52px; }
     return d;
   }
 
-  let papel = 'recepcao', CFG = {}, ajSujo = false, aj = { jogo: 'pedido', ativo: false, memoria: true };
+  let papel = 'recepcao', CFG = {}, ajSujo = false, aj = { jogo: 'pedido', ativo: false, memoria: true, chances: 3 };
   function mostrarAjustes() {
     document.querySelectorAll('#aj-jogo button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.jogo === aj.jogo)));
     $('aj-ativo').checked = !!aj.ativo; $('aj-memoria').checked = aj.memoria !== false;
+    $('aj-chances').textContent = aj.chances || 3;
   }
   function render(d) {
-    if (!ajSujo) { const a = d.ajustes || { jogo: CFG.jogo === 'quiz' ? 'quiz' : 'pedido', ativo: CFG.ativo === true, memoria: CFG.memoria !== false }; aj = Object.assign({}, a); mostrarAjustes(); }
+    if (!ajSujo) { const a = d.ajustes || { jogo: CFG.jogo === 'quiz' ? 'quiz' : 'pedido', ativo: CFG.ativo === true, memoria: CFG.memoria !== false }; aj = Object.assign({ chances: 3 }, a); mostrarAjustes(); }
     if (d.papel) { papel = d.papel; document.body.classList.toggle('recepcao', papel !== 'dono'); $('h1').textContent = papel === 'dono' ? 'Brindes · Dono' : 'Brindes · Recepção'; if (papel !== 'dono' && ['fila', 'lancar', 'ajustes', 'programar'].includes(abaAtual)) aba('baixa'); if (papel === 'dono' && !PROG) carregarPrograma(); }
     const itens = d.itens || [];
     const livres = itens.filter(i => !i.codigo);
@@ -481,12 +484,13 @@ input[type="time"], input[type="date"] { min-height: 52px; }
   $('aj-jogo').addEventListener('click', e => { const b = e.target.closest('[data-jogo]'); if (!b) return; aj.jogo = b.dataset.jogo; ajSujo = true; mostrarAjustes(); });
   $('aj-ativo').addEventListener('change', e => { aj.ativo = e.target.checked; ajSujo = true; });
   $('aj-memoria').addEventListener('change', e => { aj.memoria = e.target.checked; ajSujo = true; });
+  [['aj-menos', -1], ['aj-mais', 1]].forEach(([id, d]) => $(id).addEventListener('click', () => { aj.chances = Math.max(1, Math.min(10, (aj.chances || 3) + d)); ajSujo = true; mostrarAjustes(); }));
   $('aj-salvar').addEventListener('click', async () => {
     $('aj-salvar').disabled = true;
     try {
       const d = await api('/ajustes', aj);
       ajSujo = false; aj = Object.assign({}, d.ajustes); mostrarAjustes();
-      msg($('aj-msg'), 'Salvo! ' + (aj.ativo ? (aj.jogo === 'quiz' ? 'Quiz do Gabba' : 'Pedido Certo') + ' valendo brinde.' : 'Jogos sem prêmio por enquanto.'), 'ok');
+      msg($('aj-msg'), 'Salvo! ' + (aj.ativo ? (aj.jogo === 'quiz' ? 'Quiz do Gabba' : 'Pedido Certo') + ' valendo brinde, ' + aj.chances + (aj.chances === 1 ? ' chance' : ' chances') + ' por dia.' : 'Jogos sem prêmio por enquanto.'), 'ok');
     } catch (e) { msg($('aj-msg'), e.message, 'err'); }
     finally { $('aj-salvar').disabled = false; }
   });

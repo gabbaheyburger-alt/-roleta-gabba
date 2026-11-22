@@ -291,7 +291,8 @@ export class Brindes extends DurableObject {
     }
 
     if (rota === '/ajustes' && metodo === 'POST') {
-      const a = { jogo: corpo.jogo === 'quiz' ? 'quiz' : 'pedido', ativo: corpo.ativo === true, memoria: corpo.memoria !== false };
+      const ch = Math.round(Number(corpo.chances));
+      const a = { jogo: corpo.jogo === 'quiz' ? 'quiz' : 'pedido', ativo: corpo.ativo === true, memoria: corpo.memoria !== false, chances: ch >= 1 && ch <= 10 ? ch : 3 };
       this.sql.exec(`INSERT INTO ajustes (id, json, salvo_em) VALUES (1, ?, ?) ON CONFLICT(id) DO UPDATE SET json = excluded.json, salvo_em = excluded.salvo_em`, JSON.stringify(a), dia + ' ' + horaAgora());
       return { data: { ok: true, ajustes: a } };
     }
