@@ -4,76 +4,111 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Roleta Gabba</title>
-<meta name="theme-color" content="#17110f">
+<meta name="theme-color" content="#070808">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Barlow:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Barlow+Condensed:wght@700;800&family=Barlow:wght@400;600;700&display=swap">
 <style>
-/* Layout: coluna única; roleta e botão para o cliente no topo, área da loja (PIN) com relatório e prêmios abaixo */
+/* Layout: coluna única; roleta e botão para o cliente no topo, área da loja (PIN) com relatório e prêmios abaixo.
+   Visual neon do Fliperama: fundo escuro, cores vivas, brilho, lâmpadas em volta da roleta. */
 :root {
-  --bg: #17110f;
-  --surface: #221a17;
-  --line: #3b2e29;
-  --fg: #f6ece2;
-  --muted: #b5a397;
-  --red: #d7261e;
-  --red-deep: #9c1611;
-  --mustard: #f2b632;
-  --cream: #f6e7cf;
-  --ink: #1d1411;
-  --ok: #6fbf73;
+  --bg: #070808;
+  --surface: #0e0f0f;
+  --surface-2: #151717;
+  --line: #262a29;
+  --fg: #f4f1ec;
+  --muted: #b9b3ad;
+  --laranja: #ff8a3d;
+  --vermelho: #ff3d2e;
+  --amarelo: #ffd63d;
+  --verde: #3ddc84;
+  --azul: #40c4ff;
+  --rosa: #ff4da6;
+  --roxo: #a66bff;
+  --mustard: #ffd63d;
+  --ok: #3ddc84;
   --display: 'Bungee', Impact, 'Arial Black', sans-serif;
   --body: 'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
-html, body { background: var(--bg); color: var(--fg); }
-body { margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); font-family: var(--body); font-size: 16px; line-height: 1.45; }
+html, body { background-color: var(--bg); color: var(--fg); }
+body {
+  margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); font-family: var(--body); font-size: 16px; line-height: 1.45;
+  background-image:
+    radial-gradient(60vmax 50vmax at 0% 0%, rgba(61,220,132,.14), transparent 60%),
+    radial-gradient(60vmax 50vmax at 100% 100%, rgba(255,90,50,.15), transparent 60%),
+    radial-gradient(40vmax 30vmax at 50% 38%, rgba(166,107,255,.10), transparent 70%);
+  background-attachment: fixed;
+}
+body::after { content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 20; background: repeating-linear-gradient(0deg, rgba(255,255,255,.018) 0 1px, transparent 1px 3px); }
 [hidden] { display: none !important; }
-.wrap { max-width: 520px; margin: 0 auto; padding: 20px 16px 48px; display: flex; flex-direction: column; gap: 22px; }
+.wrap { max-width: 520px; margin: 0 auto; padding: 18px 16px 48px; display: flex; flex-direction: column; gap: 20px; }
 
 header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-h1 { font-family: var(--display); font-weight: 400; font-size: clamp(1.6rem, 7vw, 2.2rem); line-height: 1; margin: 0; letter-spacing: .01em; text-wrap: balance; }
-h1 span { color: var(--mustard); }
-.sub { color: var(--muted); font-size: .9rem; margin: 6px 0 0; }
+.kicker { display: inline-flex; align-items: center; gap: 6px; font: 700 .7rem var(--body); letter-spacing: .18em; text-transform: uppercase; color: var(--verde); text-shadow: 0 0 10px rgba(61,220,132,.6); margin-bottom: 4px; }
+.kicker::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--verde); box-shadow: 0 0 8px var(--verde); animation: pisca 1.4s infinite; }
+@keyframes pisca { 50% { opacity: .25; } }
+h1 { font-family: var(--display); font-weight: 400; font-size: clamp(1.8rem, 8vw, 2.4rem); line-height: 1; margin: 0; letter-spacing: .01em;
+  background: linear-gradient(90deg, #fff 0%, #ffd63d 50%, #ff8a3d 100%); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 0 14px rgba(255,160,60,.45)); }
+h1 span { background: linear-gradient(90deg, #ff8a3d, #ff3d2e); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.sub { color: var(--muted); font-size: .92rem; margin: 6px 0 0; }
 .top-actions { display: flex; gap: 6px; flex-wrap: wrap; }
-.pill { background: transparent; border: 1px solid var(--line); color: var(--muted); font: 600 .78rem var(--body); padding: 6px 10px; border-radius: 999px; cursor: pointer; letter-spacing: .04em; text-transform: uppercase; }
-.pill[aria-pressed="true"], .pill.on { color: var(--mustard); border-color: var(--mustard); }
+.pill { background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.14); color: #d8d2cc; font: 700 .74rem var(--body); padding: 7px 11px; border-radius: 999px; cursor: pointer; letter-spacing: .06em; text-transform: uppercase; }
+.pill[aria-pressed="true"], .pill.on { color: var(--verde); border-color: rgba(61,220,132,.7); box-shadow: 0 0 14px rgba(61,220,132,.3); }
 
-.stage { position: relative; width: 100%; max-width: 440px; margin: 0 auto; aspect-ratio: 1; }
-.stage canvas { width: 100%; height: 100%; display: block; }
-.pointer { position: absolute; top: -6px; left: 50%; transform: translateX(-50%); width: 34px; height: 44px; z-index: 2; filter: drop-shadow(0 3px 2px rgba(0,0,0,.5)); }
+.stage { position: relative; width: 100%; max-width: 440px; margin: 6px auto 0; aspect-ratio: 1; border-radius: 50%; }
+.stage::before { content: ''; position: absolute; inset: -4%; border-radius: 50%; background: radial-gradient(circle, rgba(255,138,61,.0) 55%, rgba(255,138,61,.28) 68%, transparent 74%); filter: blur(6px); animation: halo 3s ease-in-out infinite; }
+.stage.girando::before { animation-duration: .5s; }
+@keyframes halo { 50% { opacity: .45; } }
+.stage canvas { position: relative; width: 100%; height: 100%; display: block; }
+.pointer { position: absolute; top: -14px; left: 50%; transform: translateX(-50%); width: 46px; height: 58px; z-index: 2; filter: drop-shadow(0 0 10px rgba(255,214,61,.85)) drop-shadow(0 3px 2px rgba(0,0,0,.6)); }
+.stage.girando .pointer { animation: tic .12s linear infinite; }
+@keyframes tic { 50% { transform: translateX(-50%) rotate(-7deg); } }
 
-.spin { font-family: var(--display); font-size: 1.5rem; letter-spacing: .04em; background: var(--red); color: var(--cream); border: none; border-radius: 14px; padding: 16px 20px; width: 100%; cursor: pointer; box-shadow: 0 5px 0 var(--red-deep); transition: transform .08s, box-shadow .08s; }
-.spin:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 1px 0 var(--red-deep); }
-.spin:disabled { opacity: .55; cursor: default; }
-button:focus-visible, input:focus-visible { outline: 3px solid var(--mustard); outline-offset: 2px; }
+.spin { position: relative; font-family: var(--display); font-size: 1.6rem; letter-spacing: .06em; background: linear-gradient(90deg, #ff8a3d, #ff3d2e); color: #fff; border: none; border-radius: 18px; padding: 16px 20px; width: 100%; cursor: pointer;
+  box-shadow: 0 0 26px rgba(255,90,50,.55), 0 8px 24px rgba(255,70,40,.3); text-shadow: 0 2px 0 rgba(0,0,0,.25); animation: chama 1.8s ease-in-out infinite; }
+.spin span { font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif; margin-right: 8px; }
+@keyframes chama { 50% { box-shadow: 0 0 44px rgba(255,90,50,.85), 0 8px 24px rgba(255,70,40,.35); } }
+.spin:active:not(:disabled) { transform: scale(.98); }
+.spin:disabled { opacity: .55; cursor: default; animation: none; }
+button:focus-visible, input:focus-visible { outline: 3px solid var(--amarelo); outline-offset: 2px; }
 
-.result { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 18px; text-align: center; min-height: 104px; display: flex; flex-direction: column; justify-content: center; gap: 4px; }
-.label { text-transform: uppercase; letter-spacing: .12em; font-size: .72rem; color: var(--muted); font-weight: 600; }
-.result .prize { font-family: var(--display); font-size: clamp(1.3rem, 6vw, 1.8rem); color: var(--mustard); line-height: 1.15; overflow-wrap: anywhere; }
-.result.win { animation: pop .5s ease-out; border-color: var(--mustard); }
-@keyframes pop { 0% { transform: scale(.94); } 60% { transform: scale(1.03); } 100% { transform: scale(1); } }
+.result { --g: 64, 196, 255; background: #0a0b0b; border: 1.5px solid rgba(var(--g), .38); border-radius: 24px; padding: 16px 18px; text-align: center; min-height: 110px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 6px;
+  box-shadow: 0 0 34px rgba(var(--g), .16), inset 0 0 28px rgba(var(--g), .05); transition: border-color .3s, box-shadow .3s; }
+.result .ico { width: 58px; height: 58px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; line-height: 1;
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif; background: radial-gradient(circle, rgba(var(--g), .28), rgba(var(--g), .05) 70%); border: 1.5px solid rgba(var(--g), .55); box-shadow: 0 0 22px rgba(var(--g), .45); }
+.label { text-transform: uppercase; letter-spacing: .14em; font-size: .72rem; color: rgb(var(--g, 255,214,61)); font-weight: 700; }
+.result .prize { font-family: var(--display); font-size: clamp(1.35rem, 6.4vw, 1.9rem); color: #fff; line-height: 1.15; overflow-wrap: anywhere; text-shadow: 0 0 16px rgba(var(--g), .55); }
+.result.win { --g: 61, 220, 132; animation: pop .55s ease-out; }
+.result.win .prize { color: var(--amarelo); text-shadow: 0 0 18px rgba(255,214,61,.8), 0 0 40px rgba(255,138,61,.5); animation: brilho 1.6s ease-in-out infinite; }
+.result.win .ico { animation: pulsa 1.2s ease-in-out infinite; }
+@keyframes pop { 0% { transform: scale(.92); } 60% { transform: scale(1.04); } 100% { transform: scale(1); } }
+@keyframes brilho { 50% { text-shadow: 0 0 8px rgba(255,214,61,.5), 0 0 20px rgba(255,138,61,.3); } }
+@keyframes pulsa { 50% { box-shadow: 0 0 40px rgba(var(--g), .8); transform: scale(1.06); } }
+#confete { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 15; }
 
 /* Área da loja */
-.admin { display: flex; flex-direction: column; gap: 16px; border-top: 2px dashed var(--line); padding-top: 18px; }
+.admin { display: flex; flex-direction: column; gap: 16px; border-top: 2px dashed rgba(255,255,255,.12); padding-top: 18px; }
 .admin-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
-.admin-head h2 { font-family: var(--display); font-weight: 400; font-size: 1.15rem; margin: 0; color: var(--cream); }
-.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
-.panel h3 { font-family: var(--display); font-weight: 400; font-size: .95rem; margin: 0; color: var(--cream); letter-spacing: .02em; }
+.admin-head h2 { font-family: var(--display); font-weight: 400; font-size: 1.15rem; margin: 0; color: #fff; text-shadow: 0 0 14px rgba(64,196,255,.45); }
+.panel { --c: 64, 196, 255; background: #0a0b0b; border: 1px solid rgba(var(--c), .3); border-radius: 20px; padding: 16px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 0 24px rgba(var(--c), .08); }
+.panel + .panel { --c: 255, 77, 166; }
+.panel h3 { font-family: var(--display); font-weight: 400; font-size: .95rem; margin: 0; color: rgb(var(--c)); letter-spacing: .02em; text-shadow: 0 0 12px rgba(var(--c), .5); }
 .hint { color: var(--muted); font-size: .85rem; margin: 0; }
 
 .date-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-.date-row input { font: 600 .95rem var(--body); background: var(--bg); color: var(--fg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+.date-row input { font: 600 .95rem var(--body); background: var(--surface-2); color: var(--fg); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; }
 .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.stat { background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
-.stat b { display: block; font-family: var(--display); font-weight: 400; font-size: 1.35rem; color: var(--mustard); font-variant-numeric: tabular-nums; margin-top: 2px; }
+.stat { background: var(--surface-2); border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; }
+.stat .label { --g: 185, 179, 173; }
+.stat b { display: block; font-family: var(--display); font-weight: 400; font-size: 1.35rem; color: var(--amarelo); text-shadow: 0 0 12px rgba(255,214,61,.45); font-variant-numeric: tabular-nums; margin-top: 2px; }
 .table-wrap { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-size: .92rem; }
 th, td { text-align: left; padding: 7px 4px; border-bottom: 1px solid var(--line); }
 th { font-size: .7rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); font-weight: 600; }
 td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
-tfoot td { font-weight: 700; border-bottom: none; }
+tfoot td { font-weight: 700; border-bottom: none; color: var(--amarelo); }
 details.log summary { cursor: pointer; color: var(--muted); font-size: .88rem; font-weight: 600; }
 .log-list { list-style: none; margin: 8px 0 0; padding: 0; max-height: 260px; overflow-y: auto; }
 .log-list li { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: .9rem; }
@@ -81,39 +116,40 @@ details.log summary { cursor: pointer; color: var(--muted); font-size: .88rem; f
 .log-list time { color: var(--muted); font-variant-numeric: tabular-nums; flex-shrink: 0; }
 
 .rows { display: flex; flex-direction: column; gap: 10px; }
-.prow { background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 10px; display: grid; grid-template-columns: 12px minmax(0,1fr) 34px; gap: 8px; align-items: center; }
-.swatch { width: 12px; height: 12px; border-radius: 3px; }
+.prow { background: var(--surface-2); border: 1px solid var(--line); border-radius: 14px; padding: 10px; display: grid; grid-template-columns: 28px minmax(0,1fr) 34px; gap: 8px; align-items: center; }
+.swatch { width: 28px; height: 28px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 16px; font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif; }
 .prow .fields { grid-column: 2 / 4; display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; align-items: end; }
 .prow label { font-size: .68rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); font-weight: 600; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-.prow input { font: 600 .95rem var(--body); background: var(--surface); color: var(--fg); border: 1px solid var(--line); border-radius: 8px; padding: 8px; width: 100%; min-width: 0; }
+.prow input { font: 600 .95rem var(--body); background: var(--bg); color: var(--fg); border: 1px solid var(--line); border-radius: 9px; padding: 8px; width: 100%; min-width: 0; }
 .prow .fields input { text-align: center; font-variant-numeric: tabular-nums; }
-.pct { color: var(--mustard); font-weight: 700; font-size: .95rem; font-variant-numeric: tabular-nums; padding-bottom: 8px; min-width: 42px; text-align: right; }
-.del { background: transparent; border: 1px solid var(--line); color: var(--muted); border-radius: 8px; height: 34px; cursor: pointer; font-size: 1.1rem; line-height: 1; }
+.pct { color: var(--verde); font-weight: 700; font-size: .95rem; font-variant-numeric: tabular-nums; padding-bottom: 8px; min-width: 42px; text-align: right; text-shadow: 0 0 10px rgba(61,220,132,.45); }
+.del { background: transparent; border: 1px solid var(--line); color: var(--muted); border-radius: 9px; height: 34px; cursor: pointer; font-size: 1.1rem; line-height: 1; }
 .del:disabled { opacity: .3; cursor: default; }
 
 .actions { display: flex; gap: 8px; flex-wrap: wrap; }
-.ghost { background: transparent; border: 1px solid var(--mustard); color: var(--mustard); font: 700 .88rem var(--body); padding: 9px 14px; border-radius: 10px; cursor: pointer; }
-.ghost.quiet { border-color: var(--line); color: var(--muted); }
-.ghost.danger { border-color: var(--red); color: #ff8a80; }
+.ghost { background: rgba(61,220,132,.06); border: 1.5px solid rgba(61,220,132,.65); color: #fff; font: 700 .88rem var(--body); padding: 9px 14px; border-radius: 12px; cursor: pointer; box-shadow: 0 0 14px rgba(61,220,132,.2); }
+.ghost.quiet { background: transparent; border-color: rgba(255,255,255,.14); color: #c9c3bd; box-shadow: none; }
+.ghost.danger { background: rgba(255,77,77,.06); border-color: rgba(255,77,77,.6); color: #ff8a80; box-shadow: 0 0 14px rgba(255,77,77,.18); }
 .ghost:disabled { opacity: .4; cursor: default; }
 .toast { color: var(--ok); font-size: .85rem; font-weight: 600; min-height: 1.2em; margin: 0; }
 
 /* Janela do PIN */
-.overlay { position: fixed; inset: 0; background: rgba(10,6,5,.82); display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 10; }
-.dialog { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 20px; width: 100%; max-width: 340px; display: flex; flex-direction: column; gap: 12px; }
-.dialog h2 { font-family: var(--display); font-weight: 400; font-size: 1.15rem; margin: 0; }
-.dialog input { font: 700 1.5rem var(--body); letter-spacing: .4em; text-align: center; background: var(--bg); color: var(--fg); border: 1px solid var(--line); border-radius: 10px; padding: 10px; width: 100%; }
+.overlay { position: fixed; inset: 0; background: rgba(6,7,7,.92); display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 30; }
+.dialog { background: #0a0b0b; border: 1.5px solid rgba(255,138,61,.45); border-radius: 24px; padding: 20px; width: 100%; max-width: 340px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 0 40px rgba(255,138,61,.2); }
+.dialog h2 { font-family: var(--display); font-weight: 400; font-size: 1.15rem; margin: 0; color: #fff; }
+.dialog input { font: 700 1.5rem var(--body); letter-spacing: .4em; text-align: center; background: var(--surface-2); color: var(--fg); border: 1px solid var(--line); border-radius: 12px; padding: 10px; width: 100%; }
 .err { color: #ff8a80; font-size: .88rem; margin: 0; min-height: 1.2em; }
 .dialog .actions { justify-content: flex-end; }
 
 footer { color: var(--muted); font-size: .78rem; text-align: center; }
-@media (prefers-reduced-motion: reduce) { .result.win { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .result.win, .result.win .prize, .result.win .ico, .spin, .stage::before, .kicker::before { animation: none !important; } }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
     <div>
+      <div class="kicker">Fliperama Gabba</div>
       <h1>Roleta <span>Gabba</span></h1>
       <p class="sub">Gire e descubra o prêmio da casa</p>
     </div>
@@ -123,15 +159,16 @@ footer { color: var(--muted); font-size: .78rem; text-align: center; }
     </div>
   </header>
 
-  <div class="stage">
-    <svg class="pointer" viewBox="0 0 34 44" aria-hidden="true"><path d="M17 44 L2 10 A15 15 0 1 1 32 10 Z" fill="#f2b632" stroke="#1d1411" stroke-width="2.5"/><circle cx="17" cy="14" r="5" fill="#1d1411"/></svg>
+  <div class="stage" id="stage">
+    <svg class="pointer" viewBox="0 0 34 44" aria-hidden="true"><defs><linearGradient id="pg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff3a8"/><stop offset=".5" stop-color="#ffd63d"/><stop offset="1" stop-color="#ff8a3d"/></linearGradient></defs><path d="M17 44 L2 10 A15 15 0 1 1 32 10 Z" fill="url(#pg)" stroke="#fff" stroke-width="2"/><circle cx="17" cy="14" r="5.5" fill="#ff3d2e" stroke="#fff" stroke-width="1.5"/></svg>
     <canvas id="wheel" role="img" aria-label="Roleta de prêmios"></canvas>
   </div>
 
-  <button class="spin" id="spin" type="button">GIRAR</button>
+  <button class="spin" id="spin" type="button"><span aria-hidden="true">🎰</span>GIRAR</button>
 
   <div class="result" id="result" aria-live="polite">
-    <span class="label">Prêmio</span>
+    <span class="ico" id="prize-ico" aria-hidden="true">🎁</span>
+    <span class="label" id="prize-label">Prêmio</span>
     <span class="prize" id="prize">Toque em girar</span>
   </div>
 
@@ -189,6 +226,7 @@ footer { color: var(--muted); font-size: .78rem; text-align: center; }
 
   <footer>Gabba Hey Burger · Paracuru</footer>
 </div>
+<canvas id="confete" aria-hidden="true"></canvas>
 
 <div class="overlay" id="pin-overlay" hidden>
   <form class="dialog" id="pin-form" autocomplete="off">
@@ -208,11 +246,19 @@ footer { color: var(--muted); font-size: .78rem; text-align: center; }
 (function () {
   const STORE = 'roleta-gabba-v2';
   const COLORS = [
-    { fill: '#d7261e', text: '#f6e7cf' },
-    { fill: '#f6e7cf', text: '#1d1411' },
-    { fill: '#f2b632', text: '#1d1411' },
-    { fill: '#9c1611', text: '#f6e7cf' }
+    { fill: '#ff3d2e', text: '#ffffff' },
+    { fill: '#ffd63d', text: '#1a1208' },
+    { fill: '#40c4ff', text: '#06141c' },
+    { fill: '#ff4da6', text: '#ffffff' },
+    { fill: '#3ddc84', text: '#06180e' },
+    { fill: '#a66bff', text: '#ffffff' },
+    { fill: '#ff8a3d', text: '#1a0d05' },
+    { fill: '#2ee6d6', text: '#04201d' }
   ];
+  // ícone pelo nome do prêmio
+  const ICONES = [[/batata|frita/i, '🍟'], [/refri|coca|guaran|lata/i, '🥤'], [/molho|maionese|ketchup/i, '🥫'], [/sobremesa|doce|brownie|pudim|bolo/i, '🍰'], [/milk|shake|sorvete|a[çc]a[ií]/i, '🍦'],
+    [/chop|cerveja|beer/i, '🍺'], [/burger|hamb|lanche|sandu/i, '🍔'], [/desconto|%|off|cupom/i, '💸'], [/[áa]gua|suco/i, '🧃'], [/caf[ée]/i, '☕'], [/pastel/i, '🥟'], [/pizza/i, '🍕'], [/brinde|camisa|bon[ée]|copo/i, '🎽'], [/tente|nada|n[ãa]o foi/i, '🍀'], [/dobro|2x|duplo/i, '✨']];
+  const icone = name => { for (const [re, ic] of ICONES) if (re.test(name)) return ic; return '🎁'; };
   // Exemplo: nomes, pesos e custos são ilustrativos. Ajuste com o CMV real de cada item.
   const EXAMPLE = [
     { name: 'Batata pequena', weight: 3, cost: 3.5 },
@@ -280,52 +326,109 @@ footer { color: var(--muted); font-size: .78rem; text-align: center; }
     draw();
   }
 
+  let tempo = 0, festa = 0;
   function draw() {
-    const W = canvas.width, c = W / 2, R = c * 0.94;
+    const W = canvas.width, c = W / 2;
     if (!W) return;
+    const R = c * 0.86, aro = c * 0.97;
     ctx.clearRect(0, 0, W, W);
     const segs = segments();
     const rad = d => (d - 90 + rotation) * Math.PI / 180;
 
-    ctx.beginPath(); ctx.arc(c, c, c * 0.995, 0, Math.PI * 2); ctx.fillStyle = '#1d1411'; ctx.fill();
+    // moldura com lâmpadas
+    let g = ctx.createRadialGradient(c, c, R, c, c, aro);
+    g.addColorStop(0, '#1b0e2e'); g.addColorStop(0.5, '#2a1546'); g.addColorStop(1, '#120a20');
+    ctx.beginPath(); ctx.arc(c, c, aro, 0, Math.PI * 2); ctx.fillStyle = g; ctx.fill();
+    ctx.lineWidth = W * 0.008; ctx.strokeStyle = '#ff8a3d'; ctx.shadowColor = '#ff8a3d'; ctx.shadowBlur = W * 0.03; ctx.stroke(); ctx.shadowBlur = 0;
+    const NL = 28, rl = (R + aro) / 2, passo = spinning ? Math.floor(tempo * 22) : Math.floor(tempo * 4);
+    for (let k = 0; k < NL; k++) {
+      const a = k / NL * Math.PI * 2, x = c + Math.cos(a) * rl, y = c + Math.sin(a) * rl;
+      let acesa = festa > 0 ? (Math.floor(tempo * 8) % 2 === 0) : ((k + passo) % 3 === 0);
+      const cor = festa > 0 ? '#ffd63d' : (k % 2 ? '#ffd63d' : '#ff4da6');
+      ctx.beginPath(); ctx.arc(x, y, W * 0.013, 0, Math.PI * 2);
+      if (acesa) { ctx.fillStyle = '#fff'; ctx.shadowColor = cor; ctx.shadowBlur = W * 0.035; ctx.fill(); ctx.shadowBlur = 0; ctx.beginPath(); ctx.arc(x, y, W * 0.009, 0, Math.PI * 2); ctx.fillStyle = cor; ctx.fill(); }
+      else { ctx.fillStyle = 'rgba(255,255,255,.18)'; ctx.fill(); }
+    }
 
+    // fatias
     segs.forEach(s => {
       const col = COLORS[s.i % COLORS.length];
-      ctx.beginPath(); ctx.moveTo(c, c);
-      ctx.arc(c, c, R, rad(s.start), rad(s.end));
-      ctx.closePath();
-      ctx.fillStyle = col.fill; ctx.fill();
-      ctx.lineWidth = W * 0.004; ctx.strokeStyle = '#1d1411'; ctx.stroke();
-      if (s.i === winner && !spinning) { ctx.fillStyle = 'rgba(255,255,255,0.18)'; ctx.fill(); }
+      ctx.beginPath(); ctx.moveTo(c, c); ctx.arc(c, c, R, rad(s.start), rad(s.end)); ctx.closePath();
+      const gf = ctx.createRadialGradient(c, c, R * 0.15, c, c, R);
+      gf.addColorStop(0, '#0b0712'); gf.addColorStop(0.45, col.fill + 'cc'); gf.addColorStop(1, col.fill);
+      ctx.fillStyle = gf; ctx.fill();
+      if (s.i === winner && !spinning) { ctx.fillStyle = 'rgba(255,255,255,' + (0.18 + 0.14 * Math.sin(tempo * 8)) + ')'; ctx.fill(); }
+    });
+    // divisórias brilhantes
+    ctx.save(); ctx.shadowColor = '#fff'; ctx.shadowBlur = W * 0.015; ctx.strokeStyle = 'rgba(255,255,255,.9)'; ctx.lineWidth = W * 0.005;
+    segs.forEach(s => { const a = rad(s.start); ctx.beginPath(); ctx.moveTo(c + Math.cos(a) * R * 0.2, c + Math.sin(a) * R * 0.2); ctx.lineTo(c + Math.cos(a) * R, c + Math.sin(a) * R); ctx.stroke(); });
+    ctx.beginPath(); ctx.arc(c, c, R, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
 
-      const mid = rad((s.start + s.end) / 2);
-      const sweepRad = (s.end - s.start) * Math.PI / 180;
-      ctx.save();
-      ctx.translate(c, c); ctx.rotate(mid);
-      ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
-      ctx.fillStyle = col.text;
-      let fs = Math.min(W * 0.045, R * sweepRad * 0.42);
-      fs = Math.max(fs, W * 0.022);
-      ctx.font = '700 ' + fs + 'px Barlow, system-ui, sans-serif';
-      let label = s.name.trim();
-      const maxW = R * 0.66;
-      while (ctx.measureText(label).width > maxW && label.length > 3) label = label.slice(0, -2) + '…';
-      ctx.fillText(label, R * 0.9, 0);
+    // ícone e nome
+    segs.forEach(s => {
+      const col = COLORS[s.i % COLORS.length];
+      const mid = rad((s.start + s.end) / 2), sweepRad = (s.end - s.start) * Math.PI / 180;
+      ctx.save(); ctx.translate(c, c); ctx.rotate(mid);
+      ctx.textBaseline = 'middle';
+      const fi = Math.min(W * 0.07, R * sweepRad * 0.5);
+      ctx.save(); ctx.translate(R * 0.82, 0); ctx.rotate(Math.PI / 2);
+      ctx.font = fi + 'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; ctx.textAlign = 'center';
+      ctx.shadowColor = 'rgba(0,0,0,.45)'; ctx.shadowBlur = W * 0.01; ctx.fillText(icone(s.name), 0, 0); ctx.restore();
+      ctx.textAlign = 'right'; ctx.fillStyle = col.text;
+      let fs = Math.min(W * 0.042, R * sweepRad * 0.36); fs = Math.max(fs, W * 0.022);
+      const fonte = f => '800 ' + f + 'px "Barlow Condensed", Barlow, system-ui, sans-serif';
+      ctx.shadowColor = col.text === '#ffffff' ? 'rgba(0,0,0,.55)' : 'rgba(255,255,255,.35)'; ctx.shadowBlur = W * 0.008;
+      const maxW = R * 0.5, x0 = R * 0.71;
+      let label = s.name.trim().toUpperCase(), linhas = [label];
+      ctx.font = fonte(fs);
+      while (ctx.measureText(label).width > maxW && fs > W * 0.03) { fs *= 0.93; ctx.font = fonte(fs); }
+      const cabe2 = R * 0.6 * sweepRad > fs * 2.1;
+      if (ctx.measureText(label).width > maxW && cabe2 && label.indexOf(' ') > 0) {
+        const meio = label.length / 2; let corte = -1;
+        for (let k = 0; k < label.length; k++) if (label[k] === ' ' && (corte < 0 || Math.abs(k - meio) < Math.abs(corte - meio))) corte = k;
+        linhas = [label.slice(0, corte), label.slice(corte + 1)];
+      }
+      linhas = linhas.map(l => { while (ctx.measureText(l).width > maxW && l.length > 3) l = l.slice(0, -2) + '…'; return l; });
+      linhas.forEach((l, k) => ctx.fillText(l, x0, (k - (linhas.length - 1) / 2) * fs * 1.02));
       ctx.restore();
     });
 
-    segs.forEach(s => {
-      const a = rad(s.start);
-      ctx.beginPath(); ctx.arc(c + Math.cos(a) * c * 0.965, c + Math.sin(a) * c * 0.965, W * 0.011, 0, Math.PI * 2);
-      ctx.fillStyle = '#f2b632'; ctx.fill();
-    });
-
-    ctx.beginPath(); ctx.arc(c, c, R * 0.2, 0, Math.PI * 2);
-    ctx.fillStyle = '#1d1411'; ctx.fill();
-    ctx.lineWidth = W * 0.012; ctx.strokeStyle = '#f2b632'; ctx.stroke();
-    ctx.fillStyle = '#f6e7cf'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.font = (W * 0.042) + 'px Bungee, Impact, sans-serif';
+    // centro
+    ctx.save();
+    g = ctx.createRadialGradient(c, c - R * 0.06, 0, c, c, R * 0.22);
+    g.addColorStop(0, '#3a1f5c'); g.addColorStop(1, '#0b0712');
+    ctx.beginPath(); ctx.arc(c, c, R * 0.21, 0, Math.PI * 2); ctx.fillStyle = g; ctx.fill();
+    ctx.lineWidth = W * 0.012; ctx.strokeStyle = '#ffd63d'; ctx.shadowColor = '#ffd63d'; ctx.shadowBlur = W * 0.03 * (0.7 + 0.3 * Math.sin(tempo * 3)); ctx.stroke();
+    ctx.shadowBlur = W * 0.02; ctx.shadowColor = '#ff8a3d';
+    g = ctx.createLinearGradient(c - R * 0.15, 0, c + R * 0.15, 0); g.addColorStop(0, '#ffffff'); g.addColorStop(0.5, '#ffd63d'); g.addColorStop(1, '#ff8a3d');
+    ctx.fillStyle = g; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = (W * 0.04) + 'px Bungee, Impact, sans-serif';
     ctx.fillText('GABBA', c, c + W * 0.003);
+    ctx.restore();
+  }
+
+  // confete na vitória
+  const cf = $('confete'), cx = cf.getContext('2d'); let confete = [];
+  function soltarConfete() {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    cf.width = innerWidth; cf.height = innerHeight;
+    const cores = ['#ffd63d', '#ff4da6', '#40c4ff', '#3ddc84', '#ff8a3d', '#a66bff'];
+    for (let k = 0; k < 140; k++) confete.push({ x: innerWidth / 2 + (Math.random() - .5) * 80, y: innerHeight * 0.42, vx: (Math.random() - .5) * 13, vy: -6 - Math.random() * 10, r: Math.random() * 6, vr: (Math.random() - .5) * .4, w: 5 + Math.random() * 6, h: 8 + Math.random() * 8, c: cores[k % cores.length], t: 0 });
+  }
+  function pintarConfete() {
+    if (!confete.length) return;
+    cx.clearRect(0, 0, cf.width, cf.height);
+    confete = confete.filter(p => p.t < 3.2 && p.y < cf.height + 20);
+    confete.forEach(p => { p.t += 1 / 60; p.vy += .32; p.vx *= .99; p.x += p.vx; p.y += p.vy; p.r += p.vr;
+      cx.save(); cx.translate(p.x, p.y); cx.rotate(p.r); cx.fillStyle = p.c; cx.globalAlpha = Math.max(0, 1 - p.t / 3.2); cx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h * Math.abs(Math.cos(p.t * 6))); cx.restore(); });
+    if (!confete.length) cx.clearRect(0, 0, cf.width, cf.height);
+  }
+  let ultimo = 0;
+  function laco(now) {
+    const dt = Math.min(0.05, ultimo ? (now - ultimo) / 1000 : 0.016); ultimo = now;
+    tempo += dt; if (festa > 0) festa -= dt;
+    draw(); pintarConfete();
+    requestAnimationFrame(laco);
   }
 
   let audio = null;
@@ -371,10 +474,10 @@ footer { color: var(--muted); font-size: .78rem; text-align: center; }
     const t0 = performance.now();
     let lastSeg = segmentAtPointer(segs).i;
 
-    spinning = true; winner = -1;
-    $('spin').disabled = true;
+    spinning = true; winner = -1; festa = 0;
+    $('spin').disabled = true; $('stage').classList.add('girando');
     $('result').classList.remove('win');
-    $('prize').textContent = 'Girando…';
+    $('prize').textContent = 'Girando…'; $('prize-ico').textContent = '🎰'; $('prize-label').textContent = 'Boa sorte!';
 
     function frame(now) {
       const t = Math.min(1, (now - t0) / dur);
@@ -382,13 +485,12 @@ footer { color: var(--muted); font-size: .78rem; text-align: center; }
       rotation = from + delta * e;
       const cur = segmentAtPointer(segs).i;
       if (cur !== lastSeg) { tick(); lastSeg = cur; }
-      draw();
       if (t < 1) { requestAnimationFrame(frame); return; }
       rotation = rotation % 360;
-      spinning = false; winner = chosen.i;
-      draw();
-      $('spin').disabled = false;
-      $('prize').textContent = chosen.name.trim();
+      spinning = false; winner = chosen.i; festa = 3;
+      $('spin').disabled = false; $('stage').classList.remove('girando');
+      $('prize').textContent = chosen.name.trim(); $('prize-ico').textContent = icone(chosen.name); $('prize-label').textContent = 'Você ganhou!';
+      soltarConfete();
       void $('result').offsetWidth;
       $('result').classList.add('win');
       fanfare();
@@ -566,11 +668,11 @@ footer { color: var(--muted); font-size: .78rem; text-align: center; }
     box.innerHTML = '';
     prizes.forEach((p, i) => {
       const row = document.createElement('div'); row.className = 'prow';
-      const sw = document.createElement('span'); sw.className = 'swatch'; sw.style.background = COLORS[i % COLORS.length].fill;
+      const sw = document.createElement('span'); sw.className = 'swatch'; sw.style.background = COLORS[i % COLORS.length].fill; sw.style.boxShadow = '0 0 12px ' + COLORS[i % COLORS.length].fill + '88'; sw.textContent = icone(p.name);
       const name = document.createElement('input');
       name.type = 'text'; name.id = 'prize-name-' + i; name.value = p.name; name.maxLength = 28;
       name.setAttribute('aria-label', 'Nome do prêmio ' + (i + 1));
-      name.addEventListener('input', () => { p.name = name.value; save(); updatePct(); draw(); });
+      name.addEventListener('input', () => { p.name = name.value; sw.textContent = icone(p.name); save(); updatePct(); draw(); });
       const del = document.createElement('button'); del.className = 'del'; del.type = 'button'; del.textContent = '×';
       del.setAttribute('aria-label', 'Remover ' + p.name);
       del.disabled = prizes.length <= MIN;
@@ -622,7 +724,7 @@ footer { color: var(--muted); font-size: .78rem; text-align: center; }
   $('spin').addEventListener('click', spin);
   window.addEventListener('resize', size);
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
-  renderSound(); size();
+  renderSound(); size(); requestAnimationFrame(laco);
 })();
 </script>
 </body>
