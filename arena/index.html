@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Arena da Mesa (teste)</title>
+<meta name="theme-color" content="#070808">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Barlow+Condensed:wght@700;800&family=Barlow:wght@400;600;700;800&display=swap">
+<style>
+/* Layout: o celular fica deitado no meio da mesa. A tela é dividida em 2, 3 ou 4 "cantos", um por jogador,
+   e os cantos de cima ficam virados de cabeça para baixo para quem está do outro lado da mesa.
+   Cada canto tem nome, pontos e a área do minijogo. Telas de início e fim usam o cartão neon padrão. */
+:root {
+  --bg: #070808; --fg: #f4f1ec; --muted: #b9b3ad; --line: #262a29;
+  --display: 'Bungee', Impact, 'Arial Black', sans-serif;
+  --cond: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  --body: 'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --emoji: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; margin: 0; background: var(--bg); color: var(--fg); font-family: var(--body); overflow: hidden; user-select: none; -webkit-user-select: none; overscroll-behavior: none; touch-action: none; }
+[hidden] { display: none !important; }
+
+#mesa { position: fixed; inset: 0; display: grid; gap: 6px; padding: calc(env(safe-area-inset-top, 0px) + 6px) 6px calc(env(safe-area-inset-bottom, 0px) + 6px); }
+#mesa.n2 { grid-template: 1fr 1fr / 1fr; }
+#mesa.n3 { grid-template: 1fr 1fr / 1fr 1fr; }
+#mesa.n3 .z0 { grid-column: 1 / 3; }
+#mesa.n4 { grid-template: 1fr 1fr / 1fr 1fr; }
+.zona { --c: 255, 61, 46; position: relative; border-radius: 22px; border: 2px solid rgba(var(--c), .7); background: radial-gradient(120% 90% at 50% 100%, rgba(var(--c), .2), rgba(var(--c), .03) 60%), #0b0c0c;
+  box-shadow: 0 0 22px rgba(var(--c), .25), inset 0 0 30px rgba(var(--c), .06); display: flex; flex-direction: column; overflow: hidden; touch-action: none; }
+.zona.virada { transform: rotate(180deg); }
+.zona .topo { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px 4px; font-family: var(--cond); font-weight: 800; letter-spacing: .04em; }
+.zona .nome { color: rgb(var(--c)); font-size: 1.05rem; text-shadow: 0 0 10px rgba(var(--c), .6); }
+.zona .pts { white-space: nowrap; background: rgba(var(--c), .18); border: 1px solid rgba(var(--c), .5); border-radius: 999px; padding: 2px 10px; font-size: 1rem; color: #fff; }
+.zona .area { position: relative; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 6px 10px 10px; text-align: center; }
+#mesa.n4 .zona .nome, #mesa.n3 .zona:not(.z0) .nome { font-size: .9rem; }
+#mesa.n4 .zona .pts, #mesa.n3 .zona:not(.z0) .pts { font-size: .82rem; padding: 1px 8px; }
+#mesa.n4 .zona .topo, #mesa.n3 .zona:not(.z0) .topo { padding: 6px 8px 2px; }
+.zona.pisca { animation: zpisca .3s; }
+@keyframes zpisca { 50% { background-color: rgba(var(--c), .35); } }
+
+.titulo { font-family: var(--display); font-size: clamp(1.1rem, 5.5vw, 1.6rem); line-height: 1.05; color: #fff; }
+.regra { color: var(--muted); font-size: .92rem; max-width: 30ch; line-height: 1.3; }
+.grande { font-family: var(--display); font-size: clamp(2.6rem, 14vw, 4.2rem); line-height: 1; color: #fff; text-shadow: 0 0 22px rgba(var(--c), .8); }
+.emo { font-family: var(--emoji); }
+.msg { font-family: var(--cond); font-weight: 800; font-size: 1.25rem; letter-spacing: .03em; }
+.msg.bom { color: #3ddc84; text-shadow: 0 0 12px rgba(61,220,132,.6); }
+.msg.ruim { color: #ff6b5e; }
+.lugar { font-family: var(--display); font-size: clamp(1.4rem, 7vw, 2.2rem); }
+
+/* botão grande de toque */
+.toque { width: min(78%, 240px); aspect-ratio: 1; max-height: 70%; border-radius: 50%; border: 3px solid rgba(var(--c), .9); background: radial-gradient(circle at 50% 38%, rgba(var(--c), .55), rgba(var(--c), .12) 70%);
+  color: #fff; font-family: var(--display); font-size: clamp(1.1rem, 6vw, 1.6rem); box-shadow: 0 0 26px rgba(var(--c), .45); touch-action: none; cursor: pointer; }
+.toque:active { transform: scale(.95); }
+.barra { width: 86%; height: 16px; border-radius: 999px; background: rgba(255,255,255,.08); overflow: hidden; border: 1px solid rgba(255,255,255,.12); }
+.barra i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, rgba(var(--c), .7), rgb(var(--c))); box-shadow: 0 0 12px rgb(var(--c)); transition: width .08s; }
+.corda { position: relative; width: 90%; height: 26px; }
+.corda::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 5px; margin-top: -2.5px; background: repeating-linear-gradient(90deg, #c9a35a 0 8px, #8a6a3a 8px 14px); border-radius: 3px; }
+.corda b { position: absolute; top: 0; width: 26px; height: 26px; margin-left: -13px; border-radius: 50%; background: #ffd63d; box-shadow: 0 0 14px #ffd63d; transition: left .1s; }
+.corda::after { content: ''; position: absolute; left: 50%; top: -4px; bottom: -4px; width: 2px; background: rgba(255,255,255,.5); }
+
+/* grade do Pega a Batata */
+.grade { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; width: min(92%, 260px); }
+.grade button { aspect-ratio: 1; border-radius: 14px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.04); font-size: clamp(1.4rem, 8vw, 2.2rem); font-family: var(--emoji); touch-action: none; padding: 0; color: #fff; }
+.grade button.cheio { background: rgba(var(--c), .18); border-color: rgba(var(--c), .6); }
+/* Monte o Lanche */
+.pedido { display: flex; gap: 3px; justify-content: center; flex-wrap: nowrap; }
+.pedido span { font-family: var(--emoji); font-size: clamp(1.1rem, 6vw, 2.1rem); width: 1.6em; height: 1.6em; display: flex; align-items: center; justify-content: center; border-radius: 10px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); }
+.pedido span.ok { background: rgba(61,220,132,.25); border-color: #3ddc84; }
+.teclas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; width: min(92%, 270px); }
+.teclas button, .opcoes button { border-radius: 12px; border: 1.5px solid rgba(var(--c), .55); background: rgba(var(--c), .1); color: #fff; font-family: var(--emoji); font-size: clamp(1.3rem, 7vw, 1.9rem); padding: 6px 0; touch-action: none; }
+.teclas button:active, .opcoes button:active { background: rgba(var(--c), .35); }
+/* Quantos? */
+.campo { position: relative; width: min(92%, 280px); height: 42%; min-height: 90px; border-radius: 14px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1); }
+.campo span { position: absolute; font-family: var(--emoji); font-size: clamp(1rem, 5vw, 1.5rem); transform: translate(-50%, -50%); }
+.opcoes { display: flex; gap: 8px; width: min(92%, 280px); }
+.opcoes button { flex: 1; font-family: var(--display); font-size: clamp(1.2rem, 6vw, 1.7rem); padding: 8px 0; }
+.opcoes button.errou { opacity: .3; }
+
+/* centro: rodada e contagem (lido por todos) */
+#centro { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 5; pointer-events: none; display: flex; align-items: center; justify-content: center; }
+#centro div { min-width: 64px; height: 64px; padding: 0 14px; border-radius: 999px; background: #0b0c0c; border: 2px solid #ffd63d; box-shadow: 0 0 22px rgba(255,214,61,.5); display: flex; align-items: center; justify-content: center; font-family: var(--display); font-size: 1.5rem; color: #ffd63d; }
+.sair { position: fixed; right: 10px; top: 50%; transform: translateY(-50%); z-index: 6; width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(255,255,255,.2); background: rgba(10,10,10,.85); color: #fff; font-size: 1rem; touch-action: manipulation; }
+
+/* telas de início e fim */
+.overlay { position: fixed; inset: 0; background: rgba(6,7,7,.94); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 24px; text-align: center; z-index: 10; overflow-y: auto; touch-action: pan-y; }
+.overlay * { touch-action: manipulation; }
+.overlay h1 { font-family: var(--display); font-weight: 400; font-size: clamp(1.9rem, 9vw, 2.6rem); line-height: 1; margin: 0; }
+.overlay h1 span { color: #ffd63d; }
+.overlay p { margin: 0; color: var(--muted); max-width: 34ch; }
+.qtd { display: flex; gap: 10px; }
+.qtd button { width: 64px; height: 64px; border-radius: 18px; border: 2px solid rgba(255,255,255,.2); background: rgba(255,255,255,.04); color: #fff; font-family: var(--display); font-size: 1.6rem; cursor: pointer; }
+.qtd button[aria-pressed="true"] { border-color: #ffd63d; color: #ffd63d; box-shadow: 0 0 18px rgba(255,214,61,.45); }
+.lista { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; text-align: left; max-width: 340px; }
+.lista li { background: #0e0f0f; border: 1px solid var(--line); border-radius: 12px; padding: 7px 12px; font-size: .9rem; }
+.lista b { color: #ffd63d; }
+.btn { font-family: var(--display); font-size: 1.3rem; letter-spacing: .04em; background: linear-gradient(90deg, #ff8a3d, #ff3d2e); color: #fff; border: none; border-radius: 16px; padding: 14px 30px; cursor: pointer; box-shadow: 0 0 24px rgba(255,90,50,.5); }
+.link { color: var(--muted); border: 1px solid var(--line); border-radius: 10px; padding: 9px 14px; font-weight: 700; font-size: .9rem; text-decoration: none; background: transparent; cursor: pointer; font-family: var(--body); }
+.placar { list-style: none; margin: 0; padding: 0; width: 100%; max-width: 320px; display: flex; flex-direction: column; gap: 6px; }
+.placar li { display: flex; justify-content: space-between; align-items: center; padding: 8px 14px; border-radius: 14px; border: 1.5px solid rgba(var(--c), .6); background: rgba(var(--c), .1); font-family: var(--cond); font-weight: 800; font-size: 1.2rem; }
+.placar li b { font-family: var(--display); font-weight: 400; }
+button:focus-visible, a:focus-visible { outline: 3px solid #ffd63d; outline-offset: 2px; }
+#confete { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 20; }
+</style>
+<script src="../contador.js"></script>
+<link rel="stylesheet" href="../comum/neon.css">
+<script src="../comum/neon.js" defer></script>
+</head>
+<body>
+<div id="mesa"></div>
+<div id="centro" hidden><div id="centro-txt">1/5</div></div>
+<button class="sair" id="sair" type="button" aria-label="Sair da partida" hidden>✕</button>
+
+<div class="overlay" id="start" data-kind="start" data-icon="⚔️">
+  <h1>Arena da <span>Mesa</span></h1>
+  <p>Disputa para a mesa toda num celular só! Deite o celular no meio da mesa: cada um joga no seu canto da tela.</p>
+  <p style="color:#fff;font-weight:700">Quantos vão jogar?</p>
+  <div class="qtd" id="qtd"><button type="button" data-n="2" aria-pressed="true">2</button><button type="button" data-n="3" aria-pressed="false">3</button><button type="button" data-n="4" aria-pressed="false">4</button></div>
+  <ul class="lista">
+    <li><b>5 rodadas</b> de minijogos rápidos, cada uma de um tipo</li>
+    <li>Quem ganha a rodada leva <b>3 pontos</b>, o segundo leva 1</li>
+    <li>No fim, quem tiver mais pontos é o <b>campeão da mesa</b> 🏆</li>
+  </ul>
+  <button class="btn" id="play" type="button">COMEÇAR</button>
+  <a class="link" href="../jogos/">Escolher outro jogo</a>
+</div>
+
+<div class="overlay" id="fim" hidden data-kind="win" data-icon="🏆">
+  <h1 id="fim-titulo">Campeão da mesa!</h1>
+  <ol class="placar" id="fim-placar"></ol>
+  <button class="btn" id="again" type="button">REVANCHE!</button>
+  <a class="link" href="../jogos/">Escolher outro jogo</a>
+</div>
+<canvas id="confete" aria-hidden="true"></canvas>
+
+<script>
+(function () {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const TESTE = /[?&]teste\b/.test(location.search);
+  const conta = (n, t) => { if (!TESTE && window.gabbaConta) gabbaConta(n, t); };
+  const CORES = [
+    { nome: 'VERMELHO', rgb: '255, 61, 46', hex: '#ff3d2e' },
+    { nome: 'AZUL', rgb: '64, 196, 255', hex: '#40c4ff' },
+    { nome: 'VERDE', rgb: '61, 220, 132', hex: '#3ddc84' },
+    { nome: 'AMARELO', rgb: '255, 214, 61', hex: '#ffd63d' }
+  ];
+  let N = 2, J = [], rodada = 0, ordem = [], jogando = false, timers = [];
+  const espera = (ms, fn) => { const t = setTimeout(fn, ms); timers.push(t); return t; };
+  const limparTimers = () => { timers.forEach(clearTimeout); timers = []; };
+  const sorteio = l => l[Math.floor(Math.random() * l.length)];
+  const embaralhar = l => { l = l.slice(); for (let i = l.length - 1; i > 0; i--) { const k = Math.floor(Math.random() * (i + 1)); [l[i], l[k]] = [l[k], l[i]]; } return l; };
+
+  /* ---------- Som ---------- */
+  let audio = null;
+  function initAudio() { try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); if (audio.state === 'suspended') audio.resume(); } catch (e) {} }
+  function tom(f1, f2, d, tipo, vol, atraso) {
+    if (!audio) return;
+    setTimeout(() => { const o = audio.createOscillator(), g = audio.createGain(), n = audio.currentTime; o.type = tipo || 'triangle'; o.frequency.setValueAtTime(f1, n); o.frequency.exponentialRampToValueAtTime(f2, n + d); g.gain.setValueAtTime(vol || 0.05, n); g.gain.exponentialRampToValueAtTime(0.0001, n + d); o.connect(g).connect(audio.destination); o.start(); o.stop(n + d + 0.02); }, atraso || 0);
+  }
+  const som = {
+    toque: () => tom(600 + Math.random() * 200, 900, 0.05, 'square', 0.03),
+    bom: () => { tom(660, 990, 0.1, 'triangle', 0.07); tom(990, 1320, 0.12, 'triangle', 0.06, 80); },
+    ruim: () => tom(220, 90, 0.3, 'sawtooth', 0.06),
+    bip: () => tom(520, 520, 0.12, 'square', 0.05),
+    vai: () => tom(880, 880, 0.25, 'square', 0.06),
+    rodada: () => [523, 659, 784].forEach((f, k) => tom(f, f, 0.14, 'triangle', 0.07, k * 90)),
+    campeao: () => [523, 659, 784, 1047, 784, 1047, 1319].forEach((f, k) => tom(f, f, 0.16, 'triangle', 0.07, k * 110))
+  };
+  const vibra = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} };
+
+  /* ---------- Mesa ---------- */
+  function montarMesa() {
+    const mesa = $('mesa'); mesa.innerHTML = ''; mesa.className = 'n' + N;
+    // ordem na tela: os de cima ficam virados para o outro lado da mesa
+    const posicoes = N === 2 ? [{ i: 1, virada: true }, { i: 0 }] : N === 3 ? [{ i: 1, virada: true }, { i: 2, virada: true }, { i: 0 }] : [{ i: 2, virada: true }, { i: 3, virada: true }, { i: 0 }, { i: 1 }];
+    J = [];
+    posicoes.forEach(p => {
+      const cor = CORES[p.i], z = document.createElement('section');
+      z.className = 'zona z' + p.i + (p.virada ? ' virada' : '');
+      z.style.setProperty('--c', cor.rgb);
+      z.innerHTML = '<div class="topo"><span class="nome">' + cor.nome + '</span><span class="pts">0 pts</span></div><div class="area"></div>';
+      mesa.append(z);
+      J[p.i] = { i: p.i, cor: cor, pts: 0, zona: z, area: z.querySelector('.area'), ptsEl: z.querySelector('.pts') };
+    });
+    if (N === 3) { mesa.append(J[0].zona); }   // o jogador 0 ocupa a linha de baixo inteira
+  }
+  function area(j, html) { j.area.innerHTML = html; return j.area; }
+  function todos(fn) { J.forEach(fn); }
+  function pintarPts() { todos(j => { j.ptsEl.textContent = j.pts + (j.pts === 1 ? ' pt' : ' pts'); }); }
+  function centro(t) { $('centro').hidden = !t; $('centro-txt').textContent = t || ''; }
+  function pisca(j) { j.zona.classList.remove('pisca'); void j.zona.offsetWidth; j.zona.classList.add('pisca'); }
+  // um toque que funciona com vários dedos ao mesmo tempo
+  function aoTocar(el, fn) { el.addEventListener('pointerdown', e => { e.preventDefault(); if (jogando) fn(e); }); }
+
+  /* ---------- Minijogos ---------- */
+  // cada minijogo chama fim(placar) com { indiceDoJogador: pontosNaRodada }
+  const MINIJOGOS = [
+    {
+      id: 'corrida', nome: 'Corrida do Toque', icone: '👆', regra: 'Toque o mais rápido que puder no seu botão!',
+      jogar(fim) {
+        const toques = {}, META = 45, cabo = N === 2;
+        todos(j => {
+          toques[j.i] = 0;
+          const a = area(j, (cabo ? '<div class="corda"><b style="left:50%"></b></div>' : '<div class="barra"><i></i></div>') + '<button class="toque" type="button">TOQUE!</button><div class="msg" style="opacity:.8"><span class="n">0</span> toques</div>');
+          aoTocar(a.querySelector('.toque'), () => {
+            toques[j.i]++; som.toque(); a.querySelector('.n').textContent = toques[j.i];
+            atualizar();
+            if (!cabo && toques[j.i] >= META) acabar();
+          });
+        });
+        function atualizar() {
+          if (cabo) {
+            const dif = toques[0] - toques[1];
+            todos(j => { const meu = j.i === 0 ? dif : -dif, pos = Math.max(4, Math.min(96, 50 + meu * 2.5)); j.area.querySelector('.corda b').style.left = (100 - pos) + '%'; });
+            if (Math.abs(dif) >= 20) acabar();
+          } else todos(j => { j.area.querySelector('.barra i').style.width = Math.min(100, toques[j.i] / META * 100) + '%'; });
+        }
+        let acabou = false;
+        function acabar() { if (acabou) return; acabou = true; fim(toques); }
+        espera(cabo ? 9000 : 7000, acabar);
+      }
+    },
+    {
+      id: 'reflexo', nome: 'Reflexo do Burger', icone: '⚡', regra: 'Toque quando aparecer o 🍔. Se aparecer 🥦, não toque! Tocou antes da hora, queimou.',
+      jogar(fim) {
+        const pts = {}; todos(j => { pts[j.i] = 0; });
+        let sub = 0; const TOTAL = 5;
+        function proxima() {
+          if (sub >= TOTAL) return fim(pts);
+          sub++;
+          let estado = 'espera', queimou = {}, vez = Math.random() < 0.72 ? '🍔' : '🥦';
+          todos(j => {
+            const a = area(j, '<div class="alvoz" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px"><div class="msg" style="opacity:.75">Rodada ' + sub + ' de ' + TOTAL + '</div><div class="grande emo alvo">⏳</div><div class="msg aviso">Espere...</div></div>');
+            aoTocar(a.querySelector('.alvoz'), () => {
+              if (queimou[j.i] || estado === 'fim') return;
+              if (estado === 'espera') { queimou[j.i] = true; a.querySelector('.aviso').textContent = 'Queimou! 🔥'; a.querySelector('.aviso').className = 'msg ruim aviso'; som.ruim(); vibra(80); return; }
+              if (vez === '🥦') { queimou[j.i] = true; pts[j.i] = Math.max(0, pts[j.i] - 1); a.querySelector('.aviso').textContent = 'Era brócolis! −1'; a.querySelector('.aviso').className = 'msg ruim aviso'; som.ruim(); vibra(80); return; }
+              estado = 'fim'; pts[j.i]++; som.bom(); pisca(j);
+              todos(k => { const av = k.area.querySelector('.aviso'); av.textContent = k === j ? 'Você foi o mais rápido! +1' : j.cor.nome + ' foi mais rápido'; av.className = 'msg aviso ' + (k === j ? 'bom' : 'ruim'); });
+              espera(1300, proxima);
+            });
+          });
+          espera(1600 + Math.random() * 2800, () => {
+            if (estado !== 'espera') return;
+            estado = 'vale'; som.vai();
+            todos(j => { j.area.querySelector('.alvo').textContent = vez; if (!queimou[j.i]) j.area.querySelector('.aviso').textContent = vez === '🍔' ? 'TOQUE!' : 'NÃO TOQUE!'; });
+            espera(vez === '🍔' ? 2500 : 1500, () => { if (estado === 'vale') { estado = 'fim'; todos(j => { if (!queimou[j.i]) j.area.querySelector('.aviso').textContent = vez === '🥦' ? 'Boa, ninguém caiu!' : 'Ninguém tocou...'; }); espera(900, proxima); } });
+          });
+        }
+        proxima();
+      }
+    },
+    {
+      id: 'batata', nome: 'Pega a Batata', icone: '🍟', regra: 'Toque só nas 🍟 (+1). Cebola e brócolis tiram ponto (−1)!',
+      jogar(fim) {
+        const pts = {}, DUR = 13000;
+        todos(j => {
+          pts[j.i] = 0;
+          const a = area(j, '<div class="msg"><span class="n">0</span> 🍟</div><div class="grade">' + '<button type="button"></button>'.repeat(9) + '</div>');
+          a.querySelectorAll('.grade button').forEach((b, k) => aoTocar(b, () => {
+            const it = b.dataset.it; if (!it) return;
+            b.dataset.it = ''; b.textContent = ''; b.classList.remove('cheio');
+            if (it === '🍟') { pts[j.i]++; som.toque(); } else { pts[j.i] = Math.max(0, pts[j.i] - 1); som.ruim(); vibra(60); }
+            a.querySelector('.n').textContent = pts[j.i];
+          }));
+        });
+        // a mesma sequência aparece para todos: justo
+        let rodando = true;
+        function soltar() {
+          if (!rodando) return;
+          const cel = Math.floor(Math.random() * 9), it = Math.random() < 0.7 ? '🍟' : sorteio(['🧅', '🥦']);
+          todos(j => { const b = j.area.querySelectorAll('.grade button')[cel]; b.dataset.it = it; b.textContent = it; b.classList.add('cheio'); espera(950, () => { if (b.dataset.it === it) { b.dataset.it = ''; b.textContent = ''; b.classList.remove('cheio'); } }); });
+          espera(420 + Math.random() * 260, soltar);
+        }
+        soltar();
+        espera(DUR, () => { rodando = false; fim(pts); });
+      }
+    },
+    {
+      id: 'lanche', nome: 'Monte o Lanche', icone: '🍔', regra: 'Toque os ingredientes na ordem do pedido. Errou, recomeça!',
+      jogar(fim) {
+        const ING = ['🍞', '🥩', '🧀', '🥓', '🥬', '🍅'], pts = {}, TOTAL = 3; let n = 0;
+        todos(j => { pts[j.i] = 0; });
+        function proximo() {
+          if (n >= TOTAL) return fim(pts);
+          n++;
+          const ped = ['🍞'].concat(embaralhar(ING.slice(1)).slice(0, 3)).concat(['🍞']);
+          let fechado = false;
+          espera(18000, () => { if (fechado) return; fechado = true; todos(q => { const av = q.area.querySelector('.aviso'); av.textContent = 'Tempo esgotado!'; av.className = 'msg aviso ruim'; }); espera(1200, proximo); });
+          todos(j => {
+            let pos = 0;
+            const a = area(j, '<div class="msg" style="opacity:.75">Pedido ' + n + ' de ' + TOTAL + '</div><div class="pedido">' + ped.map(p => '<span>' + p + '</span>').join('') + '</div><div class="teclas">' + ING.map(p => '<button type="button">' + p + '</button>').join('') + '</div><div class="msg aviso"></div>');
+            const casas = a.querySelectorAll('.pedido span');
+            a.querySelectorAll('.teclas button').forEach((b, k) => aoTocar(b, () => {
+              if (fechado) return;
+              if (ING[k] === ped[pos]) { casas[pos].classList.add('ok'); pos++; som.toque(); if (pos === ped.length) {
+                fechado = true; pts[j.i]++; som.bom(); pisca(j);
+                todos(q => { const av = q.area.querySelector('.aviso'); av.textContent = q === j ? 'Lanche pronto! +1' : j.cor.nome + ' montou primeiro'; av.className = 'msg aviso ' + (q === j ? 'bom' : 'ruim'); });
+                espera(1300, proximo);
+              } }
+              else { pos = 0; casas.forEach(c => c.classList.remove('ok')); som.ruim(); vibra(60); }
+            }));
+          });
+        }
+        proximo();
+      }
+    },
+    {
+      id: 'quantos', nome: 'Quantos Tem?', icone: '🔢', regra: 'Conte rapidinho e toque no número certo. Errou, fica de fora da pergunta!',
+      jogar(fim) {
+        const pts = {}, TOTAL = 4; let n = 0;
+        todos(j => { pts[j.i] = 0; });
+        function proxima() {
+          if (n >= TOTAL) return fim(pts);
+          n++;
+          const em = sorteio(['🍟', '🍔', '🥤', '🍺', '🌭']), k = 5 + Math.floor(Math.random() * 9);
+          const lugares = []; for (let t = 0; lugares.length < k && t < 400; t++) { const x = 8 + Math.random() * 84, y = 12 + Math.random() * 76; if (lugares.every(p => Math.hypot(p[0] - x, (p[1] - y) * 0.6) > 11)) lugares.push([x, y]); }
+          const certo = lugares.length, ops = embaralhar([certo, certo + sorteio([1, 2]), certo - sorteio([1, 2])]);
+          let fechado = false; const fora = {};
+          espera(12000, () => { if (fechado) return; fechado = true; todos(z => { const av = z.area.querySelector('.aviso'); av.textContent = 'Tempo! Eram ' + certo; av.className = 'msg aviso'; }); espera(1400, proxima); });
+          todos(j => {
+            const a = area(j, '<div class="msg" style="opacity:.75">' + n + ' de ' + TOTAL + ': quantos ' + em + '?</div><div class="campo">' + lugares.map(p => '<span style="left:' + p[0] + '%;top:' + p[1] + '%">' + em + '</span>').join('') + '</div><div class="opcoes">' + ops.map(o => '<button type="button">' + o + '</button>').join('') + '</div><div class="msg aviso"></div>');
+            a.querySelectorAll('.opcoes button').forEach((b, q) => aoTocar(b, () => {
+              if (fechado || fora[j.i]) return;
+              if (ops[q] === certo) {
+                fechado = true; pts[j.i]++; som.bom(); pisca(j);
+                todos(z => { const av = z.area.querySelector('.aviso'); av.textContent = z === j ? 'Certo, eram ' + certo + '! +1' : j.cor.nome + ' acertou: eram ' + certo; av.className = 'msg aviso ' + (z === j ? 'bom' : 'ruim'); });
+                espera(1500, proxima);
+              } else {
+                fora[j.i] = true; b.classList.add('errou'); som.ruim(); vibra(60);
+                a.querySelector('.aviso').textContent = 'Errou! Fora desta.'; a.querySelector('.aviso').className = 'msg ruim aviso';
+                if (Object.keys(fora).length >= N) { fechado = true; todos(z => { const av = z.area.querySelector('.aviso'); av.textContent = 'Eram ' + certo + '!'; }); espera(1500, proxima); }
+              }
+            }));
+          });
+        }
+        proxima();
+      }
+    }
+  ];
+
+  /* ---------- Rodadas ---------- */
+  function iniciarPartida() {
+    initAudio(); limparTimers();
+    montarMesa(); pintarPts();
+    ordem = embaralhar(MINIJOGOS); rodada = 0; jogando = false;
+    $('start').hidden = true; $('fim').hidden = true; $('sair').hidden = false;
+    conta('partida-arena', 'Partida: Arena da Mesa (' + N + ' jogadores)');
+    apresentar();
+  }
+  function apresentar() {
+    const mj = ordem[rodada]; jogando = false;
+    centro((rodada + 1) + '/' + ordem.length); som.rodada();
+    todos(j => area(j, '<div class="grande emo">' + mj.icone + '</div><div class="titulo">' + mj.nome + '</div><div class="regra">' + mj.regra + '</div><div class="msg cont" style="color:rgb(var(--c))">Prepare-se...</div>'));
+    let c = 3;
+    espera(2600, function contar() {
+      if (c === 0) { centro((rodada + 1) + '/' + ordem.length); jogando = true; som.vai(); mj.jogar(fimRodada); return; }
+      todos(j => { const el = j.area.querySelector('.cont'); if (el) { el.textContent = c; el.className = 'grande cont'; } });
+      som.bip(); c--; espera(750, contar);
+    });
+  }
+  function fimRodada(placar) {
+    if (!jogando) return;
+    jogando = false; limparTimers();
+    // classifica: 1º lugar +3, 2º +1 (empate divide o mesmo lugar)
+    const lista = J.map(j => ({ j, v: placar[j.i] || 0 })).sort((a, b) => b.v - a.v);
+    const valores = [...new Set(lista.map(x => x.v))];
+    lista.forEach(x => { const lugar = valores.indexOf(x.v); x.lugar = lugar; x.ganho = x.v === 0 && lugar > 0 ? 0 : lugar === 0 ? 3 : lugar === 1 && N > 2 ? 1 : 0; if (valores.length === 1) x.ganho = x.v > 0 ? 1 : 0; x.j.pts += x.ganho; });
+    pintarPts();
+    lista.forEach(x => {
+      const ganhou = x.lugar === 0 && valores.length > 1;
+      area(x.j, '<div class="lugar" style="color:' + (ganhou ? '#ffd63d' : '#fff') + '">' + (valores.length === 1 ? 'EMPATE!' : ganhou ? '🥇 VENCEU!' : (x.lugar + 1) + 'º lugar') + '</div><div class="msg ' + (x.ganho ? 'bom' : '') + '">' + (x.ganho ? '+' + x.ganho + (x.ganho === 1 ? ' ponto' : ' pontos') : 'sem pontos') + '</div><div class="regra">Total: ' + x.j.pts + (x.j.pts === 1 ? ' ponto' : ' pontos') + '</div>');
+      if (ganhou) pisca(x.j);
+    });
+    som.bom();
+    rodada++;
+    espera(2800, () => { if (rodada < ordem.length) apresentar(); else final(); });
+  }
+  function final() {
+    centro(''); $('sair').hidden = true; jogando = false;
+    const lista = J.slice().sort((a, b) => b.pts - a.pts), topo = lista[0].pts, campeoes = lista.filter(j => j.pts === topo);
+    $('fim-titulo').innerHTML = campeoes.length > 1 ? 'Empate no <span>topo!</span>' : 'Campeão: <span style="background:none;-webkit-text-fill-color:' + campeoes[0].cor.hex + ';color:' + campeoes[0].cor.hex + '">' + campeoes[0].cor.nome + '</span>';
+    $('fim-placar').innerHTML = lista.map((j, k) => '<li style="--c:' + j.cor.rgb + '"><span>' + (j.pts === topo ? '🏆 ' : (k + 1) + 'º ') + j.cor.nome + '</span><b>' + j.pts + '</b></li>').join('');
+    todos(j => area(j, '<div class="grande emo">' + (j.pts === topo ? '🏆' : '👏') + '</div><div class="lugar">' + (j.pts === topo ? 'CAMPEÃO!' : 'Boa!') + '</div>'));
+    som.campeao(); confete();
+    espera(1800, () => { $('fim').hidden = false; });
+    conta('arena-fim', 'Arena: fim de partida');
+  }
+  function sair() { limparTimers(); jogando = false; centro(''); $('sair').hidden = true; $('fim').hidden = true; $('start').hidden = false; }
+
+  /* ---------- Confete ---------- */
+  function confete() {
+    const cv = $('confete'), cx = cv.getContext('2d'); cv.width = innerWidth; cv.height = innerHeight;
+    const cs = ['#ffd63d', '#ff4da6', '#40c4ff', '#3ddc84', '#ff8a3d'], ps = [];
+    for (let k = 0; k < 150; k++) ps.push({ x: innerWidth / 2, y: innerHeight / 2, vx: (Math.random() - .5) * 16, vy: (Math.random() - .5) * 16, r: Math.random() * 6, c: cs[k % 5], t: 0 });
+    (function q() { cx.clearRect(0, 0, cv.width, cv.height); let vivo = false; ps.forEach(p => { p.t += 1 / 60; p.vy += .25; p.x += p.vx; p.y += p.vy; p.r += .2; if (p.t < 3) { vivo = true; cx.save(); cx.translate(p.x, p.y); cx.rotate(p.r); cx.globalAlpha = 1 - p.t / 3; cx.fillStyle = p.c; cx.fillRect(-4, -6, 8, 12); cx.restore(); } }); if (vivo) requestAnimationFrame(q); else cx.clearRect(0, 0, cv.width, cv.height); })();
+  }
+
+  /* ---------- Botões ---------- */
+  $('qtd').querySelectorAll('button').forEach(b => b.addEventListener('click', () => { N = +b.dataset.n; $('qtd').querySelectorAll('button').forEach(o => o.setAttribute('aria-pressed', String(o === b))); }));
+  $('play').addEventListener('click', iniciarPartida);
+  $('again').addEventListener('click', iniciarPartida);
+  $('sair').addEventListener('click', sair);
+  window.__arena = { J: () => J, rodada: () => rodada, ordem: () => ordem.map(m => m.id) };
+  montarMesa();
+})();
+</script>
+<script>
+(function () {
+  var lastEnd = 0;
+  document.addEventListener('touchend', function (e) { var now = Date.now(); var onControl = e.target && e.target.closest && e.target.closest('button, a'); if (!onControl && now - lastEnd < 350) e.preventDefault(); lastEnd = now; }, { passive: false });
+  document.addEventListener('dblclick', function (e) { e.preventDefault(); }, { passive: false });
+  ['gesturestart', 'gesturechange', 'gestureend'].forEach(function (t) { document.addEventListener(t, function (e) { e.preventDefault(); }, { passive: false }); });
+})();
+</script>
+</body>
+</html>
