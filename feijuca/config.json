@@ -226,6 +226,19 @@
             "btn": "whatsapp"
           }
         ]
+      },
+      {
+        "nome": "Pra Hoje",
+        "capa": "",
+        "itens": [
+          {
+            "midia": "vid/u1795881946402.mov",
+            "prato": "Feijoada completa",
+            "txt": "",
+            "sub": "",
+            "btn": "pedir"
+          }
+        ]
       }
     ]
   },
@@ -289,6 +302,12 @@
       "preco": "",
       "foto": "fotos/pudim.jpg",
       "oculto": false
+    }
+  ],
+  "videos": [
+    {
+      "arq": "vid/u1795881946402.mov",
+      "nome": "enviado em 28/11 13:06"
     }
   ]
 }
