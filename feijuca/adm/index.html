@@ -725,7 +725,7 @@ input[type=date] { font: 600 1.05rem var(--body); color: var(--fg); background: 
     });
     ['pratos', 'chopes', 'sobremesas'].forEach(k => (C[k] || []).forEach(it => { ['nome', 'desc', 'preco', 'selo'].forEach(c => it[c] = (it[c] || '').trim()); if (!it.nome && !erro) erro = 'Tem item sem nome em ' + ({ pratos: 'Destaques', chopes: 'Chopes', sobremesas: 'Sobremesas' }[k]) + '. Preencha ou apague.'; }));
     const S = C.stories || {};
-    [].concat(((S.hoje || {}).itens || []), ...((S.grupos || []).map(g => g.itens || []))).forEach(st => { if (!st.midia && !erro) erro = 'Tem story sem foto ou vídeo na aba Stories. Escolha a mídia ou apague.'; if (!st.prato && !(st.txt || '').trim() && !erro) erro = 'Tem story sem prato e sem texto na aba Stories.'; });
+    [].concat(((S.hoje || {}).itens || []), ...((S.grupos || []).map(g => g.itens || []))).forEach(st => { if (!st.midia && !erro) erro = 'Tem um story sem foto ou vídeo na aba Stories (quadro vazio). Escolha a mídia ou toque em Apagar nele.'; });
     (S.grupos || []).forEach(g => { g.nome = (g.nome || '').trim(); if (!g.nome && !erro) erro = 'Tem bolinha sem nome na aba Stories.'; });
     if (S.hoje && S.hoje.ativo && !(S.hoje.itens || []).length && !erro) erro = 'O story do dia está ligado mas não tem nenhum story.';
     const N = C.novidade || {};
