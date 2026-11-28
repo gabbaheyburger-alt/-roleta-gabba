@@ -332,21 +332,44 @@ input[type=date] { font: 600 1.05rem var(--body); color: var(--fg); background: 
   function enviaVideo(story) { alvoVideo = story; const inp = $('arquivo-video'); inp.value = ''; inp.click(); }
   const lerUrl = f => new Promise((ok, erro) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = erro; r.readAsDataURL(f); });
   function infoVideo(file) {
-    // duração e uma foto de espera (primeiro quadro) tirada do próprio vídeo
-    return new Promise((ok, erro) => {
+    // duração e uma foto de espera tirada do próprio vídeo.
+    // No iPhone o vídeo só carrega tocando: toca escondido e sem som por um instante. Nunca espera mais de 8 s.
+    return new Promise((ok) => {
       const v = document.createElement('video'), url = URL.createObjectURL(file);
-      v.muted = true; v.playsInline = true; v.preload = 'auto'; v.setAttribute('playsinline', '');
-      v.onerror = () => { URL.revokeObjectURL(url); erro(new Error('formato')); };
-      v.onloadedmetadata = () => { v.currentTime = Math.min(0.5, (v.duration || 1) / 2); };
-      v.onseeked = () => {
-        const s = Math.min(1, 720 / Math.max(v.videoWidth || 720, v.videoHeight || 1280));
-        const c = document.createElement('canvas'); c.width = Math.round((v.videoWidth || 720) * s); c.height = Math.round((v.videoHeight || 1280) * s);
+      let fim = false, dur = NaN;
+      v.muted = true; v.playsInline = true; v.preload = 'auto';
+      v.setAttribute('muted', ''); v.setAttribute('playsinline', '');
+      Object.assign(v.style, { position: 'fixed', left: '-10px', top: '0', width: '2px', height: '2px', opacity: '0', pointerEvents: 'none' });
+      document.body.append(v);
+      const termina = (poster) => {
+        if (fim) return; fim = true;
+        try { v.pause(); } catch (e) {}
+        v.remove(); URL.revokeObjectURL(url);
+        ok({ dur: dur, poster: poster || posterPadrao() });
+      };
+      const tira = () => {
+        if (fim || !v.videoWidth) return;
+        const s = Math.min(1, 720 / Math.max(v.videoWidth, v.videoHeight));
+        const c = document.createElement('canvas'); c.width = Math.round(v.videoWidth * s); c.height = Math.round(v.videoHeight * s);
         let poster = '';
         try { c.getContext('2d').drawImage(v, 0, 0, c.width, c.height); poster = c.toDataURL('image/jpeg', 0.8); } catch (e) {}
-        URL.revokeObjectURL(url); ok({ dur: v.duration, poster: poster });
+        termina(poster);
       };
-      v.src = url;
+      v.addEventListener('loadedmetadata', () => { dur = v.duration; const t = v.play(); if (t && t.catch) t.catch(() => {}); });
+      v.addEventListener('timeupdate', () => { if (v.currentTime > 0.25) tira(); });
+      v.addEventListener('seeked', tira);
+      v.addEventListener('error', () => termina(''));
+      setTimeout(() => { if (!fim) { if (v.videoWidth) tira(); else termina(''); } }, 8000);
+      v.src = url; v.load();
     });
+  }
+  function posterPadrao() {
+    // foto de espera simples quando o celular não deixa tirar um quadro do vídeo
+    const c = document.createElement('canvas'); c.width = 405; c.height = 720; const g = c.getContext('2d');
+    g.fillStyle = '#142319'; g.fillRect(0, 0, 405, 720);
+    g.fillStyle = '#eab14a'; g.beginPath(); g.moveTo(170, 310); g.lineTo(250, 360); g.lineTo(170, 410); g.closePath(); g.fill();
+    g.font = '600 28px Barlow, sans-serif'; g.textAlign = 'center'; g.fillText('Feijuca do Gabba', 202, 470);
+    return c.toDataURL('image/jpeg', 0.8);
   }
   async function ehHevc(file) {
     // procura a marca do formato HEVC (hvc1/hev1) no arquivo: alguns Android não tocam
@@ -362,9 +385,8 @@ input[type=date] { font: 600 1.05rem var(--body); color: var(--fg); background: 
     if (!f || !st) return;
     if (f.size > MAX_MB * 1048576) { msg($('msg'), 'Esse vídeo tem ' + Math.round(f.size / 1048576) + ' MB. O limite é ' + MAX_MB + ' MB: corte no app Fotos (Editar) ou me mande pelo Claude.', 'err'); return; }
     msg($('msg'), 'Conferindo o vídeo…');
-    let info;
-    try { info = await infoVideo(f); } catch (e) { msg($('msg'), 'Não consegui abrir esse vídeo. Tente outro ou me mande pelo Claude.', 'err'); return; }
-    if (info.dur > MAX_SEG + 0.5) { msg($('msg'), 'Esse vídeo tem ' + Math.round(info.dur) + ' segundos. O limite é ' + MAX_SEG + ': corte no app Fotos (Editar → arrastar as pontas) e envie de novo.', 'err'); return; }
+    const info = await infoVideo(f);
+    if (isFinite(info.dur) && info.dur > MAX_SEG + 0.5) { msg($('msg'), 'Esse vídeo tem ' + Math.round(info.dur) + ' segundos. O limite é ' + MAX_SEG + ': corte no app Fotos (Editar → arrastar as pontas) e envie de novo.', 'err'); return; }
     if (await ehHevc(f) && !confirm('Este vídeo está no formato do iPhone (HEVC). Ele toca em iPhone, mas pode NÃO tocar em alguns celulares Android.\n\nPara evitar: Ajustes → Câmera → Formatos → "Mais compatível" e grave de novo, ou me mande o vídeo pelo Claude.\n\nEnviar mesmo assim?')) { msg($('msg'), 'Envio cancelado.'); return; }
     const ext = /quicktime|\.mov$/i.test(f.type + ' ' + f.name) ? 'mov' : 'mp4', base = 'vid/u' + Date.now();
     msg($('msg'), 'Enviando o vídeo (' + Math.round(f.size / 1048576) + ' MB)… pode levar até 1 minuto. Não feche esta tela.');
