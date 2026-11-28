@@ -16,6 +16,8 @@
 
 (function () {
   var CODIGO = 'gabbajogos';
+  // "Não contar minhas visitas": ligado pelo adm, vale para este celular em todas as páginas do site
+  try { if (localStorage.getItem('skipgc') === 't') CODIGO = ''; } catch (e) {}
 
   var fila = [];
   window.gabbaConta = function (nome, titulo) {

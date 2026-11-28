@@ -253,6 +253,12 @@ input[type=date] { font: 600 1.05rem var(--body); color: var(--fg); background: 
         </section>
       </div>
 
+      <section class="card">
+        <h2>Contador de visitas</h2>
+        <p class="note" id="cont-status"></p>
+        <button class="mini" type="button" id="cont-btn" style="align-self:flex-start"></button>
+        <p class="note">Vale só para este celular e este navegador. Faça uma vez em cada celular seu (e no Safari, se também abrir a bio por lá).</p>
+      </section>
       <div class="row">
         <a class="ghost" href="../" target="_blank" rel="noopener">Abrir a bio</a>
         <button class="ghost" id="sair" type="button">Desconectar este celular</button>
@@ -676,6 +682,16 @@ input[type=date] { font: 600 1.05rem var(--body); color: var(--fg); background: 
   $('fd-txt').addEventListener('input', e => { C.fidelidade.texto = e.target.value; marca(); });
   $('fd-valor').addEventListener('input', e => { C.fidelidade.valor = +e.target.value.replace(/\D/g, '') || ''; marca(); });
   $('fd-val').addEventListener('input', e => { C.fidelidade.validade = +e.target.value.replace(/\D/g, '') || ''; marca(); });
+  function contador() {
+    let fora = false; try { fora = localStorage.getItem('skipgc') === 't'; } catch (e) {}
+    $('cont-status').textContent = fora ? '✅ Suas visitas NÃO entram no relatório (este celular).' : 'Suas visitas a partir deste celular estão entrando no relatório.';
+    $('cont-btn').textContent = fora ? 'Voltar a contar minhas visitas' : '🚫 Não contar minhas visitas';
+  }
+  $('cont-btn').addEventListener('click', () => {
+    try { if (localStorage.getItem('skipgc') === 't') localStorage.removeItem('skipgc'); else localStorage.setItem('skipgc', 't'); } catch (e) { msg($('msg'), 'Este navegador não deixou guardar a escolha.', 'err'); }
+    contador();
+  });
+  contador();
   function preenche() {
     $('fechado').checked = C.fechadoEm === hojeStr();
     $('aviso').value = C.aviso || '';
