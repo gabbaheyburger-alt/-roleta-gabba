@@ -65,6 +65,7 @@ input[type=date] { font: 600 1.05rem var(--body); color: var(--fg); background: 
 .chips2 { display: flex; flex-wrap: wrap; gap: 8px; }
 .chips2 button { border: 1px solid var(--line); background: var(--bg); color: var(--fg); border-radius: 999px; padding: 9px 13px; font: 700 .92rem var(--body); cursor: pointer; }
 .chips2 button[aria-pressed="true"] { background: var(--laranja); border-color: var(--laranja); color: var(--bg); }
+.mini.env-video { align-self: flex-start; border-color: var(--laranja); color: var(--laranja); background: rgba(234,177,74,.1); }
 .fotos2 { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
 .fotos2 > div { display: flex; flex-direction: column; gap: 4px; }
 .fotos2 small { color: var(--muted); font-weight: 700; font-size: .8rem; }
@@ -184,7 +185,7 @@ input[type=date] { font: 600 1.05rem var(--body); color: var(--fg); background: 
           <div id="hoje-itens" style="display:flex;flex-direction:column;gap:10px"></div>
           <button class="add" type="button" id="hoje-add">+ Story no "Hoje"</button>
         </section>
-        <p class="note" style="margin-top:16px">Vídeo novo: em Mídia, escolha <b>📹 Enviar vídeo do celular</b> (até 20 segundos e 30 MB).</p>
+        <p class="note" style="margin-top:16px">Vídeo novo: toque em <b>📹 Enviar vídeo do celular</b> no story (até 20 segundos e 30 MB).</p>
         <p class="note" style="margin-top:8px">Bolinhas (destaques fixos). Cada bolinha tem seus stories. Escolha um prato para usar o nome, a descrição e o preço do cardápio.</p>
         <div id="grupos" style="display:flex;flex-direction:column;gap:14px;margin-top:12px"></div>
         <button class="add" type="button" id="grupo-add" style="margin-top:12px;width:100%">+ Nova bolinha</button>
@@ -328,7 +329,7 @@ input[type=date] { font: 600 1.05rem var(--body); color: var(--fg); background: 
   const MAX_SEG = 20, MAX_MB = 30;
   function videosEnviados() { return (C.videos || []).map(v => [v.arq, v.nome]); }
   let alvoVideo = null;
-  function enviaVideo(story) { alvoVideo = story; desenhaStories(); $('arquivo-video').value = ''; $('arquivo-video').click(); }
+  function enviaVideo(story) { alvoVideo = story; const inp = $('arquivo-video'); inp.value = ''; inp.click(); }
   const lerUrl = f => new Promise((ok, erro) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = erro; r.readAsDataURL(f); });
   function infoVideo(file) {
     // duração e uma foto de espera (primeiro quadro) tirada do próprio vídeo
@@ -522,11 +523,14 @@ input[type=date] { font: 600 1.05rem var(--body); color: var(--fg); background: 
   function editorStory(lista, i) {
     const s = lista[i];
     const ehVideo = /\.(mp4|mov|m4v)$/i.test(s.midia || '');
-    const midiaSel = sel([['', 'Foto da galeria']].concat(VIDEOS.concat(videosEnviados()).map(([v, t]) => [v, 'Vídeo: ' + t]), [['__novo', '📹 Enviar vídeo do celular…']]), ehVideo ? s.midia : '', v => { if (v === '__novo') { enviaVideo(s); return; } s.midia = v; marca(); desenhaStories(); });
+    const midiaSel = sel([['', 'Foto da galeria']].concat(VIDEOS.concat(videosEnviados()).map(([v, t]) => [v, 'Vídeo: ' + t])), ehVideo ? s.midia : '', v => { s.midia = v; marca(); desenhaStories(); });
     const prev = ehVideo ? el('img', { className: 'prev', src: fotoSrc(s.midia.replace(/\.(mp4|mov|m4v)$/i, '.jpg')), alt: '' }) : fotoBtn(s, 'midia', 'Toque p/ foto');
     const pratos = (C.pratos || []).concat(C.chopes || [], C.sobremesas || []).map(p => [p.nome, p.nome]);
     const pratoSel = sel([['', 'Nenhum (escrever texto)']].concat(pratos), s.prato, v => { s.prato = v; if (v && !s.btn) s.btn = 'pedir'; marca(); desenhaStories(); });
-    const campos = [el('label', {}, ['Mídia', midiaSel]), el('label', {}, ['Prato do cardápio', pratoSel])];
+    // botão próprio: no iPhone a galeria só abre com um toque direto (não pela lista)
+    const bv = el('button', { type: 'button', className: 'mini env-video', textContent: '📹 Enviar vídeo do celular' });
+    bv.addEventListener('click', () => enviaVideo(s));
+    const campos = [el('label', {}, ['Mídia', midiaSel]), bv, el('label', {}, ['Prato do cardápio', pratoSel])];
     if (!s.prato) { campos.push(campo('Texto grande', s, 'txt', 'Ex.: Hoje tem Feijuca!')); campos.push(campo('Texto menor', s, 'sub', 'Ex.: Das 11h às 15h')); }
     campos.push(el('label', {}, ['Botão', sel(BOTOES, s.btn, v => { s.btn = v; marca(); })]));
     const sobe = el('button', { type: 'button', className: 'mini', textContent: '↑', disabled: i === 0 }); sobe.addEventListener('click', () => { [lista[i - 1], lista[i]] = [lista[i], lista[i - 1]]; marca(); desenhaStories(); });
