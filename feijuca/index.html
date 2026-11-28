@@ -219,9 +219,9 @@ body.travado { overflow: hidden; }
 .teste-faixa { position: fixed; left: 0; right: 0; top: 0; z-index: 70; background: #ffe7b0; color: #10180f; text-align: center; font: 700 .82rem var(--body); padding: calc(4px + env(safe-area-inset-top)) 10px 4px; }
 
 /* ---------- Como está agora ---------- */
-.mov { display: inline-flex; align-items: center; gap: 6px; font: 700 .8rem var(--label); letter-spacing: .07em; text-transform: uppercase; padding: 5px 11px; border-radius: 999px; background: rgba(12,22,16,.6); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); border: 1px solid rgba(247,240,226,.2); }
-.mov i { width: 8px; height: 8px; border-radius: 50%; }
-.mov.livre i { background: #74d68a; } .mov.enchendo i { background: #eab14a; } .mov.cheia i { background: #ff5a4f; }
+.mov { display: inline-flex; align-items: center; gap: 7px; font: 700 .82rem var(--label); letter-spacing: .07em; text-transform: uppercase; padding: 6px 12px; border-radius: 999px; color: #fff; box-shadow: 0 4px 14px rgba(0,0,0,.35); }
+.mov i { width: 8px; height: 8px; border-radius: 50%; background: #fff; }
+.mov.livre { background: #1f9d55; } .mov.enchendo { background: #f07a1a; color: #fff; } .mov.enchendo i { background: #fff; } .mov.cheia { background: #d63a2f; }
 .acabando-faixa { margin: -4px 0 12px; display: inline-flex; align-items: center; gap: 8px; background: #c4331f; color: #fff; font: 700 .9rem var(--body); padding: 7px 12px; border-radius: 10px; animation: pisca 2.4s ease-in-out infinite; }
 @keyframes pisca { 50% { box-shadow: 0 0 0 6px rgba(196,51,31,.25); } }
 .item .tag-acab { position: absolute; right: 10px; top: 10px; background: #c4331f; color: #fff; font: 700 .72rem var(--label); letter-spacing: .1em; text-transform: uppercase; padding: 4px 9px; border-radius: 999px; }
