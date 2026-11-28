@@ -177,16 +177,17 @@ input[type=date] { font: 600 1.05rem var(--body); color: var(--fg); background: 
       </div>
 
       <div data-painel="stories" hidden>
-        <section class="card">
-          <h2>Story do dia</h2>
-          <p class="note">Aparece com um aro colorido na logo e a etiqueta "HOJE". Some sozinho na hora marcada.</p>
-          <label class="switch"><span>Story do dia ligado</span><input type="checkbox" id="hoje-ativo"></label>
+        <section class="card" style="border-color:var(--laranja)">
+          <h2>🔥 Pra Hoje (story do dia)</h2>
+          <p class="note">É o primeiro da fileira, maior, com aro girando e brilho, e também acende a logo com "HOJE". Coloque aqui o que é do dia. Ele some sozinho na hora marcada.</p>
+          <label class="switch"><span>Pra Hoje ligado</span><input type="checkbox" id="hoje-ativo"></label>
+          <button class="mini" type="button" id="hoje-renova" style="align-self:flex-start;border-color:var(--laranja);color:var(--laranja)">⏱ Vale até o fim de hoje</button>
           <div class="dois"><label>Some no dia <input type="date" id="hoje-dia"></label><label>às <input type="time" id="hoje-hora"></label></div>
           <div id="hoje-itens" style="display:flex;flex-direction:column;gap:10px"></div>
-          <button class="add" type="button" id="hoje-add">+ Story no "Hoje"</button>
+          <button class="add" type="button" id="hoje-add">+ Story no "Pra Hoje"</button>
         </section>
         <p class="note" style="margin-top:16px">Vídeo novo: toque em <b>📹 Enviar vídeo do celular</b> no story (até 20 segundos e 30 MB).</p>
-        <p class="note" style="margin-top:8px">Bolinhas (destaques fixos). Cada bolinha tem seus stories. Escolha um prato para usar o nome, a descrição e o preço do cardápio.</p>
+        <p class="note" style="margin-top:8px">Bolinhas (destaques fixos, ficam sempre). Para o que é do dia, use o <b>Pra Hoje</b> lá em cima, não uma bolinha nova. Cada bolinha tem seus stories. Escolha um prato para usar o nome, a descrição e o preço do cardápio.</p>
         <div id="grupos" style="display:flex;flex-direction:column;gap:14px;margin-top:12px"></div>
         <button class="add" type="button" id="grupo-add" style="margin-top:12px;width:100%">+ Nova bolinha</button>
       </div>
@@ -585,6 +586,7 @@ input[type=date] { font: 600 1.05rem var(--body); color: var(--fg); background: 
   $('hoje-ativo').addEventListener('change', e => { C.stories.hoje.ativo = e.target.checked; marca(); });
   const ateMuda = () => { const d = $('hoje-dia').value, h = $('hoje-hora').value || '23:59'; C.stories.hoje.ate = d ? d + 'T' + h : ''; marca(); };
   $('hoje-dia').addEventListener('change', ateMuda); $('hoje-hora').addEventListener('change', ateMuda);
+  $('hoje-renova').addEventListener('click', () => { const H = C.stories.hoje; H.ativo = true; H.ate = hojeStr() + 'T23:59'; marca(); desenhaStories(); msg($('msg'), 'Pra Hoje vale até 23h59 de hoje. Toque em Salvar.'); });
   $('hoje-add').addEventListener('click', () => { const H = C.stories.hoje; H.itens.push(novoStory()); if (!H.ativo) { H.ativo = true; } if (!H.ate) { H.ate = hojeStr() + 'T23:59'; } marca(); desenhaStories(); });
   $('grupo-add').addEventListener('click', () => { C.stories.grupos.push({ nome: '', capa: '', itens: [novoStory()] }); marca(); desenhaStories(); const cs = $('grupos').querySelectorAll('section'); const u = cs[cs.length - 1]; if (u) { u.scrollIntoView({ behavior: 'smooth', block: 'start' }); const inp = u.querySelector('input[type=text]'); if (inp) inp.focus(); } });
 

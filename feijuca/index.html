@@ -184,6 +184,17 @@ body.travado { overflow: hidden; }
 .st-bola.visto .aro { background: #3a5244; }
 .st-bola .aro img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid var(--bg); display: block; }
 .st-bola span { font: 600 .8rem var(--body); max-width: 74px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* "Pra Hoje": story do dia, primeiro, maior, com aro girando e brilho */
+.stories { align-items: flex-end; padding-top: 30px !important; padding-bottom: 8px !important; }
+.st-bola.hoje { width: 96px; position: relative; }
+.st-bola .aro { display: block; flex-shrink: 0; box-sizing: border-box; }
+.st-bola.hoje .aro { width: 92px; height: 92px; min-height: 92px; max-width: none; overflow: visible; padding: 4px; position: relative; background: none; isolation: isolate; animation: brilho 2.2s ease-in-out infinite; }
+.st-bola.hoje .aro::before { content: ''; position: absolute; inset: 0; border-radius: 50%; z-index: -1; background: conic-gradient(from 0deg, #ffe08a, #eab14a, #ff7a3d, #e0336b, #ffe08a); animation: gira 3s linear infinite; }
+.st-bola.hoje .aro img { position: relative; }
+.st-bola.hoje .selo-hoje { position: absolute; left: 50%; top: 80px; transform: translateX(-50%); background: #e0336b; color: #fff; font: 700 .66rem var(--label); letter-spacing: .14em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; border: 2px solid var(--bg); max-width: none; overflow: visible; }
+.st-bola.hoje > span:last-child { color: var(--laranja); font-weight: 700; max-width: 96px; margin-top: 4px; }
+@keyframes brilho { 0%, 100% { box-shadow: 0 0 0 0 rgba(234,177,74,.0), 0 0 14px rgba(234,177,74,.35); } 50% { box-shadow: 0 0 0 4px rgba(234,177,74,.18), 0 0 26px rgba(224,51,107,.55); } }
+@media (prefers-reduced-motion: reduce) { .st-bola.hoje .aro, .st-bola.hoje .aro::before { animation: none; } }
 .story { position: fixed; inset: 0; z-index: 90; background: #000; display: flex; align-items: center; justify-content: center; touch-action: none; user-select: none; -webkit-user-select: none; }
 .story .tela-st { position: relative; width: 100%; height: 100%; max-width: 480px; overflow: hidden; background: #000; }
 @media (min-width: 520px) { .story .tela-st { height: min(100%, 860px); border-radius: 16px; } }
@@ -811,7 +822,7 @@ body.travado { overflow: hidden; }
     var h = (C.stories || {}).hoje; if (!h || !h.ativo || !(h.itens || []).length) return null;
     if (h.ate && agoraLocal() >= h.ate) return null;
     var itens = h.itens.filter(function (s) { return s && s.midia; }).map(story);
-    return itens.length ? { nome: 'Hoje', capa: capaDe(h), itens: itens } : null;
+    return itens.length ? { nome: h.nome || 'Pra Hoje', capa: capaDe(h), itens: itens } : null;
   }
   var G = [], gi = 0, si = 0, timer = null, t0 = 0, dur = 5000, pausa = false, passado = 0, vistos = {};
   var HOJE_L = [];
@@ -820,7 +831,14 @@ body.travado { overflow: hidden; }
     HOJE_L = h ? [h] : [];
     lg.classList.toggle('tem-story', !!h); lg.querySelector('.novo').hidden = !h;
     lg.tabIndex = h ? 0 : -1; lg.setAttribute('aria-label', h ? 'Ver o story de hoje' : 'Feijuca do Gabba');
-    G = grupos(); var box = $('stories'); box.textContent = ''; box.hidden = !G.length;
+    G = grupos(); var box = $('stories'); box.textContent = ''; box.hidden = !G.length && !h;
+    if (h) {
+      var bh = document.createElement('button'); bh.type = 'button'; bh.className = 'st-bola hoje';
+      bh.setAttribute('aria-label', 'Ver o story de hoje: ' + h.nome);
+      bh.innerHTML = '<span class="aro"><img alt=""></span><span class="selo-hoje">Hoje</span><span></span>';
+      poeImg(bh.querySelector('img'), h.capa, 'mini'); bh.lastChild.textContent = h.nome;
+      bh.addEventListener('click', function () { abreStory(HOJE_L, 0); }); box.append(bh);
+    }
     G.forEach(function (g, k) {
       var b = document.createElement('button'); b.type = 'button'; b.className = 'st-bola' + (vistos[k] ? ' visto' : '');
       b.innerHTML = '<span class="aro"><img alt=""></span><span></span>';

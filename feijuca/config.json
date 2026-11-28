@@ -119,20 +119,14 @@
   "stories": {
     "hoje": {
       "ativo": true,
-      "ate": "2026-11-01T15:00",
+      "nome": "Pra Hoje",
+      "ate": "2026-11-28T23:59",
       "itens": [
         {
-          "midia": "fotos/feijoada-completa-2.jpg",
-          "prato": "",
-          "txt": "Hoje tem Feijuca!",
-          "sub": "Das 11h às 15h · Av. João Lopes Meireles, 1792",
-          "btn": "mapa"
-        },
-        {
-          "midia": "vid/feijoada-completa.mp4",
-          "prato": "",
-          "txt": "Saindo quentinha",
-          "sub": "Se a Feijuca é boa, imagina a resenha.",
+          "midia": "vid/u1795881946402.mp4",
+          "prato": "Feijoada completa",
+          "txt": "",
+          "sub": "",
           "btn": "pedir"
         }
       ]
@@ -226,19 +220,6 @@
             "btn": "whatsapp"
           }
         ]
-      },
-      {
-        "nome": "Pra Hoje",
-        "capa": "",
-        "itens": [
-          {
-            "midia": "vid/u1795881946402.mov",
-            "prato": "Feijoada completa",
-            "txt": "",
-            "sub": "",
-            "btn": "pedir"
-          }
-        ]
       }
     ]
   },
@@ -306,7 +287,7 @@
   ],
   "videos": [
     {
-      "arq": "vid/u1795881946402.mov",
+      "arq": "vid/u1795881946402.mp4",
       "nome": "enviado em 28/11 13:06"
     }
   ]
