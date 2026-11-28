@@ -659,7 +659,7 @@ body.travado { overflow: hidden; }
       q.append(trilho(fotos, it.nome, false));
       var tr = q.querySelector('.trilho'); requestAnimationFrame(function () { tr.scrollLeft = (inicio || 0) * tr.clientWidth; });
     } else
-    if (video) { li.hidden = true; lv.hidden = false; lv.poster = src(video.replace(/\.mp4$/, '.jpg')); lv.src = src(video); lv.muted = true; var pl = lv.play(); if (pl && pl.catch) pl.catch(function () {}); }
+    if (video) { li.hidden = true; lv.hidden = false; lv.poster = src(video.replace(/\.(mp4|mov|m4v)$/i, '.jpg')); lv.src = src(video); lv.muted = true; var pl = lv.play(); if (pl && pl.catch) pl.catch(function () {}); }
     else if (video) {} else { lv.pause(); lv.removeAttribute('src'); lv.hidden = true; li.hidden = false; li.src = src(it.foto); li.alt = it.nome || ''; }
     $('luz-nome').textContent = it.nome || '';
     $('luz-desc').textContent = it.desc || ''; $('luz-desc').hidden = !it.desc;
@@ -738,7 +738,7 @@ body.travado { overflow: hidden; }
           v.muted = true; v.playsInline = true; v.loop = vids.length === 1; v.autoplay = k === 0;
           v.setAttribute('muted', ''); v.setAttribute('playsinline', ''); v.setAttribute('aria-hidden', 'true');
           v.preload = k === 0 ? 'auto' : 'metadata';
-          v.poster = src(u.replace(/\.mp4$/, '.jpg'));
+          v.poster = src(u.replace(/\.(mp4|mov|m4v)$/i, '.jpg'));
           v.className = 'camada' + (k === 0 ? ' on' : '');
           v.src = src(u); f.append(v); return v;
         });
@@ -800,7 +800,7 @@ body.travado { overflow: hidden; }
     var link = { pedir: L.pedir, whatsapp: L.whatsapp, mapa: L.mapa, cardapio: 'cardapio/' }[s.btn] || '';
     return { midia: s.midia, txt: p ? p.nome : (s.txt || ''), sub: p ? (p.desc || '') : (s.sub || ''), preco: p && p.preco ? precoTxt(p.preco) : '', btn: link ? (BTN[s.btn] || '') : '', link: link };
   }
-  function capaDe(g) { var m = g.capa || ((g.itens || [])[0] || {}).midia || ''; return m.replace(/\.mp4$/, '.jpg'); }
+  function capaDe(g) { var m = g.capa || ((g.itens || [])[0] || {}).midia || ''; return m.replace(/\.(mp4|mov|m4v)$/i, '.jpg'); }
   function grupos() {
     return ((C.stories || {}).grupos || []).filter(function (g) { return g && g.nome && (g.itens || []).length; })
       .map(function (g) { return { nome: g.nome, capa: capaDe(g), itens: g.itens.filter(function (s) { return s && s.midia; }).map(story) }; })
@@ -843,9 +843,9 @@ body.travado { overflow: hidden; }
     var btn = $('st-btn'); btn.textContent = s.btn || ''; btn.hidden = !s.btn; btn.href = s.link || '#';
     if (/^cardapio/.test(btn.getAttribute('href'))) btn.removeAttribute('target'); else btn.target = '_blank';
     var m = $('st-midia'); m.textContent = ''; clearInterval(timer); passado = 0; pausa = false;
-    if (/\.mp4$/.test(s.midia)) {
+    if (/\.(mp4|mov|m4v)$/i.test(s.midia)) {
       var v = document.createElement('video'); v.muted = true; v.playsInline = true; v.setAttribute('playsinline', ''); v.autoplay = true;
-      v.poster = src(s.midia.replace(/\.mp4$/, '.jpg')); v.src = src(s.midia); m.append(v); dur = 8000;
+      v.poster = src(s.midia.replace(/\.(mp4|mov|m4v)$/i, '.jpg')); v.src = src(s.midia); m.append(v); dur = 8000;
       v.addEventListener('loadedmetadata', function () { if (v.duration && isFinite(v.duration)) dur = Math.max(3000, v.duration * 1000); });
       v.addEventListener('ended', function () { avanca(); });
       var p = v.play(); if (p && p.catch) p.catch(function () {});
@@ -854,7 +854,7 @@ body.travado { overflow: hidden; }
     timer = setInterval(function () {
       if (pausa) return;
       var f = Math.min(1, (passado + Date.now() - t0) / dur), b = bar.children[si] && bar.children[si].firstChild; if (b) b.style.width = (f * 100) + '%';
-      if (f >= 1 && !/\.mp4$/.test(s.midia)) avanca();
+      if (f >= 1 && !/\.(mp4|mov|m4v)$/i.test(s.midia)) avanca();
     }, 50);
   }
   function avanca() { var g = G[gi]; if (si < g.itens.length - 1) si++; else if (gi < G.length - 1) { gi++; si = 0; } else { fechaStory(false); return; } mostra(); }

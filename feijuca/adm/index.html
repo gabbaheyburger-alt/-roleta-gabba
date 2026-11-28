@@ -184,7 +184,8 @@ input[type=date] { font: 600 1.05rem var(--body); color: var(--fg); background: 
           <div id="hoje-itens" style="display:flex;flex-direction:column;gap:10px"></div>
           <button class="add" type="button" id="hoje-add">+ Story no "Hoje"</button>
         </section>
-        <p class="note" style="margin-top:16px">Bolinhas (destaques fixos). Cada bolinha tem seus stories. Escolha um prato para usar o nome, a descrição e o preço do cardápio.</p>
+        <p class="note" style="margin-top:16px">Vídeo novo: em Mídia, escolha <b>📹 Enviar vídeo do celular</b> (até 20 segundos e 30 MB).</p>
+        <p class="note" style="margin-top:8px">Bolinhas (destaques fixos). Cada bolinha tem seus stories. Escolha um prato para usar o nome, a descrição e o preço do cardápio.</p>
         <div id="grupos" style="display:flex;flex-direction:column;gap:14px;margin-top:12px"></div>
         <button class="add" type="button" id="grupo-add" style="margin-top:12px;width:100%">+ Nova bolinha</button>
       </div>
@@ -278,6 +279,7 @@ input[type=date] { font: 600 1.05rem var(--body); color: var(--fg); background: 
   <p class="msg" id="msg" aria-live="polite"></p>
 </div></div>
 <input type="file" id="arquivo" accept="image/*" hidden>
+<input type="file" id="arquivo-video" accept="video/*" hidden>
 
 <script>
 (function () {
@@ -320,6 +322,62 @@ input[type=date] { font: 600 1.05rem var(--body); color: var(--fg); background: 
     row.querySelector('.aberto').addEventListener('change', e => { row.classList.toggle('off', !e.target.checked); marca(); });
     row.querySelectorAll('input[type=time]').forEach(i => i.addEventListener('change', marca));
     $('dias').append(row);
+  });
+
+  // ---------- Vídeos enviados pelo celular (só para os stories) ----------
+  const MAX_SEG = 20, MAX_MB = 30;
+  function videosEnviados() { return (C.videos || []).map(v => [v.arq, v.nome]); }
+  let alvoVideo = null;
+  function enviaVideo(story) { alvoVideo = story; desenhaStories(); $('arquivo-video').value = ''; $('arquivo-video').click(); }
+  const lerUrl = f => new Promise((ok, erro) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = erro; r.readAsDataURL(f); });
+  function infoVideo(file) {
+    // duração e uma foto de espera (primeiro quadro) tirada do próprio vídeo
+    return new Promise((ok, erro) => {
+      const v = document.createElement('video'), url = URL.createObjectURL(file);
+      v.muted = true; v.playsInline = true; v.preload = 'auto'; v.setAttribute('playsinline', '');
+      v.onerror = () => { URL.revokeObjectURL(url); erro(new Error('formato')); };
+      v.onloadedmetadata = () => { v.currentTime = Math.min(0.5, (v.duration || 1) / 2); };
+      v.onseeked = () => {
+        const s = Math.min(1, 720 / Math.max(v.videoWidth || 720, v.videoHeight || 1280));
+        const c = document.createElement('canvas'); c.width = Math.round((v.videoWidth || 720) * s); c.height = Math.round((v.videoHeight || 1280) * s);
+        let poster = '';
+        try { c.getContext('2d').drawImage(v, 0, 0, c.width, c.height); poster = c.toDataURL('image/jpeg', 0.8); } catch (e) {}
+        URL.revokeObjectURL(url); ok({ dur: v.duration, poster: poster });
+      };
+      v.src = url;
+    });
+  }
+  async function ehHevc(file) {
+    // procura a marca do formato HEVC (hvc1/hev1) no arquivo: alguns Android não tocam
+    try { const b = new Uint8Array(await file.arrayBuffer()); for (let i = 0; i < b.length - 4; i++) { if (b[i] === 0x68 && ((b[i + 1] === 0x76 && b[i + 2] === 0x63 && b[i + 3] === 0x31) || (b[i + 1] === 0x65 && b[i + 2] === 0x76 && b[i + 3] === 0x31))) return true; } } catch (e) {}
+    return false;
+  }
+  async function putArquivo(caminho, base64, mensagem) {
+    const r = await fetch(API + caminho, { method: 'PUT', headers: Object.assign({ 'Content-Type': 'application/json' }, headers()), body: JSON.stringify({ message: mensagem, content: base64, branch: BRANCH }) });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+  }
+  $('arquivo-video').addEventListener('change', async () => {
+    const f = $('arquivo-video').files[0], st = alvoVideo; alvoVideo = null;
+    if (!f || !st) return;
+    if (f.size > MAX_MB * 1048576) { msg($('msg'), 'Esse vídeo tem ' + Math.round(f.size / 1048576) + ' MB. O limite é ' + MAX_MB + ' MB: corte no app Fotos (Editar) ou me mande pelo Claude.', 'err'); return; }
+    msg($('msg'), 'Conferindo o vídeo…');
+    let info;
+    try { info = await infoVideo(f); } catch (e) { msg($('msg'), 'Não consegui abrir esse vídeo. Tente outro ou me mande pelo Claude.', 'err'); return; }
+    if (info.dur > MAX_SEG + 0.5) { msg($('msg'), 'Esse vídeo tem ' + Math.round(info.dur) + ' segundos. O limite é ' + MAX_SEG + ': corte no app Fotos (Editar → arrastar as pontas) e envie de novo.', 'err'); return; }
+    if (await ehHevc(f) && !confirm('Este vídeo está no formato do iPhone (HEVC). Ele toca em iPhone, mas pode NÃO tocar em alguns celulares Android.\n\nPara evitar: Ajustes → Câmera → Formatos → "Mais compatível" e grave de novo, ou me mande o vídeo pelo Claude.\n\nEnviar mesmo assim?')) { msg($('msg'), 'Envio cancelado.'); return; }
+    const ext = /quicktime|\.mov$/i.test(f.type + ' ' + f.name) ? 'mov' : 'mp4', base = 'vid/u' + Date.now();
+    msg($('msg'), 'Enviando o vídeo (' + Math.round(f.size / 1048576) + ' MB)… pode levar até 1 minuto. Não feche esta tela.');
+    $('salvar').disabled = true;
+    try {
+      const dados = await lerUrl(f);
+      await putArquivo('feijuca/' + base + '.' + ext, dados.split(',')[1], 'Bio Feijuca: vídeo novo (story)');
+      if (info.poster) { await putArquivo('feijuca/' + base + '.jpg', info.poster.split(',')[1], 'Bio Feijuca: foto de espera do vídeo'); previas[base + '.jpg'] = info.poster; }
+      const d = new Date(Date.now() - 3 * 3600 * 1000).toISOString();
+      C.videos = (C.videos || []).concat({ arq: base + '.' + ext, nome: 'enviado em ' + d.slice(8, 10) + '/' + d.slice(5, 7) + ' ' + d.slice(11, 16) });
+      st.midia = base + '.' + ext; marca(); desenhaStories();
+      msg($('msg'), 'Vídeo enviado. Toque em Salvar para colocar no story.', 'ok');
+    } catch (e) { msg($('msg'), 'Não consegui enviar o vídeo. Verifique a internet e tente de novo.', 'err'); }
+    finally { $('salvar').disabled = false; }
   });
 
   // ---------- Fotos ----------
@@ -463,9 +521,9 @@ input[type=date] { font: 600 1.05rem var(--body); color: var(--fg); background: 
   function sel(op, val, onch) { const x = el('select'); op.forEach(([v, t]) => x.append(el('option', { value: v, textContent: t, selected: (val || '') === v }))); x.addEventListener('change', () => onch(x.value)); return x; }
   function editorStory(lista, i) {
     const s = lista[i];
-    const ehVideo = /\.mp4$/.test(s.midia || '');
-    const midiaSel = sel([['', 'Foto da galeria']].concat(VIDEOS.map(([v, t]) => [v, 'Vídeo: ' + t])), ehVideo ? s.midia : '', v => { s.midia = v; marca(); desenhaStories(); });
-    const prev = ehVideo ? el('img', { className: 'prev', src: fotoSrc(s.midia.replace(/\.mp4$/, '.jpg')), alt: '' }) : fotoBtn(s, 'midia', 'Toque p/ foto');
+    const ehVideo = /\.(mp4|mov|m4v)$/i.test(s.midia || '');
+    const midiaSel = sel([['', 'Foto da galeria']].concat(VIDEOS.concat(videosEnviados()).map(([v, t]) => [v, 'Vídeo: ' + t]), [['__novo', '📹 Enviar vídeo do celular…']]), ehVideo ? s.midia : '', v => { if (v === '__novo') { enviaVideo(s); return; } s.midia = v; marca(); desenhaStories(); });
+    const prev = ehVideo ? el('img', { className: 'prev', src: fotoSrc(s.midia.replace(/\.(mp4|mov|m4v)$/i, '.jpg')), alt: '' }) : fotoBtn(s, 'midia', 'Toque p/ foto');
     const pratos = (C.pratos || []).concat(C.chopes || [], C.sobremesas || []).map(p => [p.nome, p.nome]);
     const pratoSel = sel([['', 'Nenhum (escrever texto)']].concat(pratos), s.prato, v => { s.prato = v; if (v && !s.btn) s.btn = 'pedir'; marca(); desenhaStories(); });
     const campos = [el('label', {}, ['Mídia', midiaSel]), el('label', {}, ['Prato do cardápio', pratoSel])];
